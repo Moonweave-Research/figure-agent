@@ -590,6 +590,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check declared vector clearance relations.")
     parser.add_argument("pdf", type=Path)
     parser.add_argument("--tex", type=Path, required=True)
+    parser.add_argument("--spec", type=Path, default=None)
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--json-output", type=Path, default=None)
     args = parser.parse_args(argv)
@@ -603,7 +604,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: missing TeX: {tex_path}", file=sys.stderr)
         return 2
     try:
-        checks = parse_vector_clearance_checks(_load_spec(pdf_path.parent.parent / "spec.yaml"))
+        spec_path = args.spec or pdf_path.parent.parent / "spec.yaml"
+        checks = parse_vector_clearance_checks(_load_spec(spec_path))
         issues = check_vector_clearance(tex_path.read_text(encoding="utf-8"), checks)
     except VectorClearanceError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

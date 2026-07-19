@@ -1,0 +1,15 @@
+{
+  "change_summary": "Protect the detached rho label with a local white field and retain the vertical magnitude lane.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v47/repaired_generated.tex",
+  "output_sha256": "sha256:96d5e0c808f406dcf48adaa4313634073dfd40745829975e01dfc5143c2a9fd9",
+  "packet_sha256": "sha256:62f61f98095517421e4221006f75788454d576c94d8163201f0658af93d3c6b1",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:e359209aeab84f0a51cdbe92d02ca163487252d3cf4b0ada6b1315030494738d"
+}

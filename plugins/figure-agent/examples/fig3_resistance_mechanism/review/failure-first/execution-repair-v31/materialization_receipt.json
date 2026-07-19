@@ -1,0 +1,15 @@
+{
+  "change_summary": "Moved the carrier legend below the cell and made it the single textual key for repeated capture and release, creating an annotation lane outside the transport path.",
+  "changed_lines": 6,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v31/repaired_generated.tex",
+  "output_sha256": "sha256:193ee3ab936d77f864b803db1e4618a9312491eb5c0feeeb95d43afd85a322c6",
+  "packet_sha256": "sha256:4bd444f21e7d3f06fcffa75da51bab57cae2f4ff1c348a2a9a34832b7d6cd1e8",
+  "preserved_boundary_blank_lines": 0,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:4abccb279c36943178e06a235d8a1e0f751ed89579f4b5869dee47d9e180f424"
+}

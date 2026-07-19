@@ -1,0 +1,16 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v40.yaml
+extends_sha256: sha256:b62b73a5a5b5724299234197d8fd47eb3cc7f79cfdd5b1b7652fce8024a02c34
+reason: preserve historical review findings and current render provenance as tracked clean-checkout receipts without re-running immutable artifacts
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/historical_layout_transfer_receipt_v1.yaml
+  - review/failure-first/historical_scope_validation_receipt_v1.yaml
+  - review/failure-first/current_render_review_provenance_v1.yaml
+  - review/failure-first/scope_extension_v41.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/tests/test_check_layout_drift.py
+  - plugins/figure-agent/tests/test_fig1_composition_comparison_v1.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

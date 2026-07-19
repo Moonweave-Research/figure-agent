@@ -1,0 +1,8 @@
+{
+  "decision": "intermediate_grammar_step_overall_review_required",
+  "repair_result": "carrier semantics moved to an external annotation lane without introducing a new structural blocker",
+  "external_compile": "passed",
+  "next_human_target": "panel_a_duplicate_transition_labels",
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}

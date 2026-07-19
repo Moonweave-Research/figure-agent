@@ -96,6 +96,182 @@ composition_header: increasing sulfur content
     return profile
 
 
+def _write_composition_profile(
+    fixture: Path, relative_path: str = "attempts/a1/composition.yaml"
+) -> Path:
+    profile = fixture / relative_path
+    profile.parent.mkdir(parents=True, exist_ok=True)
+    profile.write_text(
+        """
+schema: figure-agent.composition-profile.v1
+status: experimental_attempt_scoped
+policy: preserve_llm_composition
+requirements:
+  - semantic_load_controls_area
+  - related_panels_are_grouped
+  - negative_space_is_reserved
+forbidden:
+  - fixed_coordinates
+  - fixed_panel_rectangles
+  - primitive_geometry
+  - palette_override
+""".lstrip(),
+        encoding="utf-8",
+    )
+    return profile
+
+
+def _write_aesthetic_intent(fixture: Path) -> Path:
+    path = fixture / "aesthetic_intent.yaml"
+    path.write_text(
+        """
+schema: figure-agent.aesthetic-intent.v2
+fixture: context_demo
+target_journal: Nature Communications
+visual_maturity: polished
+density: balanced
+reference_style: multipanel_story
+design_principles:
+  - id: publication_restraint
+    instruction: Add detail only when it strengthens an already declared object or relation.
+must_avoid:
+  - id: invented_measurement
+    pattern: Do not make a conceptual panel look like measured data.
+    severity: MAJOR
+polish_triggers:
+  - id: semantic_first
+    condition: Preserve semantic boundaries before any optical refinement.
+    recommended_path: continue_tikz
+aesthetic_levers:
+  - id: state_hierarchy
+    dimension: component_fidelity
+    intent: Make semantic states visibly distinct without adding new claims.
+    priority: required
+    positive_signals:
+      - Occupied and unoccupied states are optically distinct.
+    anti_patterns:
+      - Repeated generic marks with no semantic hierarchy.
+    allowed_adjustments:
+      - Refine state-marker hierarchy.
+    forbidden_adjustments:
+      - Add new physical states.
+    default_route: tikz_patch
+""".lstrip(),
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_context_pack_injects_non_coordinate_composition_profile(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    profile = _write_composition_profile(fixture)
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+        composition_profile="attempts/a1/composition.yaml",
+    )
+
+    selected = payload["composition_profile"]
+    assert selected["sha256"] == (
+        f"sha256:{hashlib.sha256(profile.read_bytes()).hexdigest()}"
+    )
+    assert selected["policy"] == "preserve_llm_composition"
+    assert selected["authoring_directives"]
+    rendered = authoring_context_pack.render_text(payload)
+    assert "## Composition Profile" in rendered
+    assert "no coordinates or panel rectangles are prescribed" in rendered
+
+
+def test_context_pack_binds_optional_aesthetic_intent_as_authoring_directives(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    intent = _write_aesthetic_intent(fixture)
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    selected = payload["aesthetic_intent"]
+    assert selected["path"] == "examples/context_demo/aesthetic_intent.yaml"
+    assert selected["sha256"] == f"sha256:{hashlib.sha256(intent.read_bytes()).hexdigest()}"
+    assert selected["schema"] == "figure-agent.aesthetic-intent.v2"
+    assert selected["authoring_directives"] == [
+        (
+            "Preserve publication_restraint: Add detail only when it strengthens an "
+            "already declared object or relation."
+        ),
+        "For state_hierarchy: Make semantic states visibly distinct without adding new claims.",
+        "Avoid state_hierarchy anti-patterns: Repeated generic marks with no semantic hierarchy.",
+        "Allowed for state_hierarchy: Refine state-marker hierarchy.",
+        "Forbidden for state_hierarchy: Add new physical states.",
+        "Use tikz_patch for state_hierarchy by default.",
+    ]
+    assert "## Aesthetic Intent" in authoring_context_pack.render_text(payload)
+
+
+def test_fig3_context_pack_binds_human_detail_uplift_direction() -> None:
+    payload = authoring_context_pack.build_context_pack(
+        "fig3_resistance_mechanism",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+    )
+
+    directives = payload["aesthetic_intent"]["authoring_directives"]
+    assert (
+        "For material_state_hierarchy: Make carrier, trap, and terminal slow-release "
+        "state roles optically distinct without adding a new physical state."
+    ) in directives
+    assert (
+        "For irregular_support_field: Make S80 read as a dense irregular energy-state "
+        "field, never as a fitted density-of-states envelope."
+    ) in directives
+    assert (
+        "For cross_panel_finish: Increase detail through hierarchy and state distinction, "
+        "not through measured-data cues or decorative texture."
+    ) in directives
+    assert all("Fig1" not in directive for directive in directives)
+
+
+def test_context_pack_outer_cli_forwards_composition_profile(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    profile = _write_composition_profile(fixture)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--composition-profile",
+            "attempts/a1/composition.yaml",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["composition_profile"]["path"] == (
+        "attempts/a1/composition.yaml"
+    )
+    assert payload["composition_profile"]["sha256"] == (
+        f"sha256:{hashlib.sha256(profile.read_bytes()).hexdigest()}"
+    )
+
+
 def test_build_context_pack_injects_selected_shape_profile(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_context_fixture(workspace)
@@ -209,6 +385,47 @@ def test_context_pack_cli_renders_selected_shape_profile_directives_by_default(
         "- Do not assert unresolved claims [fixed_peak_count, monotonic_disorder, "
         "decay_direction]." in result.stdout
     )
+
+
+def test_context_pack_injects_declared_label_path_clearance_before_generation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        extra_spec="""
+label_path_proximity_checks:
+  - id: panel_a_carrier_path
+    kind: polyline
+    role: semantic_carrier_path
+    points_pdf_cm:
+      - [1.0, 1.0]
+      - [2.0, 2.0]
+      - [3.0, 1.5]
+    clearance_pt: 4.0
+    text_phrases:
+      - id: carrier_key
+        words: [carrier, path]
+""",
+    )
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert payload["path_constraints"]["schema"] == (
+        "figure-agent.label-path-proximity.v1"
+    )
+    assert payload["path_constraints"]["authoring_directives"] == [
+        "Keep text phrase [carrier path] at least 4 pt clear of declared path "
+        "[panel_a_carrier_path] (semantic_carrier_path; PDF-cm polyline "
+        "[(1, 1), (2, 2), (3, 1.5)])."
+    ]
+    rendered = authoring_context_pack.render_text(payload)
+    assert "## Declared Label-Path Constraints" in rendered
+    assert payload["path_constraints"]["authoring_directives"][0] in rendered
 
 
 def test_context_pack_outer_cli_rejects_explicit_empty_shape_profile(
@@ -390,6 +607,126 @@ def test_context_pack_cli_compiles_read_only_json_payload(tmp_path: Path) -> Non
     assert payload["rule_catalog"] is None
     assert payload["sources"]["rule_catalog"] == ""
     assert "briefing" in payload["paper_context"]
+
+
+def test_context_pack_binds_explicit_curated_visual_assets(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        context_pack_extra=(
+            "  visual_asset_ids:\n"
+            "    - panel_f_floating_cantilever\n"
+        ),
+    )
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assets = payload["visual_assets"]
+    assert assets["schema"] == "figure-agent.authoring-visual-assets.v1"
+    assert assets["catalog_path"] == "styles/snippets/INDEX.yaml"
+    assert len(assets["selected"]) == 1
+    selected = assets["selected"][0]
+    assert selected["id"] == "panel_f_floating_cantilever"
+    assert selected["status"] == "reviewed_reusable"
+    assert selected["path"] == "styles/snippets/panel-f-floating-cantilever.tex"
+    assert selected["sha256"].startswith("sha256:")
+    assert selected["contract"]["path"].endswith(".contract.yaml")
+    assert selected["transfer_receipt"]["path"].endswith(".transfer.yaml")
+    assert selected["authoring_directives"]
+    assert any(
+        r"Import [panel_f_floating_cantilever] with "
+        r"[\input{snippets/panel-f-floating-cantilever.tex}]"
+        in directive
+        for directive in selected["authoring_directives"]
+    )
+
+    rendered = authoring_context_pack.render_text(payload)
+    assert "## Curated Visual Assets" in rendered
+    assert "panel_f_floating_cantilever" in rendered
+    assert "Do not redraw its owned geometry" in rendered
+
+
+def test_context_pack_rejects_unknown_curated_visual_asset(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        context_pack_extra="  visual_asset_ids: [missing_asset]\n",
+    )
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="visual asset id is not present in the curated catalog",
+    ):
+        authoring_context_pack.build_context_pack(
+            "context_demo",
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+
+
+def test_context_pack_rejects_non_reusable_catalog_status(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "plugin"
+    catalog_dir = plugin_root / "styles" / "snippets"
+    catalog_dir.mkdir(parents=True)
+    (catalog_dir / "planned.tex").write_text("% not reusable\n", encoding="utf-8")
+    (catalog_dir / "INDEX.yaml").write_text(
+        "snippets:\n"
+        "  planned_asset:\n"
+        "    file: styles/snippets/planned.tex\n"
+        "    status: planned\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="visual asset is not reusable: planned_asset",
+    ):
+        authoring_context_pack._authoring_visual_assets(
+            plugin_root,
+            {
+                "authoring_context_pack": {
+                    "visual_asset_ids": ["planned_asset"],
+                }
+            },
+        )
+
+
+def test_context_pack_rejects_stale_transfer_receipt(tmp_path: Path) -> None:
+    plugin_root = tmp_path / "plugin"
+    catalog_dir = plugin_root / "styles" / "snippets"
+    catalog_dir.mkdir(parents=True)
+    (catalog_dir / "asset.tex").write_text("% asset\n", encoding="utf-8")
+    (catalog_dir / "asset.contract.yaml").write_text(
+        "schema_version: 1\n", encoding="utf-8"
+    )
+    (catalog_dir / "asset.transfer.yaml").write_text(
+        "shared_bindings:\n"
+        "  styles/snippets/asset.tex: sha256:stale\n"
+        "  styles/snippets/asset.contract.yaml: sha256:stale\n",
+        encoding="utf-8",
+    )
+    (catalog_dir / "INDEX.yaml").write_text(
+        "snippets:\n"
+        "  asset:\n"
+        "    file: styles/snippets/asset.tex\n"
+        "    contract: styles/snippets/asset.contract.yaml\n"
+        "    transfer_receipt: styles/snippets/asset.transfer.yaml\n"
+        "    status: reviewed_reusable\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="visual asset transfer receipt is stale: asset",
+    ):
+        authoring_context_pack._authoring_visual_assets(
+            plugin_root,
+            {"authoring_context_pack": {"visual_asset_ids": ["asset"]}},
+        )
 
 
 def test_context_pack_includes_read_only_narrative_context(tmp_path: Path) -> None:
@@ -599,6 +936,96 @@ rules:
         "Keep text group [applied, trapping, during, conduction] at least 0.015 "
         "page-diagonal units clear of text group [V]."
     ]
+
+
+def test_context_pack_injects_moved_group_neighbor_clearance_directive(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    review = fixture / "review"
+    review.mkdir()
+    (review / "layout_lanes.yaml").write_text(
+        """
+schema: figure-agent.layout-lanes.v1
+label_groups:
+  - id: moved_label
+    required_phrase: distribution breadth
+  - id: axis_label
+    required_phrase: trap energy E
+  - id: magnitude_label
+    required_phrase: magnitude
+rules:
+  - id: moved_label_neighbor_clearance
+    kind: minimum_clearance_from_groups
+    group: moved_label
+    other_groups: [axis_label, magnitude_label]
+    minimum_normalized_clearance: 0.01
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "context-pack",
+            "context_demo",
+            "--layout-contract",
+            "review/layout_lanes.yaml",
+            "--json",
+        ],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["layout_constraints"]["authoring_directives"] == [
+        "Keep text group [distribution breadth] at least 0.01 page-diagonal "
+        "units clear of each declared neighboring text group: "
+        "[trap energy E]; [magnitude]."
+    ]
+
+
+def test_context_pack_rejects_colliding_expanded_layout_result_ids(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_context_fixture(tmp_path / "workspace")
+    review = fixture / "review"
+    review.mkdir()
+    (review / "layout_lanes.yaml").write_text(
+        """
+schema: figure-agent.layout-lanes.v1
+label_groups:
+  - id: moved
+    required_phrase: distribution breadth
+  - id: axis
+    required_phrase: trap energy E
+rules:
+  - id: moved_neighbors
+    kind: minimum_clearance_from_groups
+    group: moved
+    other_groups: [axis]
+    minimum_normalized_clearance: 0.01
+  - id: moved_neighbors:axis
+    kind: minimum_clearance
+    first: moved
+    second: axis
+    minimum_normalized_clearance: 0.01
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="duplicate layout result id",
+    ):
+        authoring_context_pack._layout_constraints(
+            fixture, "review/layout_lanes.yaml"
+        )
 
 
 def test_context_pack_injects_region_containment_and_plot_clearance_directives(

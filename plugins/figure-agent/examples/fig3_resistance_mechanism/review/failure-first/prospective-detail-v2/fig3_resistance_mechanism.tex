@@ -1,0 +1,141 @@
+% Prospective detail candidate derived from the hash-bound Fig3 baseline.
+% It refines only declared semantic roles; it is not the fixture source.
+\documentclass[border=6pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{arrows.meta,decorations.pathmorphing}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily\fontsize{7}{8.4}\selectfont,
+  carrier/.style={circle, fill=cGray!68!black, inner sep=0pt, minimum size=1.34mm},
+  trap/.style={cGray!48!black, line width=0.50pt, line cap=round},
+  trapActive/.style={cBlue!70!black, line width=0.64pt, line cap=round},
+  trapTerminal/.style={cAmber!72!black, line width=0.72pt, line cap=round},
+  xfer/.style={-{Stealth[length=1.0mm]}, cGray!68!black, line width=0.6pt},
+  terminalLabelLeader/.style={cGray!50!black, line width=0.28pt},
+  axis/.style={-{Stealth[length=1.0mm]}, cGray!72!black, line width=0.4pt},
+  pl/.style={font=\bfseries\fontsize{7.5}{9}\selectfont},
+  label/.style={align=center, font=\fontsize{5.6}{6.8}\selectfont},
+]
+% ===================== (a) applied-bias trapping mechanism =====================
+\node[pl] at (0.08,4.60) {a};
+\node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (0.42,4.60)
+  {trapping during conduction};
+% Restrained film layering gives the material scene depth without assigning
+% chemistry, polarity, or a spatial transport network.
+\fill[cAmber!6] (0.74,1.04) rectangle (4.55,3.56);
+\fill[cAmber!11, opacity=0.46] (0.84,1.16) rectangle (4.45,3.42);
+\fill[cGray!8] (0.96,1.54) rectangle (4.34,2.89);
+\fill[cGray!70] (0.56,1.08) rectangle (0.74,3.52);
+\fill[cGray!70] (4.55,1.08) rectangle (4.73,3.52);
+\node[font=\fontsize{5.4}{6.5}\selectfont, text=cAmber!55!black] at (2.65,0.60)
+  {sulfur-polymer film};
+\node[font=\fontsize{6}{7.2}\selectfont] at (0.65,3.80) {$+V$};
+\node[font=\fontsize{6}{7.2}\selectfont] at (4.64,3.80) {$-V$};
+\draw[axis] (0.42,1.00) -- (0.42,4.02);
+\node[rotate=90, anchor=south, font=\fontsize{5.9}{7}\selectfont] at (0.20,2.46)
+  {energy, $E$};
+\draw[cAmber!60!black, line width=0.8pt] (0.74,3.42) -- (4.55,3.04);
+\node[anchor=west, font=\fontsize{5.2}{6.2}\selectfont, text=cAmber!55!black] at (1.02,3.67)
+  {mobile transport level};
+\coordinate (trap_shallow) at (1.62,2.48);
+\coordinate (trap_mid) at (2.82,2.18);
+\coordinate (trap_slow_release) at (3.70,1.74);
+\foreach \x/\y in {1.62/2.48,2.82/2.18,3.70/1.74,1.22/2.68,1.98/2.00,2.18/2.63,
+  2.48/1.98,3.17/2.56,3.38/2.05,2.34/1.68,1.45/2.10,4.08/2.31}{
+  \draw[trap] (\x-0.10,\y) -- (\x+0.10,\y);
+}
+% The named anchors keep the baseline's qualitative sequence while making the
+% declared capture, intermediate, and terminal roles legible at figure scale.
+\draw[trapActive] (1.49,2.48) -- (1.75,2.48);
+\draw[trapActive] (2.69,2.18) -- (2.95,2.18);
+\draw[trapTerminal] (3.55,1.74) -- (3.85,1.74);
+% fig-agent:start object=carrier_sequence panel=A kind=state_sequence truth_bearing=true
+% Left-to-right placement is temporal ordering, not net spatial carrier drift.
+\node[carrier] (carrier_shallow_in) at (1.22,3.28) {};
+\node[carrier] (carrier_shallow_out) at (1.94,3.10) {};
+\node[carrier] (carrier_mid_in) at (2.40,3.13) {};
+\node[carrier] (carrier_mid_out) at (3.13,2.91) {};
+\node[carrier] (carrier_deep_in) at (3.51,2.88) {};
+\draw[xfer] (carrier_shallow_in) to[out=-22,in=82] (trap_shallow);
+\draw[xfer] (trap_shallow) to[out=82,in=-150] (carrier_shallow_out);
+\draw[xfer] (carrier_mid_in) to[out=-20,in=84] (trap_mid);
+\draw[xfer] (trap_mid) to[out=82,in=-152] (carrier_mid_out);
+\draw[xfer] (carrier_deep_in) to[out=-118,in=82] (trap_slow_release);
+\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black] at (1.07,2.90) {capture};
+\node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black] at (2.08,2.90) {release};
+\coordinate (slow_release_label_anchor) at (3.70,1.56);
+\draw[terminalLabelLeader] (trap_slow_release) -- (slow_release_label_anchor);
+\node[anchor=north, font=\fontsize{4.2}{5.0}\selectfont, text=cAmber!68!black]
+  (slow_release_label) at (slow_release_label_anchor) {slow-release};
+% fig-agent:end object=carrier_sequence
+
+% ===================== (b) qualitative transient response =====================
+\node[pl] at (5.34,4.60) {b};
+\node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (5.68,4.60)
+  {transient response};
+% fig-agent:start object=qualitative_current_decay panel=B kind=qualitative_relation truth_bearing=true
+\draw[axis] (5.84,1.05) -- (8.97,1.05) node[anchor=north, font=\fontsize{5.5}{6.6}\selectfont] {time, $t$};
+\draw[axis] (5.84,1.05) -- (5.84,3.52);
+\node[rotate=90, font=\fontsize{5.5}{6.6}\selectfont] at (5.00,2.30) {current, $I(t)$};
+\draw[cBlue!70!black, line width=1.0pt] plot[smooth, domain=5.98:8.80, samples=48]
+  (\x,{1.18+2.05*(1+2.8*(\x-5.98)/2.82)^(-0.85)});
+\node[label, text=cBlue!65!black, fill=white, inner sep=1.2pt, anchor=west] at (6.18,1.91)
+  {$I(t)\propto t^{-n}$};
+\node[label, text=cGray!60!black] at (7.35,0.48)
+  {at $V=\mathrm{const}$: $I\downarrow$, $R\uparrow$};
+% fig-agent:end object=qualitative_current_decay
+
+% ===================== (c) shared vertical energy-landscape grammar =====================
+\node[pl] at (9.53,4.60) {c};
+\node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (9.87,4.60)
+  {composition-dependent trap-energy landscape};
+\draw[axis] (9.78,1.03) -- (9.78,3.92);
+\node[rotate=90, anchor=south, font=\fontsize{5.9}{7}\selectfont] at (9.55,2.47)
+  {energy, $E$};
+\draw[-{Stealth[length=0.8mm]}, cGray!45!black, line width=0.35pt] (11.34,3.90) -- (13.13,3.90);
+\node[label, text=cGray!55!black] at (12.24,4.13) {sulfur content $\uparrow$};
+% S60 and S80 are separate comparison units, sharing the same energy orientation.
+\begin{scope}
+  % The quiet rounded field is a composition sample swatch, not an envelope of
+  % the discrete states. The state marks retain their independent positions.
+  \fill[cBlue!4, rounded corners=0.8pt] (10.10,1.23) rectangle (11.60,3.46);
+  \draw[cBlue!24!white, line width=0.30pt, rounded corners=0.8pt]
+    (10.10,1.23) rectangle (11.60,3.46);
+  \fill[cBlue!24, opacity=0.18, rounded corners=0.8pt] (10.10,3.08) rectangle (11.60,3.46);
+  \draw[cBlue!38!white, line width=0.28pt] (10.24,3.08) -- (11.46,3.08);
+  \node[label, text=cBlue!60!black] at (10.85,3.55) {S60\\discrete states};
+  % fig-agent:start object=s60_discrete_states panel=C kind=energy_landscape truth_bearing=true
+  \foreach \y/\len in {2.77/0.46,2.38/0.67,1.97/0.39,1.62/0.74}{
+    \draw[cBlue!65!black, line width=0.85pt, line cap=round] (10.85-\len/2,\y) -- (10.85+\len/2,\y);
+  }
+  % fig-agent:end object=s60_discrete_states
+\end{scope}
+\begin{scope}
+  % This is likewise a sample swatch. It must not become a fitted state-density
+  % silhouette, a hard-edged support container, or a chart axis.
+  \fill[cRed!4, rounded corners=0.8pt] (12.16,1.23) rectangle (14.34,3.46);
+  \draw[cRed!24!white, line width=0.30pt, rounded corners=0.8pt]
+    (12.16,1.23) rectangle (14.34,3.46);
+  \fill[cRed!25, opacity=0.18, rounded corners=0.8pt] (12.16,3.08) rectangle (14.34,3.46);
+  \draw[cRed!38!white, line width=0.28pt] (12.30,3.08) -- (14.20,3.08);
+  \node[label, text=cRed!65!black] at (13.25,3.55) {S80\\continuous support};
+  % fig-agent:start object=s80_continuous_support panel=C kind=energy_landscape truth_bearing=true
+  % Dense, irregular state marks indicate continuous qualitative support;
+  % they do not encode a fitted density-of-states envelope or numeric count.
+  \foreach \y/\x/\len in {
+    1.43/12.58/0.27,1.55/13.62/0.41,1.67/13.04/0.31,1.79/13.93/0.24,
+    1.91/12.77/0.43,2.03/13.41/0.26,2.15/12.48/0.33,2.27/13.78/0.38,
+    2.39/13.14/0.24,2.51/12.69/0.40,2.63/13.56/0.29,2.75/12.92/0.35,
+    2.87/13.89/0.25,2.99/13.28/0.44,3.11/12.60/0.28,3.23/13.70/0.34}{
+    \draw[cRed!62!black, opacity=0.82, line width=0.46pt, line cap=round]
+      (\x-\len/2,\y) -- (\x+\len/2,\y);
+  }
+  % fig-agent:end object=s80_continuous_support
+  \draw[cRed!60!black, line width=0.35pt] (14.54,1.46) -- (14.54,3.07);
+  \draw[cRed!60!black, line width=0.35pt] (14.40,1.46) -- (14.68,1.46);
+  \draw[cRed!60!black, line width=0.35pt] (14.40,3.07) -- (14.68,3.07);
+  \node[label, text=cRed!60!black, anchor=west] at (14.73,2.27) {broader\\energy support};
+\end{scope}
+\end{tikzpicture}
+\end{document}

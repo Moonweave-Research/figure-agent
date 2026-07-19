@@ -5,22 +5,39 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
-import os
 import subprocess
 import sys
 import tempfile
 from contextlib import contextmanager
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+import human_decision_record
+import quality_patch_plan
+import repair_transaction
 from quality_manifest import file_sha256
 
 SCHEMA = "figure-agent.quality-patch-result.v1"
 PLAN_SCHEMA = "figure-agent.quality-patch-plan.v1"
+SOURCE_MUTATION_DECISION_KIND = "apply_quality_patch_plan"
 
 
 class QualityPatchApplyError(ValueError):
     """Expected user-facing error for quality patch apply failures."""
+
+
+def authorization_record_hash(record: dict[str, Any]) -> str:
+    encoded = json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+    return "sha256:" + sha256(encoded).hexdigest()
+
+
+def _atomic_write_text(path: Path, text: str) -> None:
+    repair_transaction.atomic_write_text(path, text)
+
+
+def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
+    repair_transaction.atomic_write_json(path, payload)
 
 
 def _read_plan(path: Path) -> dict[str, Any]:
@@ -56,6 +73,8 @@ def _validate_target(path_text: str, workspace_root: Path, fixture: Path) -> Pat
     if path.name in {"critique.md", "QUALITY_AUDIT.md"}:
         raise QualityPatchApplyError("plan_target_forbidden: protected target")
     target = workspace_root / path
+    if target.is_symlink():
+        raise QualityPatchApplyError("plan_target_forbidden: source symlink forbidden")
     try:
         resolved = target.resolve(strict=True)
         resolved.relative_to(fixture.resolve(strict=True))
@@ -104,22 +123,14 @@ def _check_source_hash(plan: dict[str, Any], target_rel: str, target: Path) -> N
 
 @contextmanager
 def _mutation_lock(fixture: Path) -> Any:
-    lock_root = fixture / "build" / ".quality-locks"
-    lock_root.mkdir(parents=True, exist_ok=True)
-    lock_path = lock_root / "mutation.lock"
     try:
-        fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError as exc:
+        with repair_transaction.exclusive_lock(
+            fixture / "build" / ".quality-locks" / "mutation.lock",
+            owner="quality_patch_apply",
+        ):
+            yield
+    except repair_transaction.RepairTransactionError as exc:
         raise QualityPatchApplyError("operation_in_progress: mutation lock exists") from exc
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write("quality_patch_apply\n")
-        yield
-    finally:
-        try:
-            lock_path.unlink()
-        except FileNotFoundError:
-            pass
 
 
 def _run_patch(
@@ -243,25 +254,33 @@ def _preflight_candidate(
     return candidate
 
 
-def _write_rollback_patch(fixture: Path, plan_id: str, patch_text: str) -> Path:
+def _write_rollback_patch(
+    fixture: Path,
+    plan_id: str,
+    target_rel: str,
+    original: str,
+    candidate: str,
+) -> Path:
     rollback_dir = fixture / "build" / "quality" / "rollback"
     rollback_dir.mkdir(parents=True, exist_ok=True)
     safe_id = plan_id.replace("sha256:", "")[:16]
     path = rollback_dir / f"{safe_id}.patch"
-    lines = patch_text.splitlines(keepends=True)
-    reversed_lines: list[str] = []
-    for line in lines:
-        if line.startswith("--- "):
-            reversed_lines.append(line.replace("--- ", "+++ ", 1))
-        elif line.startswith("+++ "):
-            reversed_lines.append(line.replace("+++ ", "--- ", 1))
-        elif line.startswith("-") and not line.startswith("--- "):
-            reversed_lines.append("+" + line[1:])
-        elif line.startswith("+") and not line.startswith("+++ "):
-            reversed_lines.append("-" + line[1:])
-        else:
-            reversed_lines.append(line)
-    path.write_text("".join(reversed_lines), encoding="utf-8")
+    diff_lines = difflib.unified_diff(
+        candidate.splitlines(keepends=True),
+        original.splitlines(keepends=True),
+        fromfile=target_rel,
+        tofile=target_rel,
+    )
+    rollback_lines: list[str] = []
+    for line in diff_lines:
+        if line.endswith("\n"):
+            rollback_lines.append(line)
+            continue
+        rollback_lines.append(line + "\n")
+        if line.startswith(("+", "-", " ")):
+            rollback_lines.append("\\ No newline at end of file\n")
+    rollback_text = "".join(rollback_lines)
+    path.write_text(rollback_text, encoding="utf-8")
     return path
 
 
@@ -270,6 +289,7 @@ def apply_quality_patch_plan(
     *,
     plan_path: Path,
     workspace_root: Path,
+    source_mutation_decision: dict[str, Any] | None = None,
     apply: bool,
 ) -> dict[str, Any]:
     fixture = _fixture_root(workspace_root, name)
@@ -277,6 +297,8 @@ def apply_quality_patch_plan(
     plan = _read_plan(plan_path)
     if plan.get("fixture") != name:
         raise QualityPatchApplyError("invalid_plan: fixture mismatch")
+    if plan.get("plan_id") != quality_patch_plan.compute_plan_id(plan):
+        raise QualityPatchApplyError("invalid_plan: plan_id_mismatch")
     operation = _operation(plan)
     target_rel = str(operation.get("file") or "")
     target = _validate_target(target_rel, workspace_root, fixture)
@@ -294,6 +316,8 @@ def apply_quality_patch_plan(
         "outcome": "unchanged",
         "publication_acceptance": "not_claimed",
         "post_render_verification": "pending",
+        "authorization": None,
+        "recovery_required": False,
         "rollback_patch": "",
         "verification_commands": [
             {"command": command, "returncode": None}
@@ -303,18 +327,49 @@ def apply_quality_patch_plan(
     if not apply:
         _preflight_candidate(operation, target_rel, target, patch_text)
         return result
+    if not isinstance(source_mutation_decision, dict):
+        raise QualityPatchApplyError("source_mutation_decision_missing")
+    try:
+        authorization = human_decision_record.validate_source_mutation_authorization(
+            source_mutation_decision,
+            fixture=name,
+            decision_kind=SOURCE_MUTATION_DECISION_KIND,
+            candidate_id=str(plan.get("plan_id") or ""),
+            candidate_hash=str(plan.get("plan_id") or ""),
+            packet_schema=PLAN_SCHEMA,
+            packet_recommendation=SOURCE_MUTATION_DECISION_KIND,
+            packet_path=plan_path.resolve().relative_to(fixture.resolve()).as_posix(),
+        )
+    except human_decision_record.HumanDecisionRecordError as exc:
+        raise QualityPatchApplyError(f"source_mutation_decision_invalid:{exc}") from exc
+    result["authorization"] = {
+        "decision_kind": authorization["decision_kind"],
+        "record_hash": authorization_record_hash(source_mutation_decision),
+        "authorized_candidate_id": authorization["authorized_candidate_id"],
+        "authorized_candidate_hash": authorization["authorized_candidate_hash"],
+    }
 
     with _mutation_lock(fixture):
         _check_source_hash(plan, target_rel, target)
         candidate = _preflight_candidate(operation, target_rel, target, patch_text)
-        target.write_text(candidate, encoding="utf-8")
-        rollback = _write_rollback_patch(fixture, str(plan.get("plan_id")), patch_text)
-        result["applied"] = True
-        result["outcome"] = "verification_pending"
+        original = target.read_text(encoding="utf-8")
+        rollback = _write_rollback_patch(
+            fixture,
+            str(plan.get("plan_id")),
+            target_rel,
+            original,
+            candidate,
+        )
         result["rollback_patch"] = rollback.relative_to(workspace_root).as_posix()
         output = fixture / "build" / "quality" / "patch_result.json"
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        result["outcome"] = "mutation_prepared"
+        result["recovery_required"] = True
+        _atomic_write_json(output, result)
+        _atomic_write_text(target, candidate)
+        result["applied"] = True
+        result["outcome"] = "verification_pending"
+        result["recovery_required"] = False
+        _atomic_write_json(output, result)
         return result
 
 
@@ -326,14 +381,25 @@ def main(argv: list[str] | None = None) -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
+    parser.add_argument("--authorization", type=Path)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("json",), default=None)
     args = parser.parse_args(argv)
+    source_mutation_decision = None
+    if args.authorization:
+        try:
+            source_mutation_decision = json.loads(
+                args.authorization.read_text(encoding="utf-8")
+            )
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            print(f"quality_patch_apply.py: authorization_invalid:{exc}", file=sys.stderr)
+            return 1
     try:
         payload = apply_quality_patch_plan(
             args.name,
             plan_path=args.workspace_root / "examples" / args.name / args.plan,
             workspace_root=args.workspace_root,
+            source_mutation_decision=source_mutation_decision,
             apply=args.apply,
         )
     except QualityPatchApplyError as exc:

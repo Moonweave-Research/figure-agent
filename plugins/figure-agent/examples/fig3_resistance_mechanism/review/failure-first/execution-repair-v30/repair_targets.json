@@ -1,0 +1,29 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v29/repaired_generated.tex",
+  "source_sha256": "sha256:8bedae73e7d2112ab6ec51f1494a7ffc7c9552e55b29bd29320c97c1f98ba8dd",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v30/human_findings.before.json",
+        "id": "HF012"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-b-magnitude-key",
+        "anchor_start": "  % Orthogonal metrics: horizontal breadth and detached vertical magnitude.",
+        "anchor_end": "\\node[label, align=center] at (8.94,0.18)"
+      },
+      "repair_family": "label_reflow",
+      "protected_invariants": [
+        "\\rho_{60\\mathrm{s}}",
+        "magnitude",
+        "$n$: breadth",
+        "S60",
+        "S80",
+        "continuous broad"
+      ]
+    }
+  ]
+}

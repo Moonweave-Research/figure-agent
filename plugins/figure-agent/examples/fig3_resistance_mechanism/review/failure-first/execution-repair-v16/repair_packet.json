@@ -1,0 +1,95 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "bbox_pt": [
+        257.23925,
+        104.48868,
+        314.15075,
+        104.48868
+      ],
+      "distance_pt": 0.0,
+      "evidence": "rendered semantic arrow crosses text 'breadth'",
+      "id": "UG001",
+      "kind": "label_crosses_semantic_path",
+      "nearest_text": "breadth",
+      "recommended_action": "add_micro_defect",
+      "source_line": 0
+    },
+    "finding_id": "UG001",
+    "protected_invariants": [
+      "I(t)\\propto t^{-n}",
+      "breadth",
+      "$\\rho_{60\\mathrm{s}}$: magnitude",
+      "S60",
+      "S80"
+    ],
+    "repair_family": "relation_restore",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v16/undeclared_geometry.before.json",
+    "selector": {
+      "anchor_end": "  \\draw[draw=cBrown, line width=0.65pt, {Stealth}-{Stealth}] (4.78,0.18)--(4.78,1.35);",
+      "anchor_start": "  % Orthogonal metrics: horizontal breadth and detached vertical magnitude.",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-breadth-encoding",
+      "source_hash": "sha256:4a02302c81adf66b04ce3e10a7e06a73cc7a89be00a0c699e9eb82e87a0e6c52"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v16/undeclared_geometry.before.json",
+      "schema": "figure-agent.undeclared-geometry.v1",
+      "sha256": "sha256:a88cb60076cec6f1fff2e2642a45fc6bd9408411c2e5b97c79096a246fa6e202"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v16/repaired_generated.tex",
+  "packet_sha256": "sha256:650d9caa57c0bfbc5a80acf0990a973b12a2d35d71b3a9d197def77167c42703",
+  "prompt": {
+    "sha256": "sha256:f96ba6a84940fc8383f3dcea3527298936e85fbf264e9c439086ba496eb21ffd",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v16/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v15/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: relation_restore\n- Machine finding: {\"bbox_pt\": [257.23925, 104.48868, 314.15075, 104.48868], \"distance_pt\": 0.0, \"evidence\": \"rendered semantic arrow crosses text 'breadth'\", \"id\": \"UG001\", \"kind\": \"label_crosses_semantic_path\", \"nearest_text\": \"breadth\", \"recommended_action\": \"add_micro_defect\", \"source_line\": 0}\n- Change content only between the exact anchor lines [  % Orthogonal metrics: horizontal breadth and detached vertical magnitude.] and [  \\draw[draw=cBrown, line width=0.65pt, {Stealth}-{Stealth}] (4.78,0.18)--(4.78,1.35);].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [I(t)\\propto t^{-n}].\n- Preserve the exact token [breadth].\n- Preserve the exact token [$\\rho_{60\\mathrm{s}}$: magnitude].\n- Preserve the exact token [S60].\n- Preserve the exact token [S80].\n\n## Bound editable source bytes\n```tex\n  \\draw[draw=cTeal, line width=0.65pt, {Stealth}-{Stealth}] (2.23,0.28)--(4.50,0.28);\n  \\node[compact label, text=cTeal, fill=white, inner sep=1.2pt] at (3.365,0.28)\n    {$n$: distribution breadth};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v16/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [
+    {
+      "attribution": "unbound",
+      "finding_id": "UG002"
+    }
+  ],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v15/repaired_generated.tex",
+    "sha256": "sha256:4a02302c81adf66b04ce3e10a7e06a73cc7a89be00a0c699e9eb82e87a0e6c52"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v16/repair_targets.json",
+    "sha256": "sha256:41bc5ea1c8dd8f2a4b168155b640453e6eba7382c4eb4dc7a36127eda9b78e17"
+  },
+  "verification": "external_sequential_compile_required"
+}

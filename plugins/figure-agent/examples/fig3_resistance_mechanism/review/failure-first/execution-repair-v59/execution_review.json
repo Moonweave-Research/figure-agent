@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"rejected_before_materialization","repair_result":"four deleted path lines plus three replacement lines exceeded the six-line budget","next_human_target":"panel_a_path_prefix_then_endpoint_segment","publication_acceptance":"not_claimed"}

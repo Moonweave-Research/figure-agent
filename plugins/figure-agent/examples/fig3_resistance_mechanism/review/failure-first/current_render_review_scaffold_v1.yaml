@@ -1,0 +1,65 @@
+schema: figure-agent.current-render-review-scaffold.v1
+fixture: fig3_resistance_mechanism
+created_for: current_three_column_render
+source_inputs:
+  tex_sha256: sha256:3eb8349ae637664d76e8a2f4d33e3d583da0b7a687d0cc3efb80ace83d603179
+  briefing_sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
+  spec_sha256: sha256:f6df543ef344c87b279d4231fe0f4ee7daa2cdb6f575540e8e7b90e9f3e5cadb
+render_evidence:
+  render_path: build/fig3_resistance_mechanism.pdf
+  render_png_path: build/fig3_resistance_mechanism.png
+  render_png_sha256: sha256:d57f2f48794caa9284a68887bf2197c8a178203f85a1068e5f1f363e09fb8ef4
+  audit_crop_manifest: build/audit_crops/manifest.json
+  audit_crop_manifest_sha256: sha256:208ebd7094156d4e649a71bb808eb37a9eb4ce1360806f4caaf1eb5d2dce4281
+  print_proxy: build/audit_crops/print_178mm.png
+  print_proxy_sha256: sha256:09746e95e8f2f60687a9c6e0e1cc6c9c1ad43499cb83781f3b193c737d05819d
+  inspection_method: full_render_plus_high_zoom_crops_plus_print_proxy
+machine_gate:
+  strict_compile: passed
+  visual_clash_strict_candidates: 0
+  geometry_coverage:
+    parsed_operations: 27
+    total_operations: 31
+    coverage_ratio: 0.870968
+  state_field_geometry: passed
+  publication_acceptance: not_claimed
+agent_observations:
+  - id: OBS-001
+    status: pending_human_review
+    panel: A
+    category: label_target_association
+    observation: The terminal state is labelled slow-release, not retained or deep-only. A fine vertical leader now binds the unboxed label to its representative terminal state; an opt-in contract rejects both a detached leader and a relocated label node.
+    grounded_in_rule: Briefing §3 rule 5
+    question: At print scale, does slow-release unambiguously identify the terminal representative state without suggesting that only deep traps retain carriers?
+  - id: OBS-002
+    status: pending_human_review
+    panel: C
+    category: semantic_encoding_ambiguity
+    observation: The S80 encoding is a dense, irregular field of horizontal state marks over a broader vertical span, not a symmetric fitted-envelope, closed contour, or interior container. The deliberately pale background is secondary to the marks; the opt-in state-field geometry gate also rejects a center-widening density silhouette.
+    grounded_in_rule: Briefing §3 rule 2 and rule 4
+    question: Does the dense irregular state field read as non-quantitative broad trap-energy support without implying a measured distribution/DOS or numerical state count?
+  - id: OBS-003
+    status: pending_human_review
+    panel: whole_figure
+    category: print_scale_hierarchy
+    observation: The print proxy keeps all labels readable, but the small causal labels in panel A and the explanatory labels in panel C require an editorial readability verdict.
+    grounded_in_rule: briefing §1 stated intent
+    question: At manuscript scale, is the causal sequence read before secondary explanatory text?
+reviewer_feedback:
+  reviewer: moon
+  recorded_at: '2026-07-15'
+  scope: preliminary current-render feedback
+  notes:
+    - Trap states are a continuum rather than a hard shallow/deep partition; a deeper state can be represented as slower release without implying deep-only retention.
+    - The S80 broad-support direction is acceptable; the relative merits of the surrounding box and tick treatment remain open editorial choices rather than an asserted defect.
+    - The panel-B non-data disclaimer was unnecessary and has been removed; the curve, axes, and relation now carry the qualitative role.
+    - The current Fig3 is accepted as a development baseline, subject to future editorial revision. The observed panel-C heading-to-sulfur-content crowding was repaired and rechecked in this bound render.
+  correction_minutes:
+    state: unavailable
+    reason: No prospectively timed correction session was recorded; do not estimate it retrospectively.
+  acceptance_effect: This records a development-baseline scaffold verdict only. It does not claim publication acceptance, release readiness, or measured correction time.
+human_review:
+  state: recorded
+  verdict: accepted_development_baseline_subject_to_future_editorial_revision
+  required_scope: development_baseline_only_not_publication_acceptance
+  next_action: Preserve this render as the development baseline; reopen only for a newly confirmed defect or an explicit editorial decision.

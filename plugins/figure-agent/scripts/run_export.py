@@ -109,7 +109,9 @@ def _live_tex_blockers(example_dir: Path, name: str) -> list[dict]:
     checkout) and goes stale when .tex is edited without recompiling, so trusting
     it fails open on the reversed-arrow physics this gate exists to catch.
     """
-    assertions = parse_tex_assertions(_load_spec(example_dir / "spec.yaml"))
+    assertions = parse_tex_assertions(
+        _load_spec(example_dir / "spec.yaml"), source_name=f"{name}.tex"
+    )
     if not assertions:
         return []
     tex_path = example_dir / f"{name}.tex"

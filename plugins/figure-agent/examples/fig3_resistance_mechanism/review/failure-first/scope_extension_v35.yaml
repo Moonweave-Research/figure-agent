@@ -1,0 +1,12 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v34.yaml
+extends_sha256: sha256:32ef7f34bf09441fd922c028de20be9f066f920b4c622b4282b01a315b86e717
+reason: expose the named leader-to-label-node contract in the fixture authoring instructions so future agents declare it when annotation ambiguity requires a leader
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v35.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/authoring_contract.md
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

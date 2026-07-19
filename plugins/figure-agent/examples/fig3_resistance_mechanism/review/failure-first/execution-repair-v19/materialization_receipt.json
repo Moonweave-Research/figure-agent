@@ -1,0 +1,15 @@
+{
+  "change_summary": "Reflowed the wide sample title onto two centered lines inside the film so neither electrode covers its edge words.",
+  "changed_lines": 4,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/repaired_generated.tex",
+  "output_sha256": "sha256:5578cf356365b2f4378f44f9834ee04ff35beae380d27471450e562380a25ac3",
+  "packet_sha256": "sha256:a7eb480d3f59cbb46216c667728b3ffdd1c775c8658826f66ee7317a8b9284f3",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:b09c048d3df3ba59525ae6f07f485c8ffc157cecaa8802d753d62ab2cb074c54"
+}

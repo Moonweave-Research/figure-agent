@@ -249,6 +249,29 @@ def test_palette_token_as_positional_in_option_block_no_violation(tmp_path: Path
     assert _blockers(tex) == []
 
 
+def test_numeric_tikz_node_anchor_is_blocked_as_malformed_coordinate(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\draw (s0.78)--(s1.38);" + "\n")
+
+    violations = lint(tex)
+
+    malformed = [
+        violation
+        for violation in violations
+        if violation.category == "malformed_numeric_node_anchor"
+    ]
+    assert [violation.line for violation in malformed] == [1, 1]
+    assert all(violation.severity == "blocker" for violation in malformed)
+
+
+def test_named_tikz_anchor_remains_valid(tmp_path: Path) -> None:
+    tex = _write(tmp_path, r"\draw (sample.east)--(electrode.west);" + "\n")
+
+    assert not any(
+        violation.category == "malformed_numeric_node_anchor"
+        for violation in lint(tex)
+    )
+
+
 def test_brace_enclosed_color_value(tmp_path: Path) -> None:
     """Bypass attempt: fill={red} with TikZ brace-enclosed value."""
     tex = _write(tmp_path, r"\node[fill={red}] {};" + "\n")

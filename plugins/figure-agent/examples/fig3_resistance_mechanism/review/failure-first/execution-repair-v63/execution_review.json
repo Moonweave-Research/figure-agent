@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"accepted_as_nonregressing_scaffold","repair_result":"the key now explicitly binds the line to one carrier over time and clears the prior filled-token detector ambiguity","next_human_target":"remove_redundant_panel_b_bottom_summary_retry","publication_acceptance":"not_claimed"}

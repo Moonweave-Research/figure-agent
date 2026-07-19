@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\draw[draw=cTeal, line width=0.65pt, -{Stealth}] (2.75,0.28)--(2.23,0.28) (3.98,0.28)--(4.50,0.28);\n  \\node[compact label, text=cTeal, fill=white, inner sep=1.4pt] at (3.365,0.28)\n    {$n$: breadth};\n\n  \\draw[draw=cBrown, line width=0.65pt, {Stealth}-{Stealth}] (4.78,0.18)--(4.78,1.35);\n  \\node[compact label, text=cBrown, anchor=south, fill=white, inner sep=1.0pt] at (4.78,1.42) {$\\rho_{60\\mathrm{s}}$: magnitude};\n\\end{scope}",
+  "change_summary": "Reflowed the magnitude key horizontally above its vertical measure arrow so the label and metric relation read as one unit without rotation."
+}

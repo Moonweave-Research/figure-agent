@@ -1,0 +1,80 @@
+{
+  "schema": "figure-agent.adjudicated-repair-binding.v1",
+  "attempt_local": true,
+  "attempt_local_note": "B (comparable-v3) is a strict-blocked, attribution-only R5.1 attempt with no figure-agent.closed-loop-attempt-state.v1 file. The canonical v4 repair-execution-packet machinery binds only from a repair_bound/repair_authorized attempt state, which does not exist for B; forcing it would require inventing that state. Per docs/figure-agent.md R5.2 guidance, C is materialized as B's hash-bound repair child with the minimal honest artifact set (adjudication, attribution, repaired tex, compile evidence, crops, provenance, regression) instead of the full v4 packet.",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "lineage": {
+    "parent_B": {
+      "attempt_dir": "review/failure-first/comparable-v3",
+      "source_path": "verified_generated.tex",
+      "source_sha256": "54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f",
+      "render_pdf_sha256": "861e7ed8422842fdd308c124501f5c6132e6c6ed4ba615941f7ef9572c681546",
+      "render_png_sha256": "25ae1c6af24a8ae584ed409923114b3f3d37e7aa6b69612e039a6b1adc4c8e93"
+    },
+    "child_C": {
+      "attempt_dir": "review/failure-first/comparable-v3-repair-c1",
+      "source_path": "repaired.tex",
+      "source_sha256": "5d11f3b89303d34bba92933724a44fbf62d72cc56782b062a8b0ada32638057a",
+      "render_pdf_sha256": "791d014ecab028c95b45b49238ea8d7ef114ff605d27d620f6c879e30794c56f",
+      "render_png_sha256": "aeb43dc1ac36e32cf0fed4d7aee2a3d07e1ba68e6ea985e3645b2a4ed66cbee5",
+      "relation": "B_bounded_repair_child_not_independent_generation"
+    }
+  },
+  "edit": {
+    "finding_id": "HA001",
+    "lines_changed": 1,
+    "line_in_parent": 25,
+    "before": "  \\node[body label, anchor=east] at (1.13,2.45) {sulfur segment};",
+    "after": "  \\node[body label] at (2.22,1.42) {sulfur segment};",
+    "rationale": "anchor=east at x=1.13 placed the label right-edge at x=1.13 and extended the 1.268cm-wide text left to panel-x -0.262, protruding 0.262cm past the frame at x=0. On the SAME chain line the label cannot both clear the frame by >=0.10cm and clear the first S atom (left rim x=1.41) by >=0.08cm: available span 1.230cm < label width 1.268cm (short by 0.038cm). Per docs/figure-agent.md R5.2 step 6, the honest minimal one-node option is to place the label below the chain. It is centered at (2.22,1.42) to parallel the sibling 'DIB-derived segment' label (line 47, also y=1.42), keeping default (center) anchor."
+  },
+  "measured_geometry_cm": {
+    "method": "pdftotext -bbox word extraction, self-calibrated per-render from the four Panel A 'S' atom glyphs (panel-x 1.55/2.00/2.45/2.90 at global y 13.45); recovered slope 28.346 pt/cm (standalone applies no page scaling) and first-S-atom center reproduced to panel-x 1.5500.",
+    "label_literal": "sulfur segment",
+    "label_width": 1.2677,
+    "before_B": {
+      "left_edge_panel_x": -0.2620,
+      "right_edge_panel_x": 1.0057,
+      "vertical_center_global_y": 13.468,
+      "frame_left_x": 0.0,
+      "protrusion_past_frame_cm": 0.2620
+    },
+    "after_C": {
+      "left_edge_panel_x": 1.586,
+      "right_edge_panel_x": 2.854,
+      "vertical_center_global_y": 12.438,
+      "vertical_center_panel_y": 1.438,
+      "frame_left_x": 0.0
+    },
+    "clearances_after_C": {
+      "to_left_frame_cm": 1.586,
+      "to_left_frame_requirement_cm": 0.10,
+      "to_left_frame_pass": true,
+      "to_first_s_atom_cm": "vertically separated ~0.78cm (label top ~panel-y 1.53 vs S atom bottom rim panel-y 2.31); no horizontal-line proximity",
+      "to_first_s_atom_requirement_cm": 0.08,
+      "to_first_s_atom_pass": true
+    }
+  },
+  "compile": {
+    "engine": "lualatex",
+    "normal_compile": "passed",
+    "normal_compile_rc": 0,
+    "strict_compile": "failed",
+    "strict_compile_rc": 1,
+    "strict_failure_cause": "Pre-existing, unrelated Panel B finding: check_undeclared_geometry reports 3 label_crosses_semantic_path candidates (nearest_text 'increasing'/'sulfur'/'content') where the Panel B 'increasing sulfur content' arrow (line 73-74) crosses its own centered label (line 75). Identical set present in parent B (strict also failed there by design). Not introduced by this repair; the 'sulfur' word is from 'increasing sulfur content', not the moved Panel A label. Per docs/figure-agent.md line 259, B need not be strict-valid before C, and C is not required to fix unrelated strict failures."
+  },
+  "evidence_crops": {
+    "target_before_B": "crops/target-before-B.png",
+    "target_after_C": "crops/target-after-C.png",
+    "neighbor_after_C": "crops/neighbor-after-C.png",
+    "full_after_C": "crops/full-after-C.png",
+    "print_scale_after_C": "crops/print-scale-after-C.png",
+    "print_scale_note": "Full figure at true publication width 155.9 mm rendered at 300 dpi (1841 px wide)."
+  },
+  "human_review": {
+    "status": "pending",
+    "named_reviewer": null,
+    "note": "Step 10: no self-issued scaffold/review verdict. The orchestrator brings the after-render to the named human."
+  },
+  "publication_acceptance": "not_claimed"
+}

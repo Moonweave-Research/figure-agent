@@ -11,6 +11,7 @@ reviewed_source:
   commit: 9f0d5e42370fa9dae7628e7342201eeac20aa130
   variant: repaired
   panel_render_sha256: 6367a0ba8e1580af6ca9af58b1ecf099c1e673609356ddc0214df61161ac93ba
+  review_input_hash: sha256:66d6f581dab6fc46fd137d4f5a009643b9ebde22db42fd90d231efca40413bf2
 reviewed_views:
   - whole
   - panel

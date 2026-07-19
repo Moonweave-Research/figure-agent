@@ -290,6 +290,13 @@ def evaluate_layout_lanes(
     if page_diagonal <= 0:
         raise ValueError("layout lane page size must be positive")
     results: list[LayoutLaneResult] = []
+    result_ids: set[str] = set()
+
+    def reserve_result_ids(*candidate_ids: str) -> None:
+        if any(candidate in result_ids for candidate in candidate_ids):
+            raise ValueError("duplicate layout lane result id")
+        result_ids.update(candidate_ids)
+
     for rule in raw_rules:
         if not isinstance(rule, dict):
             raise ValueError("layout lane rule must be an object")
@@ -297,6 +304,9 @@ def evaluate_layout_lanes(
         if not isinstance(rule_id, str):
             raise ValueError("layout lane rule is invalid")
         kind = rule.get("kind")
+        missing_policy = rule.get("missing_policy", "fail")
+        if missing_policy not in {"fail", "skip_rule"}:
+            raise ValueError("layout lane rule missing_policy is invalid")
         if kind in {"contained_in_region", "minimum_clearance_from_region"}:
             group_id = rule.get("group")
             region_id = rule.get("region")
@@ -314,11 +324,16 @@ def evaluate_layout_lanes(
                 or float(minimum) < 0
             ):
                 raise ValueError("layout lane region rule is invalid")
+            reserve_result_ids(rule_id)
             if group_id not in groups or groups[group_id] is None:
                 results.append(
                     LayoutLaneResult(
                         rule_id=rule_id,
-                        status="missing_label_group",
+                        status=(
+                            "not_applicable"
+                            if missing_policy == "skip_rule"
+                            else "missing_label_group"
+                        ),
                         clearance=None,
                         minimum_clearance=float(minimum),
                         missing_groups=(group_id,),
@@ -343,6 +358,68 @@ def evaluate_layout_lanes(
                 )
             )
             continue
+        if kind == "minimum_clearance_from_groups":
+            group_id = rule.get("group")
+            other_group_ids = rule.get("other_groups")
+            minimum = rule.get("minimum_normalized_clearance")
+            if (
+                not isinstance(group_id, str)
+                or group_id not in groups
+                or not isinstance(other_group_ids, list)
+                or not other_group_ids
+                or not all(isinstance(item, str) for item in other_group_ids)
+                or len(set(other_group_ids)) != len(other_group_ids)
+                or group_id in other_group_ids
+                or any(item not in groups for item in other_group_ids)
+                or not isinstance(minimum, int | float)
+                or isinstance(minimum, bool)
+                or float(minimum) < 0
+            ):
+                raise ValueError("layout lane group-clearance rule is invalid")
+            expanded_rule_ids = tuple(
+                f"{rule_id}:{other_group_id}"
+                for other_group_id in other_group_ids
+            )
+            reserve_result_ids(*expanded_rule_ids)
+            for other_group_id, result_rule_id in zip(
+                other_group_ids, expanded_rule_ids, strict=True
+            ):
+                missing = tuple(
+                    candidate
+                    for candidate in (group_id, other_group_id)
+                    if groups[candidate] is None
+                )
+                if missing:
+                    results.append(
+                        LayoutLaneResult(
+                            rule_id=result_rule_id,
+                            status=(
+                                "not_applicable"
+                                if missing_policy == "skip_rule"
+                                else "missing_label_group"
+                            ),
+                            clearance=None,
+                            minimum_clearance=float(minimum),
+                            missing_groups=missing,
+                        )
+                    )
+                    continue
+                clearance = (
+                    _bbox_clearance(groups[group_id], groups[other_group_id])
+                    / page_diagonal
+                )  # type: ignore[arg-type]
+                results.append(
+                    LayoutLaneResult(
+                        rule_id=result_rule_id,
+                        status=(
+                            "ok" if clearance >= float(minimum) else "violation"
+                        ),
+                        clearance=round(clearance, 6),
+                        minimum_clearance=float(minimum),
+                        missing_groups=(),
+                    )
+                )
+            continue
         first_id = rule.get("first")
         second_id = rule.get("second")
         minimum = rule.get("minimum_normalized_clearance")
@@ -354,6 +431,7 @@ def evaluate_layout_lanes(
             or float(minimum) < 0
         ):
             raise ValueError("layout lane rule is invalid")
+        reserve_result_ids(rule_id)
         missing = tuple(
             group_id
             for group_id in (first_id, second_id)
@@ -363,7 +441,11 @@ def evaluate_layout_lanes(
             results.append(
                 LayoutLaneResult(
                     rule_id=rule_id,
-                    status="missing_label_group",
+                    status=(
+                        "not_applicable"
+                        if missing_policy == "skip_rule"
+                        else "missing_label_group"
+                    ),
                     clearance=None,
                     minimum_clearance=float(minimum),
                     missing_groups=missing,
@@ -383,18 +465,70 @@ def evaluate_layout_lanes(
     return results
 
 
+def _layout_contract_exclusion_reason(
+    contract: dict[str, Any], artifact_path: Path | None
+) -> str | None:
+    applies_to_path_regex = contract.get("applies_to_path_regex")
+    exclude_path_regex = contract.get("exclude_path_regex")
+    if applies_to_path_regex is not None and exclude_path_regex is not None:
+        raise ValueError(
+            "layout contract cannot combine applies_to_path_regex and exclude_path_regex"
+        )
+    key = (
+        "applies_to_path_regex"
+        if applies_to_path_regex is not None
+        else "exclude_path_regex"
+    )
+    pattern = (
+        applies_to_path_regex
+        if applies_to_path_regex is not None
+        else exclude_path_regex
+    )
+    if pattern is None:
+        return None
+    if not isinstance(pattern, str) or not pattern:
+        raise ValueError(f"{key} must be a non-empty string")
+    try:
+        matches = artifact_path is not None and re.search(
+            pattern, artifact_path.as_posix()
+        ) is not None
+    except re.error as exc:
+        raise ValueError(f"invalid {key}: {exc}") from exc
+    if applies_to_path_regex is not None and artifact_path is not None and not matches:
+        return "artifact_path_outside_applies_to_path_regex"
+    if exclude_path_regex is not None and matches:
+        return "artifact_path_matches_exclude_path_regex"
+    return None
+
+
 def layout_lane_payload(
     contract: dict[str, Any],
     pdf_words: list[dict[str, Any]],
     pdf_page_size: tuple[float, float],
+    *,
+    artifact_path: Path | None = None,
 ) -> dict[str, Any]:
+    exclusion_reason = _layout_contract_exclusion_reason(contract, artifact_path)
+    if exclusion_reason is not None:
+        return {
+            "schema": "figure-agent.layout-lane-report.v1",
+            "contract_schema": LAYOUT_LANES_SCHEMA,
+            "applicable": False,
+            "exclusion_reason": exclusion_reason,
+            "page_size_pt": list(pdf_page_size),
+            "failure_count": 0,
+            "results": [],
+            "text_budget_results": [],
+        }
     results = evaluate_layout_lanes(contract, pdf_words, pdf_page_size)
     budget_results = evaluate_text_budgets(contract, pdf_words, pdf_page_size)
     return {
         "schema": "figure-agent.layout-lane-report.v1",
         "contract_schema": LAYOUT_LANES_SCHEMA,
         "page_size_pt": list(pdf_page_size),
-        "failure_count": sum(result.status != "ok" for result in results)
+        "failure_count": sum(
+            result.status not in {"ok", "not_applicable"} for result in results
+        )
         + sum(result.status != "ok" for result in budget_results),
         "results": [
             {
@@ -430,6 +564,8 @@ def _layout_lane_line(
         return f"OK layout lane {rule_id}: {clearance:.3f} >= {minimum:.3f}"
     if status == "violation":
         return f"WARN layout lane {rule_id}: {clearance:.3f} < {minimum:.3f}"
+    if status == "not_applicable":
+        return f"SKIP layout lane {rule_id}: missing label groups {', '.join(missing_groups)}"
     return f"WARN layout lane {rule_id}: missing label groups {', '.join(missing_groups)}"
 
 
@@ -631,20 +767,26 @@ def run_check(
         lanes = yaml.safe_load(lanes_path.read_text(encoding="utf-8")) or {}
         if not isinstance(lanes, dict):
             return 1, [f"ERROR invalid layout_lanes.yaml: {lanes_path}"]
-        for result in evaluate_layout_lanes(lanes, pdf_words, page_size):
-            if result.status != "ok":
+        payload = layout_lane_payload(
+            lanes,
+            pdf_words,
+            page_size,
+            artifact_path=pdf_path,
+        )
+        for result in payload["results"]:
+            if result["status"] not in {"ok", "not_applicable"}:
                 failures += 1
             lines.append(
                 _layout_lane_line(
-                    result.rule_id,
-                    result.status,
-                    result.clearance,
-                    result.minimum_clearance,
-                    result.missing_groups,
+                    str(result["rule_id"]),
+                    str(result["status"]),
+                    result["clearance"],
+                    float(result["minimum_clearance"]),
+                    list(result["missing_groups"]),
                 )
             )
-        for result in evaluate_text_budgets(lanes, pdf_words, page_size):
-            if result.status != "ok":
+        for result in payload["text_budget_results"]:
+            if result["status"] != "ok":
                 failures += 1
             lines.append(_text_budget_line(result))
     return failures, lines
@@ -680,9 +822,19 @@ def main(argv: list[str] | None = None) -> int:
             if not isinstance(contract, dict):
                 raise ValueError(f"invalid layout contract: {args.layout_contract}")
             words, page_size = extract_pdf_words_and_page(args.pdf)
-            payload = layout_lane_payload(contract, words, page_size)
+            payload = layout_lane_payload(
+                contract,
+                words,
+                page_size,
+                artifact_path=args.pdf,
+            )
             failures = int(payload["failure_count"])
             lines = []
+            if payload.get("applicable") is False:
+                lines.append(
+                    "SKIP layout contract: "
+                    f"{payload['exclusion_reason']} for artifact {args.pdf}"
+                )
             for result in payload["results"]:
                 lines.append(
                     _layout_lane_line(

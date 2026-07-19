@@ -1,0 +1,13 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v19.yaml
+extends_sha256: sha256:477e27a27cac2646c91d8d2d73c888eb4b1a2251ab336a019b74fe6ac42cb47a
+reason: attach the retained-state label to its deep-trap target without changing the declared mechanism
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v20.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+  - plugins/figure-agent/tests/test_semantic_assertions.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

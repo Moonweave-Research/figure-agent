@@ -1,0 +1,16 @@
+{
+  "schema": "figure-agent.maintained-source-promotion.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "decision_source": "human-review.json",
+  "decision_source_sha256": "sha256:12371248f69893749dc4528655fc2160f3f92c115383a70878f5f45f9ef6ee5c",
+  "candidate_source": "examples/fig3_resistance_mechanism/review/post-baseline/label-clearance-v1/fig3_resistance_mechanism.tex",
+  "maintained_source": "examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex",
+  "maintained_source_sha256": "sha256:3eb8349ae637664d76e8a2f4d33e3d583da0b7a687d0cc3efb80ace83d603179",
+  "strict_compile": "passed",
+  "strict_status_sha256": "sha256:8ff3e3a05f7cb02ceef8914f4ee36fbdf8c9472216e9efce013ed75b3aef2f4a",
+  "candidate_render_png_sha256": "sha256:d57f2f48794caa9284a68887bf2197c8a178203f85a1068e5f1f363e09fb8ef4",
+  "maintained_render_png_sha256": "sha256:d57f2f48794caa9284a68887bf2197c8a178203f85a1068e5f1f363e09fb8ef4",
+  "render_equivalence": "png_sha256_identical",
+  "historical_artifacts_modified": false,
+  "publication_acceptance": "not_claimed"
+}

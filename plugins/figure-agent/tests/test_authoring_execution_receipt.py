@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import authoring_execution_packet
@@ -10,14 +11,23 @@ import pytest
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _evidence(tmp_path: Path) -> dict[str, Path]:
+def _evidence(tmp_path: Path, *, with_visual_asset: bool = False) -> dict[str, Path]:
     workspace = tmp_path / "workspace"
     fixture = workspace / "examples/context_demo"
     review = fixture / "review"
     attempt = review / "failure-first/execution-binding-v1"
     attempt.mkdir(parents=True)
+    visual_asset_config = (
+        "authoring_context_pack:\n"
+        "  enabled: true\n"
+        "  visual_asset_ids: [panel_f_floating_cantilever]\n"
+        if with_visual_asset
+        else ""
+    )
     (fixture / "spec.yaml").write_text(
-        "name: context_demo\ntitle: Demo\nstyle_profile: polymer-paper\npanels: []\n",
+        "name: context_demo\ntitle: Demo\nstyle_profile: polymer-paper\n"
+        + visual_asset_config
+        + "panels:\n  - id: C\n    caption: Trap landscape\n",
         encoding="utf-8",
     )
     (review / "budget.yaml").write_text("max_attempts: 1\n", encoding="utf-8")
@@ -26,9 +36,13 @@ def _evidence(tmp_path: Path) -> dict[str, Path]:
         "examples/context_demo/review/failure-first/execution-binding-v1/"
         "control_generated.tex"
     )
+    plugin_root = PLUGIN_ROOT
+    if with_visual_asset:
+        plugin_root = tmp_path / "plugin"
+        shutil.copytree(PLUGIN_ROOT / "styles", plugin_root / "styles")
     packet, prompt = authoring_execution_packet.compile_authoring_execution_packet(
         "context_demo",
-        plugin_root=PLUGIN_ROOT,
+        plugin_root=plugin_root,
         workspace_root=workspace,
         model_id="gpt-5.5",
         budget_contract="examples/context_demo/review/budget.yaml",
@@ -48,14 +62,16 @@ def _evidence(tmp_path: Path) -> dict[str, Path]:
         "\\documentclass[tikz,border=4pt]{standalone}\n"
         "\\usepackage{tikz}\n"
         "\\usepackage{polymer-paper-preamble}\n"
-        "\\begin{document}\\begin{tikzpicture}\\end{tikzpicture}\\end{document}\n",
+        "\\begin{document}\\begin{tikzpicture}\n"
+        "% Panel C\n"
+        "\\end{tikzpicture}\\end{document}\n",
         encoding="utf-8",
     )
     transcript_path = attempt / "control.transcript.jsonl"
     transcript_path.write_text('{"event":"completed"}\n', encoding="utf-8")
     touched_files_path = attempt / "control.touched-files.json"
     touched_files_path.write_text(json.dumps([output_rel]) + "\n", encoding="utf-8")
-    return {
+    paths = {
         "workspace": workspace,
         "packet": packet_path,
         "prompt": prompt_path,
@@ -64,6 +80,11 @@ def _evidence(tmp_path: Path) -> dict[str, Path]:
         "touched": touched_files_path,
         "receipt": attempt / "control_receipt.json",
     }
+    if with_visual_asset:
+        paths["asset"] = (
+            plugin_root / "styles/snippets/panel-f-floating-cantilever.tex"
+        )
+    return paths
 
 
 def _record(paths: dict[str, Path], **overrides: object) -> dict[str, object]:
@@ -102,7 +123,54 @@ def test_records_bound_runtime_evidence(tmp_path: Path) -> None:
     assert receipt["manual_repairs"] == 0
     assert receipt["filesystem_read_isolation"] == "unavailable"
     assert receipt["publication_acceptance"] == "not_claimed"
+    assert receipt["required_panel_markers"] == ["% Panel C"]
     assert json.loads(paths["receipt"].read_text(encoding="utf-8")) == receipt
+
+
+def test_receipt_rejects_generated_source_without_required_panel_marker(
+    tmp_path: Path,
+) -> None:
+    paths = _evidence(tmp_path)
+    paths["source"].write_text(
+        paths["source"].read_text(encoding="utf-8").replace("% Panel C\n", ""),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_execution_receipt.AuthoringExecutionReceiptError,
+        match="required panel marker missing: % Panel C",
+    ):
+        _record(paths)
+
+
+def test_receipt_rejects_duplicate_required_panel_marker(tmp_path: Path) -> None:
+    paths = _evidence(tmp_path)
+    paths["source"].write_text(
+        paths["source"].read_text(encoding="utf-8").replace(
+            "% Panel C\n", "% Panel C\n% Panel C\n"
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_execution_receipt.AuthoringExecutionReceiptError,
+        match="required panel marker duplicate: % Panel C",
+    ):
+        _record(paths)
+
+
+def test_receipt_rejects_visual_asset_byte_drift(tmp_path: Path) -> None:
+    paths = _evidence(tmp_path, with_visual_asset=True)
+    paths["asset"].write_text(
+        paths["asset"].read_text(encoding="utf-8") + "% drift\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_execution_receipt.AuthoringExecutionReceiptError,
+        match="visual asset byte drift",
+    ):
+        _record(paths)
 
 
 def test_records_transcript_from_ancestor_repository_root(tmp_path: Path) -> None:

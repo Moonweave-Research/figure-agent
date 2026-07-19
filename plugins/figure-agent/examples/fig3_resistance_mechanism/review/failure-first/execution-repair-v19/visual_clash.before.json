@@ -1,0 +1,21 @@
+{
+  "schema": "figure-agent.visual-clash.v1",
+  "candidates": [
+    {
+      "bbox_px": [124, 317, 379, 367],
+      "id": "VC014",
+      "kind": "text_on_path",
+      "metric": {"dark": 0.167, "edge": 0.006},
+      "tex_lines": null,
+      "text": "disordered"
+    },
+    {
+      "bbox_px": [763, 317, 847, 367],
+      "id": "VC015",
+      "kind": "text_on_path",
+      "metric": {"dark": 0.377, "edge": 0.018},
+      "tex_lines": null,
+      "text": "film"
+    }
+  ]
+}

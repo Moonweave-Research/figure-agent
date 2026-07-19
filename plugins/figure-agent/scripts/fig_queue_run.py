@@ -10,6 +10,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import closed_loop_attempt_state  # noqa: E402
 import fig_driver  # noqa: E402
 import fig_queue  # noqa: E402
 import fig_run  # noqa: E402
@@ -29,6 +30,7 @@ def _planned_run(item: dict[str, Any]) -> dict[str, Any]:
         "would_execute": True,
         "executed": False,
         "result": None,
+        **fig_queue._next_action_evidence_fields(item),
     }
 
 
@@ -47,12 +49,21 @@ def _executed_run(
             "would_execute": False,
             "stop_reason": "invalid_fixture",
         }
+    try:
+        closed_loop_attempt_state.validate_workspace_fixture(repo_root, fixture)
+    except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+        return _planned_run(item) | {
+            "would_execute": False,
+            "stop_reason": str(exc),
+        }
     result = fig_run.run_workflow(
         fixture,
         mode=mode,
         goal=goal,
         execute=execute,
         max_steps=max_steps,
+        expected_first_action=item.get("action"),
+        expected_first_safe_command=item.get("safe_command"),
         repo_root=repo_root,
     )
     return {
@@ -72,6 +83,9 @@ def _summary(
 ) -> dict[str, int]:
     executed_commands = 0
     failed = 0
+    stale = 0
+    busy = 0
+    admission_invalid = 0
     for run in runs:
         result = run.get("result")
         if not isinstance(result, dict):
@@ -81,6 +95,12 @@ def _summary(
             executed_commands += executed_count
         if result.get("final_stop_reason") == fig_run.STOP_COMMAND_FAILED:
             failed += 1
+        if result.get("final_stop_reason") == fig_run.STOP_STALE_PLAN:
+            stale += 1
+        if result.get("final_stop_reason") == fig_run.STOP_ADMISSION_BUSY:
+            busy += 1
+        if result.get("final_stop_reason") == fig_run.STOP_ADMISSION_INVALID:
+            admission_invalid += 1
     planned_executable = int(command_plan.get("executable_count", 0))
     attempted = len(runs)
     return {
@@ -90,9 +110,29 @@ def _summary(
         "attempted": attempted,
         "executed_commands": executed_commands,
         "failed": failed,
+        "stale": stale,
+        "busy": busy,
+        "admission_invalid": admission_invalid,
+        # Deprecated compatibility field. The pending stop is no longer generated.
+        "admission_pending": 0,
         "blocked": int(command_plan.get("blocked_count", 0)),
         "unattempted_executable": max(planned_executable - attempted, 0),
     }
+
+
+def _has_delegated_execution_error(runs: list[dict[str, Any]]) -> bool:
+    """Return whether a nested fig_run failed or stopped before admission."""
+    return any(
+        isinstance(run.get("result"), dict)
+        and run["result"].get("final_stop_reason")
+        in {
+            fig_run.STOP_ADMISSION_BUSY,
+            fig_run.STOP_ADMISSION_INVALID,
+            fig_run.STOP_COMMAND_FAILED,
+            fig_run.STOP_STALE_PLAN,
+        }
+        for run in runs
+    )
 
 
 def _queue_filters_from_args(args: argparse.Namespace) -> dict[str, str | None]:
@@ -246,7 +286,12 @@ def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int
     queue = payload.get("queue", {})
     fig_queue._print_workspace_diagnostic(queue)
     print(json.dumps(payload, indent=2, sort_keys=True))
-    return fig_queue.workspace_diagnostic_exit_code(queue)
+    diagnostic_exit_code = fig_queue.workspace_diagnostic_exit_code(queue)
+    if diagnostic_exit_code:
+        return diagnostic_exit_code
+    if args.execute and _has_delegated_execution_error(payload["runs"]):
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

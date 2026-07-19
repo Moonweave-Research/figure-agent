@@ -1,0 +1,15 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v31.yaml
+extends_sha256: sha256:992f335c41f6463478b0a4bac60b59b6353ef0fee7e0a084f545ea90a1cb62b2
+reason: bind the approved baseline-raising source revision to the live current-authority manifest and reproducible render receipt without altering historical evidence
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v32.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/authority_manifest_v2.yaml
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/render_receipt.yaml
+  - plugins/figure-agent/scripts/compile.sh
+  - plugins/figure-agent/tests/test_compile_contract.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

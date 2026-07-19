@@ -1,0 +1,39 @@
+{
+  "schema": "figure-agent.post-baseline-verification.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "baseline": {
+    "attempt_id": "attempt-0b027d13014cdd0d62bc8109",
+    "render_sha256": "sha256:7dd148f1716d564e6b932044c628eea2ffd00314fe1778e225fe860a34727d99",
+    "development_state": "development_accepted"
+  },
+  "repair_scope": [
+    "panel-c-s60-label-clears-sample-top",
+    "panel-c-s80-label-clears-sample-top"
+  ],
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/post-baseline/label-clearance-v1/fig3_resistance_mechanism.tex",
+    "sha256": "sha256:a04dbb2b85813ba77f4d86a42b27c0f42290f6e962f42c38962b91a9a61d482f"
+  },
+  "render_pdf": {
+    "path": "examples/fig3_resistance_mechanism/review/post-baseline/label-clearance-v1/build/fig3_resistance_mechanism.pdf",
+    "sha256": "sha256:22c87fa86a6f282b700e6aaaacaea0cb0817d53539516371489573eb1d6661e1"
+  },
+  "render_png": {
+    "path": "examples/fig3_resistance_mechanism/review/post-baseline/label-clearance-v1/build/fig3_resistance_mechanism.png",
+    "sha256": "sha256:d57f2f48794caa9284a68887bf2197c8a178203f85a1068e5f1f363e09fb8ef4"
+  },
+  "machine_verification": {
+    "strict_compile": "passed",
+    "text_boundary_checks": 2,
+    "text_boundary_candidates": 0,
+    "semantic_assertions": 5,
+    "test_result": "67 passed, 1 skipped"
+  },
+  "human_review": {
+    "status": "development_accepted",
+    "verdict_path": "examples/fig3_resistance_mechanism/review/post-baseline/label-clearance-v1/human-review.json",
+    "verdict_sha256": "sha256:12371248f69893749dc4528655fc2160f3f92c115383a70878f5f45f9ef6ee5c",
+    "visible_defects": "none_identified_by_reviewer"
+  },
+  "publication_acceptance": "not_claimed"
+}

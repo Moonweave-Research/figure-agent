@@ -9,7 +9,7 @@ Schema: figure-agent.driver.v1.
 The ``forbidden_actions`` field in the JSON output draws from two stable
 identifier namespaces:
 
-* the 11 canonical action names below (``ACTION_*`` constants), and
+* the canonical action names below (``ACTION_*`` constants), and
 * operational mutation identifiers (``FORBIDDEN_*`` constants) that
   document mutations the driver itself never performs and that no
   downstream executor should perform without an explicit mode/issue
@@ -32,6 +32,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import check_visual_clash_budget as warning_budget_mod  # noqa: E402
+import closed_loop_attempt_state  # noqa: E402
 import fig_driver_checkpoint as checkpoint_mod  # noqa: E402
 import fig_driver_closeout as closeout_mod  # noqa: E402
 import fig_driver_commands as command_mod  # noqa: E402
@@ -58,6 +59,7 @@ ACTION_HUMAN_GATE_STOP = "human_gate_stop"
 ACTION_POLISH_HANDOFF_STOP = "polish_handoff_stop"
 ACTION_RELEASE_BLOCKED = "release_blocked"
 ACTION_COMPLETE = "complete"
+ACTION_CLOSED_LOOP_HANDOFF_STOP = "closed_loop_handoff_stop"
 
 # Stop-boundary identifiers (Issue 8A contract).
 STOP_HOST_LLM_CRITIQUE = "host_llm_critique_required"
@@ -72,6 +74,10 @@ STOP_HUMAN_GATE = "human_gate_required"
 STOP_FORCE_GOLDEN = "force_golden_required"
 STOP_MODE_FORBIDDEN = "mode_forbidden_action"
 STOP_CLOSEOUT = "closeout_required"
+STOP_CLOSED_LOOP_ACTOR = "closed_loop_actor_required"
+STOP_CLOSED_LOOP_INVALID = "closed_loop_invalid"
+STOP_CLOSED_LOOP_AMBIGUOUS = "closed_loop_ambiguous"
+STOP_CLOSED_LOOP_TERMINAL = "closed_loop_terminal"
 
 # Operational mutation identifiers used in ``forbidden_actions``. These are
 # stable strings the driver pins so downstream executors can recognise them
@@ -103,6 +109,7 @@ _STATUS_COMPACT_KEYS = (
     "publication_gate_failures",
     "critique_lint_summary",
     "spine_evidence",
+    "closed_loop_attempt",
 )
 _SELECTED_VISUAL_DIRECTION_BLOCKER = "release_deferred_for_selected_visual_direction"
 
@@ -231,6 +238,9 @@ def _summary(
     spine_evidence = status.get("spine_evidence")
     if isinstance(spine_evidence, dict):
         summary["spine_evidence"] = spine_evidence
+    closed_loop_attempt = status.get("closed_loop_attempt")
+    if isinstance(closed_loop_attempt, dict):
+        summary["closed_loop_attempt"] = closed_loop_attempt
     if loop_checkpoint is not None:
         summary["loop_checkpoint"] = loop_checkpoint
         svg_polish_readiness = editorial_mod.svg_polish_readiness_from_checkpoint(loop_checkpoint)
@@ -600,7 +610,9 @@ def build_driver_summary(
     if mode not in MODES:
         raise ValueError(f"unsupported mode: {mode}")
     fixture_identity.validate_fixture_name(name)
-    example_dir = repo_root / "examples" / name
+    example_dir = closed_loop_attempt_state.validate_workspace_fixture(
+        repo_root, name, require_directory=False
+    )
     status = _status_for(example_dir)
     workspace_warnings = _workspace_warnings(repo_root)
     loop_checkpoint = (
@@ -665,6 +677,58 @@ def _select_action(
             closeout=closeout_report,
             warning_budget=effective_warning_budget,
         )
+
+    closed_loop = status.get("closed_loop_attempt")
+    if isinstance(closed_loop, dict):
+        resolution = closed_loop.get("resolution")
+        lifecycle_state = closed_loop.get("state")
+        if resolution in {"invalid", "ambiguous"}:
+            stop_boundary = (
+                STOP_CLOSED_LOOP_INVALID
+                if resolution == "invalid"
+                else STOP_CLOSED_LOOP_AMBIGUOUS
+            )
+            return make(
+                ACTION_CLOSED_LOOP_HANDOFF_STOP,
+                safe_command=None,
+                stop_boundary=stop_boundary,
+                reason=(
+                    f"closed-loop current-state resolution is {resolution}; "
+                    "repair or disambiguate the hash-bound attempt lineage before "
+                    "any legacy workflow action can run."
+                ),
+            )
+        if (
+            resolution == "current"
+            and lifecycle_state == "development_accepted"
+            and mode in {"authoring", "review"}
+        ):
+            return make(
+                ACTION_COMPLETE,
+                safe_command=None,
+                stop_boundary=None,
+                reason=(
+                    "closed-loop attempt has a named development-baseline "
+                    "acceptance; this closes authoring/review only and does not "
+                    "claim accepted, golden, release, or publication state."
+                ),
+            )
+        if resolution == "current" and lifecycle_state != "development_accepted":
+            stop_boundary = (
+                STOP_CLOSED_LOOP_TERMINAL
+                if closed_loop.get("terminal") is True
+                else STOP_CLOSED_LOOP_ACTOR
+            )
+            return make(
+                ACTION_CLOSED_LOOP_HANDOFF_STOP,
+                safe_command=None,
+                stop_boundary=stop_boundary,
+                reason=(
+                    f"closed-loop attempt is at {lifecycle_state}; the recorded "
+                    f"next actor is {closed_loop.get('required_actor')}. "
+                    "R4.1 stops here instead of falling through to a legacy loop."
+                ),
+            )
 
     # Stage 0/1: source must be scaffolded or authored first.
     if render in ("NOT_SCAFFOLDED", "NOT_AUTHORED"):

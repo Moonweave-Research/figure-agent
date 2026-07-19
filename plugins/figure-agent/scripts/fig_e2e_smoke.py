@@ -17,7 +17,10 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import closed_loop_attempt_state  # noqa: E402
+import closed_loop_current_state  # noqa: E402
 import fixture_identity  # noqa: E402
+import repair_transaction  # noqa: E402
 import runtime_paths  # noqa: E402
 from status import infer_stage  # noqa: E402
 
@@ -189,6 +192,33 @@ def _stability_failure(
     return summary
 
 
+def _resolve_absent_canonical_state(repo_root: Path, name: str) -> None:
+    """Fail closed unless this compatibility run has no canonical attempt."""
+    try:
+        current = closed_loop_current_state.resolve_current_attempt(repo_root, name)
+    except OSError as exc:
+        raise SmokeError("canonical_state_resolution_error") from exc
+    resolution = current.get("resolution")
+    if resolution != "absent":
+        raise SmokeError(
+            "canonical_attempt_resolution:"
+            f"{resolution}:{current.get('reason')}; use canonical status/lifecycle"
+        )
+
+
+def _admission_error(exc: Exception) -> SmokeError:
+    if isinstance(exc, closed_loop_attempt_state.FixtureAdmissionLeaseBusy):
+        return SmokeError(
+            "canonical_admission_legacy_coordination_busy; retry canonical admission "
+            "or legacy coordination"
+        )
+    if isinstance(exc, closed_loop_attempt_state.ClosedLoopAttemptStateError):
+        return SmokeError(f"canonical_preflight:{exc}")
+    if isinstance(exc, repair_transaction.RepairTransactionError):
+        return SmokeError(str(exc))
+    return SmokeError("canonical_preflight_error")
+
+
 def run_smoke(
     name: str,
     *,
@@ -207,7 +237,13 @@ def run_smoke(
         raise SmokeError(str(exc)) from exc
 
     repo_root = repo_root.resolve()
-    runs_root = runs_root.resolve() if runs_root is not None else None
+    try:
+        runs_root = closed_loop_attempt_state.validate_legacy_runs_root(
+            repo_root,
+            runs_root or repo_root / ".scratch" / "fig-loop-runs",
+        )
+    except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+        raise SmokeError(str(exc)) from exc
     example_dir = repo_root / "examples" / name
     tex_path = example_dir / f"{name}.tex"
     if not example_dir.is_dir():
@@ -228,35 +264,51 @@ def run_smoke(
     for iteration in range(1, repeat + 1):
         run: dict[str, Any] = {"iteration": iteration}
         summary["runs"].append(run)
-
-        run["compile"] = _run_step(
-            ["fig-agent", "compile", name],
-            repo_root=repo_root,
-            command_runner=command_runner,
-        )
-        if run["compile"]["returncode"] != 0:
-            return _failure(summary, run, "compile")
-
-        run["export"] = _run_step(
-            ["fig-agent", "export", name],
-            repo_root=repo_root,
-            command_runner=command_runner,
-        )
-        if run["export"]["returncode"] != 0:
-            return _failure(summary, run, "export")
-
-        run["status_command"] = _run_step(
-            ["fig-agent", "status", name],
-            repo_root=repo_root,
-            command_runner=command_runner,
-        )
-        if run["status_command"]["returncode"] != 0:
-            return _failure(summary, run, "status")
         try:
-            run["status"] = _status_summary(example_dir)
-        except Exception as exc:
-            run["status_error"] = str(exc)
-            return _failure(summary, run, "status")
+            with closed_loop_attempt_state.fixture_admission_lock(repo_root, name):
+                _resolve_absent_canonical_state(repo_root, name)
+                try:
+                    closed_loop_attempt_state._workspace_artifact(  # noqa: SLF001
+                        repo_root, name, tex_path, label="source"
+                    )
+                except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+                    raise SmokeError(f"canonical_preflight:{exc}") from exc
+
+                run["compile"] = _run_step(
+                    ["fig-agent", "compile", name],
+                    repo_root=repo_root,
+                    command_runner=command_runner,
+                )
+                if run["compile"]["returncode"] != 0:
+                    return _failure(summary, run, "compile")
+
+                run["export"] = _run_step(
+                    ["fig-agent", "export", name],
+                    repo_root=repo_root,
+                    command_runner=command_runner,
+                )
+                if run["export"]["returncode"] != 0:
+                    return _failure(summary, run, "export")
+
+                run["status_command"] = _run_step(
+                    ["fig-agent", "status", name],
+                    repo_root=repo_root,
+                    command_runner=command_runner,
+                )
+                if run["status_command"]["returncode"] != 0:
+                    return _failure(summary, run, "status")
+                try:
+                    run["status"] = _status_summary(example_dir)
+                except Exception as exc:
+                    run["status_error"] = str(exc)
+                    return _failure(summary, run, "status")
+        except (
+            closed_loop_attempt_state.ClosedLoopAttemptStateError,
+            closed_loop_attempt_state.FixtureAdmissionLeaseBusy,
+            repair_transaction.RepairTransactionError,
+            OSError,
+        ) as exc:
+            raise _admission_error(exc) from exc
 
         fig_loop_process = _run_process(
             _fig_loop_command(name, goal=_loop_goal(goal, iteration, repeat), runs_root=runs_root),

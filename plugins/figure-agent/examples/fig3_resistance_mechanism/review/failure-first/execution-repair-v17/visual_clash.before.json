@@ -1,0 +1,16 @@
+{
+  "schema": "figure-agent.visual-clash.v1",
+  "candidates": [
+    {
+      "bbox_px": [793, 407, 988, 457],
+      "id": "VC007",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.344,
+        "edge": 0.017
+      },
+      "tex_lines": null,
+      "text": "retained"
+    }
+  ]
+}

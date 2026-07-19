@@ -10,6 +10,46 @@ SCHEMA = "figure-agent.human-decision-record.v1"
 RELEASE_DECISION_PACKET_SCHEMA = "figure-agent.release-decision-packet.v1"
 STYLE_DIRECTION_PACKET_SCHEMA = "figure-agent.style-direction-packet.v1"
 DESIGN_DIRECTION_PACKET_SCHEMA = "figure-agent.design-direction-packet.v1"
+QUALITY_PATCH_PLAN_SCHEMA = "figure-agent.quality-patch-plan.v1"
+DEVELOPMENT_VERDICT_SCHEMA = "figure-agent.closed-loop-development-verdict.v1"
+AUTHORING_REPAIR_PACKET_SCHEMAS = frozenset(
+    {
+        "figure-agent.repair-execution-packet.v3",
+        "figure-agent.repair-execution-packet.v4",
+        "figure-agent.attempt-local-repair-packet.v1",
+    }
+)
+ADDITIVE_MATERIALIZATION_APPROVAL = "approve this exact additive repair candidate"
+DEVELOPMENT_BASELINE_APPROVAL = (
+    "accept this exact visually re-reviewed artifact as a development baseline"
+)
+DEVELOPMENT_BASELINE_STATE_BOUNDARY = (
+    "development_baseline_state_mutation_allowed"
+)
+DEVELOPMENT_VERDICT_POLICIES = {
+    "accept_development_baseline": {
+        "human_decision": DEVELOPMENT_BASELINE_APPROVAL,
+        "mutation_boundary": DEVELOPMENT_BASELINE_STATE_BOUNDARY,
+        "next_state": "development_accepted",
+        "evidence_role": "human_decision_record",
+    },
+    "reject_development_artifact": {
+        "human_decision": (
+            "reject this exact visually re-reviewed artifact as a development baseline"
+        ),
+        "mutation_boundary": "development_rejection_state_mutation_allowed",
+        "next_state": "rejected",
+        "evidence_role": "human_decision_record",
+    },
+    "request_development_repair": {
+        "human_decision": (
+            "require another repair attempt for this exact visually re-reviewed artifact"
+        ),
+        "mutation_boundary": "development_repair_request_state_mutation_allowed",
+        "next_state": "repair_required",
+        "evidence_role": "repair_failure_record",
+    },
+}
 
 DECISION_KINDS = frozenset(
     {
@@ -27,6 +67,8 @@ DECISION_KINDS = frozenset(
         "request_full_style_redesign",
         "prepare_bounded_tikz_refinement",
         "apply_bounded_tikz_candidate",
+        "apply_quality_patch_plan",
+        "materialize_authoring_repair_candidate",
         "prepare_editorial_redesign_candidates",
         "prepare_svg_polish_handoff",
         "defer_design_decision",
@@ -71,6 +113,8 @@ PACKET_SCHEMAS = frozenset(
         RELEASE_DECISION_PACKET_SCHEMA,
         STYLE_DIRECTION_PACKET_SCHEMA,
         DESIGN_DIRECTION_PACKET_SCHEMA,
+        QUALITY_PATCH_PLAN_SCHEMA,
+        *AUTHORING_REPAIR_PACKET_SCHEMAS,
     }
 )
 MUTATION_BOUNDARIES = frozenset(
@@ -79,6 +123,7 @@ MUTATION_BOUNDARIES = frozenset(
         "source_mutation_allowed",
         "release_state_mutation_allowed",
         "golden_mutation_allowed",
+        "additive_artifact_materialization_allowed",
     }
 )
 _RELEASE_MUTATION_BOUNDARIES = frozenset(
@@ -87,7 +132,12 @@ _RELEASE_MUTATION_BOUNDARIES = frozenset(
 _SVG_POLISH_DECISION_KINDS = frozenset(
     {"request_svg_polish_candidate_evidence", "request_svg_polish_handoff_evidence"}
 )
-_SOURCE_MUTATION_DECISION_KINDS = frozenset({"apply_bounded_tikz_candidate"})
+_SOURCE_MUTATION_DECISION_KINDS = frozenset(
+    {"apply_bounded_tikz_candidate", "apply_quality_patch_plan"}
+)
+_ADDITIVE_MATERIALIZATION_DECISION_KINDS = frozenset(
+    {"materialize_authoring_repair_candidate"}
+)
 
 
 class HumanDecisionRecordError(ValueError):
@@ -186,6 +236,13 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
     ):
         raise HumanDecisionRecordError("source_mutation_decision_requires_source_boundary")
     if (
+        decision_kind in _ADDITIVE_MATERIALIZATION_DECISION_KINDS
+        and mutation_boundary != "additive_artifact_materialization_allowed"
+    ):
+        raise HumanDecisionRecordError(
+            "materialization_decision_requires_additive_artifact_boundary"
+        )
+    if (
         decision_kind in _SVG_POLISH_DECISION_KINDS
         and packet_recommendation != decision_kind
     ):
@@ -206,3 +263,201 @@ def validate_decision_record(record: dict[str, Any]) -> dict[str, Any]:
         "follow_up": follow_up,
         "mutation_boundary": mutation_boundary,
     }
+
+
+def validate_source_mutation_authorization(
+    record: dict[str, Any],
+    *,
+    fixture: str,
+    decision_kind: str,
+    candidate_id: str,
+    candidate_hash: str,
+    packet_schema: str | None = None,
+    packet_recommendation: str | None = None,
+    packet_path: str | None = None,
+) -> dict[str, Any]:
+    """Validate one named decision bound to one exact source-mutation candidate."""
+    normalized = validate_decision_record(record)
+    if normalized["fixture"] != fixture:
+        raise HumanDecisionRecordError("source_mutation_decision_fixture_mismatch")
+    if normalized["decision_kind"] != decision_kind:
+        raise HumanDecisionRecordError("source_mutation_decision_kind_invalid")
+    if normalized["mutation_boundary"] != "source_mutation_allowed":
+        raise HumanDecisionRecordError("source_mutation_decision_boundary_invalid")
+    if packet_schema is not None and normalized["packet_schema"] != packet_schema:
+        raise HumanDecisionRecordError("source_mutation_decision_packet_schema_mismatch")
+    if (
+        packet_recommendation is not None
+        and normalized["packet_recommendation"] != packet_recommendation
+    ):
+        raise HumanDecisionRecordError(
+            "source_mutation_decision_packet_recommendation_mismatch"
+        )
+    if packet_path is not None and normalized["packet_path"] != packet_path:
+        raise HumanDecisionRecordError("source_mutation_decision_packet_path_mismatch")
+    authorized_candidate_id = _required_string(record, "authorized_candidate_id")
+    authorized_candidate_hash = _required_string(record, "authorized_candidate_hash")
+    if authorized_candidate_id != candidate_id:
+        raise HumanDecisionRecordError("source_mutation_decision_candidate_id_mismatch")
+    if authorized_candidate_hash != candidate_hash:
+        raise HumanDecisionRecordError("source_mutation_decision_candidate_hash_mismatch")
+    return {
+        **normalized,
+        "authorized_candidate_id": authorized_candidate_id,
+        "authorized_candidate_hash": authorized_candidate_hash,
+    }
+
+
+def validate_additive_materialization_authorization(
+    record: dict[str, Any],
+    *,
+    fixture: str,
+    packet_schema: str,
+    packet_sha256: str,
+    output_path: str,
+    output_sha256: str,
+    preview_sha256: str,
+    expected_packet_path: str | None = None,
+) -> dict[str, Any]:
+    """Validate one named decision bound to one additive repair artifact."""
+    normalized = validate_decision_record(record)
+    expected_kind = "materialize_authoring_repair_candidate"
+    if normalized["fixture"] != fixture:
+        raise HumanDecisionRecordError("materialization_decision_fixture_mismatch")
+    if (
+        packet_schema not in AUTHORING_REPAIR_PACKET_SCHEMAS
+        or normalized["packet_schema"] != packet_schema
+    ):
+        raise HumanDecisionRecordError("materialization_decision_packet_schema_mismatch")
+    if normalized["packet_recommendation"] != expected_kind:
+        raise HumanDecisionRecordError(
+            "materialization_decision_packet_recommendation_mismatch"
+        )
+    if normalized["decision_kind"] != expected_kind:
+        raise HumanDecisionRecordError("materialization_decision_kind_invalid")
+    if normalized["mutation_boundary"] != "additive_artifact_materialization_allowed":
+        raise HumanDecisionRecordError("materialization_decision_boundary_invalid")
+    if normalized["human_decision"] != ADDITIVE_MATERIALIZATION_APPROVAL:
+        raise HumanDecisionRecordError("materialization_decision_not_approved")
+    reviewer = _required_string(record, "reviewer")
+    authorized_packet_sha256 = _required_string(record, "authorized_packet_sha256")
+    authorized_output_path = _required_string(record, "authorized_output_path")
+    authorized_output_sha256 = _required_string(record, "authorized_output_sha256")
+    authorized_preview_sha256 = _required_string(record, "authorized_preview_sha256")
+    if authorized_packet_sha256 != packet_sha256:
+        raise HumanDecisionRecordError("materialization_decision_packet_hash_mismatch")
+    if authorized_output_path != output_path:
+        raise HumanDecisionRecordError("materialization_decision_output_path_mismatch")
+    if authorized_output_sha256 != output_sha256:
+        raise HumanDecisionRecordError("materialization_decision_output_hash_mismatch")
+    if authorized_preview_sha256 != preview_sha256:
+        raise HumanDecisionRecordError("materialization_decision_preview_hash_mismatch")
+    if expected_packet_path is not None and normalized["packet_path"] != expected_packet_path:
+        raise HumanDecisionRecordError("materialization_decision_packet_path_mismatch")
+    return {
+        **normalized,
+        "reviewer": reviewer,
+        "authorized_packet_sha256": authorized_packet_sha256,
+        "authorized_output_path": authorized_output_path,
+        "authorized_output_sha256": authorized_output_sha256,
+        "authorized_preview_sha256": authorized_preview_sha256,
+    }
+
+
+def validate_development_verdict(
+    record: dict[str, Any],
+    *,
+    fixture: str,
+    attempt_id: str,
+    state_path: str,
+    state_sha256: str,
+) -> dict[str, Any]:
+    """Validate one named verdict bound to one visually re-reviewed state."""
+    expected_fields = {
+        "schema",
+        "fixture",
+        "attempt_id",
+        "reviewed_state_path",
+        "reviewed_state_sha256",
+        "decision_kind",
+        "reviewer",
+        "human_decision",
+        "human_note",
+        "mutation_boundary",
+        "publication_acceptance",
+    }
+    if not isinstance(record, dict) or set(record) != expected_fields:
+        raise HumanDecisionRecordError("development_verdict_fields_invalid")
+    if record.get("schema") != DEVELOPMENT_VERDICT_SCHEMA:
+        raise HumanDecisionRecordError("development_verdict_schema_invalid")
+    record_fixture = _required_string(record, "fixture")
+    try:
+        fixture_identity.validate_fixture_name(record_fixture)
+    except ValueError as exc:
+        raise HumanDecisionRecordError(
+            f"development_verdict_fixture_invalid:{record_fixture}"
+        ) from exc
+    if record_fixture != fixture:
+        raise HumanDecisionRecordError("development_verdict_fixture_mismatch")
+    if _required_string(record, "attempt_id") != attempt_id:
+        raise HumanDecisionRecordError("development_verdict_attempt_id_mismatch")
+    reviewed_state_path = _required_string(record, "reviewed_state_path")
+    if reviewed_state_path != state_path:
+        raise HumanDecisionRecordError("development_verdict_state_path_mismatch")
+    decision_kind = _required_string(record, "decision_kind")
+    policy = DEVELOPMENT_VERDICT_POLICIES.get(decision_kind)
+    if policy is None:
+        raise HumanDecisionRecordError("development_verdict_decision_kind_invalid")
+    human_decision = _required_string(record, "human_decision")
+    if human_decision != policy["human_decision"]:
+        error = (
+            "development_verdict_not_approved"
+            if decision_kind == "accept_development_baseline"
+            else "development_verdict_decision_text_invalid"
+        )
+        raise HumanDecisionRecordError(error)
+    mutation_boundary = _required_string(record, "mutation_boundary")
+    if mutation_boundary != policy["mutation_boundary"]:
+        raise HumanDecisionRecordError("development_verdict_mutation_boundary_invalid")
+    reviewer = _required_string(record, "reviewer")
+    reviewed_state_sha256 = _required_string(record, "reviewed_state_sha256")
+    if reviewed_state_sha256 != state_sha256:
+        raise HumanDecisionRecordError("development_verdict_state_hash_mismatch")
+    if record.get("publication_acceptance") != "not_claimed":
+        raise HumanDecisionRecordError("development_verdict_publication_claimed")
+    return {
+        "schema": DEVELOPMENT_VERDICT_SCHEMA,
+        "fixture": record_fixture,
+        "attempt_id": attempt_id,
+        "reviewed_state_path": reviewed_state_path,
+        "decision_kind": decision_kind,
+        "reviewer": reviewer,
+        "human_decision": human_decision,
+        "human_note": _required_string(record, "human_note"),
+        "mutation_boundary": mutation_boundary,
+        "reviewed_state_sha256": reviewed_state_sha256,
+        "publication_acceptance": "not_claimed",
+        "next_state": policy["next_state"],
+        "evidence_role": policy["evidence_role"],
+    }
+
+
+def validate_development_baseline_acceptance(
+    record: dict[str, Any],
+    *,
+    fixture: str,
+    attempt_id: str,
+    state_path: str,
+    state_sha256: str,
+) -> dict[str, Any]:
+    """Compatibility validator restricted to development-baseline acceptance."""
+    normalized = validate_development_verdict(
+        record,
+        fixture=fixture,
+        attempt_id=attempt_id,
+        state_path=state_path,
+        state_sha256=state_sha256,
+    )
+    if normalized["decision_kind"] != "accept_development_baseline":
+        raise HumanDecisionRecordError("development_verdict_decision_kind_invalid")
+    return normalized

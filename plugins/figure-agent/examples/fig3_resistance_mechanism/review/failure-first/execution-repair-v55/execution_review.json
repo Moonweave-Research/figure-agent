@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"failed_exact_repair","repair_result":"external breadth dimension was clearer but competed with the redundant bottom summary lane","next_human_target":"remove_redundant_panel_b_bottom_summary","publication_acceptance":"not_claimed"}

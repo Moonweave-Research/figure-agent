@@ -1,0 +1,46 @@
+{
+  "schema": "figure-agent.post-repair-visual-review-response.v1",
+  "attempt_local": true,
+  "finding_id": "HA003",
+  "compared": {
+    "parent_C2_build": "../comparable-v3-repair-c2/build",
+    "child_C3_build": "build"
+  },
+  "page_geometry": {
+    "parent_C2_pt": [441.894, 461.832],
+    "child_C3_pt": [441.894, 461.832],
+    "verdict": "identical page size. The one label whose move would have narrowed the page (grounded source return, the rightmost element) was left open, so no absolute-pixel coordinate artifact appears."
+  },
+  "detector_diff": {
+    "collisions": {"C2": 0, "C3": 0, "verdict": "identical"},
+    "text_boundary_clash": {"C2": 0, "C3": 0, "verdict": "identical"},
+    "label_path_proximity": {"C2": 0, "C3": 0, "verdict": "identical"},
+    "vector_clearance": {"C2": 0, "C3": 0, "verdict": "identical"},
+    "undeclared_geometry": {"C2": 0, "C3": 0, "verdict": "identical (still 0 actionable)"},
+    "visual_clash": {
+      "C2": 36, "C3": 37,
+      "genuinely_new_in_C3": [
+        {"id": "VC039", "kind": "near_miss", "text": "driven", "metric": {"dark": 0.019, "edge": 0.005}, "promotion_tier": null, "cause": "the 'driven electrode' label moved 0.25 cm toward its own electrode-bar referent, so 'driven' now sits nearer the bar; sub-threshold, untiered, leader still connects, after-PNG reads clean."}
+      ],
+      "metric_shifted_preexisting": [
+        {"kind": "text_on_path", "text": "cantilever", "C2_dark": 0.14, "C3_dark": 0.112, "note": "the 'cantilever' text_on_path already existed in C2; the 0.145 cm move of the floating-polymer-cantilever label shifted its metric DOWN (0.14 -> 0.112), i.e. slightly improved. Not a new finding."}
+      ],
+      "removed_in_C3": [],
+      "verdict": "one genuinely new sub-threshold near_miss ('driven', 0.019, tier null); no new tiered/promoted finding; one pre-existing text_on_path metric improved."
+    },
+    "panel_boundary_coverage": {
+      "C2": {"total": 6, "by_panel": {"D": 1, "E": 1, "F": 4}},
+      "C3": {"total": 4, "by_panel": {"D": 1, "E": 1, "F": 2}},
+      "removed": ["F panel_F_frame_left 'floating'", "F panel_F_frame_right 'electrode'"],
+      "remaining_open": ["D panel_D_frame_right 'grounded'", "E panel_E_frame_left 'grounded'", "F panel_F_frame_right 'grounded'", "F panel_F_frame_right 'return'"],
+      "verdict": "crossings 6 -> 4: both repaired labels' crossings removed; the 4 remaining belong to the 2 labels deliberately left open (grounded substrate, grounded source return)."
+    }
+  },
+  "regression_verdict": "PASS (machine) with one disclosed caveat: 2 of 4 accidental frame-crossing labels repaired (crossings 6 -> 4), no new tiered/promoted finding, page geometry unchanged, undeclared_geometry still 0. Caveat: one sub-threshold untiered near_miss on 'driven' (dark 0.019) from moving that label toward its referent; it is not a real collision (leader connects, PNG clean). Strict compile still blocked by the pre-existing check_visual_clash failure (identical mechanism as C1/C2), unrelated to this repair.",
+  "open_items": [
+    "grounded substrate (Panel E): boxed between the left frame and the substrate rectangle; no position/anchor-only fit without collision or detachment. Human decision needed (widen panel, shorten text, or accept overhang).",
+    "grounded source return (Panel F): must overlap the HV wiring / motif / its own referent to clear the right frame. Human decision needed."
+  ],
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

@@ -29,21 +29,55 @@ if [[ ! -f "$TEX_INPUT" ]]; then
   exit 1
 fi
 
+# A copied execution-repair-v* source is immutable review evidence. It keeps
+# the fixture's generic schematic profile, but a later live coverage contract
+# cannot make its strict replay fail.
+HISTORICAL_REPAIR_REPLAY=0
+if [[ "$(basename "$(dirname "$TEX_INPUT")")" =~ ^execution-repair-v[0-9]+$ ]]; then
+  HISTORICAL_REPAIR_REPLAY=1
+fi
+LIVE_REPAIR_VERIFY="${FIGURE_AGENT_LIVE_REPAIR_VERIFY:-0}"
+LIVE_ASSERTION_TARGET=0
+if [[ $HISTORICAL_REPAIR_REPLAY -eq 0 || "$LIVE_REPAIR_VERIFY" == "1" ]]; then
+  LIVE_ASSERTION_TARGET=1
+fi
+
 FIXTURE_NAME=""
+FIXTURE_ROOT=""
 FIXTURE_TAIL="${TEX_INPUT#*examples/}"
-if [[ "$FIXTURE_TAIL" != "$TEX_INPUT" ]]; then
+if [[ -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ]]; then
+  FIXTURE_NAME="$FIGURE_AGENT_FIXTURE_NAME"
+elif [[ "$FIXTURE_TAIL" != "$TEX_INPUT" ]]; then
   FIXTURE_NAME="${FIXTURE_TAIL%%/*}"
 fi
 COLLISION_FIXTURE_ARGS=()
 UNDECLARED_GEOMETRY_SPEC_ARGS=()
+TEX_ASSERTION_SPEC_ARGS=()
+STATE_FIELD_GEOMETRY_SPEC_ARGS=()
+SEMANTIC_ASSERTION_SPEC_ARGS=()
+TEXT_BOUNDARY_SPEC_ARGS=()
+LABEL_PATH_SPEC_ARGS=()
+VECTOR_CLEARANCE_SPEC_ARGS=()
+LAYOUT_CONTRACT=""
 if [[ -n "$FIXTURE_NAME" ]]; then
   COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")
-  FIGURE_SPEC="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}/spec.yaml"
-  FIXTURE_ROOT="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}"
+  FIXTURE_WORKSPACE="${FIGURE_AGENT_WORKSPACE:-$WORKFLOW_DIR}"
+  FIGURE_SPEC="${FIXTURE_WORKSPACE}/examples/${FIXTURE_NAME}/spec.yaml"
+  FIXTURE_ROOT="${FIXTURE_WORKSPACE}/examples/${FIXTURE_NAME}"
+  LAYOUT_CONTRACT="${FIXTURE_ROOT}/layout_lanes.yaml"
   TEX_INPUT_DIR="$(cd "$(dirname "$TEX_INPUT")" && pwd)"
   TEX_INPUT_ABS="${TEX_INPUT_DIR}/$(basename "$TEX_INPUT")"
-  if [[ "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* && -f "$FIGURE_SPEC" ]]; then
+  # An explicitly named fixture is sufficient for a live source outside the
+  # examples tree, but never turns immutable execution-repair evidence into a
+  # current-source assertion target.
+  if [[ $LIVE_ASSERTION_TARGET -eq 1 && ( "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/"* || -n "${FIGURE_AGENT_FIXTURE_NAME:-}" ) && -f "$FIGURE_SPEC" ]]; then
     UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    STATE_FIELD_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    SEMANTIC_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    TEXT_BOUNDARY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    LABEL_PATH_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    VECTOR_CLEARANCE_SPEC_ARGS=(--spec "$FIGURE_SPEC")
   fi
 fi
 
@@ -62,11 +96,16 @@ echo 'Lint: Style Lock check (BLOCKER fails, WARN reports)...' >&2
 # collision/clash checkers so non-zero findings fail the compile (default
 # behavior is report-only with exit 0 to preserve dogfood ergonomics).
 STRICT_ARGS=()
-VISUAL_CLASH_ARGS=()
+VISUAL_CLASH_ARGS=(--ignore-known-fp)
 if [[ "${FIGURE_AGENT_STRICT:-}" == "1" ]]; then
   STRICT_ARGS=(--strict)
   VISUAL_CLASH_ARGS=(--strict --ignore-known-fp)
   echo 'Strict mode: collision/clash findings will fail the compile.' >&2
+fi
+UNDECLARED_GEOMETRY_STRICT_ARGS=("${STRICT_ARGS[@]}")
+if [[ $LIVE_ASSERTION_TARGET -eq 0 ]]; then
+  UNDECLARED_GEOMETRY_STRICT_ARGS=()
+  echo "INFO: historical repair replay reports, but does not strict-gate, live coverage requirements" >&2
 fi
 
 ENGINE="${LATEX_ENGINE:-lualatex}"
@@ -158,6 +197,7 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_coll
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   ${COLLISION_FIXTURE_ARGS[@]+"${COLLISION_FIXTURE_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/collisions.json" \
+  --render-image "$PNG_OUT" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \
   ${VISUAL_CLASH_ARGS[@]+"${VISUAL_CLASH_ARGS[@]}"} \
@@ -166,28 +206,39 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visu
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_text_boundary_clash.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${TEXT_BOUNDARY_SPEC_ARGS[@]+"${TEXT_BOUNDARY_SPEC_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/text_boundary_clash.json" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_path_proximity.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${LABEL_PATH_SPEC_ARGS[@]+"${LABEL_PATH_SPEC_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_path_proximity.json" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_undeclared_geometry.py" \
-  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${UNDECLARED_GEOMETRY_STRICT_ARGS[@]+"${UNDECLARED_GEOMETRY_STRICT_ARGS[@]}"} \
   ${UNDECLARED_GEOMETRY_SPEC_ARGS[@]+"${UNDECLARED_GEOMETRY_SPEC_ARGS[@]}"} \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/undeclared_geometry.json" \
   "$PDF_OUT"
+if [[ ${#STATE_FIELD_GEOMETRY_SPEC_ARGS[@]} -ne 0 ]]; then
+  run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_state_field_geometry.py" \
+    ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+    ${STATE_FIELD_GEOMETRY_SPEC_ARGS[@]+"${STATE_FIELD_GEOMETRY_SPEC_ARGS[@]}"} \
+    --tex "$FILE" \
+    --json-output "${BUILD_DIR}/state_field_geometry.json"
+fi
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_label_hyphenation.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_hyphenation.json" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/semantic_assertions.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${SEMANTIC_ASSERTION_SPEC_ARGS[@]+"${SEMANTIC_ASSERTION_SPEC_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/semantic_assertions.json" \
   "$PDF_OUT"
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/vector_clearance.py" \
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/vector_clearance.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${VECTOR_CLEARANCE_SPEC_ARGS[@]+"${VECTOR_CLEARANCE_SPEC_ARGS[@]}"} \
   --tex "$FILE" \
   --json-output "${BUILD_DIR}/vector_clearance.json" \
   "$PDF_OUT"
@@ -195,14 +246,29 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/semantic_assertio
 # a defect no render detector catches). STRICT-gated like the other clash checkers.
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_assertions.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${TEX_ASSERTION_SPEC_ARGS[@]+"${TEX_ASSERTION_SPEC_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/tex_assertions.json" \
   "$FILE"
 # Physics-intent grounding meta-check (advisory: which figures still need assertions).
 # Always report-only — it surfaces a TODO, not a defect, so it never fails a build.
+# A prospective candidate under a fixture's review tree is deliberately a
+# separate source artifact. Its physics grounding must still resolve against
+# the parent fixture's briefing/spec rather than report a false missing-briefing
+# warning for the candidate-only directory.
+PHYSICS_GROUNDING_DIR="$PWD"
+if [[ -n "$FIXTURE_ROOT" && "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/review/"* ]]; then
+  PHYSICS_GROUNDING_DIR="$FIXTURE_ROOT"
+fi
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_physics_grounding.py" \
-  --json-output "${BUILD_DIR}/physics_grounding.json" \
-  "$PWD"
-if [[ -f "coordinate_hints.yaml" ]]; then
+  --json-output "${BUILD_DIR}/physics_grounding.json" "$PHYSICS_GROUNDING_DIR"
+if [[ -n "$LAYOUT_CONTRACT" && -f "$LAYOUT_CONTRACT" ]]; then
+  run_report_check "${UV_RUN[@]}" python3 \
+    "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" \
+    ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+    --pdf "$PWD/$PDF_OUT" \
+    --layout-contract "$LAYOUT_CONTRACT" \
+    --json-output "${BUILD_DIR}/layout_lanes.json"
+elif [[ -f "coordinate_hints.yaml" ]]; then
   run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_layout_drift.py" \
     ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
     .
@@ -221,6 +287,16 @@ fi
 # Report-only; best-effort — must never fail the build (no FIGURE_AGENT_WORKSPACE
 # in some invocations means the fixture is unresolvable, which is fine to skip).
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/convention_receipt.py" "$BASE" --write >/dev/null || true
+STRICT_STATUS_ARGS=()
+if [[ ${#STRICT_ARGS[@]} -ne 0 ]]; then
+  STRICT_STATUS_ARGS+=(--strict-requested)
+fi
+if [[ $STRICT_CHECK_FAILURE -ne 0 ]]; then
+  STRICT_STATUS_ARGS+=(--detector-failed)
+fi
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/strict_status.py" \
+  --json-output "${BUILD_DIR}/strict_status.json" \
+  "${STRICT_STATUS_ARGS[@]}"
 trap - ERR
 
 if [[ $STRICT_CHECK_FAILURE -ne 0 ]]; then

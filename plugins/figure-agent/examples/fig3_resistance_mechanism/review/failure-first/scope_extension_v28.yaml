@@ -1,0 +1,20 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v27.yaml
+extends_sha256: sha256:1e277b86bcfad665de48f42896262bf4699fa55ec6176abd1b7b4618fa38f5a2
+reason: promote the observed S80 density-silhouette ambiguity into a reusable opt-in state-field geometry gate while preserving creative placement freedom and human publication review
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/current_render_review_scaffold_v1.yaml
+  - review/failure-first/scope_extension_v28.yaml
+  - review/failure-first/authority_manifest_v2.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/spec.yaml
+  - plugins/figure-agent/scripts/checks/check_state_field_geometry.py
+  - plugins/figure-agent/scripts/compile.sh
+  - plugins/figure-agent/tests/test_state_field_geometry.py
+  - plugins/figure-agent/tests/test_compile_contract.py
+  - plugins/figure-agent/tests/test_semantic_assertions.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

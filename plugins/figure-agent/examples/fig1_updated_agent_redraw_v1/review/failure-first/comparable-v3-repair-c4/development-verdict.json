@@ -1,0 +1,39 @@
+{
+  "schema": "figure-agent.closed-loop-development-verdict.v1",
+  "attempt_local": true,
+  "attempt_local_note": "Attempt-local instance (no closed-loop-attempt-state.v1 leaf exists for this lineage). Issued by the orchestrator under the named human's recorded live delegation, which for C4 also set the approach directly. Supersedes the pending human_review fields in provenance.json and regression.json by lineage; those files are left unmodified as historical evidence.",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "attempt_dir": "review/failure-first/comparable-v3-repair-c4",
+  "verdict_at": "2026-07-18",
+  "verdict_authority": "orchestrator_under_named_human_delegation",
+  "delegator": {
+    "name": "Choe Mun-yeong",
+    "handle": "Moon-python",
+    "session": "live session 2026-07-18",
+    "delegation_quote_verbatim": "이 정도는 그냥 너가 판단해도 되는 수준",
+    "delegation_note": "The named human directly set the C4 approach: allow restacking, permit a minimal sibling-label nudge as label-position vocabulary, never commit a known real collision, and record the exhausted label as a declared-open defect."
+  },
+  "verdict_translation": "Accepted as a development baseline for the Panel E 'grounded substrate' repair (restack + minimal 'sample' nudge, both frame crossings removed, zero new findings). Overall polish/completeness NOT claimed. Panel F 'grounded source return' is accepted as a declared permanently-open defect for a future authoring/layout iteration.",
+  "outcome": "development_baseline_accepted",
+  "scope_note": "Development-baseline acceptance of the R5.2d bounded repair: Panel E 'grounded substrate' restacked to two lines with a 0.06 cm sibling 'sample' nudge, removing both frame crossings (boundary crossings 4 -> 2) with zero new detector findings and unchanged page geometry. NOT release acceptance and NOT publication acceptance. Strict compile does not pass (pre-existing check_visual_clash failure identical to C1/C2/C3, unrelated to this repair).",
+  "reviewed_finding_id": "HA004",
+  "accepted_known_open_items": [
+    "Panel F 'grounded source return' remains open: label-only position/anchor/restack vocabulary is geometrically exhausted (ground-symbol referent 0.60 cm from the right frame). Its fix requires a future authoring/layout iteration (widen Panel F, or move the ground symbol / HV inward) beyond bounded label-repair scope."
+  ],
+  "accepted_artifacts": {
+    "repaired_tex": {"path": "repaired.tex", "sha256": "20372e10f4f40fabd1e491f59a22be66b2af5e8771566f2dbe57fb6a7149df15"},
+    "render_png": {"path": "build/repaired.png", "sha256": "5d2961d0aa711aac3073a4de1b7c94210607765a033d08f338d8f86c88a98e3d"},
+    "full_after_crop": {"path": "crops/full-after-C4.png", "sha256": "7cef1ef380f2367b3578019516bafc99c0ce370daaaa81ece37ea0678b63497d"},
+    "print_scale_after_crop": {"path": "crops/print-scale-after-C4.png", "sha256": "a3ec3c2748ee941f90bf560663ad2e5bbe9d52514050b7ef0296f49f09833384"}
+  },
+  "reviewed_evidence": {
+    "adjudication": {"path": "adjudication.json", "sha256": "2d7174cfbab60f42906a51670813c4d6e8e6e9cfd817e405f0761d08207c0fdc"},
+    "attribution": {"path": "attribution.json", "sha256": "c7505e04101fec3a2f90445876aaeaabe939f11fcb17809ef5eb501a759b1f51"},
+    "provenance": {"path": "provenance.json", "sha256": "79ae409b884c5e6e26c3626577e04146e3a0e5b1f1354555a5bacaf8101b5b59"},
+    "regression": {"path": "regression.json", "sha256": "dd310f3896f934e351147867697b4e11d693f433fa84a14b11a2ebe875361a77"},
+    "declared_boundary_replay": {"path": "declared-boundary-replay.json", "sha256": "c97b5ba50a20e3cb255639bb361e9c0fa1d0f5a84aedbf960ddee583023ae4d6"}
+  },
+  "parent_C3_source_sha256": "0fe2951b5ef16199da8b2d916bce5c9bf87a3e7d20cc6b36828d0d2eff846cad",
+  "supersedes_pending_human_review_in": ["provenance.json", "regression.json"],
+  "publication_acceptance": "not_claimed"
+}

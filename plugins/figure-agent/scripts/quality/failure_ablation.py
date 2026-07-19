@@ -13,6 +13,7 @@ REPORT_SCHEMA = "figure-agent.failure-ablation-report.v1"
 VARIANTS = {"raw", "verified", "repaired"}
 SCIENTIFIC_CLASSES = {"semantic", "relation"}
 GENERATION_RECEIPT_SCHEMA = "figure-agent.generation-receipt.v1"
+COMPARISON_ELIGIBLE = "eligible_equal_input"
 
 
 class FailureAblationError(ValueError):
@@ -29,7 +30,16 @@ def _load_run(path: Path, *, expected_variant: str) -> dict[str, Any]:
         raise FailureAblationError("run_variant_invalid")
     findings = payload.get("findings")
     if not isinstance(findings, list) or any(
-        not isinstance(item, dict) for item in findings
+        not isinstance(item, dict)
+        or (
+            "occurrences" in item
+            and (
+                not isinstance(item["occurrences"], int)
+                or isinstance(item["occurrences"], bool)
+                or item["occurrences"] < 1
+            )
+        )
+        for item in findings
     ):
         raise FailureAblationError("run_findings_invalid")
     payload["_run_path"] = path
@@ -57,8 +67,18 @@ def _summarize_run(run: dict[str, Any]) -> dict[str, Any]:
         )
         else "pending"
     )
-    return {
+    verdict_decision = (
+        str(verdict.get("decision"))
+        if verdict_state == "recorded"
+        and isinstance(verdict.get("decision"), str)
+        and bool(verdict["decision"].strip())
+        else "pending"
+    )
+    summary = {
         "confirmed_defect_count": len(confirmed),
+        "confirmed_defect_occurrence_count": sum(
+            item.get("occurrences", 1) for item in confirmed
+        ),
         "confirmed_defect_counts": dict(sorted(class_counts.items())),
         "scientific_gate": "failed" if scientific_failed else "passed",
         "human_correction_minutes": run.get("human_correction_minutes"),
@@ -66,12 +86,16 @@ def _summarize_run(run: dict[str, Any]) -> dict[str, Any]:
         "clean_reproduction": run.get("clean_reproduction") is True,
         "human_verdict_state": verdict_state,
     }
+    if verdict_decision != "pending":
+        summary["human_verdict_decision"] = verdict_decision
+    return summary
 
 
 def _delta(current: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for key in (
         "confirmed_defect_count",
+        "confirmed_defect_occurrence_count",
         "human_correction_minutes",
         "intervention_count",
     ):
@@ -162,6 +186,39 @@ def _has_bound_generation_receipt(run: dict[str, Any]) -> bool:
     )
 
 
+def _is_explicitly_comparison_ineligible(run: dict[str, Any]) -> bool:
+    eligibility = run.get("comparison_eligibility")
+    return eligibility is not None and eligibility != COMPARISON_ELIGIBLE
+
+
+def _has_bounded_repair_lineage(runs: dict[str, dict[str, Any]]) -> bool:
+    if {
+        name: runs[name].get("comparison_role") for name in VARIANTS
+    } != {
+        "raw": "raw_authoring",
+        "verified": "contract_authoring",
+        "repaired": "bounded_repair_child",
+    }:
+        return False
+    raw_receipt = runs["raw"].get("generation_receipt")
+    verified_receipt = runs["verified"].get("generation_receipt")
+    repaired_receipt = runs["repaired"].get("generation_receipt")
+    if not all(
+        isinstance(receipt, dict)
+        for receipt in (raw_receipt, verified_receipt, repaired_receipt)
+    ):
+        return False
+    verified_generated = verified_receipt.get("generated_artifact_sha256")
+    return bool(
+        raw_receipt.get("starting_artifact_sha256")
+        == verified_receipt.get("starting_artifact_sha256")
+        and runs["repaired"].get("parent_variant") == "verified"
+        and runs["repaired"].get("parent_generated_artifact_sha256")
+        == verified_generated
+        and repaired_receipt.get("starting_artifact_sha256") == verified_generated
+    )
+
+
 def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
     if set(run_paths) != VARIANTS:
         raise FailureAblationError("variant_set_invalid")
@@ -192,13 +249,38 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
     human_complete = all(
         item["human_verdict_state"] == "recorded" for item in variants.values()
     )
-    receipts = [runs[name].get("generation_receipt") for name in VARIANTS]
-    transcript_bound = all(
-        _has_bound_generation_receipt(runs[name]) for name in VARIANTS
-    ) and all(
-        len({receipt[field] for receipt in receipts if isinstance(receipt, dict)}) == 1
-        for field in ("model_id", "source_commit", "starting_artifact_sha256")
+    human_approved = all(
+        item.get("human_verdict_decision") == "accepted"
+        for item in variants.values()
     )
+    reproduction_complete = all(
+        item["clean_reproduction"] for item in variants.values()
+    )
+    correction_time_complete = all(
+        isinstance(item["human_correction_minutes"], int | float)
+        and not isinstance(item["human_correction_minutes"], bool)
+        and item["human_correction_minutes"] >= 0
+        for item in variants.values()
+    )
+    receipts = [runs[name].get("generation_receipt") for name in VARIANTS]
+    receipts_bound = (
+        not any(_is_explicitly_comparison_ineligible(runs[name]) for name in VARIANTS)
+        and all(_has_bound_generation_receipt(runs[name]) for name in VARIANTS)
+        and all(
+            len({receipt[field] for receipt in receipts if isinstance(receipt, dict)})
+            == 1
+            for field in ("model_id", "source_commit")
+        )
+    )
+    same_start = receipts_bound and len(
+        {
+            receipt["starting_artifact_sha256"]
+            for receipt in receipts
+            if isinstance(receipt, dict)
+        }
+    ) == 1
+    lineage_complete = receipts_bound and _has_bounded_repair_lineage(runs)
+    transcript_bound = receipts_bound and (same_start or lineage_complete)
     return {
         "schema": REPORT_SCHEMA,
         "variants": variants,
@@ -209,9 +291,22 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
         "comparison_evidence": (
             "transcript_bound" if transcript_bound else "staged_only"
         ),
+        "correction_time_gate": (
+            "passed" if correction_time_complete else "failed"
+        ),
+        "lineage_gate": "passed" if lineage_complete else "failed",
+        "reproduction_gate": "passed" if reproduction_complete else "failed",
         "product_claim": (
             "review_eligible"
-            if scientific_pass and human_complete and transcript_bound
+            if (
+                scientific_pass
+                and human_complete
+                and human_approved
+                and reproduction_complete
+                and correction_time_complete
+                and transcript_bound
+                and lineage_complete
+            )
             else "not_authorized"
         ),
         "publication_acceptance": "not_claimed",

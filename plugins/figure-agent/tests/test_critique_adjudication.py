@@ -102,6 +102,59 @@ def test_invalid_decision_value_fails() -> None:
         validate_adjudication(payload)
 
 
+def test_optional_repair_evidence_is_validated_for_apply_decision() -> None:
+    payload = _valid_payload()
+    payload["decisions"][0]["repair_evidence"] = {
+        "report_path": "examples/demo_fig/build/collisions.json",
+        "finding_id": "TC001",
+        "selector_registry_path": "examples/demo_fig/source_selectors.json",
+    }
+
+    assert validate_adjudication(payload) == payload
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("report_path", ""),
+        ("finding_id", ""),
+        ("selector_registry_path", "../outside.json"),
+    ),
+)
+def test_invalid_optional_repair_evidence_fails(field: str, value: str) -> None:
+    payload = _valid_payload()
+    payload["decisions"][0]["repair_evidence"] = {
+        "report_path": "examples/demo_fig/build/collisions.json",
+        "finding_id": "TC001",
+        "selector_registry_path": "examples/demo_fig/source_selectors.json",
+    }
+    payload["decisions"][0]["repair_evidence"][field] = value
+
+    with pytest.raises(CritiqueAdjudicationError, match="repair_evidence"):
+        validate_adjudication(payload)
+
+
+def test_repair_evidence_is_rejected_for_non_apply_decision() -> None:
+    payload = _valid_payload()
+    payload["decisions"][0]["decision"] = "defer"
+    payload["decisions"][0]["repair_evidence"] = {
+        "report_path": "examples/demo_fig/build/collisions.json",
+        "finding_id": "TC001",
+        "selector_registry_path": "examples/demo_fig/source_selectors.json",
+    }
+
+    with pytest.raises(CritiqueAdjudicationError, match="only valid for apply"):
+        validate_adjudication(payload)
+
+
+def test_patch_classes_reject_non_string_list_items() -> None:
+    payload = _valid_payload()
+    payload["decisions"][0]["patch_classes"] = ["local_reposition", 1]
+
+    with pytest.raises(CritiqueAdjudicationError, match="patch_classes"):
+        validate_adjudication(payload)
+
+
 def test_missing_required_fields_fail() -> None:
     payload = _valid_payload()
     del payload["source_critique_hash"]

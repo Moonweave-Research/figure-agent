@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"accepted_as_nonregressing_scaffold","repair_result":"only one start and one retained endpoint remain, so the path no longer reads as four simultaneous carriers","next_human_target":"panel_a_terminal_path_segment","publication_acceptance":"not_claimed"}

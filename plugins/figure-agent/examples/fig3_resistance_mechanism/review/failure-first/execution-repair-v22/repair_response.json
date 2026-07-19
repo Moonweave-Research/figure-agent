@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[compact label, anchor=south] at (2.05,1.16)\\n  {sign-agnostic carrier};",
+  "change_summary": "Reflowed the sign-agnostic carrier label to one line in the lower central clearance below the carrier path."
+}

@@ -38,7 +38,45 @@ The normal order is:
 
 With `--execute`, it still does not execute queue commands directly. For each
 planned fixture it calls `/fig_run` logic, which re-queries live driver state
-and applies the existing deterministic allowlist and safety predicates.
+and applies the existing deterministic allowlist and safety predicates. It
+also passes the exact queued `action` and `safe_command` as a first-step
+expectation. Compile, adjudication-scaffold, and export candidates are re-queried
+and revalidated under the shared fixture admission lease, which remains held
+through subprocess completion. A mismatch or lost safety predicate returns
+`stale_plan`; a busy lease returns `admission_busy`. Neither starts a
+subprocess. An invalid fixture path, non-busy lock failure, or under-lock
+validation failure returns non-retryable `admission_invalid` with a sanitized
+diagnostic. A matched first step is consumed after its successful command;
+later steps remain free to follow fresh live driver decisions and reacquire the
+lease independently.
+
+Queue-bound `run_fig_loop` uses the existing self-leased `fig_loop` Python API;
+queue-run does not add an outer lease or spawn the loop CLI. An internal
+callback runs after `fig_loop` acquires its lease and exact-matches the queued
+action and command against the under-lock live driver result. Drift returns
+`stale_plan` before scratch creation. Busy and invalid loop admission map to
+`admission_busy` and `admission_invalid`. A match writes the normal verify-only
+checkpoint, preserves `fig_loop --json` stdout shape, and lets `/fig_run`
+continue with fresh live replanning.
+
+## Exit status
+
+The complete JSON payload is written before `queue-run` exits. Direct
+`fig_queue_run.py` and `fig-agent queue-run` use the same exit matrix:
+
+| Exit | Condition |
+|---|---|
+| `0` | Plan-only/dry-run, or an execute batch with no nested `/fig_run` `command_failed`, `stale_plan`, `admission_busy`, or `admission_invalid` final stop. This includes complete, host/human boundaries, repeated-action, max-step, blocked, unattempted, and pre-delegation fixture-row errors. |
+| `1` | `--execute` delegated at least one selected fixture to `/fig_run` and that nested run ended with canonical `final_stop_reason: command_failed`, `stale_plan`, `admission_busy`, or `admission_invalid`. Remaining selected fixtures are still attempted and remain in `runs`. |
+| `2` | Existing argument/value errors or workspace diagnostics, including missing `examples/` and an implicit symlinked `examples/` directory. These diagnostics take precedence over delegated command failures. |
+
+`summary.failed` counts only delegated command failures. `summary.stale`,
+`summary.busy`, and `summary.admission_invalid` count their corresponding stops
+separately. `summary.admission_pending` remains as a deprecated compatibility
+field and is always zero because current runner paths no longer generate that
+stop. Exit status is based only on actual current nested `/fig_run` stop
+contracts, so a pre-delegation fixture/path error row does not make shell or CI
+treat the batch as a delegated execution error.
 
 ## Filters
 
@@ -68,6 +106,10 @@ make SVG polish handoff executable; `svg_editor` rows remain blocked.
 - Default mode is plan-only.
 - `--execute` delegates to `/fig_run`; this script never calls shell commands
   directly.
+- Compile, adjudication-scaffold, and export subprocesses run only after
+  under-lease live revalidation.
+- Queue-bound `run_fig_loop` uses the self-leased loop API with under-lock live
+  revalidation; no outer lease or loop subprocess is introduced.
 - `--max-fixtures` bounds the number of fixture attempts.
 - Host critique, human review, release/golden approval, SVG polish handoff,
   and rows with stop boundaries are not attempted.
@@ -84,11 +126,12 @@ make SVG polish handoff executable; `svg_editor` rows remain blocked.
 | `filters` | active queue filters |
 | `queue` | source queue summary, `bottleneck_report`, and command plan |
 | `runs` | one record per attempted fixture |
-| `summary` | planned executable, planned blocked, planned complete, attempted, unattempted executable, executed command, failed, and blocked counts |
+| `summary` | planned executable, planned blocked, planned complete, attempted, unattempted executable, executed command, failed, stale, busy, admission-invalid, admission-pending, and blocked counts |
 
 Run records contain the planned fixture/action/command. In execute mode they
-also include the embedded `/fig_run` result so the operator can inspect the live
-revalidation stop reason.
+also include the embedded `/fig_run` result, including additive per-step
+`execution_evidence` and `plan_binding`. Queue-run preserves that nested schema
+as-is and does not create a second evidence wrapper.
 
 Blocked rows remain under `queue.command_plan.blocked`. Each blocked row carries
 `operator_handoff`, copied from `/fig_queue`, so the operator can see the next
@@ -97,3 +140,6 @@ manual/host/release/closeout action without making that row executable.
 Mode-scoped complete rows remain under `queue.command_plan.complete` and are
 counted as `summary.planned_complete`. They are non-executable, but they are not
 blocked and do not count toward `summary.blocked`.
+
+Admission and machine-gate outcomes never claim visual, human-development,
+release, or publication acceptance.

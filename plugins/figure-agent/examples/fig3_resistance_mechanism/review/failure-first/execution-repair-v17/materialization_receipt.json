@@ -1,0 +1,15 @@
+{
+  "change_summary": "Moved the retained label above-left of the terminal carrier so the label no longer crosses the carrier path or right electrode.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v17/repaired_generated.tex",
+  "output_sha256": "sha256:c0e0add394b38e33b190c5831e1d51eafddd1638f660fbea97b50618df21cfcd",
+  "packet_sha256": "sha256:e765fc22a2e9d0d815a7ae29d20787b087f9a8ae5820082ee8f3591b381b84dc",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:29dd017cb1f9b6d65991f4e481ac111b9c8f76278d855522fd1eb86ba3fb8b91"
+}

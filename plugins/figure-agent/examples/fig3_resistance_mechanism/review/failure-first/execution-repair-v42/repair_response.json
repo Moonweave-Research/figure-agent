@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[label, text=cBlue, font=\\sffamily\\bfseries\\footnotesize] at (0.965,1.92) {S60};\n  \\node[compact label] at (0.965,1.65) {single discrete state};",
+  "change_summary": "Align the S60 name and descriptor as a centered stack above the narrow peak."
+}

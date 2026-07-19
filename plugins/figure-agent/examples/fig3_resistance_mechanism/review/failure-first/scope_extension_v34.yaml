@@ -1,0 +1,13 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v33.yaml
+extends_sha256: sha256:b27ea35e05028517ce0468d241efa77e8a1131c595e9035a1ecf7a9e5bea59b0
+reason: bind an opt-in leader endpoint to its named annotation node so later label relocation cannot silently detach the declared relation
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v34.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/spec.yaml
+  - plugins/figure-agent/scripts/checks/check_tex_assertions.py
+  - plugins/figure-agent/tests/test_check_tex_assertions.py
+publication_acceptance: not_claimed

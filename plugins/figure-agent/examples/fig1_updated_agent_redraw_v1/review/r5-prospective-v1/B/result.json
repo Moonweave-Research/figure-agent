@@ -1,0 +1,41 @@
+{
+  "schema": "figure-agent.r5-authoring-condition-result.v1",
+  "condition": "B",
+  "comparison_role": "contract_authoring",
+  "model_id": "gpt-5.6-sol",
+  "reasoning_effort": "medium",
+  "source_commit": "8ee29359db9cd8eb1e6d8dcd9436dbe74ec82d88",
+  "prompt_sha256": "sha256:2234678646cfb169a4ee3d4280ed305460dbcd010a2368a982b89399bbfaea68",
+  "task_sha256": "sha256:250aee80d5581b7952a85bd62b248f1d8fc22e86a1c30f24743530de55e6f039",
+  "budget_contract_sha256": "sha256:bfb7809ef2b6a92649f3158fb3d2f5667775f0dabddd4f8710d9d5324e88f992",
+  "generated_source_sha256": "sha256:e69a4117c71233a5b58a1063345412172b5cef4bbcf93ec01ddd0881421e1bb8",
+  "generated_source_lines": 168,
+  "authoring_attempts": 1,
+  "feedback_rounds": 0,
+  "figure_agent_compile": {
+    "state": "blocked_by_style_lock",
+    "returncode": 1,
+    "blockers": 9,
+    "warnings": 4,
+    "confirmed_contract_failures": [
+      "polymer-paper-preamble named only in a comment and not imported",
+      "local font ownership overrides",
+      "local palette redefinition"
+    ]
+  },
+  "diagnostic_render": {
+    "state": "rendered_outside_product_gate",
+    "eligible_for_product_claim": false,
+    "pdf_sha256": "sha256:dcc9e0fbdc5a5f5f73335b7cf9a8d40d356cab43b6842283f7a1bfdeeaf26e7c",
+    "png_sha256": "sha256:f127d45d4940d2ea06f29b174a7be110d1f172539ecd20ecdce1fa43aeaea44e",
+    "confirmed_visible_defects": [
+      "Panel D subtitle overlaps the panel title",
+      "Panel E subtitle overlaps the panel title",
+      "Panel F force annotation competes with the title lane",
+      "Panel F bottom support and source-return labels collide with the boundary"
+    ]
+  },
+  "human_correction_minutes": null,
+  "human_verdict": "pending",
+  "publication_acceptance": "not_claimed"
+}

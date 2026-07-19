@@ -196,6 +196,8 @@ def _should_run_aggressive_candidates(
     actor: str,
 ) -> bool:
     stop_boundary = run_payload.get("final_stop_boundary")
+    if actor == "human" or actor.startswith("human_"):
+        return False
     if stop_boundary == "basin_detected":
         return True
     if stop_reason == STOP_OPTIONAL_IMPROVEMENT:
@@ -213,7 +215,7 @@ def _should_run_aggressive_candidates(
         fig_driver.STOP_AMBIGUOUS_PATCH,
     }:
         return False
-    return stop_reason == STOP_REPEATED_BOUNDARY or actor == "human"
+    return stop_reason == STOP_REPEATED_BOUNDARY
 
 
 def _run_aggressive_candidate_search(
@@ -295,6 +297,8 @@ def run_improvement(
     candidate_iterations: int = 1,
     candidate_runner: CandidateRunner | None = None,
 ) -> dict[str, Any]:
+    if aggressive_candidates:
+        raise ValueError("aggressive_candidates is no longer supported")
     if max_loops < 1:
         raise ValueError("max_loops must be >= 1")
     if max_steps_per_loop < 1:
@@ -350,23 +354,6 @@ def run_improvement(
     }
     if ready_improvement is not None:
         payload["ready_improvement_summary"] = ready_improvement
-    if aggressive_candidates and _should_run_aggressive_candidates(
-        final_run,
-        stop_reason=final_stop_reason,
-        actor=final_actor,
-    ):
-        runner = candidate_runner or _run_aggressive_candidate_search
-        candidate_run = runner(
-            name,
-            goal=goal,
-            max_iterations=candidate_iterations,
-            repo_root=repo_root,
-        )
-        candidate_summary = _candidate_run_summary(candidate_run)
-        payload["aggressive_candidate_run"] = candidate_summary
-        payload["next_operator_instruction"] = _aggressive_candidate_instruction(
-            candidate_summary
-        )
     return payload
 
 
@@ -377,8 +364,6 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--max-loops", type=int, default=DEFAULT_MAX_LOOPS)
     parser.add_argument("--max-steps-per-loop", type=int, default=fig_run.DEFAULT_MAX_STEPS)
-    parser.add_argument("--aggressive-candidates", action="store_true")
-    parser.add_argument("--candidate-iterations", type=int, default=1)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("json",), default="json")
     args = parser.parse_args(argv)
@@ -395,8 +380,6 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             max_loops=args.max_loops,
             max_steps_per_loop=args.max_steps_per_loop,
             repo_root=resolved_repo_root,
-            aggressive_candidates=args.aggressive_candidates,
-            candidate_iterations=args.candidate_iterations,
         )
     except ValueError as exc:
         print(f"fig_improve.py: {exc}", file=sys.stderr)

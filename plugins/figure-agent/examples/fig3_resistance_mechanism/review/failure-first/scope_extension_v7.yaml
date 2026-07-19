@@ -1,0 +1,15 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v6.yaml
+extends_sha256: sha256:a498c38011cabc67e14e180f155d15f20a893b06f7522d335837416f65f26a0d
+reason: authorize additive retained-ownership regression and recovery evidence
+allowed_review_prefixes:
+  - review/failure-first/execution-repair-v34/
+  - review/failure-first/execution-repair-v35/
+  - review/failure-first/execution-repair-v36/
+allowed_review_paths:
+  - review/failure-first/scope_extension_v7.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/docs/execution-plan.md
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[compact label, align=center, anchor=north, fill=cAmberSphere!22,\n      inner xsep=1.5pt, inner ysep=2pt] at (1.92,1.03)\n  {sign-agnostic carrier\\\\repeated capture $\\leftrightarrow$ release};\n% The local label is owned by the adjacent filled endpoint carrier.\n\\node[compact label, anchor=south east, inner sep=0.6pt] at (2.91,3.10) {retained};",
+  "change_summary": "Remove the detached white label box and bind retained to the adjacent filled endpoint carrier."
+}

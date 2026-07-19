@@ -12,6 +12,10 @@ Run from the plugin root:
 fig-agent loop <name> --goal "<goal>"
 ```
 
+When the installed plugin bundle and figure workspace differ, public
+`fig-agent loop` reads fixtures and writes its default scratch evidence under
+`FIGURE_AGENT_WORKSPACE` (or `CLAUDE_PROJECT_DIR`), not the bundled plugin root.
+
 ## When To Use
 
 Run `/fig_loop` only when `/fig_status <name>` reports `render_state: FRESH`
@@ -79,7 +83,30 @@ boundaries. It does not change `stop_reason`, active patch target,
 On preflight failure, the command preserves the existing error contract: exit
 code `1`, empty stdout, and a prose `fig_loop.py: ...` message on stderr.
 
+When canonical lifecycle resolution is current, invalid, or ambiguous, direct
+legacy `/fig_loop` stops before creating scratch evidence and directs the caller
+to canonical status/lifecycle. A transient recoverable fixture-root coordination
+lease also serializes root admission and a legacy loop run; if it is busy,
+retry after the active admission or legacy run finishes.
+The internal Python `run_loop` API may receive an admission callback for bounded
+runner integration. It invokes that callback only after acquiring its own lease
+and before canonical/source preflight or scratch creation. A false result rejects
+the loop without output. This is not a CLI option and does not transfer lease
+ownership outside `fig_loop`.
+The same internal API may receive a post-run finalizer. It receives the exact
+run directory after checkpoint artifacts are written and before the self-owned
+lease is released. Finalizer exceptions are isolated from the loop result. This
+is also not a CLI option and does not transfer lease ownership.
+
 Outputs are written under `.scratch/fig-loop-runs/<timestamp>-<name>/`:
+
+An external `--runs-root` remains supported for test or dogfood evidence. A
+workspace path, a workspace path that resolves through a symlink, or an
+external alias that resolves into the workspace is accepted only under the
+canonical `.scratch/fig-loop-runs/` root, whose `.scratch` and
+`.scratch/fig-loop-runs` components must not be symlinks. The fixture source
+and its fixture-path components are also fail-closed against symlinks before a
+checkpoint write.
 
 - `run_manifest.json` — fixture, goal, mode, branch/commit, run timing, and artifact list.
 - `iteration_001.json` — `/fig_status`-equivalent state, audit-evidence
@@ -176,7 +203,7 @@ human gates, top-tier blockers, crop uncertainty, aesthetic lever gates, export
 freshness, accepted/golden gates, or publication provenance.
 
 `/fig_loop` is verify-only. It does not edit `examples/<name>/`, run compile/export,
-change acceptance state, stage files, or run git mutation commands. Use it to
+critique scaffolding, change acceptance state, stage files, or run git mutation commands. Use it to
 turn the current status + critique adjudication state into an auditable loop
 checkpoint before a human or later automation decides what to patch.
 

@@ -1,0 +1,76 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "replace the first three path lines with a smooth time-directed prefix while preserving the final segment for a subsequent bounded repair",
+      "id": "HF042",
+      "subject": "panel_a_temporal_path_prefix"
+    },
+    "finding_id": "HF042",
+    "protected_invariants": [
+      "cBlue"
+    ],
+    "repair_family": "relation_restore",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v60/human_findings.before.json",
+    "selector": {
+      "anchor_end": "  -- (2.49,1.52) -- (3.02,3.02);",
+      "anchor_start": "% The walk changes direction repeatedly and has no electrode-polarity assignment.",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-temporal-path-prefix",
+      "source_hash": "sha256:38a1e4a84be346ffa23890cfc123ddc6fdf34e7f034bfdfd0806dd8d92e704d6"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v60/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:34bca80acb1362be2c09bd7ba57d1e1d414399212d2b09e2360954749e01c1f0"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v60/repaired_generated.tex",
+  "packet_sha256": "sha256:4840025732802514cea6cb39dfa9058cf3325a24a363634bea7f92f032451935",
+  "prompt": {
+    "sha256": "sha256:aff5a8e5bfacc38826ee6523f5b517acfa12214a90739474759c00d78574522f",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v60/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: relation_restore\n- Machine finding: {\"finding\": \"replace the first three path lines with a smooth time-directed prefix while preserving the final segment for a subsequent bounded repair\", \"id\": \"HF042\", \"subject\": \"panel_a_temporal_path_prefix\"}\n- Change content only between the exact anchor lines [% The walk changes direction repeatedly and has no electrode-polarity assignment.] and [  -- (2.49,1.52) -- (3.02,3.02);].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [cBlue].\n\n## Bound editable source bytes\n```tex\n\\draw[draw=cBlue, line width=0.95pt, rounded corners=2.5pt]\n  (1.08,1.62) -- (1.34,2.02) -- (1.07,2.42) -- (1.61,3.03)\n  -- (2.02,2.72) -- (2.31,2.59) -- (2.02,2.18) -- (2.68,1.98)\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v60/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/repaired_generated.tex",
+    "sha256": "sha256:38a1e4a84be346ffa23890cfc123ddc6fdf34e7f034bfdfd0806dd8d92e704d6"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v60/repair_targets.json",
+    "sha256": "sha256:ad7c3ce17e14e9589020d86d998133338db4344629847f760e9ffc09e8628292"
+  },
+  "verification": "external_sequential_compile_required"
+}

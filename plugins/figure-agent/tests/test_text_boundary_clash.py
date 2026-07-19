@@ -299,12 +299,13 @@ def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
         "clearance_pt": 0.5,
     }
 
-    assert boundary.text_boundary_clash_payload(pdf, [candidate]) == {
+    assert boundary.text_boundary_clash_payload(pdf, [candidate], checked=1) == {
         "schema": "figure-agent.text-boundary-clash.v1",
         "fixture": "demo",
         "render_pdf": "build/demo.pdf",
         "source": "spec.yaml:text_boundary_checks",
         "candidates": [candidate],
+        "checked": 1,
         "total": 1,
     }
 
@@ -317,7 +318,7 @@ def test_payload_infers_fixture_name_for_compile_sh_relative_pdf(
     (fixture / "build").mkdir(parents=True)
     monkeypatch.chdir(fixture)
 
-    payload = boundary.text_boundary_clash_payload(Path("build/demo.pdf"), [])
+    payload = boundary.text_boundary_clash_payload(Path("build/demo.pdf"), [], checked=0)
 
     assert payload["fixture"] == "demo"
     assert payload["render_pdf"] == "build/demo.pdf"
@@ -346,6 +347,7 @@ def test_main_writes_zero_candidate_json_when_spec_has_no_checks(
     assert report["schema"] == "figure-agent.text-boundary-clash.v1"
     assert report["candidates"] == []
     assert report["total"] == 0
+    assert report["checked"] == 0
 
 
 def test_main_strict_returns_one_when_boundary_candidates_exist(
@@ -373,6 +375,18 @@ def test_main_strict_returns_one_when_boundary_candidates_exist(
         "extract_pdf_words_and_page",
         lambda _pdf: ([_word("polymer", 70.0, 20.0, 75.0, 30.0)], (200.0, 200.0)),
     )
-    monkeypatch.setattr(sys, "argv", ["check_text_boundary_clash.py", str(pdf), "--strict"])
+    output = build / "text_boundary_clash.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "check_text_boundary_clash.py",
+            str(pdf),
+            "--strict",
+            "--json-output",
+            str(output),
+        ],
+    )
 
     assert boundary.main() == 1
+    assert json.loads(output.read_text(encoding="utf-8"))["checked"] == 1

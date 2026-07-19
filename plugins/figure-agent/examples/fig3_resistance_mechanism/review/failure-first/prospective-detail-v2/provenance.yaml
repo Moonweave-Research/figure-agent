@@ -1,0 +1,22 @@
+schema: figure-agent.prospective-detail-candidate.v1
+fixture: fig3_resistance_mechanism
+candidate_id: prospective-detail-v2
+based_on:
+  candidate_id: prospective-detail-v1
+  path: review/failure-first/prospective-detail-v1/fig3_resistance_mechanism.tex
+  sha256: sha256:9681afdfd528a19dcc2b7a43ffaa3245b9d2c2cdbb4f2b45d929c93c9c0da609
+parent_source:
+  path: fig3_resistance_mechanism.tex
+  sha256: sha256:148d9bda59c6344f31a587b0b3517ee07d9c47bfff32980c21111a803d377955
+authoring_intent:
+  path: aesthetic_intent.yaml
+  sha256: sha256:f68f73c70327d43219dad40c13b3fb9b36edd1bb511fd7a0efa28b8c2c3c3740
+accepted_human_feedback:
+  - Removing the S60/S80 boxes makes the comparison worse.
+  - Preserve sample identity with sample-like swatches rather than an energy-density envelope.
+candidate_source: fig3_resistance_mechanism.tex
+acceptance_state: not_declared
+publication_acceptance: not_claimed
+notes:
+  - Baseline fixture source and historical review artifacts remain untouched.
+  - The rounded fields are composition sample swatches, not quantitative state distributions.

@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[compact label, align=center, anchor=north, fill=cAmberSphere!22,\n      inner xsep=1.5pt, inner ysep=2pt] at (1.92,1.03)\n  {sign-agnostic carrier path\\\\capture $\\leftrightarrow$ release repeats\\\\filled endpoint: retained};\n% Transition and endpoint semantics share one external key.",
+  "change_summary": "Remove the competing local label and assign retained to the filled endpoint in the external carrier key."
+}

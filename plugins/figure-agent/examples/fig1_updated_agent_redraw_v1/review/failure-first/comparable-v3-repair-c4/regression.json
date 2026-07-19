@@ -1,0 +1,44 @@
+{
+  "schema": "figure-agent.post-repair-visual-review-response.v1",
+  "attempt_local": true,
+  "finding_id": "HA004",
+  "compared": {
+    "parent_C3_build": "../comparable-v3-repair-c3/build",
+    "child_C4_build": "build"
+  },
+  "page_geometry": {
+    "parent_C3_pt": [441.894, 461.832],
+    "child_C4_pt": [441.894, 461.832],
+    "verdict": "identical page size; the label whose move would have narrowed the page (grounded source return, rightmost element) was left open, so no absolute-pixel coordinate artifact appears."
+  },
+  "detector_diff": {
+    "collisions": {"C3": 0, "C4": 0, "verdict": "identical"},
+    "text_boundary_clash": {"C3": 0, "C4": 0, "verdict": "identical"},
+    "label_path_proximity": {"C3": 0, "C4": 0, "verdict": "identical"},
+    "vector_clearance": {"C3": 0, "C4": 0, "verdict": "identical"},
+    "undeclared_geometry": {"C3": 0, "C4": 0, "verdict": "identical (still 0 actionable)"},
+    "visual_clash": {
+      "C3": 37, "C4": 37,
+      "new_in_C4": [],
+      "removed_in_C4": [],
+      "verdict": "IDENTICAL set (kind|text|dark signatures match exactly). The 2-line restack of 'grounded substrate' plus the 0.06 cm 'sample' nudge introduce NO new text_on_path or near_miss anywhere -- verified specifically that 'grounded'/'substrate'/'sample' produce no finding."
+    },
+    "panel_boundary_coverage": {
+      "C3": {"total": 4, "by_panel": {"D": 1, "E": 1, "F": 2}},
+      "C4": {"total": 2, "by_panel": {"F": 2}},
+      "removed": ["D panel_D_frame_right 'grounded'", "E panel_E_frame_left 'grounded'"],
+      "remaining": ["F panel_F_frame_right 'grounded'", "F panel_F_frame_right 'return'"],
+      "verdict": "crossings 4 -> 2: both Panel E 'grounded substrate' crossings removed; the 2 remaining belong to Panel F 'grounded source return', declared permanently open."
+    }
+  },
+  "panel_E_focus": {
+    "attributed_new_clash_candidates_C4": 0,
+    "verdict": "the restacked 'grounded substrate' and nudged 'sample' introduce NO new clash/collision; the only whole-figure detector delta is the boundary-coverage crossings 4 -> 2."
+  },
+  "regression_verdict": "PASS (machine, clean): Panel E 'grounded substrate' frame crossing removed via a two-label position edit (restack + minimal sibling nudge) with ZERO new findings anywhere, page geometry unchanged, undeclared_geometry still 0, visual_clash set byte-identical. Strict compile still blocked only by the pre-existing check_visual_clash failure (identical to C1/C2/C3), unrelated to this repair.",
+  "declared_open_defects": [
+    "Panel F 'grounded source return' (2 right-frame crossings): label-only vocabulary geometrically exhausted (referent 0.60 cm from the frame). Belongs to a future authoring/layout iteration -- widen Panel F or move the ground symbol/HV inward. Not a bounded label repair. Recorded so the next iteration inherits it."
+  ],
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

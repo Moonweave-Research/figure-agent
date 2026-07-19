@@ -1,0 +1,67 @@
+{
+  "comparison_evidence": "transcript_bound",
+  "correction_time_gate": "failed",
+  "deltas": {
+    "repaired_vs_raw": {
+      "confirmed_defect_count": 0,
+      "confirmed_defect_occurrence_count": 30,
+      "human_correction_minutes": null,
+      "intervention_count": 1
+    },
+    "verified_vs_raw": {
+      "confirmed_defect_count": 0,
+      "confirmed_defect_occurrence_count": 21,
+      "human_correction_minutes": null,
+      "intervention_count": 0
+    }
+  },
+  "lineage_gate": "failed",
+  "product_claim": "not_authorized",
+  "publication_acceptance": "not_claimed",
+  "reproduction_gate": "failed",
+  "schema": "figure-agent.failure-ablation-report.v1",
+  "variants": {
+    "raw": {
+      "clean_reproduction": false,
+      "confirmed_defect_count": 4,
+      "confirmed_defect_counts": {
+        "geometry": 1,
+        "style": 2,
+        "typography": 1
+      },
+      "confirmed_defect_occurrence_count": 28,
+      "human_correction_minutes": null,
+      "human_verdict_state": "pending",
+      "intervention_count": 0,
+      "scientific_gate": "passed"
+    },
+    "repaired": {
+      "clean_reproduction": false,
+      "confirmed_defect_count": 4,
+      "confirmed_defect_counts": {
+        "geometry": 1,
+        "style": 2,
+        "typography": 1
+      },
+      "confirmed_defect_occurrence_count": 58,
+      "human_correction_minutes": null,
+      "human_verdict_state": "pending",
+      "intervention_count": 1,
+      "scientific_gate": "passed"
+    },
+    "verified": {
+      "clean_reproduction": false,
+      "confirmed_defect_count": 4,
+      "confirmed_defect_counts": {
+        "geometry": 1,
+        "style": 2,
+        "typography": 1
+      },
+      "confirmed_defect_occurrence_count": 49,
+      "human_correction_minutes": null,
+      "human_verdict_state": "pending",
+      "intervention_count": 0,
+      "scientific_gate": "passed"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v18/repaired_generated.tex",
+  "source_sha256": "sha256:b09c048d3df3ba59525ae6f07f485c8ffc157cecaa8802d753d62ab2cb074c54",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/visual_clash.before.json",
+        "id": "VC014"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-sample-title",
+        "anchor_start": "  at (3.515,2.44) {electrode};",
+        "anchor_end": "\\draw[draw=cGray, line width=0.45pt]"
+      },
+      "repair_family": "label_reflow",
+      "protected_invariants": [
+        "disordered",
+        "sulfur--polymer film",
+        "electrode",
+        "retained"
+      ]
+    }
+  ]
+}

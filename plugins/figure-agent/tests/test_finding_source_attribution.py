@@ -168,6 +168,120 @@ def test_builds_existing_repair_target_contract_for_one_exact_finding(
     assert contract["targets"][0]["attribution"] == {"state": "exact"}
 
 
+def _semantic_contract(*, relations: list[str] | None = None) -> dict:
+    return {
+        "schema": "figure-agent.failure-first-semantic-contract.v1",
+        "required_objects": ["panel_a.axis", "panel_a.material_label"],
+        "protected_relations": (
+            ["material_label_remains_clear_of_axis"]
+            if relations is None
+            else relations
+        ),
+        "semantic_legibility": {
+            "object_roles": [
+                {
+                    "object_id": "panel_a.axis",
+                    "declared_role": "plot_axis",
+                    "forbidden_readings": [],
+                },
+                {
+                    "object_id": "panel_a.material_label",
+                    "declared_role": "annotation_label",
+                    "forbidden_readings": [],
+                },
+            ],
+            "visible_connectors": [],
+            "forbidden_connectors": [],
+            "label_ownership": [],
+        },
+        "publication_acceptance": "not_claimed",
+    }
+
+
+def test_resolves_exact_semantic_selector_from_declared_refs(tmp_path: Path) -> None:
+    source, report, registry = _fixture(tmp_path)
+    registry["selectors"][1]["semantic_object_refs"] = [
+        "panel_a.material_label",
+        "panel_a.axis",
+    ]
+    registry["selectors"][1]["semantic_relation_refs"] = [
+        "material_label_remains_clear_of_axis"
+    ]
+    attribution = finding_source_attribution.attribute_findings(
+        report,
+        registry,
+        source_path=source,
+    )
+
+    result = finding_source_attribution.resolve_semantic_selector(
+        registry=registry,
+        attribution=attribution,
+        finding_id="TC001",
+        semantic_contract=_semantic_contract(),
+    )
+
+    assert result == {
+        "state": "exact",
+        "reason_code": "one_declared_semantic_selector",
+        "selector_id": "panel-a-material-label",
+        "candidate_selector_ids": ["panel-a-material-label"],
+        "missing_reference_kinds": [],
+        "semantic_object_refs": ["panel_a.axis", "panel_a.material_label"],
+        "semantic_relation_refs": ["material_label_remains_clear_of_axis"],
+    }
+
+
+@pytest.mark.parametrize("relations", [[], ["same", "same"]])
+def test_rejects_empty_or_duplicate_declared_relation_list(
+    tmp_path: Path,
+    relations: list[str],
+) -> None:
+    source, report, registry = _fixture(tmp_path)
+    attribution = finding_source_attribution.attribute_findings(
+        report,
+        registry,
+        source_path=source,
+    )
+
+    with pytest.raises(
+        finding_source_attribution.SourceAttributionError,
+        match="semantic contract protected_relations are invalid",
+    ):
+        finding_source_attribution.resolve_semantic_selector(
+            registry=registry,
+            attribution=attribution,
+            finding_id="TC001",
+            semantic_contract=_semantic_contract(relations=relations),
+        )
+
+
+def test_rejects_duplicate_selector_relation_refs(tmp_path: Path) -> None:
+    source, report, registry = _fixture(tmp_path)
+    registry["selectors"][1]["semantic_object_refs"] = [
+        "panel_a.material_label"
+    ]
+    registry["selectors"][1]["semantic_relation_refs"] = [
+        "material_label_remains_clear_of_axis",
+        "material_label_remains_clear_of_axis",
+    ]
+    attribution = finding_source_attribution.attribute_findings(
+        report,
+        registry,
+        source_path=source,
+    )
+
+    with pytest.raises(
+        finding_source_attribution.SourceAttributionError,
+        match="semantic relation references are invalid",
+    ):
+        finding_source_attribution.resolve_semantic_selector(
+            registry=registry,
+            attribution=attribution,
+            finding_id="TC001",
+            semantic_contract=_semantic_contract(),
+        )
+
+
 def test_cli_writes_attribution_and_target_contract(tmp_path: Path) -> None:
     source, report, registry = _fixture(tmp_path)
     report_path = tmp_path / "collisions.json"

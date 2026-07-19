@@ -1,23 +1,25 @@
 # Panel Goals — fig3_resistance_mechanism
 
-## Panel A — Cell, Transport, Decay
+## A — Trapping mechanism
 
-Goal: make the reader see that applied bias drives a sign-agnostic carrier through a
-disordered sulfur-polymer film, where repeated trapping causes transient current to decay.
+Show how applied bias, sign-agnostic dispersive transport, and repeated capture/release make
+representative slow-release occupancy plausible. The reader must not interpret the sequence as a
+net carrier-drift path or as deep-only retention.
 
-Required reader takeaway: current decay is not a generic dielectric relaxation cue;
-it is the visible symptom of trapping during conduction.
+## B — Qualitative transient response
 
-## Panel B — Trap-Energy Distribution Evolution
+Give the causal observable its own column: a clean tick-free `I(t) ∝ t⁻ⁿ` decay whose only reading
+is trapping causes current to fall and, at fixed applied V, resistance to rise. This is a concept
+panel—not an experimental graph or a proxy for real data.
 
-Goal: make the reader see that sulfur composition changes the trap-energy landscape
-from discrete low-sulfur states to a broad continuous S80 distribution.
+## C — Trap-energy landscape
 
-Required reader takeaway: `n` means breadth of the trap-energy distribution, while
-`rho_60s` is a separate magnitude cue.
+Use the same vertical energy grammar as A to compare a representative discrete S60 state set with
+continuous broad S80 support. The comparison is qualitative; no numerical width-to-`n` relation,
+trap-strength ranking, or fitted density-of-states envelope is claimed.
+Use a dense irregular state field for S80, rather than a closed box or smooth distribution silhouette.
 
-## Cross-Panel Bridge
+## Cross-panel bridge
 
-Goal: connect Panel A and Panel B without crowding. The reader should be able to
-follow: broader `g(E)` -> larger `n` -> slower current decay -> increasing
-resistance.
+The reader should read A → B → C in under ten seconds: trapping mechanism, its qualitative
+transient-current signature, then the compositional landscape that motivates the mechanism.

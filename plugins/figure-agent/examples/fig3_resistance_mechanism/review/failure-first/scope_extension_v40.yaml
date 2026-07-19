@@ -1,0 +1,13 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v39.yaml
+extends_sha256: sha256:37ee2f4b66cef4aaeaa64267fdd5f59a8af7f7a0481b7b379243d34fdc7ed159
+reason: record the two-family capability decision from existing Fig1 and Fig3 ablation evidence without promoting a renderer or altering either figure source
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v40.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/benchmarks/failure_first_capability_decision.yaml
+  - plugins/figure-agent/docs/execution-plan.md
+  - plugins/figure-agent/tests/test_failure_ablation.py
+publication_acceptance: not_claimed

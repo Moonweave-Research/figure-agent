@@ -1,0 +1,8 @@
+{
+  "decision": "human_target_resolved_overall_review_required",
+  "repair_result": "upper-left arrow now follows the declared carrier path order without a new structural blocker",
+  "external_compile": "passed",
+  "next_human_target": "panel_a_retained_label_ownership",
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}

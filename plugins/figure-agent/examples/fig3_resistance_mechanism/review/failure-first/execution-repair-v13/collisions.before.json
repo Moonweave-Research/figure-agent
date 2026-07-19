@@ -1,0 +1,24 @@
+{
+  "schema": "figure-agent.text-collisions.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "review/failure-first/comparable-v2/verified_generated.pdf",
+  "iou_threshold": 0.05,
+  "word_count": 62,
+  "collisions": [
+    {
+      "id": "TC001",
+      "texts": ["sulfur", "g(E)"],
+      "iou": 0.182533,
+      "a": {
+        "text": "sulfur",
+        "bbox_pdf": [188.723, 19.715401, 208.213107, 27.095723]
+      },
+      "b": {
+        "text": "g(E)",
+        "bbox_pdf": [193.9, 24.668559, 209.201205, 29.976651]
+      },
+      "source_mapping": null
+    }
+  ],
+  "total": 1
+}

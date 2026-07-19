@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:4abccb279c36943178e06a235d8a1e0f751ed89579f4b5869dee47d9e180f424",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF013",
+      "subject": "panel_a_transition_label_arrow_grammar",
+      "finding": "retained and repeated capture release labels float over the carrier path without a consistent state-transition grammar"
+    }
+  ],
+  "publication_acceptance": "not_claimed"
+}

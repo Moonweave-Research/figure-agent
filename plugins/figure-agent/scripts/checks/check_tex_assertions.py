@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-r"""Deterministic tex-geometry assertion check (report-only WARN).
+r"""Deterministic TeX geometry assertion check (report-only WARN).
 
 Directional physics facts — a force arrow points AWAY from the drive electrode, a
 cantilever bends opposite under +V vs -V — live in DRAWN elements, not in text
@@ -49,55 +49,200 @@ _ALL_DRAW_RE = re.compile(
     r"\\draw\s*(?:\[(" + _OPT_BODY + r")\])?\s*"
     rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*--\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
 )
+_STYLED_TO_RE = re.compile(
+    r"\\draw\s*\[(" + _OPT_BODY + r")\]\s*"
+    rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*to(?:\s*\[("
+    + _OPT_BODY
+    + rf")\])?\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
+)
+_ALL_TO_RE = re.compile(
+    r"\\draw\s*(?:\[(" + _OPT_BODY + r")\])?\s*"
+    rf"\(\s*({_NUM})\s*,\s*({_NUM})\s*\)\s*to(?:\s*\[("
+    + _OPT_BODY
+    + rf")\])?\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
+)
+_NAMED_COORD = r"[A-Za-z][A-Za-z0-9_-]*"
+_STYLED_NAMED_TO_RE = re.compile(
+    r"\\draw\s*\[(" + _OPT_BODY + r")\]\s*"
+    rf"\(\s*({_NAMED_COORD})\s*\)\s*to(?:\s*\["
+    + _OPT_BODY
+    + rf"\])?\s*\(\s*({_NAMED_COORD})\s*\)"
+)
+_STYLED_NAMED_DRAW_RE = re.compile(
+    r"\\draw\s*\[(" + _OPT_BODY + r")\]\s*"
+    rf"\(\s*({_NAMED_COORD})\s*\)\s*--\s*\(\s*({_NAMED_COORD})\s*\)"
+)
+_NAMED_NODE_AT_NAMED_COORD_RE = re.compile(
+    r"\\node(?:\s*\[" + _OPT_BODY + r"\])?\s*"
+    rf"\(\s*({_NAMED_COORD})\s*\)\s*at\s*\(\s*({_NAMED_COORD})\s*\)"
+)
+_NAMED_COORD_DECL_RE = re.compile(
+    r"\\(?:coordinate|node)(?:\s*\[[^\]]*\])?\s*"
+    rf"\(\s*({_NAMED_COORD})\s*\)\s*at\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
+)
+
+_RAW_DRAW_PATTERN = tuple[re.Pattern[str], tuple[int, int, int, int], int | None]
+
+
+def _option_tokens(option_body: str) -> list[str]:
+    """Split TikZ options only at top-level commas."""
+    tokens: list[str] = []
+    start = brace_depth = bracket_depth = 0
+    for index, char in enumerate(option_body):
+        if char == "{":
+            brace_depth += 1
+        elif char == "}":
+            brace_depth -= 1
+        elif char == "[":
+            bracket_depth += 1
+        elif char == "]":
+            bracket_depth -= 1
+        elif char == "," and brace_depth == bracket_depth == 0:
+            tokens.append(option_body[start:index].strip())
+            start = index + 1
+    tokens.append(option_body[start:].strip())
+    return [token for token in tokens if token]
+
+
+def _has_style_token(option_body: str, style: str) -> bool:
+    """Require an exact bare style token, never a word-boundary substring."""
+    return style in _option_tokens(option_body)
+
+
+def _strip_tex_comments(tex_text: str) -> str:
+    """Remove unescaped TeX comments while preserving line boundaries.
+
+    A commented-out ``\\draw`` is not rendered and must not satisfy a source
+    contract. An escaped ``\\%`` remains ordinary TeX content; an even number of
+    preceding backslashes leaves ``%`` unescaped and starts a comment.
+    """
+    stripped_lines: list[str] = []
+    for line in tex_text.splitlines(keepends=True):
+        for index, char in enumerate(line):
+            if char != "%":
+                continue
+            preceding_slashes = 0
+            for before in reversed(line[:index]):
+                if before != "\\":
+                    break
+                preceding_slashes += 1
+            if preceding_slashes % 2:
+                continue
+            line_ending = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else ""
+            stripped_lines.append(line[:index] + line_ending)
+            break
+        else:
+            stripped_lines.append(line)
+    return "".join(stripped_lines)
+
+
+def _match_raw_draws(
+    tex_text: str,
+    patterns: tuple[_RAW_DRAW_PATTERN, ...],
+    *,
+    style: str | None = None,
+) -> list[tuple[float, float, float, float, str]]:
+    tex_text = _strip_tex_comments(tex_text)
+    matches: list[tuple[int, tuple[float, float, float, float, str]]] = []
+    for pattern, coordinate_groups, to_options_group in patterns:
+        for match in pattern.finditer(tex_text):
+            draw_options = match.group(1) or ""
+            if style is not None and not _has_style_token(draw_options, style):
+                continue
+            to_options = match.group(to_options_group) if to_options_group else None
+            options = ",".join(option for option in (draw_options, to_options) if option)
+            matches.append(
+                (
+                    match.start(),
+                    (
+                        *(float(match.group(group)) for group in coordinate_groups),
+                        options,
+                    ),
+                )
+            )
+    return [raw for _, raw in sorted(matches, key=lambda item: item[0])]
 
 
 def _styled_draws_raw(tex_text: str, style: str) -> list[tuple[float, float, float, float, str]]:
-    """Every `\\draw[…<style>…] (x1,y1) -- (x2,y2)` as (x1, y1, x2, y2, option_body).
+    """Every styled straight or `to[...]` draw as (x1, y1, x2, y2, option_body).
 
-    The style token is matched word-bounded inside the option body so `forceArr`
-    does not match `forceArrow`; the option body carries the arrow-tip spec.
+    The style token is exact inside the comma-delimited option body, so
+    `xfer-helper` cannot satisfy an `xfer` assertion.
     """
-    style_re = re.compile(r"\b" + re.escape(style) + r"\b")
-    out: list[tuple[float, float, float, float, str]] = []
-    for match in _STYLED_DRAW_RE.finditer(tex_text):
-        options = match.group(1)
-        if not style_re.search(options):
+    literal_paths = _match_raw_draws(
+        tex_text,
+        ((_STYLED_DRAW_RE, (2, 3, 4, 5), None), (_STYLED_TO_RE, (2, 3, 5, 6), 4)),
+        style=style,
+    )
+    stripped = _strip_tex_comments(tex_text)
+    coordinates = {
+        match.group(1): (float(match.group(2)), float(match.group(3)))
+        for match in _NAMED_COORD_DECL_RE.finditer(stripped)
+    }
+    named_paths: list[tuple[float, float, float, float, str]] = []
+    for match in _STYLED_NAMED_TO_RE.finditer(stripped):
+        if not _has_style_token(match.group(1), style):
             continue
-        out.append(
-            (
-                float(match.group(2)),
-                float(match.group(3)),
-                float(match.group(4)),
-                float(match.group(5)),
-                options,
-            )
-        )
-    return out
+        start = coordinates.get(match.group(2))
+        end = coordinates.get(match.group(3))
+        if start is not None and end is not None:
+            named_paths.append((*start, *end, match.group(1)))
+    return literal_paths + named_paths
 
 
 def _all_draws_raw(tex_text: str) -> list[tuple[float, float, float, float, str]]:
-    """Every straight `\\draw … (x1,y1) -- (x2,y2)` as (x1, y1, x2, y2, option_body)."""
-    return [
-        (
-            float(match.group(2)),
-            float(match.group(3)),
-            float(match.group(4)),
-            float(match.group(5)),
-            match.group(1) or "",
-        )
-        for match in _ALL_DRAW_RE.finditer(tex_text)
-    ]
+    """Every straight or `to[...]` draw as (x1, y1, x2, y2, option_body)."""
+    return _match_raw_draws(
+        tex_text,
+        ((_ALL_DRAW_RE, (2, 3, 4, 5), None), (_ALL_TO_RE, (2, 3, 5, 6), 4)),
+    )
 
 
 def find_styled_draws(tex_text: str, style: str) -> list[tuple[float, float, float, float]]:
-    """Coordinates of every `\\draw[…<style>…] (x1,y1) -- (x2,y2)` in the source."""
+    """Coordinates of every styled straight or `to[...]` draw in the source."""
     return [raw[:4] for raw in _styled_draws_raw(tex_text, style)]
 
 
 def find_all_draws(tex_text: str) -> list[tuple[float, float, float, float]]:
-    """Coordinates of every straight `\\draw … (x1,y1) -- (x2,y2)` regardless of
-    style. Bezier `.. controls ..` segments are not matched."""
+    """Coordinates of every straight or `to[...]` draw, excluding Bezier controls."""
     return [raw[:4] for raw in _all_draws_raw(tex_text)]
+
+
+def find_styled_named_paths(tex_text: str, style: str) -> list[tuple[str, str]]:
+    """Named TikZ endpoints for ``style``-tagged curved or straight paths.
+
+    A source relation is robust only when the path ends at the named visual state
+    it claims to enter or leave. Literal coordinates cannot provide that binding:
+    moving a trap tick and forgetting an adjacent arrow would otherwise remain a
+    silent semantic defect.
+    """
+    paths: list[tuple[str, str]] = []
+    for match in _STYLED_NAMED_TO_RE.finditer(_strip_tex_comments(tex_text)):
+        if _has_style_token(match.group(1), style):
+            paths.append((match.group(2), match.group(3)))
+    for match in _STYLED_NAMED_DRAW_RE.finditer(_strip_tex_comments(tex_text)):
+        if _has_style_token(match.group(1), style):
+            paths.append((match.group(2), match.group(3)))
+    return paths
+
+
+def find_styled_named_to_paths(tex_text: str, style: str) -> list[tuple[str, str]]:
+    """Backward-compatible alias for :func:`find_styled_named_paths`."""
+    return find_styled_named_paths(tex_text, style)
+
+
+def find_named_node_anchor_bindings(tex_text: str) -> list[tuple[str, str]]:
+    """Return named nodes placed directly at named coordinates.
+
+    A leader endpoint alone is insufficient to bind an annotation: the text node
+    can be moved away while leaving the leader in place. These bindings let an
+    opt-in source contract require the label node to share its declared leader
+    anchor.
+    """
+    return [
+        (match.group(1), match.group(2))
+        for match in _NAMED_NODE_AT_NAMED_COORD_RE.finditer(_strip_tex_comments(tex_text))
+    ]
 
 
 def _tip_orientation(option_body: str) -> str:
@@ -108,7 +253,7 @@ def _tip_orientation(option_body: str) -> str:
     comma/bracket does not split the option list.
     """
     masked = re.sub(r"\{(?:[^{}]|\{[^{}]*\})*\}", "T", option_body)
-    for option in masked.split(","):
+    for option in _option_tokens(masked):
         arrow = re.fullmatch(r"([<>|T]?)-([<>|T]?)", option.strip())
         if not arrow:
             continue
@@ -121,6 +266,25 @@ def _tip_orientation(option_body: str) -> str:
             return "forward"
         return "none"
     return "none"
+
+
+def _style_tip(tex_text: str, style: str) -> str:
+    """Resolve an arrowhead declared by a named TikZ style when unambiguous."""
+    pattern = re.compile(
+        rf"{re.escape(style)}/\.style\s*=\s*\{{((?:[^{{}}]|\{{[^{{}}]*\}})*)\}}"
+    )
+    matches = pattern.findall(_strip_tex_comments(tex_text))
+    tips = {_tip_orientation(body) for body in matches}
+    return tips.pop() if len(tips) == 1 else "none"
+
+
+def _resolved_tip(tex_text: str, option_body: str) -> str:
+    direct = _tip_orientation(option_body)
+    if direct != "none":
+        return direct
+    style_tips = {_style_tip(tex_text, token) for token in _option_tokens(option_body)}
+    style_tips.discard("none")
+    return style_tips.pop() if len(style_tips) == 1 else "none"
 
 
 def check_direction(
@@ -174,7 +338,11 @@ class TexAssertionError(ValueError):
     """Raised when declared tex_assertions are malformed."""
 
 
-def parse_tex_assertions(spec: dict) -> list[dict]:
+def parse_tex_assertions(
+    spec: dict,
+    *,
+    source_name: str | None = None,
+) -> list[dict]:
     raw = spec.get("tex_assertions")
     if raw is None:
         return []
@@ -195,6 +363,11 @@ def parse_tex_assertions(spec: dict) -> list[dict]:
             if not isinstance(anchor_style, str) or not anchor_style.strip():
                 raise TexAssertionError(f"tex_assertions[{index}].anchor_style must be a string")
             out["anchor_style"] = anchor_style.strip()
+        assertion_source_name = item.get("source_name")
+        if assertion_source_name is not None:
+            if not isinstance(assertion_source_name, str) or not assertion_source_name.strip():
+                raise TexAssertionError(f"tex_assertions[{index}].source_name must be a string")
+            out["source_name"] = assertion_source_name.strip()
         if out["axis"] not in AXES:
             raise TexAssertionError(f"tex_assertions[{index}].axis must be one of {AXES}")
         if out["direction"] not in DIRECTIONS:
@@ -215,12 +388,194 @@ def parse_tex_assertions(spec: dict) -> list[dict]:
             ):
                 raise TexAssertionError(f"tex_assertions[{index}].near must be [x, y] numbers")
             out["near"] = [float(near[0]), float(near[1])]
+        if "minimum_matches" in item:
+            minimum_matches = item["minimum_matches"]
+            if (
+                isinstance(minimum_matches, bool)
+                or not isinstance(minimum_matches, int)
+                or minimum_matches < 1
+            ):
+                raise TexAssertionError(
+                    f"tex_assertions[{index}].minimum_matches must be a positive integer"
+                )
+            if "near" in out:
+                raise TexAssertionError(
+                    f"tex_assertions[{index}].minimum_matches cannot be combined with near"
+                )
+            out["minimum_matches"] = minimum_matches
+        require_arrow = item.get("require_unidirectional_arrow", False)
+        if not isinstance(require_arrow, bool):
+            raise TexAssertionError(
+                f"tex_assertions[{index}].require_unidirectional_arrow must be boolean"
+            )
+        if require_arrow:
+            out["require_unidirectional_arrow"] = True
         if "anchor_style" not in out and "near" not in out:
             raise TexAssertionError(
                 f"tex_assertions[{index}] requires anchor_style or near to locate the draw"
             )
+        if source_name is not None and out.get("source_name") not in (None, source_name):
+            continue
         parsed.append(out)
     return parsed
+
+
+def parse_named_endpoint_assertions(
+    spec: dict,
+    *,
+    source_name: str | None = None,
+) -> list[dict]:
+    """Parse source-level bindings between semantic paths and named TikZ states."""
+    raw = spec.get("named_endpoint_assertions")
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise TexAssertionError("named_endpoint_assertions must be a list")
+    parsed: list[dict] = []
+    for index, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise TexAssertionError(
+                f"named_endpoint_assertions[{index}] must be a mapping"
+            )
+        out: dict = {}
+        for field in ("id", "anchor_style"):
+            value = item.get(field)
+            if not isinstance(value, str) or not value.strip():
+                raise TexAssertionError(
+                    f"named_endpoint_assertions[{index}].{field} is required"
+                )
+            out[field] = value.strip()
+        for field in ("required_anchors", "allowed_anchors"):
+            anchors = item.get(field)
+            if (
+                not isinstance(anchors, list)
+                or not anchors
+                or any(not isinstance(anchor, str) or not anchor.strip() for anchor in anchors)
+            ):
+                raise TexAssertionError(
+                    f"named_endpoint_assertions[{index}].{field} must be a non-empty string list"
+                )
+            out[field] = [anchor.strip() for anchor in anchors]
+        if not set(out["required_anchors"]).issubset(out["allowed_anchors"]):
+            raise TexAssertionError(
+                f"named_endpoint_assertions[{index}].required_anchors must be allowed"
+            )
+        minimum_paths = item.get("minimum_paths")
+        if (
+            isinstance(minimum_paths, bool)
+            or not isinstance(minimum_paths, int)
+            or minimum_paths < 1
+        ):
+            raise TexAssertionError(
+                f"named_endpoint_assertions[{index}].minimum_paths must be a positive integer"
+            )
+        out["minimum_paths"] = minimum_paths
+        required_node_bindings = item.get("required_node_bindings")
+        if required_node_bindings is not None:
+            if not isinstance(required_node_bindings, list) or not required_node_bindings:
+                raise TexAssertionError(
+                    f"named_endpoint_assertions[{index}].required_node_bindings"
+                    " must be a non-empty list"
+                )
+            parsed_bindings: list[dict[str, str]] = []
+            for binding_index, binding in enumerate(required_node_bindings):
+                if not isinstance(binding, dict):
+                    raise TexAssertionError(
+                        f"named_endpoint_assertions[{index}].required_node_bindings"
+                        f"[{binding_index}] must be a mapping"
+                    )
+                parsed_binding: dict[str, str] = {}
+                for field in ("node", "anchor"):
+                    value = binding.get(field)
+                    if not isinstance(value, str) or not value.strip():
+                        raise TexAssertionError(
+                            f"named_endpoint_assertions[{index}].required_node_bindings"
+                            f"[{binding_index}].{field} is required"
+                        )
+                    parsed_binding[field] = value.strip()
+                parsed_bindings.append(parsed_binding)
+            out["required_node_bindings"] = parsed_bindings
+        assertion_source_name = item.get("source_name")
+        if assertion_source_name is not None:
+            if not isinstance(assertion_source_name, str) or not assertion_source_name.strip():
+                raise TexAssertionError(
+                    f"named_endpoint_assertions[{index}].source_name must be a string"
+                )
+            out["source_name"] = assertion_source_name.strip()
+        if source_name is not None and out.get("source_name") not in (None, source_name):
+            continue
+        parsed.append(out)
+    return parsed
+
+
+def check_named_endpoint_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
+    """Return blocking issues when semantic paths detach from declared named states."""
+    issues: list[dict] = []
+    for assertion in assertions:
+        paths = find_styled_named_paths(tex_text, assertion["anchor_style"])
+        if len(paths) < assertion["minimum_paths"]:
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "insufficient_named_paths",
+                    "message": (
+                        f"assertion {assertion['id']!r}: {assertion['anchor_style']!r} has "
+                        f"{len(paths)} named paths; requires at least {assertion['minimum_paths']}"
+                    ),
+                }
+            )
+            continue
+        allowed = set(assertion["allowed_anchors"])
+        unexpected = sorted(
+            {anchor for path in paths for anchor in path if anchor not in allowed}
+        )
+        if unexpected:
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "named_endpoint_unbound",
+                    "message": (
+                        f"assertion {assertion['id']!r}: unexpected named endpoints "
+                        f"{', '.join(unexpected)}"
+                    ),
+                }
+            )
+            continue
+        observed = {anchor for path in paths for anchor in path}
+        missing = sorted(set(assertion["required_anchors"]) - observed)
+        if missing:
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "named_endpoint_missing",
+                    "message": (
+                        f"assertion {assertion['id']!r}: required named endpoints absent "
+                        f"{', '.join(missing)}"
+                    ),
+                }
+            )
+            continue
+        required_node_bindings = assertion.get("required_node_bindings", [])
+        observed_node_bindings = set(find_named_node_anchor_bindings(tex_text))
+        missing_node_bindings = [
+            binding
+            for binding in required_node_bindings
+            if (binding["node"], binding["anchor"]) not in observed_node_bindings
+        ]
+        if missing_node_bindings:
+            rendered = ", ".join(
+                f"{binding['node']} at {binding['anchor']}" for binding in missing_node_bindings
+            )
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "named_label_binding_missing",
+                    "message": (
+                        f"assertion {assertion['id']!r}: required label bindings absent {rendered}"
+                    ),
+                }
+            )
+    return issues
 
 
 def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
@@ -231,6 +586,49 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
         style = assertion.get("anchor_style")
         draws = _styled_draws_raw(tex_text, style) if style else _all_draws_raw(tex_text)
         anchor = repr(style) if style else "any draw near the declared point"
+        minimum_matches = assertion.get("minimum_matches")
+        require_arrow = assertion.get("require_unidirectional_arrow", False)
+        def direction_holds(draw: tuple[float, float, float, float, str]) -> bool:
+            tip = _resolved_tip(tex_text, draw[4])
+            return tip in {"forward", "reverse"} and check_direction(
+                draw[:4], axis=assertion["axis"], direction=assertion["direction"], tip=tip,
+                tol=assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM),
+            ) == "pass" if require_arrow else check_direction(
+                draw[:4], axis=assertion["axis"], direction=assertion["direction"], tip=tip,
+                tol=assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM),
+            ) == "pass"
+        if minimum_matches is not None:
+            if len(draws) < minimum_matches:
+                issues.append(
+                    {
+                        "id": assertion["id"],
+                        "status": "insufficient_matches",
+                        "message": (
+                            f"assertion {assertion['id']!r}: {anchor} matches {len(draws)} draws; "
+                            f"requires at least {minimum_matches}"
+                        ),
+                    }
+                )
+                continue
+            matching_count = sum(
+                1
+                for draw in draws
+                if direction_holds(draw)
+            )
+            if matching_count >= minimum_matches:
+                continue
+            issues.append(
+                {
+                    "id": assertion["id"],
+                    "status": "insufficient_matches",
+                    "message": (
+                        f"assertion {assertion['id']!r}: {anchor} has {matching_count} "
+                        f"{assertion['direction']} matches on {assertion['axis']}; requires "
+                        f"at least {minimum_matches}"
+                    ),
+                }
+            )
+            continue
         status, selected = select_draw(draws, assertion.get("near"))
         if status == "missing":
             issues.append(
@@ -253,11 +651,17 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
                 }
             )
             continue
+        tip = _resolved_tip(tex_text, selected[4])
+        if require_arrow and tip not in {"forward", "reverse"}:
+            issues.append({"id": assertion["id"], "status": "arrowhead_invalid", "message": (
+                f"assertion {assertion['id']!r}: {anchor} has {tip} arrowhead"
+            )})
+            continue
         result = check_direction(
             selected[:4],
             axis=assertion["axis"],
             direction=assertion["direction"],
-            tip=_tip_orientation(selected[4]),
+            tip=tip,
             tol=assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM),
         )
         if result == "pass":
@@ -267,7 +671,7 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
                 "id": assertion["id"],
                 "status": result,
                 "message": (
-                    f"assertion {assertion['id']!r} {result}: {assertion['anchor_style']!r} "
+                    f"assertion {assertion['id']!r} {result}: {anchor} "
                     f"is not {assertion['direction']} on {assertion['axis']}"
                 ),
             }
@@ -278,7 +682,11 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
 # Statuses that should BLOCK export: a violated assertion is wrong physics; a
 # missing/ambiguous anchor means an authored assertion is unverified. 'indeterminate'
 # (within tolerance) is advisory, not blocking.
-BLOCKING_STATUSES = ("violated", "anchor_missing", "anchor_ambiguous")
+BLOCKING_STATUSES = (
+    "violated", "anchor_missing", "anchor_ambiguous", "insufficient_matches", "arrowhead_invalid",
+    "insufficient_named_paths", "named_endpoint_unbound", "named_endpoint_missing",
+    "named_label_binding_missing",
+)
 
 
 def _gate_failure_issue(status: str, json_path, *, detail: str | None = None) -> dict:
@@ -353,20 +761,24 @@ def main() -> int:
 
     spec_path = args.spec or args.tex.parent / "spec.yaml"
     spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) if spec_path.exists() else {}
-    assertions = parse_tex_assertions(spec or {})
+    assertions = parse_tex_assertions(spec or {}, source_name=args.tex.name)
+    named_endpoint_assertions = parse_named_endpoint_assertions(
+        spec or {}, source_name=args.tex.name
+    )
     tex_text = args.tex.read_text(encoding="utf-8")
-    issues = check_tex_assertions(tex_text, assertions)
+    issues = check_tex_assertions(tex_text, assertions) + check_named_endpoint_assertions(
+        tex_text, named_endpoint_assertions
+    )
+    assertion_count = len(assertions) + len(named_endpoint_assertions)
 
     if args.json_output:
-        write_tex_assertions_json(args.tex, issues, len(assertions), args.json_output)
-    print(f"tex assertions: {args.tex.name} ({len(assertions)} checked)")
+        write_tex_assertions_json(args.tex, issues, assertion_count, args.json_output)
+    print(f"tex assertions: {args.tex.name} ({assertion_count} checked)")
     for issue in issues:
         print(f"WARN {issue['status']}: {issue['message']}")
     if not issues:
         print("OK: no tex-geometry assertion issues")
-    violated = any(
-        i["status"] in ("violated", "anchor_missing", "anchor_ambiguous") for i in issues
-    )
+    violated = any(i["status"] in BLOCKING_STATUSES for i in issues)
     return 1 if (args.strict and violated) else 0
 
 

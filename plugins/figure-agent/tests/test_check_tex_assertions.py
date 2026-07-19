@@ -4,6 +4,8 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks"))
 
 import check_tex_assertions as cta  # noqa: E402
@@ -28,6 +30,10 @@ def test_find_styled_draws_empty_when_style_absent():
 def test_find_styled_draws_does_not_match_a_different_style_substring():
     # "forceArr" must be word-bounded — "forceArrow" should not match "forceArr".
     assert cta.find_styled_draws("\\draw[forceArrow] (0,0) -- (1,1);", "forceArr") == []
+
+
+def test_find_styled_draws_requires_an_exact_tikz_style_token():
+    assert cta.find_styled_draws("\\draw[xfer-helper] (0,0) -- (1,1);", "xfer") == []
 
 
 def test_find_styled_draws_returns_all_matches():
@@ -92,6 +98,27 @@ def test_parse_tex_assertions_rejects_bad_axis():
         cta.parse_tex_assertions({"tex_assertions": [bad]})
 
 
+def test_parse_tex_assertions_rejects_non_positive_minimum_matches():
+    with pytest.raises(cta.TexAssertionError, match="minimum_matches"):
+        cta.parse_tex_assertions({"tex_assertions": [{**ASSERTION, "minimum_matches": 0}]})
+
+
+def test_parse_tex_assertions_scopes_a_contract_to_its_declared_source_name():
+    spec = {"tex_assertions": [{**ASSERTION, "source_name": "current.tex"}]}
+
+    assert cta.parse_tex_assertions(spec, source_name="current.tex") == [
+        {**ASSERTION, "source_name": "current.tex"}
+    ]
+    assert cta.parse_tex_assertions(spec, source_name="historical.tex") == []
+
+
+def test_parse_tex_assertions_rejects_invalid_scoped_contract_for_other_source():
+    spec = {"tex_assertions": [{**ASSERTION, "source_name": "current.tex", "minimum_matches": 0}]}
+
+    with pytest.raises(cta.TexAssertionError, match="minimum_matches"):
+        cta.parse_tex_assertions(spec, source_name="historical.tex")
+
+
 def test_check_passes_a_correct_repulsion_figure():
     issues = cta.check_tex_assertions(FORCE_AWAY, [ASSERTION])
     assert issues == []
@@ -113,6 +140,185 @@ def test_check_reports_anchor_ambiguous_when_style_matches_twice():
     tex = FORCE_AWAY + "\n" + FORCE_TOWARD
     issues = cta.check_tex_assertions(tex, [ASSERTION])
     assert issues[0]["status"] == "anchor_ambiguous"
+
+
+def test_check_passes_repeated_curved_capture_arrows_by_semantic_style():
+    tex = "\n".join(
+        [
+            r"\draw[capture] (1.0,3.0) to[out=-100,in=80] (1.1,2.0);",
+            r"\draw[capture] (2.0,3.0) to[out=-100,in=80] (2.1,2.0);",
+        ]
+    )
+    assertion = {
+        "id": "repeated-capture",
+        "anchor_style": "capture",
+        "axis": "y",
+        "direction": "decreasing",
+        "minimum_matches": 2,
+    }
+
+    assert cta.check_tex_assertions(tex, [assertion]) == []
+
+
+def test_check_ignores_commented_out_curved_paths_for_minimum_matches():
+    tex = """
+    % \\draw[capture] (1,3) to[out=-90,in=90] (1,2);
+    % \\draw[capture] (2,3) to[out=-90,in=90] (2,2);
+    """
+    assertion = {
+        "id": "two-captures",
+        "anchor_style": "capture",
+        "axis": "y",
+        "direction": "decreasing",
+        "minimum_matches": 2,
+    }
+
+    issues = cta.check_tex_assertions(tex, [assertion])
+
+    assert issues[0]["id"] == "two-captures"
+    assert issues[0]["status"] == "insufficient_matches"
+
+
+def test_check_rejects_insufficient_repeated_curved_semantic_arrows():
+    tex = r"\draw[capture] (1.0,3.0) to[out=-100,in=80] (1.1,2.0);"
+    assertion = {
+        "id": "repeated-capture",
+        "anchor_style": "capture",
+        "axis": "y",
+        "direction": "decreasing",
+        "minimum_matches": 2,
+    }
+
+    issues = cta.check_tex_assertions(tex, [assertion])
+
+    assert issues[0]["status"] == "insufficient_matches"
+    assert issues[0]["id"] == "repeated-capture"
+
+
+def test_check_rejects_reversed_curved_semantic_arrow_in_a_repeated_role():
+    tex = "\n".join(
+        [
+            r"\draw[capture] (1.0,3.0) to[out=-100,in=80] (1.1,2.0);",
+            r"\draw[capture] (2.0,2.0) to[out=80,in=-100] (2.1,3.0);",
+        ]
+    )
+    assertion = {
+        "id": "repeated-capture",
+        "anchor_style": "capture",
+        "axis": "y",
+        "direction": "decreasing",
+        "minimum_matches": 2,
+    }
+
+    issues = cta.check_tex_assertions(tex, [assertion])
+
+    assert issues[0]["status"] == "insufficient_matches"
+
+
+def test_fig3_carrier_sequence_declares_and_satisfies_repeated_capture_release_contract():
+    plugin_root = Path(__file__).resolve().parents[1]
+    fixture = plugin_root / "examples" / "fig3_resistance_mechanism"
+    assertions = cta.parse_tex_assertions(
+        yaml.safe_load((fixture / "spec.yaml").read_text(encoding="utf-8")),
+        source_name="fig3_resistance_mechanism.tex",
+    )
+
+    assert {assertion["id"] for assertion in assertions} >= {
+        "carrier-sequence-repeated-capture",
+        "carrier-sequence-repeated-release",
+    }
+    assert (
+        cta.check_tex_assertions(
+            (fixture / "fig3_resistance_mechanism.tex").read_text(encoding="utf-8"),
+            assertions,
+        )
+        == []
+    )
+
+
+def test_fig3_carrier_sequence_binds_each_transfer_to_declared_named_states():
+    plugin_root = Path(__file__).resolve().parents[1]
+    fixture = plugin_root / "examples" / "fig3_resistance_mechanism"
+    spec = yaml.safe_load((fixture / "spec.yaml").read_text(encoding="utf-8"))
+    assertions = cta.parse_named_endpoint_assertions(
+        spec,
+        source_name="fig3_resistance_mechanism.tex",
+    )
+
+    assert [assertion["id"] for assertion in assertions] == [
+        "carrier-sequence-binds-every-transfer-to-a-declared-state",
+        "terminal-state-label-binds-to-terminal-trap",
+    ]
+    assert cta.check_named_endpoint_assertions(
+        (fixture / "fig3_resistance_mechanism.tex").read_text(encoding="utf-8"),
+        assertions,
+    ) == []
+
+
+def test_named_endpoint_assertion_rejects_a_literal_detached_transfer_path():
+    tex = "\n".join(
+        [
+            r"\coordinate (carrier) at (1.0,3.0);",
+            r"\coordinate (trap) at (1.0,2.0);",
+            r"\draw[xfer] (carrier) to[out=-90,in=90] (1.0,2.0);",
+        ]
+    )
+    assertion = {
+        "id": "named-transfer",
+        "anchor_style": "xfer",
+        "minimum_paths": 1,
+        "required_anchors": ["carrier", "trap"],
+        "allowed_anchors": ["carrier", "trap"],
+    }
+
+    issues = cta.check_named_endpoint_assertions(tex, [assertion])
+
+    assert issues[0]["id"] == "named-transfer"
+    assert issues[0]["status"] == "insufficient_named_paths"
+
+
+def test_named_endpoint_assertion_binds_a_straight_leader_to_its_named_target():
+    tex = "\n".join(
+        [
+            r"\coordinate (trap) at (1.0,2.0);",
+            r"\coordinate (label_anchor) at (1.0,1.5);",
+            r"\draw[terminalLabelLeader] (trap) -- (label_anchor);",
+            r"\node (label) at (label_anchor) {slow-release};",
+        ]
+    )
+    assertion = {
+        "id": "terminal-label",
+        "anchor_style": "terminalLabelLeader",
+        "minimum_paths": 1,
+        "required_anchors": ["trap", "label_anchor"],
+        "allowed_anchors": ["trap", "label_anchor"],
+        "required_node_bindings": [{"node": "label", "anchor": "label_anchor"}],
+    }
+
+    assert cta.check_named_endpoint_assertions(tex, [assertion]) == []
+
+
+def test_named_endpoint_assertion_rejects_a_leader_when_its_label_node_detaches():
+    tex = "\n".join(
+        [
+            r"\coordinate (trap) at (1.0,2.0);",
+            r"\coordinate (label_anchor) at (1.0,1.5);",
+            r"\draw[terminalLabelLeader] (trap) -- (label_anchor);",
+            r"\node (label) at (1.6,1.5) {slow-release};",
+        ]
+    )
+    assertion = {
+        "id": "terminal-label",
+        "anchor_style": "terminalLabelLeader",
+        "minimum_paths": 1,
+        "required_anchors": ["trap", "label_anchor"],
+        "allowed_anchors": ["trap", "label_anchor"],
+        "required_node_bindings": [{"node": "label", "anchor": "label_anchor"}],
+    }
+
+    issues = cta.check_named_endpoint_assertions(tex, [assertion])
+
+    assert issues[0]["status"] == "named_label_binding_missing"
 
 
 def test_payload_has_stable_shape(tmp_path):
@@ -251,12 +457,13 @@ def test_read_blocking_issues_filters_to_blocking_statuses(tmp_path):
                     {"id": "b", "status": "indeterminate"},
                     {"id": "c", "status": "anchor_missing"},
                     {"id": "d", "status": "anchor_ambiguous"},
+                    {"id": "e", "status": "insufficient_matches"},
                 ]
             }
         ),
         encoding="utf-8",
     )
-    assert {i["id"] for i in cta.read_blocking_issues(p)} == {"a", "c", "d"}
+    assert {i["id"] for i in cta.read_blocking_issues(p)} == {"a", "c", "d", "e"}
 
 
 def test_read_blocking_issues_missing_artifact_blocks(tmp_path):
@@ -320,6 +527,37 @@ def test_cli_strict_flags_violation_and_writes_json(tmp_path):
     assert data["source_hashes"]["examples/demo/demo.tex"].startswith("sha256:")
 
 
+def test_cli_strict_rejects_commented_out_minimum_matches(tmp_path):
+    import subprocess
+
+    fixture = tmp_path / "demo"
+    fixture.mkdir()
+    (fixture / "spec.yaml").write_text(
+        "name: demo\n"
+        "tex_assertions:\n"
+        "  - id: repeated-capture\n"
+        "    anchor_style: capture\n"
+        "    axis: y\n"
+        "    direction: decreasing\n"
+        "    minimum_matches: 2\n",
+        encoding="utf-8",
+    )
+    (fixture / "demo.tex").write_text(
+        "% \\draw[capture] (1,3) to[out=-90,in=90] (1,2);\n"
+        "% \\draw[capture] (2,3) to[out=-90,in=90] (2,2);\n",
+        encoding="utf-8",
+    )
+    script = Path(__file__).resolve().parents[1] / "scripts" / "checks" / "check_tex_assertions.py"
+    result = subprocess.run(
+        [sys.executable, str(script), str(fixture / "demo.tex"), "--strict"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 1
+    assert "insufficient_matches" in result.stdout
+
+
 # --- M1: direction must follow the arrowhead, not coordinate order ---
 
 
@@ -361,6 +599,19 @@ def test_check_tex_assertions_forward_arrowhead_passes():
     assert cta.check_tex_assertions(tex, assertions) == []
 
 
+def test_check_tex_assertions_honors_reverse_arrowhead_on_curved_to_path():
+    # The endpoint order is decreasing-x, but the head is at the start of the
+    # curved path, so the physical direction is increasing-x.
+    tex = r"\draw[forceArr] (2,0) to[{Stealth}-] (0,0);"
+    assertions = [
+        {"id": "force-away", "anchor_style": "forceArr", "axis": "x", "direction": "decreasing"}
+    ]
+
+    issues = cta.check_tex_assertions(tex, assertions)
+
+    assert issues[0]["status"] == "violated"
+
+
 def test_check_tex_assertions_matches_styled_draw_with_inline_tip_bracket():
     # C2: an inline tip spec with an inner ] must not break the styled-draw anchor.
     tex = "\\draw[forceArr,-{Stealth[length=6pt,width=4.5pt]}] (0,0) -- (-1,0);"
@@ -369,3 +620,28 @@ def test_check_tex_assertions_matches_styled_draw_with_inline_tip_bracket():
     ]
     # forward tip, coords -x -> decreasing holds -> pass (NOT anchor_missing).
     assert cta.check_tex_assertions(tex, assertions) == []
+
+
+def test_named_style_arrowhead_satisfies_unidirectional_assertion():
+    tex = "\\tikzset{xfer/.style={-{Stealth[length=1mm]}}}\n\\draw[xfer] (0,1) -- (0,0);"
+    assertion = {
+        "id": "capture",
+        "anchor_style": "xfer",
+        "axis": "y",
+        "direction": "decreasing",
+        "require_unidirectional_arrow": True,
+    }
+    assert cta.check_tex_assertions(tex, [assertion]) == []
+
+
+def test_unidirectional_assertion_rejects_missing_or_bidirectional_arrowhead():
+    assertion = {
+        "id": "capture",
+        "anchor_style": "xfer",
+        "axis": "y",
+        "direction": "decreasing",
+        "require_unidirectional_arrow": True,
+    }
+    for options in ("xfer", "xfer,<->"):
+        issues = cta.check_tex_assertions(f"\\draw[{options}] (0,1) -- (0,0);", [assertion])
+        assert issues[0]["status"] == "arrowhead_invalid"

@@ -1,0 +1,54 @@
+{
+  "schema": "figure-agent.post-repair-visual-review-response.v1",
+  "attempt_local": true,
+  "finding_id": "HA001",
+  "compared": {
+    "parent_B_build": "../comparable-v3/build",
+    "child_C_build": "build"
+  },
+  "detector_diff": {
+    "collisions": {"B": 0, "C": 0, "verdict": "identical"},
+    "text_boundary_clash": {"B": 0, "C": 0, "verdict": "identical (detector blind: no spec check)"},
+    "label_path_proximity": {"B": 0, "C": 0, "verdict": "identical"},
+    "vector_clearance": {"B": 0, "C": 0, "verdict": "identical"},
+    "undeclared_geometry": {
+      "B": 3, "C": 3,
+      "verdict": "identical finding set by (kind,nearest_text): label_crosses_semantic_path x3 on 'content'/'increasing'/'sulfur' = Panel B 'increasing sulfur content' arrow-over-label overlap; pre-existing, unrelated to Panel A edit"
+    },
+    "visual_clash": {
+      "B": 35, "C": 36,
+      "new_in_C": [
+        {
+          "id": "VC035",
+          "kind": "near_miss",
+          "text": "I(t)",
+          "panel": "D",
+          "metric": {"dark": 0.017, "edge": 0.008},
+          "promotion_tier": null,
+          "source_attribution": null,
+          "tex_lines": null
+        }
+      ],
+      "removed_in_C": [],
+      "verdict": "one sub-threshold near_miss appeared, analyzed below as a coordinate-threshold artifact"
+    }
+  },
+  "panel_A_focus": {
+    "attributed_visual_clash_candidates_B": 0,
+    "attributed_visual_clash_candidates_C": 0,
+    "verdict": "the moved 'sulfur segment' label introduces NO new clash/collision in Panel A"
+  },
+  "vc035_artifact_analysis": {
+    "claim": "VC035 is a detector coordinate-threshold artifact of removing Panel A's leftward protrusion, not a new or worsened real defect.",
+    "evidence": [
+      "Panel D source (lines 139-165, scope shift (0,0)) is byte-identical between B and C; only line 25 (Panel A) changed. TikZ renders each scope from its own byte-identical source, so Panel D internal clearances are mathematically unchanged.",
+      "Removing the -0.262cm protrusion made the page 0.367cm (86.6px @600dpi) narrower, shifting all absolute pixel coordinates; the visual_clash detector uses absolute pixels, so a sub-threshold near_miss on '$I(t)$' near its own meter box crossed the reporting floor.",
+      "Pixel comparison of the Panel D 'I(t)' region after 87px re-alignment: 96.7% byte-identical (33091/34226 px), residual 3.3% is low-magnitude (max intensity 93, never a full 255 flip) edge antialiasing from the 0.6px sub-pixel offset residual.",
+      "VC035 promotion_tier is null (not queued) and source_attribution is null; it carries no actionable weight."
+    ],
+    "conclusion": "No mandatory stop: repair introduces no real new collision and worsens no confirmed defect (docs/figure-agent.md section 6)."
+  },
+  "regression_verdict": "PASS (machine): no new/worsened real defect; the one new near_miss is a sub-pixel coordinate artifact; the target defect (frame protrusion) is removed.",
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

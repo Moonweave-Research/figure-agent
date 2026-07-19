@@ -7,13 +7,10 @@ import yaml
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 SNIPPET = PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.tex"
 CONTRACT = PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.contract.yaml"
-TRANSFER_RECEIPT = (
-    PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.transfer.yaml"
-)
+TRANSFER_RECEIPT = PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.transfer.yaml"
 TRANSFER_HELPER = PLUGIN_ROOT / "scripts/quality/panel_f_transfer_receipt.py"
 FIXTURES = (
-    PLUGIN_ROOT
-    / "examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex",
+    PLUGIN_ROOT / "examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex",
     PLUGIN_ROOT
     / "examples/fig1_overview_v5f_art_direction_001_vault"
     / "fig1_overview_v5f_art_direction_001_vault.tex",
@@ -105,6 +102,9 @@ def test_both_fixtures_input_and_invoke_the_same_motif_inside_selector() -> None
         selected = source.split(SELECTOR_START, 1)[1].split(SELECTOR_END, 1)[0]
         assert rf"{MACRO}{{panelF}}{{11.84,2.84}}" in selected
         assert "panelFCoulombRepulsionArrow" not in selected
+        assert "at (13.62, 1.62) {electrode};" in selected
+        assert r"at (12.84, 3.66) {$V_{\mathrm{app}}$};" in selected
+        assert "at (11.48, 2.50) {trapped charge};" in selected
 
 
 def test_transfer_receipt_binds_sources_and_records_non_publication_evidence() -> None:
@@ -121,9 +121,7 @@ def test_transfer_receipt_binds_sources_and_records_non_publication_evidence() -
     assert receipt["motif"] == "panel-f-floating-cantilever"
     assert receipt["shared_bindings"] == expected_shared_bindings
     assert receipt["source_bindings"] == expected_bindings
-    assert receipt["compile_results"] == {
-        path: "passed" for path in expected_bindings
-    }
+    assert receipt["compile_results"] == {path: "passed" for path in expected_bindings}
     comparison = receipt["crop_comparison"]
     assert {
         key: comparison[key]
@@ -142,9 +140,7 @@ def test_transfer_receipt_binds_sources_and_records_non_publication_evidence() -
         "absolute_error_fraction": 0.00368091,
     }
     expected_render_paths = {
-        str(
-            (fixture.parent / "build" / f"{fixture.stem}.png").relative_to(PLUGIN_ROOT)
-        )
+        str((fixture.parent / "build" / f"{fixture.stem}.png").relative_to(PLUGIN_ROOT))
         for fixture in FIXTURES
     }
     assert set(comparison["render_bindings"]) == expected_render_paths

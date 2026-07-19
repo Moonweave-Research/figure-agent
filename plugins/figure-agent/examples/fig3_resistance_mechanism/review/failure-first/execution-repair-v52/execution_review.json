@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"failed_exact_repair","repair_result":"two-line descriptor cleared the y-axis but introduced an S60 title contact","next_human_target":"panel_b_s60_stack_coupled_retry","publication_acceptance":"not_claimed"}

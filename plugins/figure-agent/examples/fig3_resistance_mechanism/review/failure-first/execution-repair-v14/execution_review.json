@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "decision": "failed_exact_repair",
+  "source_attempt": "execution-repair-v13",
+  "normal_compile_exit_code": 0,
+  "target": "upper progression arrow crossing increases",
+  "repair_result": "arrow start remained inside the measured word boundary",
+  "semantic_path_crossing_before": 4,
+  "semantic_path_crossing_after": 3,
+  "human_review": "not_requested_failed_machine_target",
+  "publication_acceptance": "not_claimed"
+}

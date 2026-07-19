@@ -33,8 +33,141 @@ SCRIPT_IMPORT_DIRS = (
 for script_dir in reversed(SCRIPT_IMPORT_DIRS):
     sys.path.insert(0, str(script_dir))
 
+import compatibility_command_contracts  # noqa: E402
 import fixture_identity  # noqa: E402
 import runtime_paths  # noqa: E402
+
+CORE_COMMANDS = frozenset(
+    {
+        "adjudicate",
+        "attest",
+        "authoring-input-audit",
+        "authoring-packet",
+        "authoring-preflight",
+        "authoring-preflight-triplet",
+        "authoring-receipt",
+        "authoring-repair-finalize",
+        "authoring-repair-materialize",
+        "authoring-repair-packet",
+        "authoring-repair-rollback",
+        "closeout",
+        "compile",
+        "context-pack",
+        "critique-scaffold",
+        "doctor",
+        "export",
+        "failure-ablation",
+        "failure-corpus",
+        "quality-map",
+        "run",
+        "status",
+        "text-finding-attribution",
+    }
+)
+RETIRED_DEFAULT_COMMANDS = frozenset(
+    {
+        "compose-accept",
+        "compose-apply",
+        "compose-apply-ready",
+        "compose-capture",
+        "compose-generalization-report",
+        "compose-generate-families",
+        "compose-post-apply-verify",
+        "compose-rank",
+        "compose-render",
+        "compose-review",
+        "compose-review-synthesis",
+        "compose-visual-clash-triage",
+        "quality-search",
+        "rank-candidates",
+    }
+)
+_LITERAL_INTERNAL_COMPATIBILITY_COMMANDS = frozenset(
+    {
+        "accept-candidate",
+        "analyze-composition",
+        "analyze-panel",
+        "apply-candidate",
+        "apply-candidate-ready",
+        "apply-plan",
+        "adjudicated-repair-target",
+        "authoring-orro-plan",
+        "authoring-repair-review",
+        "benchmark-compare",
+        "benchmark-detectors",
+        "benchmark-list",
+        "benchmark-run",
+        "bounded-tikz-apply",
+        "bounded-tikz-candidate",
+        "bounded-tikz-refinement",
+        "candidates",
+        "closeout-accept",
+        "closeout-ready",
+        "compare-candidate",
+        "compare-fixtures",
+        "design-dogfood",
+        "drive",
+        "evidence-sync",
+        "finding-attribution",
+        "fork-fixture",
+        "helper",
+        "intent",
+        "lint-composition",
+        "loop-metrics",
+        "memory-index",
+        "memory-log",
+        "next",
+        "plan-check",
+        "promotion-queue",
+        "propose",
+        "quality-next-experiment",
+        "queue",
+        "queue-run",
+        "render-candidates",
+        "review-candidate",
+        "text-boundary",
+        "triage",
+        "verify-plan",
+        "visual-metrics",
+    }
+)
+INTERNAL_COMPATIBILITY_COMMANDS = (
+    _LITERAL_INTERNAL_COMPATIBILITY_COMMANDS
+    | compatibility_command_contracts.command_names()
+)
+ALL_COMMANDS = (
+    CORE_COMMANDS | INTERNAL_COMPATIBILITY_COMMANDS | RETIRED_DEFAULT_COMMANDS
+)
+
+
+def _command_surface() -> dict[str, object]:
+    by_disposition = {
+        "core": sorted(CORE_COMMANDS),
+        "internal_compatibility": sorted(INTERNAL_COMPATIBILITY_COMMANDS),
+        "retired_default": sorted(RETIRED_DEFAULT_COMMANDS),
+    }
+    return {
+        "canonical_route": ["status", "run"],
+        "bounded_repair_entry_route": [
+            "authoring-repair-packet",
+            "authoring-repair-materialize",
+            "authoring-repair-finalize",
+            "authoring-repair-rollback",
+        ],
+        "bounded_repair_transaction_state": "complete",
+        "commands_by_disposition": by_disposition,
+        "counts": {
+            **{key: len(value) for key, value in by_disposition.items()},
+            "total": sum(len(value) for value in by_disposition.values()),
+        },
+        "compatibility_contract": (
+            "internal and retired-default commands remain callable until their "
+            "CLI, import, fixture, receipt, and release-gate dependencies are migrated"
+        ),
+        "compatibility_command_contract_registry": (
+            compatibility_command_contracts.serialize_registry()
+        ),
+    }
 
 
 def _missing_project_python_modules() -> list[str]:
@@ -121,6 +254,7 @@ def _doctor(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="fig-agent doctor")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument("--commands", action="store_true")
     args = parser.parse_args(argv)
     paths = _paths()
     deps = _dependency_diagnostics()
@@ -130,6 +264,8 @@ def _doctor(argv: list[str]) -> int:
         "workspace": runtime_paths.workspace_diagnostics_for_cli(paths),
         "dependencies": deps,
     }
+    if args.commands:
+        payload["command_surface"] = _command_surface()
     ok = (
         payload["bundle"]["state"] == "ok"
         and payload["workspace"]["state"] == "ok"
@@ -210,8 +346,23 @@ def _adjudicate(argv: list[str]) -> int:
 
 
 def _loop(argv: list[str]) -> int:
+    routed_argv: list[str] = []
+    index = 0
+    while index < len(argv):
+        arg = argv[index]
+        if arg.startswith("--repo-root="):
+            index += 1
+            continue
+        if arg == "--repo-root":
+            index += 1
+            if index < len(argv) and not argv[index].startswith("--"):
+                index += 1
+            continue
+        routed_argv.append(arg)
+        index += 1
+    routed_argv.extend(["--repo-root", str(_paths().workspace_root)])
     return _run(
-        [sys.executable, str(SCRIPTS_DIR / "fig_loop.py"), *argv],
+        [sys.executable, str(SCRIPTS_DIR / "fig_loop.py"), *routed_argv],
         cwd=_paths().workspace_root,
     )
 
@@ -340,6 +491,7 @@ def _context_pack(argv: list[str]) -> int:
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--layout-contract")
     parser.add_argument("--shape-profile")
+    parser.add_argument("--composition-profile")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     pass_args = [name]
@@ -351,6 +503,8 @@ def _context_pack(argv: list[str]) -> int:
         pass_args.extend(["--layout-contract", args.layout_contract])
     if args.shape_profile is not None:
         pass_args.extend(["--shape-profile", args.shape_profile])
+    if args.composition_profile is not None:
+        pass_args.extend(["--composition-profile", args.composition_profile])
     return authoring_context_pack.main(
         pass_args,
         plugin_root=_paths().plugin_root,
@@ -372,6 +526,7 @@ def _authoring_packet(argv: list[str]) -> int:
     parser.add_argument("--prompt-out", required=True)
     parser.add_argument("--layout-contract")
     parser.add_argument("--shape-profile")
+    parser.add_argument("--composition-profile")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
@@ -388,6 +543,7 @@ def _authoring_packet(argv: list[str]) -> int:
             execution_cwd=args.execution_cwd,
             layout_contract=args.layout_contract,
             shape_profile=args.shape_profile,
+            composition_profile=args.composition_profile,
         )
         packet_path = authoring_execution_packet.resolve_attempt_artifact_path(
             paths.workspace_root,
@@ -447,20 +603,60 @@ def _authoring_preflight(argv: list[str]) -> int:
     return 0
 
 
+def _authoring_preflight_triplet(argv: list[str]) -> int:
+    import authoring_execution_preflight
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-preflight-triplet")
+    parser.add_argument("--raw", required=True)
+    parser.add_argument("--verified", required=True)
+    parser.add_argument("--repaired", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+
+    def packet_path(value: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("packet path must be repository-relative and safe")
+        resolved = (workspace_root / relative).resolve(strict=False)
+        if not resolved.is_relative_to(workspace_root):
+            raise ValueError("packet path must remain inside the workspace")
+        return resolved
+
+    try:
+        payload = authoring_execution_preflight.preflight_authoring_triplet(
+            packet_path(args.raw),
+            packet_path(args.verified),
+            packet_path(args.repaired),
+        )
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-preflight-triplet: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def _authoring_repair_packet(argv: list[str]) -> int:
     import authoring_repair_packet
 
     parser = argparse.ArgumentParser(prog="fig-agent authoring-repair-packet")
     parser.add_argument("name")
     parser.add_argument("--model-id", required=True)
-    parser.add_argument("--source", required=True)
-    parser.add_argument("--target-contract", required=True)
+    parser.add_argument("--binding")
+    parser.add_argument("--source")
+    parser.add_argument("--target-contract")
     parser.add_argument("--output-path", required=True)
     parser.add_argument("--execution-cwd", default=".")
     parser.add_argument("--packet-out", required=True)
     parser.add_argument("--prompt-out", required=True)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
+    if args.binding and (args.source or args.target_contract):
+        parser.error("--binding is mutually exclusive with --source/--target-contract")
+    if not args.binding and not (args.source and args.target_contract):
+        parser.error("provide --binding or both --source and --target-contract")
     name = _validated_fixture_name(parser, args.name)
     workspace_root = _paths().workspace_root.resolve()
 
@@ -485,15 +681,27 @@ def _authoring_repair_packet(argv: list[str]) -> int:
         return path
 
     try:
-        packet, prompt = authoring_repair_packet.compile_repair_execution_packet(
-            name,
-            workspace_root=workspace_root,
-            model_id=args.model_id,
-            source_path=args.source,
-            target_contract=args.target_contract,
-            output_path=args.output_path,
-            execution_cwd=args.execution_cwd,
-        )
+        if args.binding:
+            packet, prompt = (
+                authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+                    name,
+                    workspace_root=workspace_root,
+                    model_id=args.model_id,
+                    binding_path=args.binding,
+                    output_path=args.output_path,
+                    execution_cwd=args.execution_cwd,
+                )
+            )
+        else:
+            packet, prompt = authoring_repair_packet.compile_repair_execution_packet(
+                name,
+                workspace_root=workspace_root,
+                model_id=args.model_id,
+                source_path=args.source,
+                target_contract=args.target_contract,
+                output_path=args.output_path,
+                execution_cwd=args.execution_cwd,
+            )
         packet_path = repair_artifact(args.packet_out, suffix=".json")
         prompt_path = repair_artifact(args.prompt_out, suffix=".md")
         if packet_path.parent != Path(workspace_root / args.output_path).parent:
@@ -518,6 +726,11 @@ def _authoring_repair_materialize(argv: list[str]) -> int:
     parser.add_argument("--packet", required=True)
     parser.add_argument("--response", required=True)
     parser.add_argument("--receipt-out", required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--dry-run", action="store_true")
+    mode.add_argument("--apply", action="store_true")
+    parser.add_argument("--authorization")
+    parser.add_argument("--legacy-packet", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     workspace_root = _paths().workspace_root.resolve()
@@ -547,14 +760,22 @@ def _authoring_repair_materialize(argv: list[str]) -> int:
             raise ValueError("repair packet, response, and receipt must be adjacent")
         packet = json.loads(packet_path.read_text(encoding="utf-8"))
         response = json.loads(response_path.read_text(encoding="utf-8"))
+        authorization = None
+        if args.authorization:
+            authorization_path = workspace_path(args.authorization, must_exist=True)
+            if authorization_path.parent != packet_path.parent:
+                raise ValueError("repair authorization must be adjacent to packet")
+            authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+            if authorization.get("packet_path") != args.packet:
+                raise ValueError("repair authorization packet path mismatch")
         receipt = authoring_repair_packet.materialize_repair_candidate(
             packet,
             response,
             workspace_root=workspace_root,
-        )
-        receipt_path.write_text(
-            json.dumps(receipt, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
+            authorization=authorization,
+            apply=args.apply,
+            receipt_path=receipt_path,
+            allow_legacy_packet=args.legacy_packet,
         )
     except (ValueError, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         print(f"fig-agent authoring-repair-materialize: {exc}", file=sys.stderr)
@@ -563,10 +784,101 @@ def _authoring_repair_materialize(argv: list[str]) -> int:
     return 0
 
 
+def _authoring_repair_finalize(argv: list[str]) -> int:
+    import authoring_repair_finalize
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-repair-finalize")
+    parser.add_argument("--packet", required=True)
+    parser.add_argument("--receipt", required=True)
+    parser.add_argument("--authorization", required=True)
+    parser.add_argument("--legacy-packet", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    paths = _paths()
+    workspace_root = paths.workspace_root.resolve()
+
+    def evidence_path(value: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("repair evidence path must be workspace-relative and safe")
+        return workspace_root / relative
+
+    try:
+        result = authoring_repair_finalize.finalize_materialized_candidate(
+            packet_path=evidence_path(args.packet),
+            receipt_path=evidence_path(args.receipt),
+            authorization_path=evidence_path(args.authorization),
+            workspace_root=workspace_root,
+            plugin_root=paths.plugin_root,
+            allow_legacy_packet=args.legacy_packet,
+        )
+    except (ValueError, OSError) as exc:
+        print(f"fig-agent authoring-repair-finalize: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0 if result.get("post_render_verification") == "passed" else 1
+
+
+def _authoring_repair_rollback(argv: list[str]) -> int:
+    import authoring_repair_rollback
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-repair-rollback")
+    parser.add_argument("--packet", required=True)
+    parser.add_argument("--receipt", required=True)
+    parser.add_argument("--authorization", required=True)
+    parser.add_argument("--legacy-packet", action="store_true")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+
+    def evidence_path(value: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("repair evidence path must be workspace-relative and safe")
+        return workspace_root / relative
+
+    try:
+        result = authoring_repair_rollback.rollback_failed_materialized_candidate(
+            packet_path=evidence_path(args.packet),
+            receipt_path=evidence_path(args.receipt),
+            authorization_path=evidence_path(args.authorization),
+            workspace_root=workspace_root,
+            allow_legacy_packet=args.legacy_packet,
+        )
+    except (ValueError, OSError) as exc:
+        print(f"fig-agent authoring-repair-rollback: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def _finding_attribution(argv: list[str]) -> int:
     import finding_source_attribution
 
     return finding_source_attribution.main(argv)
+
+
+def _adjudicated_repair_target(argv: list[str]) -> int:
+    import critique_repair_bridge
+
+    return critique_repair_bridge.main(
+        argv,
+        plugin_root=_paths().plugin_root.resolve(),
+        workspace_root=_paths().workspace_root.resolve(),
+    )
+
+
+def _authoring_repair_review(argv: list[str]) -> int:
+    import post_repair_visual_review
+
+    return post_repair_visual_review.main(
+        argv,
+        workspace_root=_paths().workspace_root.resolve(),
+    )
 
 
 def _authoring_orro_plan(argv: list[str]) -> int:
@@ -1577,16 +1889,27 @@ def _apply_plan(argv: list[str]) -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
+    parser.add_argument("--authorization")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--format", choices=("json",), default=None)
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
     paths = _paths()
+    source_mutation_decision = None
+    if args.authorization:
+        try:
+            source_mutation_decision = json.loads(
+                Path(args.authorization).read_text(encoding="utf-8")
+            )
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            print(f"fig-agent apply-plan: authorization_invalid:{exc}", file=sys.stderr)
+            return 1
     try:
         payload = quality_patch_apply.apply_quality_patch_plan(
             name,
             plan_path=paths.examples_dir / name / args.plan,
             workspace_root=paths.workspace_root,
+            source_mutation_decision=source_mutation_decision,
             apply=args.apply,
         )
     except quality_patch_apply.QualityPatchApplyError as exc:
@@ -1873,11 +2196,15 @@ def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
     if not args:
         print(
-            "usage: fig-agent <doctor|status|compile|export|adjudicate|loop|closeout|helper> ...",
+            "usage: fig-agent "
+            "<doctor|status|context-pack|compile|run|export|adjudicate|closeout> ...",
             file=sys.stderr,
         )
         return 2
     command, rest = args[0], args[1:]
+    if command not in ALL_COMMANDS:
+        print(f"fig-agent: unknown command {command!r}", file=sys.stderr)
+        return 2
     if command == "doctor":
         return _doctor(rest)
     if command == "status":
@@ -1920,12 +2247,22 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_packet(rest)
     if command == "authoring-preflight":
         return _authoring_preflight(rest)
+    if command == "authoring-preflight-triplet":
+        return _authoring_preflight_triplet(rest)
     if command == "authoring-repair-packet":
         return _authoring_repair_packet(rest)
     if command == "authoring-repair-materialize":
         return _authoring_repair_materialize(rest)
+    if command == "authoring-repair-finalize":
+        return _authoring_repair_finalize(rest)
+    if command == "authoring-repair-rollback":
+        return _authoring_repair_rollback(rest)
     if command in {"text-finding-attribution", "finding-attribution"}:
         return _finding_attribution(rest)
+    if command == "adjudicated-repair-target":
+        return _adjudicated_repair_target(rest)
+    if command == "authoring-repair-review":
+        return _authoring_repair_review(rest)
     if command == "authoring-orro-plan":
         return _authoring_orro_plan(rest)
     if command == "authoring-receipt":

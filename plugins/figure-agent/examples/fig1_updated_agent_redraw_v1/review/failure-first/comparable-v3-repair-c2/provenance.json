@@ -1,0 +1,105 @@
+{
+  "schema": "figure-agent.adjudicated-repair-binding.v1",
+  "attempt_local": true,
+  "attempt_local_note": "Second bounded R5.2 repair (R5.2b). Parent C1 (comparable-v3-repair-c1) is a development-baseline-accepted attempt-local child of B with no figure-agent.closed-loop-attempt-state.v1 file, so the canonical v4 repair-execution-packet machinery (which binds only from a repair_bound/repair_authorized state) cannot bind here without inventing that state. Per docs/figure-agent.md R5.2 guidance, C2 is materialized as C1's hash-bound repair child with the same minimal honest artifact set (adjudication, attribution, repaired tex, compile evidence, crops, provenance, regression) as C1.",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "lineage": {
+    "grandparent_B": {
+      "attempt_dir": "review/failure-first/comparable-v3",
+      "source_path": "verified_generated.tex",
+      "source_sha256": "54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f"
+    },
+    "parent_C1": {
+      "attempt_dir": "review/failure-first/comparable-v3-repair-c1",
+      "source_path": "repaired.tex",
+      "source_sha256": "5d11f3b89303d34bba92933724a44fbf62d72cc56782b062a8b0ada32638057a",
+      "render_pdf_sha256": "791d014ecab028c95b45b49238ea8d7ef114ff605d27d620f6c879e30794c56f",
+      "render_png_sha256": "aeb43dc1ac36e32cf0fed4d7aee2a3d07e1ba68e6ea985e3645b2a4ed66cbee5",
+      "development_verdict": "development_baseline_accepted (2026-07-18, Choe Mun-yeong)"
+    },
+    "child_C2": {
+      "attempt_dir": "review/failure-first/comparable-v3-repair-c2",
+      "source_path": "repaired.tex",
+      "source_sha256": "c1b235af640c496336e965d04a5970c6215f4249e1e992b7c8717458bb503d8e",
+      "render_pdf_sha256": "6a6e849380b7aba5e9cfdaad0136c8c8efa9b139683feec37c446b016afb715b",
+      "render_png_sha256": "b6562d48ce83a4ea33c659a01579322285af127bf68320f1b850257ab51074ab",
+      "relation": "C1_bounded_repair_child_not_independent_generation"
+    }
+  },
+  "edit": {
+    "finding_id": "HA002",
+    "lines_changed": 2,
+    "lines_in_parent": [73, 74],
+    "before": [
+      "  \\draw[-{Stealth[length=3.2pt,width=2.4pt]}, cAmber!90!black, line width=0.75pt]",
+      "    (1.25,4.02)--(5.95,4.02);"
+    ],
+    "after": [
+      "  \\draw[cAmber!90!black, line width=0.75pt] (1.25,4.02)--(2.53,4.02);",
+      "  \\draw[-{Stealth[length=3.2pt,width=2.4pt]}, cAmber!90!black, line width=0.75pt]",
+      "    (4.66,4.02)--(5.95,4.02);"
+    ],
+    "rationale": "Option (a) from docs/figure-agent.md R5.2 step 6, the classic interrupted-arrow, chosen because the label sits ON the line (arrow y=4.02 == label center y=4.02). The single (1.25,4.02)--(5.95,4.02) path is split into a left plain segment (1.25->2.53) and a right arrow-headed segment (4.66->5.95), leaving a measured gap behind the label. Tail (1.25), head/arrowhead (5.95), y (4.02), color, line width, and Stealth style are all preserved; only the middle span is removed. The label node (line 75) is byte-identical. Composition preserved: the arrow still runs left-to-right across the three composition boxes with the arrowhead pointing right (increasing direction)."
+  },
+  "measured_geometry_cm": {
+    "method": "pdfplumber vector-line extraction for arrow endpoints + pdftotext -bbox for label word boxes. Calibration confirmed twice: (1) arrow tail panel-x 1.25 renders at pdf-x 253.796 (no arrowhead there), scale 28.3465 pt/cm (standalone applies no page scaling); (2) inverse-mapped label center pdf-x 320.41 reproduces panel-x 3.600 (== label node coordinate). panel_x = 1.25 + (pdf_x - 253.796) / 28.3465.",
+    "label_literal": "increasing sulfur content",
+    "label_rendered_bbox": {
+      "words": {"increasing": [294.489, 316.288], "sulfur": [317.612, 329.306], "content": [330.636, 346.323]},
+      "text_x_span_pt": [294.489, 346.323],
+      "text_x_span_panel_cm": [2.6856, 4.5143],
+      "text_width_cm": 1.8288,
+      "vertical_pt_top_down": [29.737, 34.165],
+      "note": "label bbox identical in B, C1, C2 (the label node was never edited)"
+    },
+    "before_parent_C1": {
+      "arrow_path": "single (1.25,4.02)--(5.95,4.02)",
+      "rendered_line_x_pt": [253.796, 385.095],
+      "rendered_line_top_pt": 31.919,
+      "crosses_label": true,
+      "detector_distance_pt": 0.0
+    },
+    "after_C2": {
+      "left_segment_pt": [253.796, 290.080],
+      "left_segment_panel_cm": [1.25, 2.53],
+      "right_segment_pt": [350.459, 385.095],
+      "right_segment_panel_cm": [4.66, 5.95],
+      "gap_pt": [290.080, 350.459],
+      "arrowhead_tip_pt": 385.095,
+      "arrowhead_direction": "rightward (unchanged)"
+    },
+    "clearances_after_C2": {
+      "left_segment_end_to_increasing_left_cm": 0.1556,
+      "content_right_to_right_segment_start_cm": 0.1459,
+      "requirement_cm": 0.08,
+      "both_pass": true,
+      "note": "measured 4.409 pt and 4.136 pt gaps respectively; symmetric interrupted-arrow reading, both well above the 0.08 cm clearance floor"
+    }
+  },
+  "compile": {
+    "engine": "lualatex",
+    "normal_compile": "passed",
+    "normal_compile_rc": 0,
+    "strict_compile": "failed",
+    "strict_compile_rc": 1,
+    "targeted_defect_resolved": true,
+    "undeclared_geometry_actionable": {"parent_C1": 3, "child_C2": 0},
+    "strict_did_not_flip_to_pass": true,
+    "strict_failure_cause": "check_visual_clash --strict --ignore-known-fp (36 candidates: 25 text_on_path + 11 near_miss, all promotion_tier=null) returns rc 1. This is PRE-EXISTING and identical in parent C1: a read-only re-run of the same checker on C1's committed, hash-verified render (repaired.pdf 791d014e...) also returns rc 1 with the byte-identical 36-candidate set. The targeted 3 undeclared_geometry findings (UG001/UG002/UG003) that this repair addressed ARE gone (3->0). Honest correction: C1's provenance narrative called the 3 undeclared findings the 'sole cause' of strict failure, but visual_clash --strict was a co-existing strict failure in C1 as well; removing the undeclared findings alone therefore cannot flip strict to PASS. The residual visual_clash candidates are the historically-unbound schematic visual candidates (docs/figure-agent.md line 260); they are NOT chased here per the R5.2b instruction and are unrelated to the Panel B arrow repair (identical set in C1 and C2)."
+  },
+  "evidence_crops": {
+    "target_before_B": "crops/target-before-B.png",
+    "target_after_C": "crops/target-after-C.png",
+    "neighbor_after_C": "crops/neighbor-after-C.png",
+    "full_after_C": "crops/full-after-C.png",
+    "print_scale_after_C": "crops/print-scale-after-C.png",
+    "print_scale_note": "Full figure at true publication width 155.9 mm rendered at 300 dpi (1842 px wide).",
+    "target_before_note": "target-before-B is cropped from grandparent B's render (the arrow runs unbroken up to the label); target-after-C from C2 (a clean symmetric interrupted-arrow gap)."
+  },
+  "human_review": {
+    "status": "pending",
+    "named_reviewer": null,
+    "note": "Step 10: no self-issued scaffold/review development verdict for C2. The named human (Choe Mun-yeong) was informed this Panel B defect is the next target, but the final development-baseline verdict on the C2 render stays pending; the orchestrator brings the after-render to the named human."
+  },
+  "publication_acceptance": "not_claimed"
+}

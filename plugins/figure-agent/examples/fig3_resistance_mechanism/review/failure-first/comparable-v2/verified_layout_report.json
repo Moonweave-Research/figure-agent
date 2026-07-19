@@ -1,0 +1,19 @@
+{
+  "contract_schema": "figure-agent.layout-lanes.v1",
+  "failure_count": 1,
+  "page_size_pt": [
+    334.469,
+    141.957
+  ],
+  "results": [
+    {
+      "clearance": 0.0,
+      "minimum_clearance": 0.015,
+      "missing_groups": [],
+      "rule_id": "panel_a_narrative_clear_of_bias_marker",
+      "status": "violation"
+    }
+  ],
+  "schema": "figure-agent.layout-lane-report.v1",
+  "text_budget_results": []
+}

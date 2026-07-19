@@ -1,0 +1,12 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v28.yaml
+extends_sha256: sha256:75c55fee5f9c00d1395c8e74466224d685b5c74e649857009df9dc4fdf93c1cc
+reason: replace the stale host-vision critique with a current-render, crop-bound record while preserving the separate pending human art-direction verdict
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v29.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/critique.md
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

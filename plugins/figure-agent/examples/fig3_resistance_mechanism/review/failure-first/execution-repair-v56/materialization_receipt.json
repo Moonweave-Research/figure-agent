@@ -1,0 +1,15 @@
+{
+  "change_summary": "Remove the redundant bottom summary while preserving the distribution plot and magnitude key.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v56/repaired_generated.tex",
+  "output_sha256": "sha256:88e42e991eed009d00b4b48000a1915c641cc47083524b9c56bacbb87ca2c26b",
+  "packet_sha256": "sha256:71671b7645aa4742d2098a208434408a2c19cd4910af594c26eb4129e00c9d37",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:38a1e4a84be346ffa23890cfc123ddc6fdf34e7f034bfdfd0806dd8d92e704d6"
+}

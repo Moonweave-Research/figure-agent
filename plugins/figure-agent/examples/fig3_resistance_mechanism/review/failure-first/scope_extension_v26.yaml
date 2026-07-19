@@ -1,0 +1,21 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v25.yaml
+extends_sha256: sha256:a1354af9ea59b6568411ed89af03b19bebf1f64353612cc6c1d56592f77b784a
+reason: clarify slow-release occupancy and replace the S80 DOS-like envelope with a non-quantitative continuous-support band; record the render-verified bounded detector exception for terminal-label adjacency
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/current_render_review_scaffold_v1.yaml
+  - review/failure-first/scope_extension_v26.yaml
+  - review/failure-first/authority_manifest_v2.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/spec.yaml
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/briefing.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/authoring_contract.md
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/panel_goals.md
+  - plugins/figure-agent/tests/test_semantic_assertions.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+  - plugins/figure-agent/_known_false_positives.yaml
+  - plugins/figure-agent/tests/test_strict_mode.py
+publication_acceptance: not_claimed

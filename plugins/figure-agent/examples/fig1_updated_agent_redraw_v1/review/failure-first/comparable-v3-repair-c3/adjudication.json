@@ -1,0 +1,58 @@
+{
+  "schema": "figure-agent.initial-human-adjudication.v1",
+  "attempt_dir": "review/failure-first/comparable-v3-repair-c3",
+  "parent_attempt_dir": "review/failure-first/comparable-v3-repair-c2",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "adjudicated_at": "2026-07-18",
+  "adjudicated_by": "orchestrator_under_named_human_delegation",
+  "delegation": {
+    "named_human": {"name": "Choe Mun-yeong", "handle": "Moon-python", "session": "live session 2026-07-18"},
+    "delegation_quote_verbatim": "이 정도는 그냥 너가 판단해도 되는 수준",
+    "delegation_scope": "routine same-class judgments (same defect class as the already-human-adjudicated Panel A sulfur-segment frame crossing) delegated to the orchestrator; final development-baseline verdict on C3 still routes to the named human."
+  },
+  "finding": {
+    "id": "HA003",
+    "kind": "text_crosses_panel_frame",
+    "class": "accidental_frame_crossing_label",
+    "class_precedent": "same class as HA001 (Panel A 'sulfur segment'), human-adjudicated 2026-07-18",
+    "summary": "The 6 remaining panel-boundary crossings from declared-boundary-replay.json resolve to 4 accidental frame-crossing labels; no intentional_overflow convention exists in this figure (every other label sits inside its frame).",
+    "detector_status": "detected",
+    "detector": "check_panel_boundary_coverage (fresh replay on parent C2 render, 6 crossings)",
+    "labels": [
+      {"panel": "E", "literal": "grounded substrate", "crossings": ["panel_D_frame_right", "panel_E_frame_left"], "machine_ids_on_C2": ["PB001", "PB002"], "note": "one label straddles the D-E gutter, poking into Panel D and across E's left frame"},
+      {"panel": "F", "literal": "floating polymer cantilever", "crossings": ["panel_F_frame_left"], "machine_ids_on_C2": ["PB003"]},
+      {"panel": "F", "literal": "grounded source return", "crossings": ["panel_F_frame_right", "panel_F_frame_right"], "machine_ids_on_C2": ["PB004", "PB005"]},
+      {"panel": "F", "literal": "driven electrode", "crossings": ["panel_F_frame_right"], "machine_ids_on_C2": ["PB006"]}
+    ]
+  },
+  "adjudication": {
+    "decision": "all_four_are_accidental_crossings_not_intentional_overflow",
+    "rationale": "No declared intentional_overflow allowlist exists for this fixture and every non-crossing label sits inside its frame, so a label straddling a frame is accidental, same class as the Panel A sulfur-segment case the named human already adjudicated. Each is a candidate for a one-node position/anchor bounded repair.",
+    "decided_by": ["orchestrator"]
+  },
+  "authorization_scope": {
+    "authorized": [
+      "adjudicate these 4 same-class defects under the named human's delegation",
+      "bounded position/anchor repair of ONLY these 4 label nodes (no multi-line shortstack, no font changes)",
+      "leave any label unrepaired as an open item if it cannot fit without a new collision or visual detachment from its referent"
+    ],
+    "not_authorized": [
+      "final scaffold/review development verdict on C3 (routes to the named human)",
+      "editing leaders, motif, rects, or any non-label geometry",
+      "any publication acceptance"
+    ]
+  },
+  "outcome_summary": {
+    "repaired": [
+      {"label": "floating polymer cantilever (F)", "removed_crossings": ["panel_F_frame_left"]},
+      {"label": "driven electrode (F)", "removed_crossings": ["panel_F_frame_right (electrode)"]}
+    ],
+    "left_open": [
+      {"label": "grounded substrate (E)", "reason": "1.454 cm label; only 0.97 cm clear between E's left frame and the substrate rectangle (x>=1.15); any right shift collides with the filled substrate rect, and moving it out of the apparatus box detaches it from its referent."},
+      {"label": "grounded source return (F)", "reason": "'source return' (0.994 cm) must shift left 0.528 cm to clear the right frame, which lands the text on the HV wiring / cantilever motif (verified: new text_on_path 'source' dark=0.162) and over its own ground-symbol referent."}
+    ]
+  },
+  "parent_source_sha256": "c1b235af640c496336e965d04a5970c6215f4249e1e992b7c8717458bb503d8e",
+  "grandparent_C1_source_sha256": "5d11f3b89303d34bba92933724a44fbf62d72cc56782b062a8b0ada32638057a",
+  "publication_acceptance": "not_claimed"
+}

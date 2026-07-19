@@ -1,0 +1,67 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: raw
+comparison_eligibility: eligible_equal_input
+model_contract_hash: sha256:9d969e65514446c9ea822e099c48372d1bead7bde2d38787b3e1fbf9c9cb2545
+input_packet_hash: sha256:dc301d15cb39fd431f48098b5f07c5b66e8bde35152729a48567b6005fd15dfb
+budget_contract_hash: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+comparison_contract_hash: sha256:c98e94e48c02ec0b583f9685f2dd1337dd51b29e4bf166ed4b16219122aad775
+condition_prompt_hash: sha256:71323a0a17cf361145b39f4f210f83b4c68e5fd2a7d85461d5137584e05c2511
+review_input_hash: sha256:6cbff8747e12ec70806fed131378895ce229548e5dbdcd360b512d6a0f50ee1a
+figure_family: fig3_resistance_mechanism
+findings:
+- id: RAW_MISSING_STYLE_PREAMBLE
+  failure_class: style
+  observation_scale: source
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: document.preamble
+  occurrences: 1
+- id: RAW_FORBIDDEN_LOCAL_PALETTE
+  failure_class: style
+  observation_scale: source
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: document.local_color_definitions
+  occurrences: 21
+- id: RAW_EXTREME_LOCAL_TYPE
+  failure_class: typography
+  observation_scale: source
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: document.local_font_sizes
+  occurrences: 4
+- id: RAW_LABEL_SOURCE_ORDER_RISK
+  failure_class: geometry
+  observation_scale: source
+  review_outcome: confirmed_defect
+  attribution_state: exact
+  selector_id: document.filled_label_order
+  occurrences: 2
+human_correction_minutes: null
+intervention_count: 0
+clean_reproduction: false
+compile_outcome:
+  command:
+  - bash
+  - scripts/compile.sh
+  - examples/fig3_resistance_mechanism/review/failure-first/comparable-v1/raw_generated.tex
+  exit: 1
+  state: blocked_before_render_by_style_lock
+  blocker_count: 22
+  warning_count: 7
+semantic_evaluation: unavailable_nonrenderable
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
+generation_receipt:
+  schema: figure-agent.generation-receipt.v1
+  model_id: codex-gpt-5.5
+  input_packet_sha256: sha256:dc301d15cb39fd431f48098b5f07c5b66e8bde35152729a48567b6005fd15dfb
+  budget_contract_sha256: sha256:98107e2bbb9ac58a0fd64eb4d1158fb9af4ea417359937d10948e35e19981b8f
+  source_commit: 59e64de8
+  starting_artifact_path: blank_start.txt
+  starting_artifact_sha256: sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+  generated_artifact_path: raw_generated.tex
+  generated_artifact_sha256: sha256:e7ccaf3cfdb7eb0eca077823879184c2f311be1119250193d2ed84f7bd9546dc
+  transcript_path: raw.transcript.json
+  transcript_sha256: sha256:62644131005777b22921a8343c94869af51e59239d70fba00e6e060e0799f5ed

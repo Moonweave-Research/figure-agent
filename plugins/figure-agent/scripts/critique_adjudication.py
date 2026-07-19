@@ -70,6 +70,36 @@ def _validate_patch_classes(value: Any, *, label: str) -> None:
         raise CritiqueAdjudicationError(f"{label} must be a non-empty string or string list")
 
 
+def _validate_repair_evidence(
+    value: object,
+    *,
+    decision: str,
+    label: str,
+) -> None:
+    if value is None:
+        return
+    if decision != "apply":
+        raise CritiqueAdjudicationError(
+            f"{label} is only valid for apply decisions"
+        )
+    evidence = _require_mapping(value, label)
+    expected = {"report_path", "finding_id", "selector_registry_path"}
+    if set(evidence) != expected:
+        raise CritiqueAdjudicationError(
+            f"{label} must contain exactly: {', '.join(sorted(expected))}"
+        )
+    for key in sorted(expected):
+        text = _require_non_empty_string(evidence, key, label=label)
+        if key.endswith("_path"):
+            path = Path(text)
+            if path.is_absolute() or any(
+                part in {"", ".", ".."} for part in path.parts
+            ):
+                raise CritiqueAdjudicationError(
+                    f"{label}.{key} must be workspace-relative and safe"
+                )
+
+
 def validate_adjudication(data: dict[str, Any]) -> dict[str, Any]:
     """Validate a critique adjudication mapping and return it unchanged."""
     data = _require_mapping(data, "adjudication")
@@ -108,6 +138,11 @@ def validate_adjudication(data: dict[str, Any]) -> dict[str, Any]:
         _validate_patch_classes(
             decision_item.get("patch_classes"),
             label=f"{decision_label}.patch_classes",
+        )
+        _validate_repair_evidence(
+            decision_item.get("repair_evidence"),
+            decision=decision_value,
+            label=f"{decision_label}.repair_evidence",
         )
 
     return data

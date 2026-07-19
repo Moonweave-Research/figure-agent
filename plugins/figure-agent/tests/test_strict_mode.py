@@ -7,6 +7,7 @@ fail under FIGURE_AGENT_STRICT=1 without changing default ergonomics.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -30,8 +31,7 @@ def test_compile_sh_wires_the_physics_checks() -> None:
     compile_sh = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
     # Checker imports are absolute-path stable even after compile.sh cd's into a fixture.
     assert (
-        'SCRIPT_IMPORT_PATH="${WORKFLOW_DIR}/scripts:${WORKFLOW_DIR}/scripts/checks"'
-        in compile_sh
+        'SCRIPT_IMPORT_PATH="${WORKFLOW_DIR}/scripts:${WORKFLOW_DIR}/scripts/checks"' in compile_sh
     )
     assert 'export PYTHONPATH="${SCRIPT_IMPORT_PATH}:${PYTHONPATH}"' in compile_sh
     # tex-geometry assertions are STRICT-gated (a reversed arrow is a defect);
@@ -167,7 +167,24 @@ def test_fig3_visual_clash_registry_keeps_material_label_contact_actionable() ->
         ],
         check_visual_clash.VisualIssue("near_miss", "S60", "dark=0.027, edge=0.009", (0, 0, 1, 1)),
         check_visual_clash.VisualIssue("near_miss", "I(t)", "dark=0.020, edge=0.009", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue(
+            "text_on_path", "S60", "dark=0.037, edge=0.011", (0, 0, 1, 1)
+        ),
+        check_visual_clash.VisualIssue(
+            "text_on_path", "I(t)", "dark=0.036, edge=0.010", (0, 0, 1, 1)
+        ),
         check_visual_clash.VisualIssue("near_miss", "ρ", "dark=0.018, edge=0.005", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue("near_miss", "g(E)", "dark=0.017, edge=0.006", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue(
+            "text_on_path", "+V", "dark=0.118, edge=0.015", (0, 0, 1, 1)
+        ),
+        check_visual_clash.VisualIssue("near_miss", "S80", "dark=0.017, edge=0.005", (0, 0, 1, 1)),
+        check_visual_clash.VisualIssue(
+            "text_on_path", "broad", "dark=0.054, edge=0.005", (0, 0, 1, 1)
+        ),
+        check_visual_clash.VisualIssue(
+            "text_on_path", "60", "dark=0.082, edge=0.018", (0, 0, 1, 1)
+        ),
     ]
 
     filtered, suppressed = check_visual_clash.suppress_known_false_positives(
@@ -183,7 +200,7 @@ def test_fig3_visual_clash_registry_keeps_material_label_contact_actionable() ->
         "polymer",
         "film",
     ]
-    assert suppressed == 10
+    assert suppressed == 17
 
 
 def test_fig3_visual_clash_registry_accepts_repaired_material_label_knockout() -> None:
@@ -191,9 +208,7 @@ def test_fig3_visual_clash_registry_accepts_repaired_material_label_knockout() -
         check_visual_clash.VisualIssue(
             "text_on_path", "disordered", "dark=0.036, edge=0.006", (0, 0, 1, 1)
         ),
-        check_visual_clash.VisualIssue(
-            "near_miss", "film", "dark=0.016, edge=0.007", (0, 0, 1, 1)
-        ),
+        check_visual_clash.VisualIssue("near_miss", "film", "dark=0.016, edge=0.007", (0, 0, 1, 1)),
     ]
 
     filtered, suppressed = check_visual_clash.suppress_known_false_positives(
@@ -204,6 +219,26 @@ def test_fig3_visual_clash_registry_accepts_repaired_material_label_knockout() -
 
     assert filtered == []
     assert suppressed == 2
+
+
+def test_fig3_visual_calibrations_are_fixture_scoped_and_bounded() -> None:
+    current_axis = check_visual_clash.VisualIssue(
+        "near_miss", "I(t)", "dark=0.023, edge=0.011", (0, 0, 1, 1)
+    )
+    film = check_visual_clash.VisualIssue(
+        "near_miss", "film", "dark=0.022, edge=0.008", (0, 0, 1, 1)
+    )
+    patterns = check_visual_clash.load_known_false_positive_patterns()
+
+    filtered, suppressed = check_visual_clash.suppress_known_false_positives(
+        [current_axis, film], patterns, "fig3_resistance_mechanism"
+    )
+    foreign_filtered, foreign_suppressed = check_visual_clash.suppress_known_false_positives(
+        [current_axis, film], patterns, "fig2_trap_design_space"
+    )
+
+    assert filtered == [] and suppressed == 2
+    assert foreign_filtered == [current_axis, film] and foreign_suppressed == 0
 
 
 def test_check_visual_clash_cli_uses_explicit_fixture_for_suppression(
@@ -311,11 +346,16 @@ def test_check_collisions_writes_deterministic_json_output(
     }
 
 
-def test_collision_payload_preserves_fixture_identity_for_nested_attempt() -> None:
-    pdf = Path(
-        "examples/demo/review/failure-first/execution-binding-v6/build/"
-        "treatment_generated.pdf"
+def test_collision_payload_preserves_fixture_identity_for_nested_attempt(
+    tmp_path: Path,
+) -> None:
+    pdf = (
+        tmp_path
+        / "examples/demo/review/failure-first/execution-binding-v6/build/"
+        / "treatment_generated.pdf"
     )
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"%PDF-1.4\n")
 
     report = check_collisions.collision_payload(pdf, [], [], 0.05)
 
@@ -325,13 +365,32 @@ def test_collision_payload_preserves_fixture_identity_for_nested_attempt() -> No
     )
 
 
-def test_collision_payload_accepts_bound_fixture_after_compile_changes_cwd() -> None:
-    report = check_collisions.collision_payload(
-        Path("build/treatment_generated.pdf"), [], [], 0.05, fixture="demo"
-    )
+def test_collision_payload_accepts_bound_fixture_after_compile_changes_cwd(
+    tmp_path: Path,
+) -> None:
+    pdf = tmp_path / "build" / "treatment_generated.pdf"
+    pdf.parent.mkdir()
+    pdf.write_bytes(b"%PDF-1.4\n")
+    report = check_collisions.collision_payload(pdf, [], [], 0.05, fixture="demo")
 
     assert report["fixture"] == "demo"
     assert report["render_pdf"] == "build/treatment_generated.pdf"
+
+
+def test_collision_payload_binds_current_render_bytes(tmp_path: Path) -> None:
+    fixture = tmp_path / "examples" / "demo"
+    pdf = fixture / "build" / "demo.pdf"
+    render = fixture / "build" / "demo.png"
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"%PDF-1.4\n")
+    render.write_bytes(b"render-bytes")
+
+    report = check_collisions.collision_payload(pdf, [], [], 0.05, render_image=render)
+
+    assert report["fixture"] == "demo"
+    assert report["render_path"] == "build/demo.png"
+    assert report["render_pdf_sha256"] == ("sha256:" + hashlib.sha256(b"%PDF-1.4\n").hexdigest())
+    assert report["render_sha256"] == ("sha256:" + hashlib.sha256(b"render-bytes").hexdigest())
 
 
 def test_check_visual_clash_default_exits_zero(monkeypatch) -> None:
@@ -361,6 +420,9 @@ def test_check_visual_clash_json_payload_uses_machine_readable_metrics(tmp_path:
 
     payload = check_visual_clash.visual_clash_payload(pdf, [issue])
 
+    # Legacy schema is preserved when no tiers are supplied (report mode / any
+    # caller without a rendered image). Tier fields appear only once tiering is
+    # applied — see test_visual_clash_payload_labels_tiers_and_counts.
     assert payload == {
         "fixture": "demo_fixture",
         "render_pdf": "build/demo_fixture.pdf",
@@ -539,6 +601,16 @@ def test_compile_strict_flag_is_documented_in_script() -> None:
     assert "text_boundary_clash.json" in compile_sh
 
 
+def test_compile_preserves_historical_repair_replay_from_live_contracts() -> None:
+    compile_sh = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert "HISTORICAL_REPAIR_REPLAY=0" in compile_sh
+    assert "^execution-repair-v[0-9]+$" in compile_sh
+    assert (
+        "historical repair replay reports, but does not strict-gate, live coverage requirements"
+    ) in compile_sh
+
+
 def test_check_text_boundary_clash_default_exits_zero_with_report(
     tmp_path: Path,
     monkeypatch,
@@ -576,3 +648,160 @@ def test_check_text_boundary_clash_default_exits_zero_with_report(
     assert check_text_boundary_clash.main() == 0
     report = json.loads(output.read_text(encoding="utf-8"))
     assert report["candidates"][0]["id"] == "TB001"
+
+
+# --- visual-clash promotion tiering ---------------------------------------
+# The strict gate blocks only on candidates that clear the clash evidence bar;
+# near_miss (the detector's own sub-clash band) and own-glyph enclosures (a
+# glyph wrapped by its own container contour) are demoted to a report-only
+# ledger that is still serialized and counted, but non-blocking.
+
+
+def _disk_enclosed_glyph_image() -> tuple[Image.Image, check_visual_clash.VisualIssue]:
+    """A short glyph wrapped by a thin ring that decays outward (an atom sphere)."""
+    image = Image.new("RGB", (200, 200), "white")
+    bbox = (90, 80, 110, 120)  # 20x40 glyph-scale box
+    # A ring outline hugging the glyph in the near annulus, clean beyond it.
+    ImageDraw.Draw(image).ellipse((78, 68, 122, 132), outline="black", width=6)
+    issue = check_visual_clash.VisualIssue("text_on_path", "S", "dark=0.070, edge=0.010", bbox)
+    return image, issue
+
+
+def _through_line_glyph_image() -> tuple[Image.Image, check_visual_clash.VisualIssue]:
+    """A short glyph buried in a large fill that extends into the far annulus."""
+    image = Image.new("RGB", (200, 200), "white")
+    bbox = (90, 80, 110, 120)
+    # A broad dark block covering the glyph and BOTH annuli (near + far): the
+    # ink does not decay outward, so this is a real clash / buried label and
+    # must keep blocking. bbox height is 40, so the far annulus reaches +40px
+    # to (50, 40, 150, 160); the fill fully encloses it.
+    ImageDraw.Draw(image).rectangle((40, 30, 160, 170), fill="black")
+    issue = check_visual_clash.VisualIssue("text_on_path", "S", "dark=0.200, edge=0.030", bbox)
+    return image, issue
+
+
+def test_promotion_tier_demotes_near_miss_band() -> None:
+    image = Image.new("RGB", (200, 200), "white")
+    issue = check_visual_clash.VisualIssue(
+        "near_miss", "Transient", "dark=0.016, edge=0.004", (40, 40, 160, 60)
+    )
+
+    assert check_visual_clash.classify_promotion_tier(image, issue) == (
+        "report_only",
+        "near_miss_band",
+    )
+
+
+def test_promotion_tier_blocks_confirmed_text_on_path() -> None:
+    image = Image.new("RGB", (200, 200), "white")
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path", "probe", "dark=0.187, edge=0.030", (40, 40, 160, 60)
+    )
+
+    assert check_visual_clash.classify_promotion_tier(image, issue) == ("blocking", None)
+
+
+def test_own_glyph_enclosure_demotes_disk_wrapped_glyph() -> None:
+    image, issue = _disk_enclosed_glyph_image()
+
+    assert check_visual_clash.is_own_glyph_enclosure(image, issue) is True
+    assert check_visual_clash.classify_promotion_tier(image, issue) == (
+        "report_only",
+        "own_glyph_enclosure",
+    )
+
+
+def test_glyph_in_extending_fill_still_blocks() -> None:
+    """TP counter-test: the same short glyph, but the ink does NOT decay
+    outward (a real clash / buried label) must stay in the blocking tier."""
+    image, issue = _through_line_glyph_image()
+
+    assert check_visual_clash.is_own_glyph_enclosure(image, issue) is False
+    assert check_visual_clash.classify_promotion_tier(image, issue) == ("blocking", None)
+
+
+def test_enclosure_only_applies_to_glyph_scale_labels() -> None:
+    """A multi-character word wrapped by a box is not an own-glyph enclosure;
+    the rule is scoped to glyph-scale tokens so word-on-path stays actionable."""
+    image, issue = _disk_enclosed_glyph_image()
+    word_issue = check_visual_clash.VisualIssue("text_on_path", "voltage", issue.detail, issue.bbox)
+
+    assert check_visual_clash.is_own_glyph_enclosure(image, word_issue) is False
+
+
+def test_visual_clash_payload_labels_tiers_and_counts() -> None:
+    pdf = Path("demo_fixture") / "build" / "demo_fixture.pdf"
+    issues = [
+        check_visual_clash.VisualIssue("text_on_path", "probe", "dark=0.187", (10, 10, 20, 30)),
+        check_visual_clash.VisualIssue("near_miss", "B", "dark=0.020", (30, 10, 40, 30)),
+    ]
+    tiers = [("blocking", None), ("report_only", "near_miss_band")]
+
+    payload = check_visual_clash.visual_clash_payload(pdf, issues, tiers=tiers)
+
+    assert payload["total"] == 2
+    assert payload["blocking_total"] == 1
+    assert payload["report_only_total"] == 1
+    assert payload["candidates"][0]["promotion_tier"] == "blocking"
+    assert payload["candidates"][0]["report_only_grounds"] is None
+    assert payload["candidates"][1]["promotion_tier"] == "report_only"
+    assert payload["candidates"][1]["report_only_grounds"] == "near_miss_band"
+
+
+def test_strict_exits_zero_when_only_report_only_candidates(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    """Strict must PASS (exit 0) when every remaining candidate is report-only,
+    while still serializing them to the ledger (not silently dropped)."""
+    pdf = tmp_path / "demo_fixture" / "build" / "demo_fixture.pdf"
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"%PDF-1.4\n")
+    output = pdf.parent / "visual_clash.json"
+    near_miss = check_visual_clash.VisualIssue(
+        "near_miss", "B", "dark=0.020, edge=0.005", (30, 10, 40, 30)
+    )
+    monkeypatch.setattr(check_visual_clash, "extract_pdf_words_and_page", lambda _pdf: ([], (1, 1)))
+    monkeypatch.setattr(
+        check_visual_clash,
+        "render_pdf_first_page",
+        lambda _pdf, _dpi: Image.new("RGB", (100, 100), "white"),
+    )
+    monkeypatch.setattr(check_visual_clash, "detect_visual_clashes", lambda *_args: [near_miss])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["check_visual_clash.py", str(pdf), "--strict", "--json-output", str(output)],
+    )
+
+    assert check_visual_clash.main() == 0
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["report_only_total"] == 1
+    assert payload["blocking_total"] == 0
+    assert payload["candidates"][0]["promotion_tier"] == "report_only"
+
+
+def test_strict_exits_one_when_a_blocking_candidate_remains(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    pdf = tmp_path / "demo_fixture" / "build" / "demo_fixture.pdf"
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"%PDF-1.4\n")
+    blocking = check_visual_clash.VisualIssue(
+        "text_on_path", "probe", "dark=0.187, edge=0.030", (40, 40, 160, 60)
+    )
+    monkeypatch.setattr(check_visual_clash, "extract_pdf_words_and_page", lambda _pdf: ([], (1, 1)))
+    monkeypatch.setattr(
+        check_visual_clash,
+        "render_pdf_first_page",
+        lambda _pdf, _dpi: Image.new("RGB", (200, 200), "white"),
+    )
+    monkeypatch.setattr(check_visual_clash, "detect_visual_clashes", lambda *_args: [blocking])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["check_visual_clash.py", str(pdf), "--strict"],
+    )
+
+    assert check_visual_clash.main() == 1

@@ -15,6 +15,7 @@ ACTION_HUMAN_GATE_STOP = "human_gate_stop"
 ACTION_POLISH_HANDOFF_STOP = "polish_handoff_stop"
 ACTION_RELEASE_BLOCKED = "release_blocked"
 ACTION_COMPLETE = "complete"
+ACTION_CLOSED_LOOP_HANDOFF_STOP = "closed_loop_handoff_stop"
 
 STOP_HOST_LLM_CRITIQUE = "host_llm_critique_required"
 STOP_REFERENCE_MISSING = "reference_missing"
@@ -101,6 +102,13 @@ def _fallback_decision_boundary(actor: str, action: Any, stop_boundary: Any) -> 
 def required_actor_for_summary(summary: dict[str, Any]) -> str:
     action = summary.get("action")
     stop_boundary = summary.get("stop_boundary")
+    if action == ACTION_CLOSED_LOOP_HANDOFF_STOP:
+        next_action = summary.get("next_action_summary")
+        if isinstance(next_action, dict):
+            actor = next_action.get("required_actor")
+            if isinstance(actor, str) and actor:
+                return actor
+        return "workflow_agent"
     if action == ACTION_COMPLETE:
         return "none"
     if stop_boundary in {STOP_REFERENCE_MISSING, STOP_SEMANTIC_BACKPORT}:
@@ -122,10 +130,14 @@ def required_actor_for_summary(summary: dict[str, Any]) -> str:
     return "workflow_agent"
 
 
+def _is_human_actor(actor: str) -> bool:
+    return actor in {"human", "release_operator"} or actor.startswith("human_")
+
+
 def _operator_state(action: Any, stop_boundary: Any, actor: str) -> str:
     if action == ACTION_COMPLETE:
         return "complete"
-    if actor in {"human", "release_operator"}:
+    if _is_human_actor(actor):
         return "human_boundary"
     if actor == "host_llm":
         return "host_boundary"
@@ -219,7 +231,7 @@ def _operator_next_step(summary: dict[str, Any], actor: str) -> str:
         )
     if actor == "host_llm":
         return f"Run `/fig_critique {fixture}` in the host vision session, then rerun /fig_drive."
-    if actor == "human":
+    if actor == "human" or actor.startswith("human_"):
         return "Record the required human decision, then rerun /fig_drive."
     if actor == "release_operator":
         return "Resolve accepted, golden, final-artifact, or publication gates manually."
@@ -307,7 +319,7 @@ def final_readiness_profile(
         "verify_only_complete",
         "no_actionable_findings",
     }:
-        loop_state = "human_required" if actor in {"human", "release_operator"} else "needs_action"
+        loop_state = "human_required" if _is_human_actor(actor) else "needs_action"
         loop_reason = f"latest loop stop is {loop_checkpoint.get('final_stop_reason')}."
     export_check = _profile_step(
         "pass"
@@ -325,7 +337,7 @@ def final_readiness_profile(
         "pass"
         if release_ready
         else "human_required"
-        if actor == "release_operator"
+        if _is_human_actor(actor)
         else "needs_action",
         reason=(
             "release_ready is true."
@@ -360,7 +372,7 @@ def final_readiness_profile(
             if warning_budget_check["state"] in {"pass", "not_applicable"}
             else "needs_action"
         )
-    elif actor in {"human", "release_operator"}:
+    elif _is_human_actor(actor):
         overall = "human_required"
     else:
         overall = "needs_action"

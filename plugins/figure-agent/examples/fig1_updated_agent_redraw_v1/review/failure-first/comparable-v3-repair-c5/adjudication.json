@@ -1,0 +1,49 @@
+{
+  "schema": "figure-agent.initial-human-adjudication.v1",
+  "attempt_dir": "review/failure-first/comparable-v3-repair-c5",
+  "parent_attempt_dir": "review/failure-first/comparable-v3-repair-c4",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "adjudicated_at": "2026-07-18",
+  "adjudicated_by": "orchestrator_under_named_human_delegation",
+  "delegation": {
+    "named_human": {"name": "Choe Mun-yeong", "handle": "Moon-python", "session": "live session 2026-07-18"},
+    "delegation_quote_verbatim": "이 정도는 그냥 너가 판단해도 되는 수준",
+    "delegation_scope": "routine same-class judgments delegated to the orchestrator; the orchestrator viewed the C4 render crops directly and adjudicated the strict residue (10 blocking visual_clash candidates) into 3 real repairable defects and 6 confirmed false positives."
+  },
+  "finding": {
+    "id": "HA005",
+    "kind": "visual_clash_strict_residue",
+    "summary": "Close the check_visual_clash --strict residue on C4: 10 blocking text_on_path candidates. Orchestrator crop review splits them into 3 real label/path overlaps (repair) and 6 confirmed false positives (declare via the existing fixture-scoped known-FP mechanism)."
+  },
+  "real_defects_to_repair": [
+    {"label": "constant voltage", "panel": "D", "machine_ids": ["VC030", "VC031"], "defect": "apparatus-box top border line crosses the glyph tops (dark 0.213/0.208)", "disposition": "repaired"},
+    {"label": "probe", "panel": "E", "machine_ids": ["VC035"], "defect": "the probe horizontal wire grazes the glyph tops (dark 0.187)", "disposition": "repaired"},
+    {"label": "floating polymer cantilever", "panel": "F", "machine_ids": ["VC036"], "defect": "a trapped-charge sphere sits on the letters 'er' and the beam passes behind the word (dark 0.112)", "disposition": "repaired"}
+  ],
+  "confirmed_false_positives": [
+    {"glyph": "poly(S-r-DIB)", "panel": "A", "machine_id": "VC003", "dark": 0.032, "ground": "Panel A title tail; own-glyph antialiased halo grazes the thin (0.32pt) panel-frame line, no real path collision."},
+    {"glyph": "HERO", "panel": "C", "machine_id": "VC022", "dark": 0.046, "ground": "Panel C corner tag; bold-glyph halo near the thin frame line, no real collision."},
+    {"glyph": "E", "panel": "E", "machine_id": "VC024", "dark": 0.038, "ground": "Panel E bold panel-letter; own-glyph halo near the thin frame line, not a real path crossing."},
+    {"glyph": "F", "panel": "F", "machine_id": "VC026", "dark": 0.037, "ground": "Panel F bold panel-letter; own-glyph halo near the thin frame line, not a real path crossing."},
+    {"glyph": "ISPD", "panel": "E", "machine_id": "VC027", "dark": 0.048, "ground": "Panel E title head; bold-title glyph halo near the thin frame line, no real collision."},
+    {"glyph": "Vs", "panel": "E", "machine_id": "VC032", "dark": 0.149, "ground": "Panel E 'Vs' meter label; adequately separated from its own Vs-meter box border (box-border proximity, not a real overlap)."}
+  ],
+  "adjudication": {
+    "decision": "repair_3_real_defects_and_declare_6_confirmed_false_positives",
+    "false_positive_mechanism": "the existing fixture-scoped known-FP mechanism consumed by check_visual_clash --ignore-known-fp (_known_false_positives.yaml at the plugin root). Six glyph-scoped, fixture-scoped patterns added with tight dark/edge bounds and per-entry ground text. No new suppression mechanism invented.",
+    "decided_by": ["orchestrator_under_delegation"]
+  },
+  "authorization_scope": {
+    "authorized": [
+      "bounded position/anchor repair of the 3 real defect labels",
+      "declare the 6 confirmed false positives via the existing known-FP yaml (glyph + fixture scoped, tight bounds)"
+    ],
+    "not_authorized": [
+      "final C5 development verdict is issued by the orchestrator under delegation (recorded separately)",
+      "suppressing any real defect, or an unscoped/loose FP pattern",
+      "any publication acceptance; strict first-green is a machine-valid layer only"
+    ]
+  },
+  "parent_source_sha256": "20372e10f4f40fabd1e491f59a22be66b2af5e8771566f2dbe57fb6a7149df15",
+  "publication_acceptance": "not_claimed"
+}

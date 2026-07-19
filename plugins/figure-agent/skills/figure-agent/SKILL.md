@@ -31,10 +31,10 @@ compilation in scope when they compile explicit paper-local files, Style Lock
 tokens, source-anchored rule catalogs, and opt-in semantic claims/invariants.
 They are not prompt-loop revival, generation execution, or automatic physics
 detection.
-Before product-level work, read `docs/product-spec.md` and
-`docs/execution-plan.md`. They are the only active product specification and
-forward execution plan. Treat other specs, roadmaps, and milestones as scoped
-evidence unless one of these authorities explicitly delegates to them.
+Before product-level work, read `docs/figure-agent.md`. It is the sole active
+product specification and forward execution roadmap. Treat other specs, plans,
+roadmaps, and milestones as scoped evidence unless that authority explicitly
+delegates to them.
 
 ## Runtime Entrypoint
 
@@ -96,14 +96,38 @@ run `fig-agent helper fig_run_journal.py <name>` to summarize the prior
 stop, then rerun live `/fig_status` or `/fig_drive` before using
 `/fig_run --execute` again. Do not replay commands from a journal.
 
+For the first canonical lifecycle state after a fresh real render, require one
+explicit `--closed-loop-attempt-manifest <manifest.json>` on `/fig_run`; never
+discover it adjacently. The manifest must bind fixture, named authoring-agent
+identity/role, source/render paths and hashes, task/model/budget provenance, and
+`publication_acceptance: not_claimed`. Plan-only validates and reports the
+proposed `authored_rendered` path without writing. Execute revalidates under the
+shared transition lock, publishes only that root state, and stops. This is
+lifecycle admission, not prospective defect proof, visual acceptance, or
+publication acceptance; do not synthesize any critique, review, repair,
+authorization, verdict, accepted, or golden evidence in this step.
+
+When canonical status is `repair_bound`, pass all of
+`--closed-loop-repair-packet <v4.json>` and
+`--closed-loop-candidate-response <response.json>` and
+`--closed-loop-materialization-preview <preview.json>` to `/fig_run`. The run
+recomputes the preview from this explicit triplet, validates it against the
+state binding, and only publishes
+`repair_candidate_ready`; it does not discover candidate files, invoke a model,
+materialize source, or cross the named-human authorization boundary.
+Retired pre-R4.8 candidate leaves cannot restart in place. Use
+`fig-agent helper closed_loop_legacy_candidate_quarantine.py --fixture <name> --state <leaf.json> --authorization <record.json> --execute`
+only as an explicit preservation step; it moves no evidence until `--execute`,
+requires a named-human record bound to the exact leaf path/state/file hashes,
+preserves both outside discovery, and re-exposes only its verified `repair_bound`
+parent.
+
 If the user asks to "use figure-agent to improve this", "loop 10 times", or
 "keep reviewing and polishing until no major issues remain" for one fixture,
-prefer `/fig_improve <name> --goal "<goal>" --execute --max-loops N`. It wraps
-`/fig_run` as a loop-centered orchestrator, then stops at host critique, human,
-patch, SVG polish, release, or optional-improvement boundaries. `/fig_improve`
-does not author critiques, patch source, edit SVG, force golden, or set
-accepted state. After the required actor acts, rerun `/fig_improve`; do not
-pretend the first call can cross host/human/release boundaries by itself.
+use `/fig_status` and then rerun the canonical bounded `/fig_run` after each
+host, human, or repair boundary. `/fig_improve` remains a compatibility wrapper
+over `/fig_run`; it is not a separate default workflow and does not reactivate
+autonomous quality search.
 
 If the user asks to proceed autonomously across multiple fixtures, start with
 the queue:
@@ -190,8 +214,7 @@ polish backport, or actions the current mode forbids.
                          and writes non-authoritative .scratch/fig-run-runs/
                          evidence; no resume/replay command exists
 /fig_improve <name> --goal "<goal>" --execute --max-loops N
-                         loop-centered one-fixture orchestrator over /fig_run;
-                         stops at host/human/patch/SVG/release/optional gates
+                         compatibility wrapper over /fig_run; not the default route
 /fig_queue --mode <mode> --goal "<goal>"
                          read-only multi-fixture driver queue with actor/action
                          filters and optional command plan

@@ -1,0 +1,15 @@
+{
+  "change_summary": "Place the rho value above-left of the span and the magnitude descriptor in a separate vertical lane.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v45/repaired_generated.tex",
+  "output_sha256": "sha256:2ee0be692e7c345d012edd5f1a768880c215f6611d501e49653cce7c97c3a632",
+  "packet_sha256": "sha256:bd555853ceece8ae85d87390fb8cb303567887df2598499d476063c401a04ab9",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:e359209aeab84f0a51cdbe92d02ca163487252d3cf4b0ada6b1315030494738d"
+}

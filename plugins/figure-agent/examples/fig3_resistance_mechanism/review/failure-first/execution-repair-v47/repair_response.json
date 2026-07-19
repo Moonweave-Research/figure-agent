@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[compact label, text=cBrown, anchor=west, fill=white, inner sep=1.4pt] at (4.93,1.24) {$\\rho_{60\\mathrm{s}}$};\n  \\node[compact label, text=cBrown, rotate=90] at (4.58,0.765) {magnitude};\n\\end{scope}",
+  "change_summary": "Protect the detached rho label with a local white field and retain the vertical magnitude lane."
+}

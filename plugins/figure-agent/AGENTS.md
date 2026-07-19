@@ -1,10 +1,9 @@
 # AGENTS.md — figure-agent
 
 Codex entry point. Authoritative workflow: `skills/figure-agent/SKILL.md`.
-Before product work, read the single product authority
-`docs/product-spec.md` and the single active forward plan
-`docs/execution-plan.md`. Other roadmaps and specs are evidence, not product
-authority.
+Before product work, read the sole product and execution authority
+`docs/figure-agent.md`. Other specifications, plans, roadmaps, and milestones
+are evidence, not product authority.
 
 ## Identity
 
@@ -20,7 +19,7 @@ Quality kernel responsibilities:
 Plugin does **not**:
 - Call image-gen or external vision APIs directly.
 - Decide which frontier LLM/agent to use.
-- Convert PNG → SVG/TikZ automatically (see `docs/product-spec.md`).
+- Convert PNG → SVG/TikZ automatically (see `docs/figure-agent.md`).
 
 Plugin **does** delegate vision tasks to the host main loop (L4.5 vision
 critique). The host reads the build PNG and writes `critique.md` using
@@ -56,7 +55,6 @@ was renamed and extended into `/fig_critique` (PR #9). See
 - Successor to `[tikz-paper-workflow]/` (archived 2026-04-27).
 - Reference-layer architecture deprecated (Y0 pilot evidence).
 - v0.1 spec: `docs/historical/design-v0.1.md` (frozen historical).
-- Product authority: `docs/product-spec.md`.
-- Forward execution authority: `docs/execution-plan.md`.
+- Product and forward execution authority: `docs/figure-agent.md`.
 - Operational reference:
   `docs/architecture-v0.5-per-panel-reference-workflow.md`.

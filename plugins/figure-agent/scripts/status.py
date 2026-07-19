@@ -1,5 +1,7 @@
 """Infer figure-pipeline stage from filesystem + spec.yaml only."""
 
+# ruff: noqa: E402
+
 from __future__ import annotations
 
 import argparse
@@ -8,8 +10,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+SCRIPTS_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPTS_DIR))
+sys.path.insert(0, str(SCRIPTS_DIR / "checks"))
+sys.path.insert(0, str(SCRIPTS_DIR / "quality"))
 
+import closed_loop_current_state
+import current_render_review_scaffold
 import human_decision_record
 import runtime_paths
 import status_next_policy
@@ -61,6 +68,7 @@ RENDER_FRESH = "FRESH"
 _SPEC_PARSE_ERROR_KEY = "__spec_parse_error__"
 SPINE_EVIDENCE_SCHEMA = "figure-agent.spine-evidence-summary.v1"
 PROMOTION_QUEUE_SCHEMA = "figure-agent.promotion-queue.v1"
+STRICT_STATUS_SCHEMA = "figure-agent.strict-status.v1"
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -552,6 +560,70 @@ def _physics_grounding_summary(path: Path) -> dict[str, Any]:
     return {key: value for key, value in summary.items() if value is not None}
 
 
+def _strict_status_summary(path: Path) -> dict[str, Any]:
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {"state": error, "path": f"build/{path.name}"}
+    assert payload is not None
+    state = payload.get("state")
+    if payload.get("schema") != STRICT_STATUS_SCHEMA or state not in {
+        "not_requested",
+        "passed",
+        "failed",
+    }:
+        return {"state": "invalid", "path": f"build/{path.name}"}
+    return {
+        "state": state,
+        "path": f"build/{path.name}",
+        "schema": payload["schema"],
+        "strict_requested": payload.get("strict_requested") is True,
+        "detector_failed": payload.get("detector_failed") is True,
+    }
+
+
+def _geometry_coverage_summary(path: Path) -> dict[str, Any]:
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {"state": error, "path": f"build/{path.name}"}
+    assert payload is not None
+    coverage = payload.get("geometry_parse_coverage")
+    if not isinstance(coverage, dict):
+        return {"state": "invalid", "path": f"build/{path.name}"}
+    total = coverage.get("total_operations")
+    parsed = coverage.get("parsed_operations")
+    ratio = coverage.get("coverage_ratio")
+    if (
+        not isinstance(total, int)
+        or isinstance(total, bool)
+        or not isinstance(parsed, int)
+        or isinstance(parsed, bool)
+        or not isinstance(ratio, (int, float))
+        or isinstance(ratio, bool)
+    ):
+        return {"state": "invalid", "path": f"build/{path.name}"}
+    summary = {
+        "state": "present",
+        "path": f"build/{path.name}",
+        "schema": payload.get("schema"),
+        "coverage_ratio": ratio,
+        "parsed_operations": parsed,
+        "total_operations": total,
+        "unknown_operations": coverage.get("unknown_operations"),
+        "partial_unknown_operations": coverage.get("partial_unknown_operations"),
+    }
+    gate = payload.get("geometry_coverage_gate")
+    if isinstance(gate, dict) and gate.get("configured") is True:
+        state = gate.get("state")
+        clean_claim_allowed = gate.get("clean_claim_allowed")
+        if state in {"passed", "failed"} and isinstance(clean_claim_allowed, bool):
+            summary["zero_findings_clean_claim"] = {
+                "state": state,
+                "allowed": clean_claim_allowed,
+                "failures": gate.get("failures") if isinstance(gate.get("failures"), list) else [],
+            }
+    return summary
+
+
 def _spine_evidence_summary(example_dir: Path) -> dict[str, Any]:
     build_dir = example_dir / "build"
     sources = {
@@ -602,6 +674,10 @@ def _promotion_queue_summary(example_dir: Path) -> dict[str, Any]:
 
 
 def _finalize_status(result: dict, example_dir: Path) -> dict:
+    result["closed_loop_attempt"] = closed_loop_current_state.resolve_current_attempt(
+        workspace_root=example_dir.parents[1],
+        fixture=example_dir.name,
+    )
     if "release_decision" not in result:
         name = result.get("name")
         if isinstance(name, str) and name:
@@ -611,10 +687,30 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
                 exports_substate=str(result.get("exports_substate") or ""),
             )
     _append_critique_freshness_diagnostics(result, example_dir)
+    current_review = current_render_review_scaffold.review_scaffold_summary(example_dir)
+    result["current_render_review"] = current_review
+    if current_review["state"] != "NOT_DECLARED":
+        result.setdefault("checks", []).append(
+            ("current_render_review", str(current_review["state"]).lower())
+        )
+    if current_review["state"] == "PENDING":
+        result.setdefault("notes", []).append("current_render_review_pending")
+    elif current_review["state"] == "STALE":
+        result.setdefault("notes", []).append("current_render_review_stale")
+    elif current_review["state"] == "INVALID":
+        result.setdefault("notes", []).append("current_render_review_invalid")
     result["adjudication_state"] = _adjudication_state(example_dir, result)
-    result["audit_evidence"] = summarize_audit_evidence(example_dir)
+    result["audit_evidence"] = summarize_audit_evidence(
+        example_dir,
+        critique_is_current=result.get("critique_state") == CRITIQUE_FRESH,
+    )
     result["spine_evidence"] = _spine_evidence_summary(example_dir)
     result["promotion_queue"] = _promotion_queue_summary(example_dir)
+    build_dir = example_dir / "build"
+    result["strict_evidence"] = _strict_status_summary(build_dir / "strict_status.json")
+    result["geometry_coverage"] = _geometry_coverage_summary(
+        build_dir / "undeclared_geometry.json"
+    )
     metrics_summary = reference_aesthetic_metrics_summary(example_dir)
     if metrics_summary is not None:
         state = metrics_summary.get("evaluation_state", "invalid")
@@ -1082,6 +1178,14 @@ def _print_single(result: dict) -> None:
             f"{result.get('final_artifact_kind', '?')} "
             f"{result.get('final_artifact_state', '?')} "
             f"{result.get('final_artifact_path', '?')}"
+        )
+    current_review = result.get("current_render_review")
+    if isinstance(current_review, dict) and current_review.get("state") != "NOT_DECLARED":
+        detail = current_review.get("human_review_state") or current_review.get("reason")
+        print(
+            "  Current human review: "
+            f"{current_review.get('state', '?')}"
+            f" ({detail or '?'})"
         )
     audit_evidence = result.get("audit_evidence")
     if isinstance(audit_evidence, dict):

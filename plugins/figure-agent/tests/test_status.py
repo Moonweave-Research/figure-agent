@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -15,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import status as status_mod  # noqa: E402
 from critique_schema_vocab import AESTHETIC_ANTIPATTERN_IDS  # noqa: E402
+from current_render_review_scaffold import review_scaffold_summary  # noqa: E402
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
@@ -26,6 +29,194 @@ from reference_aesthetic_metrics import build_reference_aesthetic_metrics  # noq
 from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _write_current_review_scaffold(directory: Path) -> None:
+    """Write a small hash-bound pending review packet for status tests."""
+    name = directory.name
+    build_dir = directory / "build"
+    crop_dir = build_dir / "audit_crops"
+    crop_dir.mkdir(parents=True)
+    (directory / f"{name}.tex").write_text("tex", encoding="utf-8")
+    (directory / "briefing.md").write_text("briefing", encoding="utf-8")
+    (directory / "spec.yaml").write_text(
+        f"name: {name}\npanels: []\nstyle_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    render = build_dir / f"{name}.pdf"
+    render_png = build_dir / f"{name}.png"
+    manifest = crop_dir / "manifest.json"
+    print_proxy = crop_dir / "print_178mm.png"
+    render.write_bytes(b"pdf")
+    render_png.write_bytes(b"png")
+    manifest.write_bytes(b"manifest")
+    print_proxy.write_bytes(b"print")
+    scaffold = {
+        "schema": "figure-agent.current-render-review-scaffold.v1",
+        "fixture": name,
+        "source_inputs": {
+            "tex_sha256": _sha256(directory / f"{name}.tex"),
+            "briefing_sha256": _sha256(directory / "briefing.md"),
+            "spec_sha256": _sha256(directory / "spec.yaml"),
+        },
+        "render_evidence": {
+            "render_path": f"build/{name}.pdf",
+            "render_png_path": f"build/{name}.png",
+            "render_png_sha256": _sha256(render_png),
+            "audit_crop_manifest": "build/audit_crops/manifest.json",
+            "audit_crop_manifest_sha256": _sha256(manifest),
+            "print_proxy": "build/audit_crops/print_178mm.png",
+            "print_proxy_sha256": _sha256(print_proxy),
+        },
+        "machine_gate": {"publication_acceptance": "not_claimed"},
+        "agent_observations": [{"id": "OBS-001", "question": "review it"}],
+        "human_review": {"state": "pending", "verdict": "not_recorded"},
+    }
+    review_dir = directory / "review" / "failure-first"
+    review_dir.mkdir(parents=True)
+    (review_dir / "current_render_review_scaffold_v1.yaml").write_text(
+        json.dumps(scaffold, sort_keys=True) + "\n", encoding="utf-8"
+    )
+
+
+def test_current_render_review_scaffold_binds_outputs_and_detects_staleness(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "review_demo"
+    _write_current_review_scaffold(fig_dir)
+
+    current = review_scaffold_summary(fig_dir)
+    assert current["state"] == "PENDING"
+    assert current["human_review_state"] == "pending"
+
+    (fig_dir / "build" / f"{fig_dir.name}.png").write_bytes(b"changed")
+    stale = review_scaffold_summary(fig_dir)
+    assert stale["state"] == "STALE"
+    assert stale["stale_fields"] == ["render_evidence.render_png_sha256"]
+
+
+def test_current_render_review_scaffold_detects_machine_gate_geometry_drift(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "review_demo"
+    _write_current_review_scaffold(fig_dir)
+    scaffold_path = fig_dir / "review" / "failure-first" / "current_render_review_scaffold_v1.yaml"
+    scaffold = json.loads(scaffold_path.read_text(encoding="utf-8"))
+    scaffold["machine_gate"].update(
+        {
+            "strict_compile": "passed",
+            "visual_clash_strict_candidates": 0,
+            "geometry_coverage": {
+                "parsed_operations": 21,
+                "total_operations": 25,
+                "coverage_ratio": 0.84,
+            },
+        }
+    )
+    scaffold_path.write_text(json.dumps(scaffold, sort_keys=True) + "\n", encoding="utf-8")
+    build = fig_dir / "build"
+    (build / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": True,
+                "detector_failed": False,
+                "state": "passed",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (build / "visual_clash.json").write_text(
+        json.dumps({"candidates": []}) + "\n", encoding="utf-8"
+    )
+    geometry = {
+        "geometry_parse_coverage": {
+            "parsed_operations": 21,
+            "total_operations": 25,
+            "coverage_ratio": 0.84,
+        }
+    }
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(geometry) + "\n", encoding="utf-8"
+    )
+
+    assert review_scaffold_summary(fig_dir)["state"] == "PENDING"
+
+    geometry["geometry_parse_coverage"]["parsed_operations"] = 20
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(geometry) + "\n", encoding="utf-8"
+    )
+    stale = review_scaffold_summary(fig_dir)
+    assert stale["state"] == "STALE"
+    assert stale["stale_fields"] == ["machine_gate.geometry_coverage.parsed_operations"]
+
+
+def test_current_render_review_keeps_bound_strict_pass_after_nonstrict_recompile(
+    tmp_path: Path,
+) -> None:
+    """A report-only compile must not erase a still-bound strict receipt."""
+    fig_dir = tmp_path / "review_demo"
+    _write_current_review_scaffold(fig_dir)
+    scaffold_path = fig_dir / "review" / "failure-first" / "current_render_review_scaffold_v1.yaml"
+    scaffold = json.loads(scaffold_path.read_text(encoding="utf-8"))
+    scaffold["machine_gate"].update(
+        {
+            "strict_compile": "passed",
+            "visual_clash_strict_candidates": 0,
+            "geometry_coverage": {
+                "parsed_operations": 21,
+                "total_operations": 25,
+                "coverage_ratio": 0.84,
+            },
+        }
+    )
+    scaffold_path.write_text(json.dumps(scaffold, sort_keys=True) + "\n", encoding="utf-8")
+    build = fig_dir / "build"
+    (build / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": False,
+                "detector_failed": False,
+                "state": "not_requested",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (build / "visual_clash.json").write_text(
+        json.dumps({"candidates": []}) + "\n", encoding="utf-8"
+    )
+    (build / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "geometry_parse_coverage": {
+                    "parsed_operations": 21,
+                    "total_operations": 25,
+                    "coverage_ratio": 0.84,
+                }
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert review_scaffold_summary(fig_dir)["state"] == "PENDING"
+
+
+def test_status_surfaces_pending_current_render_review(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "review_status_demo"
+    _write_current_review_scaffold(fig_dir)
+
+    result = infer_stage(fig_dir)
+
+    assert result["current_render_review"]["state"] == "PENDING"
+    assert ("current_render_review", "pending") in result["checks"]
 
 
 @pytest.fixture(autouse=True)
@@ -676,6 +867,118 @@ def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     os.utime(pdf, (new_time, new_time))
     result = infer_stage(fig_dir)
     assert result["stage"] == 3
+
+
+def test_status_separates_render_freshness_from_strict_and_geometry_evidence(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "strictfig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    tex = fig_dir / "strictfig.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    pdf = build_dir / "strictfig.pdf"
+    pdf.write_bytes(b"%PDF")
+    (build_dir / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": True,
+                "detector_failed": True,
+                "state": "failed",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (build_dir / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.undeclared-geometry.v1",
+                "geometry_parse_coverage": {
+                    "coverage_ratio": 0.45,
+                    "parsed_operations": 9,
+                    "total_operations": 20,
+                    "unknown_operations": 11,
+                    "partial_unknown_operations": 0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    old_time = time.time() - 100
+    fresh_time = time.time() - 10
+    for path in (tex, fig_dir / "briefing.md", fig_dir / "spec.yaml"):
+        os.utime(path, (old_time, old_time))
+    os.utime(pdf, (fresh_time, fresh_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["render_state"] == "FRESH"
+    assert result["strict_evidence"] == {
+        "state": "failed",
+        "path": "build/strict_status.json",
+        "schema": "figure-agent.strict-status.v1",
+        "strict_requested": True,
+        "detector_failed": True,
+    }
+    assert result["geometry_coverage"] == {
+        "state": "present",
+        "path": "build/undeclared_geometry.json",
+        "schema": "figure-agent.undeclared-geometry.v1",
+        "coverage_ratio": 0.45,
+        "parsed_operations": 9,
+        "total_operations": 20,
+        "unknown_operations": 11,
+        "partial_unknown_operations": 0,
+    }
+
+
+def test_geometry_coverage_status_surfaces_zero_finding_clean_claim_policy(tmp_path: Path) -> None:
+    report = tmp_path / "undeclared_geometry.json"
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.undeclared-geometry.v1",
+                "geometry_parse_coverage": {
+                    "coverage_ratio": 0.8,
+                    "parsed_operations": 16,
+                    "total_operations": 20,
+                    "unknown_operations": 4,
+                    "partial_unknown_operations": 0,
+                },
+                "geometry_coverage_gate": {
+                    "configured": True,
+                    "state": "passed",
+                    "clean_claim_allowed": True,
+                    "failures": [],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    summary = status_mod._geometry_coverage_summary(report)
+
+    assert summary["zero_findings_clean_claim"] == {
+        "state": "passed",
+        "allowed": True,
+        "failures": [],
+    }
+
+
+def test_status_cli_loads_checker_modules_without_external_pythonpath() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "status.py"), "--json"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout)
 
 
 def test_status_surfaces_spine_evidence_from_build_reports(tmp_path: Path) -> None:

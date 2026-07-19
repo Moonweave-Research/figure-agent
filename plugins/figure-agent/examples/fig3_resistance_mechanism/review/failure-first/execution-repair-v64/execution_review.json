@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"accepted_as_nonregressing_scaffold","repair_result":"the redundant progression sentence is removed without reintroducing the earlier filled-token regression","next_human_target":"panel_b_external_breadth_dimension_retry","publication_acceptance":"not_claimed"}

@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[compact label, align=center, anchor=north] at (1.92,3.61)\n  {disordered\\\\sulfur--polymer film};",
+  "change_summary": "Reflowed the wide sample title onto two centered lines inside the film so neither electrode covers its edge words."
+}

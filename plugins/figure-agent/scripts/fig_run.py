@@ -11,17 +11,42 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shlex
 import subprocess
 import sys
+import time
+from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SCRIPTS_DIR))
+for _import_dir in ("quality", "loop", "driver"):
+    sys.path.insert(1, str(_SCRIPTS_DIR / _import_dir))
 
+import attempt_local_post_review  # noqa: E402
+import attempt_local_post_review_response  # noqa: E402
+import closed_loop_attempt_admission  # noqa: E402
+import closed_loop_attempt_state  # noqa: E402
+import closed_loop_current_state  # noqa: E402
+import closed_loop_development_verdict as development_verdict_adapter  # noqa: E402
+import closed_loop_initial_adjudication as initial_adjudication_adapter  # noqa: E402
+import closed_loop_initial_attribution_binding as initial_attribution_binding_adapter  # noqa: E402
+import closed_loop_initial_review  # noqa: E402
+import closed_loop_initial_review_response as initial_review_response_adapter  # noqa: E402
+import closed_loop_machine_repair  # noqa: E402
+import closed_loop_post_review  # noqa: E402
+import closed_loop_post_review_authority as post_review_authority  # noqa: E402
+import closed_loop_post_review_response  # noqa: E402
+import closed_loop_repair_authorization  # noqa: E402
+import closed_loop_repair_candidate  # noqa: E402
+import execution_evidence  # noqa: E402
 import fig_driver  # noqa: E402
+import fig_loop  # noqa: E402
+import repair_transaction  # noqa: E402
 import runtime_paths  # noqa: E402
 from driver_actor import required_actor_for_driver_summary  # noqa: E402
 from fig_run_records import write_run_journal  # noqa: E402
@@ -44,10 +69,78 @@ STOP_PLAN_ONLY = "plan_only"
 STOP_HOST_BOUNDARY = "host_boundary"
 STOP_NOT_EXECUTABLE = "not_executable_action"
 STOP_COMMAND_FAILED = "command_failed"
+STOP_STALE_PLAN = "stale_plan"
+STOP_ADMISSION_BUSY = "admission_busy"
+STOP_ADMISSION_INVALID = "admission_invalid"
+STOP_RUN_FIG_LOOP_ADMISSION_PENDING = "run_fig_loop_admission_integration_pending"
 STOP_COMPLETE = "complete"
 STOP_MAX_STEPS = "max_steps_exceeded"
 STOP_REPEATED_ACTION = "repeated_executable_action"
 PATCH_DEFERRED = "patch_source_mutation_deferred_until_70c"
+LEASED_EXECUTABLE_ACTIONS = frozenset(
+    {
+        fig_driver.ACTION_RUN_ADJUDICATE,
+        fig_driver.ACTION_RUN_COMPILE,
+        fig_driver.ACTION_RUN_EXPORT,
+    }
+)
+
+_ATTEMPT_LOCAL_PACKET_SCHEMA = "figure-agent.attempt-local-repair-packet.v1"
+_LEGACY_PACKET_SCHEMAS = frozenset(
+    {
+        "figure-agent.repair-execution-packet.v3",
+        "figure-agent.repair-execution-packet.v4",
+    }
+)
+_ATTEMPT_LOCAL_REQUEST_SCHEMA = "figure-agent.attempt-local-post-repair-review-request.v2"
+_LEGACY_REQUEST_SCHEMA = "figure-agent.post-repair-visual-review-request.v1"
+
+
+def _bound_evidence_schema(
+    state: dict[str, Any], role: str, *, workspace_root: Path
+) -> str:
+    record = post_review_authority.lineage_evidence_record(
+        state, role, workspace_root=workspace_root
+    )
+    path = post_review_authority.workspace_file(
+        workspace_root, str(record.get("path") or ""), label=f"dispatch_{role}"
+    )
+    data = path.read_bytes()
+    if record.get("sha256") != post_review_authority.sha256_bytes(data):
+        raise ValueError(f"dispatch_{role}_hash_drift")
+    payload = post_review_authority.load_json(path, label=f"dispatch_{role}")
+    schema = payload.get("schema")
+    if not isinstance(schema, str) or not schema:
+        raise ValueError(f"dispatch_{role}_schema_missing")
+    return schema
+
+
+def _post_review_adapters(
+    fixture: str, state_path: Path, *, workspace_root: Path
+) -> tuple[object, object]:
+    root = Path(os.path.abspath(workspace_root))
+    state, _ = post_review_authority.load_published_state(
+        workspace_root=root, fixture=fixture, state_path=state_path
+    )
+    if state.get("state") == "machine_repaired":
+        schema = _bound_evidence_schema(
+            state, "repair_execution_packet", workspace_root=root
+        )
+        if schema == _ATTEMPT_LOCAL_PACKET_SCHEMA:
+            return attempt_local_post_review, attempt_local_post_review_response
+        if schema in _LEGACY_PACKET_SCHEMAS:
+            return closed_loop_post_review, closed_loop_post_review_response
+        raise ValueError(f"unsupported_repair_execution_packet_schema:{schema}")
+    if state.get("state") == "post_review_requested":
+        schema = _bound_evidence_schema(
+            state, "post_repair_visual_review_request", workspace_root=root
+        )
+        if schema == _ATTEMPT_LOCAL_REQUEST_SCHEMA:
+            return attempt_local_post_review, attempt_local_post_review_response
+        if schema == _LEGACY_REQUEST_SCHEMA:
+            return closed_loop_post_review, closed_loop_post_review_response
+        raise ValueError(f"unsupported_post_repair_visual_review_request_schema:{schema}")
+    raise ValueError("post_review_dispatch_state_unsupported")
 
 
 @dataclass(frozen=True)
@@ -69,6 +162,22 @@ def _driver_summary(
     repo_root: Path,
 ) -> dict[str, Any]:
     return fig_driver.build_driver_summary(
+        name,
+        mode=mode,
+        goal=goal,
+        repo_root=repo_root,
+    )
+
+
+def _driver_summary_under_admission(
+    name: str,
+    *,
+    mode: str,
+    goal: str,
+    repo_root: Path,
+) -> dict[str, Any]:
+    """Re-query the driver while the fixture admission lease is held."""
+    return _driver_summary(
         name,
         mode=mode,
         goal=goal,
@@ -100,6 +209,63 @@ def _tail(text: str, *, limit: int = 4000) -> str:
     if len(text) <= limit:
         return text
     return text[-limit:]
+
+
+def _begin_step_execution_evidence(
+    repo_root: Path,
+    *,
+    fixture: str,
+    action: str,
+) -> execution_evidence.StepCapture | dict[str, object]:
+    try:
+        return execution_evidence.begin_step_capture(
+            repo_root,
+            fixture=fixture,
+            action=action,
+        )
+    except Exception as exc:
+        return execution_evidence.capture_internal_error_evidence(
+            fixture=fixture,
+            action=action,
+            error_type=type(exc).__name__,
+        )
+
+
+def _finish_step_execution_evidence(
+    capture: execution_evidence.StepCapture | dict[str, object],
+    *,
+    fixture: str,
+    action: str,
+    returncode: int,
+    loop_run_dir: Path | None = None,
+) -> dict[str, object]:
+    if isinstance(capture, dict):
+        return capture
+    try:
+        return execution_evidence.finish_step_capture(
+            capture,
+            returncode=returncode,
+            loop_run_dir=loop_run_dir,
+        )
+    except Exception as exc:
+        return execution_evidence.capture_internal_error_evidence(
+            fixture=fixture,
+            action=action,
+            error_type=type(exc).__name__,
+        )
+
+
+def _missing_step_execution_evidence(
+    *,
+    fixture: str,
+    action: str,
+    reason: str,
+) -> dict[str, object]:
+    return execution_evidence.capture_internal_error_evidence(
+        fixture=fixture,
+        action=action,
+        error_type=reason,
+    )
 
 
 def _is_slash_command(command: str | None) -> bool:
@@ -221,6 +387,125 @@ def _would_execute(summary: dict[str, Any], *, name: str, goal: str, repo_root: 
     return True
 
 
+def _projected_current_state(
+    summary: dict[str, Any],
+    *,
+    lifecycle_state: str,
+    disposition: str,
+    required_actor: str,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    if (
+        summary.get("action") != fig_driver.ACTION_CLOSED_LOOP_HANDOFF_STOP
+        or summary.get("stop_boundary") != fig_driver.STOP_CLOSED_LOOP_ACTOR
+    ):
+        return None
+    projection = summary.get("closed_loop_attempt")
+    if not isinstance(projection, dict):
+        return None
+    if (
+        projection.get("schema") != "figure-agent.closed-loop-current-state.v1"
+        or projection.get("resolution") != "current"
+        or projection.get("state") != lifecycle_state
+        or projection.get("disposition") != disposition
+        or projection.get("required_actor") != required_actor
+        or projection.get("terminal") is not False
+        or projection.get("publication_acceptance") != "not_claimed"
+    ):
+        return None
+    path_value = projection.get("path")
+    if not isinstance(path_value, str) or not path_value:
+        raise ValueError("closed_loop_current_state_path_missing")
+    state_sha256 = projection.get("state_sha256")
+    if (
+        not isinstance(state_sha256, str)
+        or not state_sha256.startswith("sha256:")
+        or len(state_sha256) != 71
+        or any(character not in "0123456789abcdef" for character in state_sha256[7:])
+    ):
+        raise ValueError("closed_loop_current_state_sha256_missing")
+    relative = Path(path_value)
+    if relative.is_absolute() or any(part in {"", ".", ".."} for part in relative.parts):
+        raise ValueError("closed_loop_current_state_path_unsafe")
+    root = Path(os.path.abspath(repo_root))
+    state_path = root / relative
+    try:
+        state_path.relative_to(root)
+    except ValueError as exc:
+        raise ValueError("closed_loop_current_state_path_unsafe") from exc
+    return state_path, state_sha256
+
+
+def _automatic_machine_repaired_state(
+    summary: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    return _projected_current_state(
+        summary,
+        lifecycle_state="machine_repaired",
+        disposition="continue",
+        required_actor="workflow_agent",
+        repo_root=repo_root,
+    )
+
+
+def _automatic_repair_authorized_state(
+    summary: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    return _projected_current_state(
+        summary,
+        lifecycle_state="repair_authorized",
+        disposition="continue",
+        required_actor="workflow_agent",
+        repo_root=repo_root,
+    )
+
+
+def _automatic_repair_candidate_ready_state(
+    summary: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    return _projected_current_state(
+        summary,
+        lifecycle_state="repair_candidate_ready",
+        disposition="human_review_required",
+        required_actor="human_repair_authorizer",
+        repo_root=repo_root,
+    )
+
+
+def _automatic_repair_bound_state(
+    summary: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    return _projected_current_state(
+        summary,
+        lifecycle_state="repair_bound",
+        disposition="continue",
+        required_actor="workflow_agent",
+        repo_root=repo_root,
+    )
+
+
+def _automatic_visually_re_reviewed_state(
+    summary: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> tuple[Path, str] | None:
+    return _projected_current_state(
+        summary,
+        lifecycle_state="visually_re_reviewed",
+        disposition="human_review_required",
+        required_actor="human_reviewer",
+        repo_root=repo_root,
+    )
+
+
 def _boundary_stop_reason(summary: dict[str, Any]) -> str:
     action = summary.get("action")
     if action == fig_driver.ACTION_COMPLETE:
@@ -238,6 +523,7 @@ def _step_payload(
     executed: bool,
     stop_reason: str | None,
     result: CommandResult | None = None,
+    step_execution_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "index": index,
@@ -250,6 +536,7 @@ def _step_payload(
         "returncode": result.returncode if result is not None else None,
         "stdout_tail": _tail(result.stdout) if result is not None else "",
         "stderr_tail": _tail(result.stderr) if result is not None else "",
+        "execution_evidence": step_execution_evidence,
         "stop_reason": stop_reason,
         "driver": summary,
     }
@@ -398,6 +685,125 @@ def _boundary_handoff(
         return None
     action = summary.get("action")
     stop_boundary = summary.get("stop_boundary")
+    if final_stop_reason == STOP_STALE_PLAN:
+        return {
+            "schema": BOUNDARY_HANDOFF_SCHEMA,
+            "action": action,
+            "stop_boundary": stop_boundary,
+            "required_actor": "workflow_agent",
+            "blocking_reason": (
+                "the live driver action changed before mutation admission; "
+                "no mutation was attempted"
+            ),
+            "evidence_refs": [
+                f"runner.stop_reason:{STOP_STALE_PLAN}",
+                "runner.plan_binding:step_admission",
+            ],
+            "allowed_scope": ["read-only"],
+            "forbidden_scope": [
+                "execute the stale command candidate",
+                "closed-loop lifecycle mutation",
+                "publication acceptance claim",
+            ],
+            "closeout_checks": [
+                "rebuild any queue derived from earlier driver state",
+                "rerun live /fig_drive",
+            ],
+            "continuation_guidance": {
+                "rerun_live_status_first": True,
+                "rerun_live_driver_first": True,
+                "note": "Discard the stale candidate; do not replay its command.",
+            },
+            "publication_acceptance": "not_claimed",
+        }
+    if final_stop_reason == STOP_ADMISSION_BUSY:
+        return {
+            "schema": BOUNDARY_HANDOFF_SCHEMA,
+            "action": action,
+            "stop_boundary": stop_boundary,
+            "required_actor": "workflow_agent",
+            "blocking_reason": (
+                "the fixture mutation admission lease is busy; no subprocess was started"
+            ),
+            "evidence_refs": [f"runner.stop_reason:{STOP_ADMISSION_BUSY}"],
+            "allowed_scope": ["read-only"],
+            "forbidden_scope": [
+                "bypass or remove the fixture admission lease",
+                "execute the unadmitted command",
+                "publication acceptance claim",
+            ],
+            "closeout_checks": [
+                "retry after the current fixture lease holder completes",
+                "rerun live /fig_drive",
+            ],
+            "continuation_guidance": {
+                "rerun_live_status_first": True,
+                "rerun_live_driver_first": True,
+                "retryable": True,
+                "note": "Retry from live state; do not replay the prior command.",
+            },
+            "publication_acceptance": "not_claimed",
+        }
+    if final_stop_reason == STOP_ADMISSION_INVALID:
+        return {
+            "schema": BOUNDARY_HANDOFF_SCHEMA,
+            "action": action,
+            "stop_boundary": stop_boundary,
+            "required_actor": "workflow_agent",
+            "blocking_reason": (
+                "fixture mutation admission became invalid; no subprocess was started"
+            ),
+            "evidence_refs": [f"runner.stop_reason:{STOP_ADMISSION_INVALID}"],
+            "allowed_scope": ["read-only"],
+            "forbidden_scope": [
+                "repair or bypass the admission boundary inside this run",
+                "execute the unadmitted command",
+                "publication acceptance claim",
+            ],
+            "closeout_checks": [
+                "inspect the admission diagnostic",
+                "restore a real canonical fixture path and valid lock state",
+                "rerun live /fig_drive",
+            ],
+            "continuation_guidance": {
+                "rerun_live_status_first": True,
+                "rerun_live_driver_first": True,
+                "retryable": False,
+                "note": "Repair the fixture or lock boundary before a new live run.",
+            },
+            "publication_acceptance": "not_claimed",
+        }
+    if final_stop_reason == STOP_RUN_FIG_LOOP_ADMISSION_PENDING:
+        return {
+            "schema": BOUNDARY_HANDOFF_SCHEMA,
+            "action": action,
+            "stop_boundary": stop_boundary,
+            "required_actor": "workflow_agent",
+            "blocking_reason": (
+                "queue-bound fig_loop admission is not integrated; no subprocess was started"
+            ),
+            "evidence_refs": [
+                f"runner.stop_reason:{STOP_RUN_FIG_LOOP_ADMISSION_PENDING}",
+                "runner.plan_binding:step_admission",
+            ],
+            "allowed_scope": ["read-only"],
+            "forbidden_scope": [
+                "wrap fig_loop in an outer admission lease",
+                "execute the queued fig_loop command",
+                "publication acceptance claim",
+            ],
+            "closeout_checks": [
+                "run direct live fig_run only when its self-leased fig_loop path is intended",
+                "rerun live /fig_drive",
+            ],
+            "continuation_guidance": {
+                "rerun_live_status_first": True,
+                "rerun_live_driver_first": True,
+                "retryable": False,
+                "note": "Wait for queue-to-fig_loop admission integration; do not replay.",
+            },
+            "publication_acceptance": "not_claimed",
+        }
     handoff = {
         "schema": BOUNDARY_HANDOFF_SCHEMA,
         "action": action,
@@ -422,6 +828,11 @@ def _boundary_handoff(
             "note": "Do not replay this handoff; rerun live status and driver state first.",
         },
     }
+    next_action = summary.get("next_action_summary")
+    if isinstance(next_action, dict):
+        publication_acceptance = next_action.get("publication_acceptance")
+        if isinstance(publication_acceptance, str) and publication_acceptance:
+            handoff["publication_acceptance"] = publication_acceptance
     if action == fig_driver.ACTION_PATCH_HANDOFF_STOP or stop_boundary in {
         fig_driver.STOP_PATCH_HANDOFF,
         fig_driver.STOP_AMBIGUOUS_PATCH,
@@ -479,6 +890,61 @@ def _result_payload(
     return payload
 
 
+def _step_plan_binding(
+    *,
+    planned_action: str,
+    planned_safe_command: str,
+    live_summary: dict[str, Any],
+    basis: str,
+    step_index: int,
+    live_would_execute: bool,
+) -> dict[str, Any]:
+    live_action = live_summary.get("action")
+    live_safe_command = live_summary.get("safe_command")
+    live_stop_boundary = live_summary.get("stop_boundary")
+    matched = (
+        live_action == planned_action
+        and live_safe_command == planned_safe_command
+        and live_stop_boundary is None
+        and live_would_execute
+    )
+    return {
+        "scope": "step_admission",
+        "basis": basis,
+        "step_index": step_index,
+        "state": "matched" if matched else "stale",
+        "planned": {
+            "action": planned_action,
+            "safe_command": planned_safe_command,
+        },
+        "live": {
+            "action": live_action,
+            "safe_command": live_safe_command,
+            "stop_boundary": live_stop_boundary,
+            "would_execute": live_would_execute,
+        },
+        "mutation_prevented": not matched,
+    }
+
+
+def _admission_diagnostic(exc: Exception) -> dict[str, Any]:
+    detail = str(exc)
+    if not detail or any(
+        character not in "abcdefghijklmnopqrstuvwxyz0123456789_:-" for character in detail
+    ):
+        detail = (
+            "fixture_boundary_invalid"
+            if isinstance(exc, closed_loop_attempt_state.ClosedLoopAttemptStateError)
+            else "fixture_admission_lock_invalid"
+        )
+    return {
+        "state": detail,
+        "exception": type(exc).__name__,
+        "retryable": False,
+        "publication_acceptance": "not_claimed",
+    }
+
+
 def run_workflow(
     name: str,
     *,
@@ -486,6 +952,21 @@ def run_workflow(
     goal: str,
     execute: bool = False,
     max_steps: int = DEFAULT_MAX_STEPS,
+    closed_loop_state: Path | None = None,
+    closed_loop_response: Path | None = None,
+    closed_loop_initial_review_response: Path | None = None,
+    closed_loop_initial_adjudication: Path | None = None,
+    closed_loop_initial_attribution_binding: Path | None = None,
+    closed_loop_repair_response: Path | None = None,
+    closed_loop_repair_packet: Path | None = None,
+    closed_loop_candidate_response: Path | None = None,
+    closed_loop_materialization_preview: Path | None = None,
+    closed_loop_authorization: Path | None = None,
+    closed_loop_development_verdict: Path | None = None,
+    closed_loop_attempt_manifest: Path | None = None,
+    closed_loop_parent_state: Path | None = None,
+    expected_first_action: str | None = None,
+    expected_first_safe_command: str | None = None,
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
     if mode == "final":
@@ -494,15 +975,1177 @@ def run_workflow(
         raise ValueError(f"unsupported mode: {mode}")
     if max_steps < 1:
         raise ValueError("max_steps must be >= 1")
+    first_step_expectation_supplied = (
+        expected_first_action is not None,
+        expected_first_safe_command is not None,
+    )
+    if any(first_step_expectation_supplied) and not all(first_step_expectation_supplied):
+        raise ValueError("first-step action and command expectations must be supplied together")
+    lifecycle_inputs = (
+        closed_loop_state,
+        closed_loop_response,
+        closed_loop_initial_review_response,
+        closed_loop_initial_adjudication,
+        closed_loop_initial_attribution_binding,
+        closed_loop_repair_response,
+        closed_loop_repair_packet,
+        closed_loop_candidate_response,
+        closed_loop_materialization_preview,
+        closed_loop_authorization,
+        closed_loop_development_verdict,
+        closed_loop_attempt_manifest,
+        closed_loop_parent_state,
+    )
+    if all(first_step_expectation_supplied) and any(
+        value is not None for value in lifecycle_inputs
+    ):
+        raise ValueError(
+            "first-step expectation is mutually exclusive with closed-loop lifecycle inputs"
+        )
+    if all(first_step_expectation_supplied) and (
+        not isinstance(expected_first_action, str)
+        or not expected_first_action
+        or not isinstance(expected_first_safe_command, str)
+        or not expected_first_safe_command
+    ):
+        raise ValueError("first-step action and command expectations must be non-empty")
+    if closed_loop_parent_state is not None and closed_loop_attempt_manifest is None:
+        raise ValueError("closed-loop parent state requires an attempt manifest")
+    if closed_loop_attempt_manifest is not None:
+        if any(
+            value is not None
+            for value in (
+                closed_loop_state,
+                closed_loop_response,
+                closed_loop_initial_review_response,
+                closed_loop_initial_adjudication,
+                closed_loop_initial_attribution_binding,
+                closed_loop_repair_response,
+                closed_loop_repair_packet,
+                closed_loop_candidate_response,
+                closed_loop_materialization_preview,
+                closed_loop_authorization,
+                closed_loop_development_verdict,
+            )
+        ):
+            raise ValueError(
+                "closed-loop attempt manifest is mutually exclusive with later lifecycle inputs"
+            )
+        root = Path(os.path.abspath(repo_root))
+        try:
+            admission = closed_loop_attempt_admission.admit_root_attempt(
+                name,
+                manifest_path=closed_loop_attempt_manifest,
+                parent_state_path=closed_loop_parent_state,
+                execute=execute,
+                workspace_root=root,
+            )
+        except closed_loop_attempt_admission.ClosedLoopAttemptAdmissionError as exc:
+            # A rerun may encounter the exact hash-bound initial-request child
+            # rather than its root.  Recover only that verified descendant;
+            # another state or attempt remains a fail-closed admission error.
+            if not execute or not str(exc).startswith("existing_current_attempt:current:"):
+                raise ValueError(str(exc)) from exc
+            try:
+                candidate = closed_loop_attempt_admission._validated_state(  # noqa: SLF001
+                    name,
+                    closed_loop_attempt_manifest,
+                    workspace_root=root,
+                    parent_state_path=closed_loop_parent_state,
+                )
+                current = closed_loop_current_state.resolve_current_attempt(root, name)
+                if (
+                    current.get("resolution") != "current"
+                    or current.get("attempt_id") != candidate["attempt_id"]
+                    or current.get("state") != "initial_review_requested"
+                    or not isinstance(current.get("path"), str)
+                    or not isinstance(current.get("state_sha256"), str)
+                ):
+                    raise ValueError(str(exc)) from exc
+                admission = {
+                    "state": candidate,
+                    "next_state_path": closed_loop_attempt_state.state_path(
+                        candidate, workspace_root=root
+                    ),
+                    "manifest_path": closed_loop_attempt_admission._manifest_evidence_path(  # noqa: SLF001
+                        candidate, workspace_root=root
+                    ),
+                    "created": False,
+                    "existing_initial_state_path": root / current["path"],
+                    "existing_initial_state_sha256": current["state_sha256"],
+                }
+            except (
+                ValueError,
+                closed_loop_attempt_admission.ClosedLoopAttemptAdmissionError,
+            ) as recovery_exc:
+                raise ValueError(str(recovery_exc)) from exc
+        state = admission["state"]
+        authored_state_path = admission["next_state_path"]
+        manifest_path = admission["manifest_path"]
+        if execute:
+            try:
+                initial_state_path = admission.get(
+                    "existing_initial_state_path", authored_state_path
+                )
+                initial_state_sha256 = admission.get(
+                    "existing_initial_state_sha256", state["state_sha256"]
+                )
+                for retry_index in range(25):
+                    try:
+                        outbound = closed_loop_initial_review.run_outbound_handoff(
+                            name,
+                            state_path=initial_state_path,
+                            execute=True,
+                            workspace_root=root,
+                            expected_state_sha256=initial_state_sha256,
+                        )
+                        break
+                    except closed_loop_initial_review.ClosedLoopInitialReviewError as exc:
+                        if (
+                            "transaction lock exists" not in str(exc)
+                            and "initial_review_current_state_mismatch" not in str(exc)
+                        ) or retry_index == 24:
+                            raise
+                        time.sleep(0.01)
+                        current = closed_loop_current_state.resolve_current_attempt(root, name)
+                        if (
+                            current.get("resolution") == "current"
+                            and current.get("state") == "initial_review_requested"
+                            and current.get("attempt_id") == state["attempt_id"]
+                            and isinstance(current.get("path"), str)
+                            and isinstance(current.get("state_sha256"), str)
+                        ):
+                            initial_state_path = root / current["path"]
+                            initial_state_sha256 = current["state_sha256"]
+                else:  # pragma: no cover - the loop either breaks or raises.
+                    raise ValueError("initial_review_retry_exhausted")
+            except closed_loop_initial_review.ClosedLoopInitialReviewError as exc:
+                raise ValueError(str(exc)) from exc
+            next_state = outbound["published_state"]
+            next_state_path = outbound["next_state_path"]
+            request_path = outbound["request_path"]
+            return {
+                "schema": SCHEMA,
+                "fixture": name,
+                "mode": mode,
+                "goal": goal,
+                "execute": execute,
+                "max_steps": max_steps,
+                "executable_actions": sorted(EXECUTABLE_ACTIONS),
+                "steps": [],
+                "final_action": outbound["action"],
+                "final_safe_command": None,
+                "final_stop_boundary": outbound["stop_boundary"],
+                "final_stop_reason": outbound["stop_reason"],
+                "executed_count": int(admission["created"]) + int(outbound["created"]),
+                "closed_loop": {
+                    "input_state": state["state"],
+                    "input_state_path": authored_state_path.relative_to(root).as_posix(),
+                    "input_state_sha256": state["state_sha256"],
+                    "next_state": next_state["state"],
+                    "next_state_path": next_state_path.relative_to(root).as_posix(),
+                    "next_state_sha256": next_state["state_sha256"],
+                    "request_path": request_path.relative_to(root).as_posix(),
+                    "manifest_path": manifest_path.relative_to(root).as_posix(),
+                    "created": bool(admission["created"] or outbound["created"]),
+                    "publication_acceptance": "not_claimed",
+                },
+                "boundary_handoff": {
+                    "schema": BOUNDARY_HANDOFF_SCHEMA,
+                    "action": outbound["action"],
+                    "stop_boundary": outbound["stop_boundary"],
+                    "required_actor": outbound["required_actor"],
+                    "blocking_reason": "initial host visual review required",
+                    "evidence_refs": [
+                        f"initial_visual_review_request:{request_path.relative_to(root).as_posix()}",
+                        f"closed_loop_state:{next_state_path.relative_to(root).as_posix()}",
+                    ],
+                    "allowed_scope": ["read-only host visual review outside the plugin"],
+                    "forbidden_scope": [
+                        "plugin host or model invocation",
+                        "critique, adjudication, attribution, repair, authorization, "
+                        "materialization, or verdict",
+                        "accepted, golden, or publication acceptance claim",
+                    ],
+                    "closeout_checks": ["supply host evidence through a separate canonical step"],
+                    "publication_acceptance": "not_claimed",
+                },
+            }
+        next_state_path = authored_state_path.parent / (
+            f"state-{state['sequence'] + 1:03d}-initial_review_requested.json"
+        )
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": closed_loop_initial_review.ACTION,
+            "final_safe_command": None,
+            "final_stop_boundary": "host_llm",
+            "final_stop_reason": STOP_PLAN_ONLY,
+            "executed_count": 0,
+            "closed_loop": {
+                "next_state": "initial_review_requested",
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "manifest_path": manifest_path.relative_to(root).as_posix(),
+                "evidence_paths": {record["role"]: record["path"] for record in state["evidence"]},
+                "created": False,
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": closed_loop_initial_review.ACTION,
+                "stop_boundary": "host_llm",
+                "required_actor": "workflow_agent",
+                "blocking_reason": (
+                    "plan validates root evidence; execute publishes an outbound "
+                    "initial review request"
+                ),
+                "evidence_refs": [
+                    f"{record['role']}:{record['path']}" for record in state["evidence"]
+                ]
+                + [
+                    f"closed_loop_state:{next_state_path.relative_to(root).as_posix()}",
+                ],
+                "allowed_scope": ["validate the explicit fresh authored render"],
+                "forbidden_scope": [
+                    "host invocation or critique synthesis",
+                    "adjudication, attribution, repair, authorization, materialization, or verdict",
+                    "accepted, golden, or publication acceptance claim",
+                ],
+                "closeout_checks": ["execute to publish the initial host-review request"],
+                "publication_acceptance": "not_claimed",
+            },
+        }
+    candidate_inputs = (
+        closed_loop_repair_packet is not None,
+        closed_loop_candidate_response is not None,
+        closed_loop_materialization_preview is not None,
+    )
+    if any(candidate_inputs) and not all(candidate_inputs):
+        raise ValueError(
+            "closed-loop repair packet, candidate response, and materialization "
+            "preview must be supplied together"
+        )
+    candidate_supplied = all(candidate_inputs)
+    if (
+        sum(
+            value is not None
+            for value in (
+                closed_loop_response,
+                closed_loop_initial_review_response,
+                closed_loop_initial_adjudication,
+                closed_loop_initial_attribution_binding,
+                closed_loop_repair_response,
+                closed_loop_authorization,
+                closed_loop_development_verdict,
+            )
+        )
+        + int(candidate_supplied)
+        > 1
+    ):
+        raise ValueError(
+            "closed-loop candidate, response, initial review response, "
+            "initial adjudication, initial attribution binding, repair response, "
+            "authorization, and "
+            "development verdict are mutually exclusive"
+        )
+    initial_summary: dict[str, Any] | None = None
+    plan_binding: dict[str, Any] | None = None
+    automatic_state_sha256: str | None = None
+    if closed_loop_state is None:
+        initial_summary = _driver_summary(
+            name,
+            mode=mode,
+            goal=goal,
+            repo_root=repo_root,
+        )
+        if all(first_step_expectation_supplied) and not execute:
+            assert expected_first_action is not None
+            assert expected_first_safe_command is not None
+            live_would_execute = _would_execute(
+                initial_summary,
+                name=name,
+                goal=goal,
+                repo_root=repo_root,
+            )
+            plan_binding = _step_plan_binding(
+                planned_action=expected_first_action,
+                planned_safe_command=expected_first_safe_command,
+                live_summary=initial_summary,
+                basis="queue_first_step",
+                step_index=1,
+                live_would_execute=live_would_execute,
+            )
+            if plan_binding["state"] == "stale":
+                step = _step_payload(
+                    index=1,
+                    summary=initial_summary,
+                    would_execute=False,
+                    executed=False,
+                    stop_reason=STOP_STALE_PLAN,
+                )
+                payload = _result_payload(
+                    name=name,
+                    mode=mode,
+                    goal=goal,
+                    execute=execute,
+                    max_steps=max_steps,
+                    steps=[step],
+                    final_summary=initial_summary,
+                    final_stop_reason=STOP_STALE_PLAN,
+                    executed_count=0,
+                )
+                payload["plan_binding"] = plan_binding
+                return payload
+        if closed_loop_development_verdict is not None:
+            automatic_state = _automatic_visually_re_reviewed_state(
+                initial_summary,
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-development-verdict requires current "
+                    "visually_re_reviewed state or --closed-loop-state"
+                )
+        elif candidate_supplied:
+            automatic_state = _automatic_repair_bound_state(
+                initial_summary,
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop repair candidate requires current repair_bound "
+                    "state or --closed-loop-state"
+                )
+        elif closed_loop_authorization is not None:
+            automatic_state = _automatic_repair_candidate_ready_state(
+                initial_summary,
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-authorization requires current "
+                    "repair_candidate_ready state or --closed-loop-state"
+                )
+        elif closed_loop_repair_response is not None:
+            automatic_state = _automatic_repair_authorized_state(
+                initial_summary,
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-repair-response requires current "
+                    "repair_authorized state or --closed-loop-state"
+                )
+        elif closed_loop_initial_review_response is not None:
+            automatic_state = _projected_current_state(
+                initial_summary,
+                lifecycle_state="initial_review_requested",
+                disposition="human_review_required",
+                required_actor="host_llm",
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-initial-review-response requires current "
+                    "initial_review_requested state or --closed-loop-state"
+                )
+        elif closed_loop_initial_adjudication is not None:
+            automatic_state = _projected_current_state(
+                initial_summary,
+                lifecycle_state="critique_unadjudicated",
+                disposition="human_review_required",
+                required_actor="human_adjudicator",
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-initial-adjudication requires current "
+                    "critique_unadjudicated state or --closed-loop-state"
+                )
+        elif closed_loop_initial_attribution_binding is not None:
+            automatic_state = _projected_current_state(
+                initial_summary,
+                lifecycle_state="adjudicated_unbound",
+                disposition="human_review_required",
+                required_actor="human_attributor",
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-initial-attribution-binding requires current "
+                    "adjudicated_unbound state or --closed-loop-state"
+                )
+        elif closed_loop_response is None:
+            automatic_state = _automatic_machine_repaired_state(
+                initial_summary,
+                repo_root=repo_root,
+            )
+        else:
+            automatic_state = _projected_current_state(
+                initial_summary,
+                lifecycle_state="post_review_requested",
+                disposition="human_review_required",
+                required_actor="host_llm",
+                repo_root=repo_root,
+            )
+            if automatic_state is None:
+                raise ValueError(
+                    "closed-loop-response requires current "
+                    "post_review_requested state or --closed-loop-state"
+                )
+        if automatic_state is not None:
+            closed_loop_state, automatic_state_sha256 = automatic_state
+    if closed_loop_state is not None and candidate_supplied:
+        assert closed_loop_repair_packet is not None
+        assert closed_loop_candidate_response is not None
+        assert closed_loop_materialization_preview is not None
+        try:
+            candidate = closed_loop_repair_candidate.run_repair_candidate(
+                name,
+                state_path=closed_loop_state,
+                packet_path=closed_loop_repair_packet,
+                response_path=closed_loop_candidate_response,
+                preview_path=closed_loop_materialization_preview,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except closed_loop_repair_candidate.ClosedLoopRepairCandidateError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        state_path = candidate["input_state_path"]
+        next_state_path = candidate["next_state_path"]
+        packet_path = candidate["packet_path"]
+        response_path = candidate["response_path"]
+        preview_path = candidate["preview_path"]
+        input_state = candidate["input_state"]
+        state_evidence_path = next_state_path if "published_state" in candidate else state_path
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": candidate["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": candidate["stop_boundary"],
+            "final_stop_reason": candidate["stop_reason"],
+            "executed_count": 1 if candidate["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": candidate["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "packet_path": packet_path.relative_to(root).as_posix(),
+                "response_path": response_path.relative_to(root).as_posix(),
+                "preview_path": preview_path.relative_to(root).as_posix(),
+                "created": candidate["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": candidate["action"],
+                "stop_boundary": candidate["stop_boundary"],
+                "required_actor": candidate["required_actor"],
+                "blocking_reason": (
+                    "publish the explicitly supplied bound repair candidate"
+                    if "published_state" not in candidate
+                    else "named human authorization is required"
+                ),
+                "evidence_refs": [
+                    "repair_execution_packet:" + packet_path.relative_to(root).as_posix(),
+                    "repair_response:" + response_path.relative_to(root).as_posix(),
+                    "materialization_preview:" + preview_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + state_evidence_path.relative_to(root).as_posix(),
+                ],
+                "allowed_scope": [
+                    "validate the explicit v1/v2 packet, response, and exact dry-run preview",
+                    "publish the canonical repair_candidate_ready state",
+                ],
+                "forbidden_scope": [
+                    "candidate artifact discovery or synthesis",
+                    "plugin host or model invocation",
+                    "repair materialization before named human authorization",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": ["obtain explicit hash-bound named human authorization"],
+                "publication_acceptance": "not_claimed",
+            },
+        }
+    if closed_loop_state is not None and closed_loop_development_verdict is not None:
+        try:
+            verdict = development_verdict_adapter.run_development_verdict(
+                name,
+                state_path=closed_loop_state,
+                verdict_path=closed_loop_development_verdict,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except development_verdict_adapter.ClosedLoopDevelopmentVerdictError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        state_path = verdict["input_state_path"]
+        next_state_path = verdict["next_state_path"]
+        verdict_path = verdict["verdict_path"]
+        input_state = verdict["input_state"]
+        state_evidence_path = next_state_path if "published_state" in verdict else state_path
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": verdict["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": verdict["stop_boundary"],
+            "final_stop_reason": verdict["stop_reason"],
+            "executed_count": 1 if verdict["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": verdict["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "verdict_path": verdict_path.relative_to(root).as_posix(),
+                "reviewer": verdict["reviewer"],
+                "decision_kind": verdict["decision_kind"],
+                "evidence_role": verdict["evidence_role"],
+                "created": verdict["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": verdict["action"],
+                "stop_boundary": verdict["stop_boundary"],
+                "required_actor": verdict["required_actor"],
+                "blocking_reason": (
+                    "publish the exact named development verdict"
+                    if "published_state" not in verdict
+                    else f"development verdict recorded as {verdict['next_state']}"
+                ),
+                "evidence_refs": [
+                    "human_decision_record:" + verdict_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + state_evidence_path.relative_to(root).as_posix(),
+                ],
+                "allowed_scope": ["publish the bound development-verdict state"],
+                "forbidden_scope": [
+                    "verdict discovery or synthesis",
+                    "accepted or golden mutation",
+                    "release or publication acceptance claim",
+                ],
+                "closeout_checks": ["publish only the exact state-bound verdict"],
+                "publication_acceptance": "not_claimed",
+            },
+        }
+    if closed_loop_state is not None and closed_loop_authorization is not None:
+        try:
+            authorization = closed_loop_repair_authorization.run_authorization(
+                name,
+                state_path=closed_loop_state,
+                authorization_path=closed_loop_authorization,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except closed_loop_repair_authorization.ClosedLoopRepairAuthorizationError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        state_path = authorization["input_state_path"]
+        next_state_path = authorization["next_state_path"]
+        authorization_path = authorization["authorization_path"]
+        input_state = authorization["input_state"]
+        state_evidence_path = next_state_path if "published_state" in authorization else state_path
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": authorization["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": authorization["stop_boundary"],
+            "final_stop_reason": authorization["stop_reason"],
+            "executed_count": 1 if authorization["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": authorization["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "authorization_path": authorization_path.relative_to(root).as_posix(),
+                "created": authorization["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": authorization["action"],
+                "stop_boundary": authorization["stop_boundary"],
+                "required_actor": authorization["required_actor"],
+                "blocking_reason": (
+                    "publish the explicitly supplied hash-bound authorization"
+                    if "published_state" not in authorization
+                    else "continue from the authorized repair candidate"
+                ),
+                "evidence_refs": [
+                    "human_authorization:" + authorization_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + state_evidence_path.relative_to(root).as_posix(),
+                ],
+                "allowed_scope": [
+                    "validate the explicit hash-bound human authorization",
+                    "publish the canonical repair_authorized state",
+                ],
+                "forbidden_scope": [
+                    "authorization discovery or synthesis",
+                    "plugin host or model invocation",
+                    "repair materialization without an explicit response",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": ["supply an explicit hash-bound repair response"],
+                "continuation_guidance": {
+                    "rerun_live_status_first": True,
+                    "rerun_live_driver_first": True,
+                    "note": "Use the exact authorized attempt; do not infer evidence from chat.",
+                },
+                "publication_acceptance": "not_claimed",
+            },
+        }
+    if closed_loop_state is not None and closed_loop_repair_response is not None:
+        try:
+            repair = closed_loop_machine_repair.run_machine_repair(
+                name,
+                state_path=closed_loop_state,
+                response_path=closed_loop_repair_response,
+                execute=execute,
+                workspace_root=repo_root,
+                plugin_root=REPO_ROOT,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except closed_loop_machine_repair.ClosedLoopMachineRepairError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        state_path = repair["input_state_path"]
+        next_state_path = repair["next_state_path"]
+        response_path = repair["response_path"]
+        receipt_path = repair["receipt_path"]
+        input_state = repair["input_state"]
+        state_evidence_path = next_state_path if repair["created"] else state_path
+        evidence_refs = [
+            f"repair_response:{response_path.relative_to(root).as_posix()}",
+            f"closed_loop_state:{state_evidence_path.relative_to(root).as_posix()}",
+        ]
+        if receipt_path.is_file():
+            evidence_refs.insert(
+                1,
+                f"materialization_receipt:{receipt_path.relative_to(root).as_posix()}",
+            )
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": repair["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": repair["stop_boundary"],
+            "final_stop_reason": repair["stop_reason"],
+            "executed_count": 1 if repair["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": repair["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "response_path": response_path.relative_to(root).as_posix(),
+                "receipt_path": receipt_path.relative_to(root).as_posix(),
+                "decision": repair["decision"],
+                "created": repair["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": repair["action"],
+                "stop_boundary": repair["stop_boundary"],
+                "required_actor": repair["required_actor"],
+                "blocking_reason": (
+                    "execute the hash-bound authorized repair plan"
+                    if not execute
+                    else (
+                        "continue from the machine-verified repair"
+                        if repair["next_state"] == "machine_repaired"
+                        else "strict verification failed and the candidate was rolled back"
+                    )
+                ),
+                "evidence_refs": evidence_refs,
+                "allowed_scope": [
+                    "hash-bound additive materialization",
+                    "strict local machine verification",
+                ],
+                "forbidden_scope": [
+                    "repair response discovery",
+                    "plugin host or model invocation",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": (
+                    ["request post-repair visual review"]
+                    if repair["next_state"] == "machine_repaired"
+                    else ["start a new attempt from the repair failure record"]
+                ),
+                "continuation_guidance": {
+                    "rerun_live_status_first": True,
+                    "rerun_live_driver_first": True,
+                    "note": (
+                        "Use the exact hash-bound attempt evidence; do not infer paths from chat."
+                    ),
+                },
+                "publication_acceptance": "not_claimed",
+            },
+        }
+    if closed_loop_state is not None and closed_loop_initial_review_response is not None:
+        try:
+            inbound = initial_review_response_adapter.run_inbound_response(
+                name,
+                state_path=closed_loop_state,
+                response_path=closed_loop_initial_review_response,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except initial_review_response_adapter.ClosedLoopInitialReviewResponseError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        input_state = inbound["input_state"]
+        state_path = inbound["input_state_path"]
+        next_state_path = inbound["next_state_path"]
+        response_path = inbound["response_path"]
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": inbound["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": inbound["stop_boundary"],
+            "final_stop_reason": inbound["stop_reason"],
+            "executed_count": 1 if inbound["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": inbound["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "response_path": response_path.relative_to(root).as_posix(),
+                "created": inbound["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": inbound["action"],
+                "stop_boundary": "human_adjudicator",
+                "required_actor": "human_adjudicator",
+                "blocking_reason": "validated initial host critique requires human adjudication",
+                "evidence_refs": [
+                    "initial_visual_review_response:" + response_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + next_state_path.relative_to(root).as_posix(),
+                ],
+                "allowed_scope": ["read-only human adjudication"],
+                "forbidden_scope": [
+                    "plugin host or model invocation",
+                    "critique generation, adjudication, attribution, repair, authorization, "
+                    "materialization, or verdict",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": ["record a named human adjudication"],
+                "publication_acceptance": "not_claimed",
+            },
+        }
+    if closed_loop_state is not None and closed_loop_initial_adjudication is not None:
+        try:
+            adjudicated = initial_adjudication_adapter.run_initial_adjudication(
+                name,
+                state_path=closed_loop_state,
+                decision_path=closed_loop_initial_adjudication,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except initial_adjudication_adapter.ClosedLoopInitialAdjudicationError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        input_state = adjudicated["input_state"]
+        input_state_path = adjudicated["input_state_path"]
+        next_state_path = adjudicated["next_state_path"]
+        decision_path = adjudicated["decision_path"]
+        handoff_path = adjudicated["attribution_handoff_path"]
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": adjudicated["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": adjudicated["stop_boundary"],
+            "final_stop_reason": adjudicated["stop_reason"],
+            "executed_count": 1 if adjudicated["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": input_state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": adjudicated["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "decision_path": decision_path.relative_to(root).as_posix(),
+                "attribution_handoff_path": (
+                    handoff_path.relative_to(root).as_posix() if handoff_path is not None else None
+                ),
+                "created": adjudicated["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": adjudicated["action"],
+                "stop_boundary": adjudicated["stop_boundary"],
+                "required_actor": adjudicated["stop_boundary"],
+                "blocking_reason": (
+                    "initial review was rejected"
+                    if adjudicated["next_state"] == "rejected"
+                    else "human attribution is required before any repair binding"
+                ),
+                "evidence_refs": [
+                    "initial_adjudication:" + decision_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + next_state_path.relative_to(root).as_posix(),
+                ]
+                + (
+                    ["attribution_handoff:" + handoff_path.relative_to(root).as_posix()]
+                    if handoff_path is not None
+                    else []
+                ),
+                "allowed_scope": (
+                    []
+                    if adjudicated["next_state"] == "rejected"
+                    else ["human attribution inside the explicit handoff scope"]
+                ),
+                "forbidden_scope": [
+                    "plugin host or model invocation",
+                    "automatic adjudication, repair binding, repair, authorization, "
+                    "materialization, or verdict",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": ["keep the source unchanged", "do not bind repair in this step"],
+                "publication_acceptance": "not_claimed",
+            },
+        }
+    if closed_loop_state is not None and closed_loop_initial_attribution_binding is not None:
+        try:
+            bound = initial_attribution_binding_adapter.run_initial_attribution_binding(
+                name,
+                state_path=closed_loop_state,
+                binding_path=closed_loop_initial_attribution_binding,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except initial_attribution_binding_adapter.ClosedLoopInitialAttributionBindingError as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        input_state = bound["input_state"]
+        input_state_path = bound["input_state_path"]
+        next_state_path = bound["next_state_path"]
+        binding_path = bound["binding_path"]
+        snapshot_path = bound["binding_snapshot_path"]
+        return {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": bound["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": bound["stop_boundary"],
+            "final_stop_reason": bound["stop_reason"],
+            "executed_count": 1 if bound["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": input_state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": bound["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "binding_path": binding_path.relative_to(root).as_posix(),
+                "binding_snapshot_path": snapshot_path.relative_to(root).as_posix(),
+                "created": bound["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": bound["action"],
+                "stop_boundary": "workflow_agent",
+                "required_actor": "workflow_agent",
+                "blocking_reason": (
+                    "initial attribution is bound; R4.13 packet compilation remains required"
+                ),
+                "evidence_refs": [
+                    "initial_attribution_binding:" + binding_path.relative_to(root).as_posix(),
+                    "closed_loop_state:" + next_state_path.relative_to(root).as_posix(),
+                ],
+                "allowed_scope": ["read-only R4.13 packet-bound repair planning"],
+                "forbidden_scope": [
+                    "plugin host or model invocation",
+                    "automatic repair packet, materialization, authorization, or verdict",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": ["do not use the legacy candidate path for v2 binding"],
+                "publication_acceptance": "not_claimed",
+            },
+        }
+    if closed_loop_state is not None and closed_loop_response is not None:
+        _, inbound_adapter = _post_review_adapters(
+            name, closed_loop_state, workspace_root=repo_root
+        )
+        try:
+            inbound = inbound_adapter.run_inbound_response(
+                name,
+                state_path=closed_loop_state,
+                response_path=closed_loop_response,
+                execute=execute,
+                workspace_root=repo_root,
+                expected_state_sha256=automatic_state_sha256,
+            )
+        except (
+            closed_loop_post_review_response.ClosedLoopPostReviewError,
+            attempt_local_post_review_response.AttemptLocalPostReviewResponseError,
+        ) as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        input_state, state_path = post_review_authority.load_published_state(
+            workspace_root=root, fixture=name, state_path=closed_loop_state
+        )
+        next_state_path = inbound["next_state_path"]
+        response_path = post_review_authority.workspace_file(
+            root, closed_loop_response, label="post_review_response"
+        )
+        receipt_path = inbound["receipt_path"]
+        payload = {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": inbound["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": inbound["stop_boundary"],
+            "final_stop_reason": inbound["stop_reason"],
+            "executed_count": 1 if inbound["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": inbound["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "response_path": response_path.relative_to(root).as_posix(),
+                "receipt_path": receipt_path.relative_to(root).as_posix(),
+                "decision": inbound["decision"],
+                "created": inbound["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": inbound["action"],
+                "stop_boundary": inbound["stop_boundary"],
+                "required_actor": inbound["required_actor"],
+                "blocking_reason": (
+                    "complete or clarify the exact host execution and response"
+                    if inbound["next_state"] == "post_review_requested"
+                    else (
+                        "validated external review requires human adjudication"
+                        if inbound["next_state"] == "visually_re_reviewed"
+                        else "validated external review requires another repair attempt"
+                    )
+                ),
+                "evidence_refs": [
+                    f"post_repair_visual_review_response:{response_path.relative_to(root).as_posix()}",
+                    f"closed_loop_state:{next_state_path.relative_to(root).as_posix()}",
+                ],
+                "allowed_scope": ["read-only"],
+                "forbidden_scope": [
+                    "plugin host or model invocation",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": (
+                    ["start a new attempt from the bound repair failure record"]
+                    if inbound["next_state"] == "repair_required"
+                    else (
+                        ["record a named human verdict before development acceptance"]
+                        if inbound["next_state"] == "visually_re_reviewed"
+                        else [
+                            "complete or clarify the exact hash-bound host execution "
+                            "and response"
+                        ]
+                    )
+                ),
+                "continuation_guidance": {
+                    "rerun_live_status_first": False,
+                    "rerun_live_driver_first": False,
+                    "note": (
+                        "Use the exact hash-bound attempt evidence; do not infer paths from chat."
+                    ),
+                },
+            },
+        }
+        if not receipt_path.is_file():
+            payload["boundary_handoff"]["evidence_refs"] = [
+                f"post_repair_visual_review_response:{response_path.relative_to(root).as_posix()}",
+                f"closed_loop_state:{state_path.relative_to(root).as_posix()}",
+            ]
+        else:
+            payload["boundary_handoff"]["evidence_refs"].insert(
+                1,
+                f"post_repair_visual_review_receipt:{receipt_path.relative_to(root).as_posix()}",
+            )
+        return payload
+    if closed_loop_state is not None:
+        outbound_adapter, _ = _post_review_adapters(
+            name, closed_loop_state, workspace_root=repo_root
+        )
+        try:
+            if outbound_adapter is attempt_local_post_review:
+                outbound = outbound_adapter.run_attempt_local_post_review(
+                    name,
+                    state_path=closed_loop_state,
+                    execute=execute,
+                    workspace_root=repo_root,
+                )
+            else:
+                outbound = outbound_adapter.run_outbound_handoff(
+                    name,
+                    state_path=closed_loop_state,
+                    execute=execute,
+                    workspace_root=repo_root,
+                    expected_state_sha256=automatic_state_sha256,
+                )
+        except (
+            closed_loop_post_review.ClosedLoopPostReviewError,
+            attempt_local_post_review.AttemptLocalPostReviewError,
+        ) as exc:
+            raise ValueError(str(exc)) from exc
+        root = Path(os.path.abspath(repo_root))
+        input_state, state_path = post_review_authority.load_published_state(
+            workspace_root=root, fixture=name, state_path=closed_loop_state
+        )
+        request_path = outbound["request_path"]
+        next_state_path = outbound.get(
+            "next_state_path",
+            state_path.with_name(
+                f"state-{input_state['sequence'] + 1:03d}-post_review_requested.json"
+            ),
+        )
+        payload = {
+            "schema": SCHEMA,
+            "fixture": name,
+            "mode": mode,
+            "goal": goal,
+            "execute": execute,
+            "max_steps": max_steps,
+            "executable_actions": sorted(EXECUTABLE_ACTIONS),
+            "steps": [],
+            "final_action": outbound["action"],
+            "final_safe_command": None,
+            "final_stop_boundary": outbound["stop_boundary"],
+            "final_stop_reason": outbound["stop_reason"],
+            "executed_count": 1 if outbound["created"] else 0,
+            "closed_loop": {
+                "input_state": input_state["state"],
+                "input_state_path": state_path.relative_to(root).as_posix(),
+                "input_state_sha256": input_state["state_sha256"],
+                "next_state": outbound["next_state"],
+                "next_state_path": next_state_path.relative_to(root).as_posix(),
+                "request_path": request_path.relative_to(root).as_posix(),
+                "created": outbound["created"],
+                "publication_acceptance": "not_claimed",
+            },
+            "boundary_handoff": {
+                "schema": BOUNDARY_HANDOFF_SCHEMA,
+                "action": outbound["action"],
+                "stop_boundary": outbound["stop_boundary"],
+                "required_actor": outbound["required_actor"],
+                "blocking_reason": (
+                    "execute the validated local handoff plan"
+                    if not execute
+                    else "host visual review required"
+                ),
+                "evidence_refs": [f"closed_loop_state:{state_path.relative_to(root).as_posix()}"],
+                "allowed_scope": ["read-only"],
+                "forbidden_scope": [
+                    "plugin host or model invocation",
+                    "publication acceptance claim",
+                ],
+                "closeout_checks": ["run host visual review outside the plugin"],
+                "continuation_guidance": {
+                    "rerun_live_status_first": False,
+                    "rerun_live_driver_first": False,
+                    "note": "Use the exact hash-bound request; do not infer paths from chat.",
+                },
+            },
+        }
+        request = outbound.get("request")
+        if isinstance(request, dict):
+            payload["boundary_handoff"].update(
+                {
+                    "request_path": request_path.relative_to(root).as_posix(),
+                    "request_sha256": request.get("request_sha256"),
+                    "evidence_refs": [
+                        f"post_repair_visual_review_request:{request_path.relative_to(root).as_posix()}",
+                        f"closed_loop_state:{next_state_path.relative_to(root).as_posix()}",
+                    ],
+                }
+            )
+        return payload
 
     steps: list[dict[str, Any]] = []
     executed_count = 0
     final_summary: dict[str, Any] | None = None
     final_stop_reason = STOP_MAX_STEPS
     executed_signatures: set[tuple[str, str]] = set()
+    queue_first_step_pending = all(first_step_expectation_supplied)
+    admission_diagnostic: dict[str, Any] | None = None
 
     for index in range(1, max_steps + 1):
-        summary = _driver_summary(name, mode=mode, goal=goal, repo_root=repo_root)
+        if initial_summary is not None:
+            summary = initial_summary
+            initial_summary = None
+        else:
+            summary = _driver_summary(name, mode=mode, goal=goal, repo_root=repo_root)
         final_summary = summary
         would_execute = _would_execute(summary, name=name, goal=goal, repo_root=repo_root)
 
@@ -521,7 +2164,20 @@ def run_workflow(
             break
 
         if not would_execute:
-            stop_reason = _boundary_stop_reason(summary)
+            if queue_first_step_pending:
+                assert expected_first_action is not None
+                assert expected_first_safe_command is not None
+                plan_binding = _step_plan_binding(
+                    planned_action=expected_first_action,
+                    planned_safe_command=expected_first_safe_command,
+                    live_summary=summary,
+                    basis="queue_first_step",
+                    step_index=index,
+                    live_would_execute=False,
+                )
+                stop_reason = STOP_STALE_PLAN
+            else:
+                stop_reason = _boundary_stop_reason(summary)
             steps.append(
                 _step_payload(
                     index=index,
@@ -534,33 +2190,341 @@ def run_workflow(
             final_stop_reason = stop_reason
             break
 
-        command = summary["safe_command"]
-        signature = (summary["action"], command)
-        if signature in executed_signatures:
+        if summary.get("action") == fig_driver.ACTION_RUN_FIG_LOOP:
+            if queue_first_step_pending:
+                assert expected_first_action is not None
+                assert expected_first_safe_command is not None
+                fig_loop_admission: dict[str, Any] = {}
+
+                def _admission_check() -> bool:
+                    try:
+                        admitted_summary = _driver_summary_under_admission(
+                            name,
+                            mode=mode,
+                            goal=goal,
+                            repo_root=repo_root,
+                        )
+                        admitted_would_execute = _would_execute(
+                            admitted_summary,
+                            name=name,
+                            goal=goal,
+                            repo_root=repo_root,
+                        )
+                    except (
+                        closed_loop_attempt_state.ClosedLoopAttemptStateError,
+                        repair_transaction.RepairTransactionError,
+                    ) as exc:
+                        binding = _step_plan_binding(
+                            planned_action=expected_first_action,
+                            planned_safe_command=expected_first_safe_command,
+                            live_summary=summary,
+                            basis="queue_first_step",
+                            step_index=index,
+                            live_would_execute=would_execute,
+                        )
+                        binding["mutation_prevented"] = True
+                        fig_loop_admission["summary"] = summary
+                        fig_loop_admission["binding"] = binding
+                        raise fig_loop.FigLoopAdmissionInvalid(str(exc)) from exc
+                    binding = _step_plan_binding(
+                        planned_action=expected_first_action,
+                        planned_safe_command=expected_first_safe_command,
+                        live_summary=admitted_summary,
+                        basis="queue_first_step",
+                        step_index=index,
+                        live_would_execute=admitted_would_execute,
+                    )
+                    fig_loop_admission["summary"] = admitted_summary
+                    fig_loop_admission["binding"] = binding
+                    if binding["state"] != "matched":
+                        return False
+                    fig_loop_admission["evidence_capture"] = _begin_step_execution_evidence(
+                        repo_root,
+                        fixture=name,
+                        action=admitted_summary["action"],
+                    )
+                    return True
+
+                def _post_run_capture(run_dir: Path) -> None:
+                    admitted_summary = fig_loop_admission["summary"]
+                    fig_loop_admission["execution_evidence"] = _finish_step_execution_evidence(
+                        fig_loop_admission["evidence_capture"],
+                        fixture=name,
+                        action=admitted_summary["action"],
+                        returncode=0,
+                        loop_run_dir=run_dir,
+                    )
+
+                try:
+                    run_dir = fig_loop.run_loop(
+                        name,
+                        goal,
+                        repo_root=repo_root,
+                        admission_check=_admission_check,
+                        post_run_callback=_post_run_capture,
+                    )
+                except fig_loop.FigLoopAdmissionRejected:
+                    admitted_summary = fig_loop_admission["summary"]
+                    plan_binding = fig_loop_admission["binding"]
+                    final_summary = admitted_summary
+                    steps.append(
+                        _step_payload(
+                            index=index,
+                            summary=admitted_summary,
+                            would_execute=False,
+                            executed=False,
+                            stop_reason=STOP_STALE_PLAN,
+                        )
+                    )
+                    final_stop_reason = STOP_STALE_PLAN
+                    break
+                except fig_loop.FigLoopAdmissionBusy:
+                    steps.append(
+                        _step_payload(
+                            index=index,
+                            summary=summary,
+                            would_execute=True,
+                            executed=False,
+                            stop_reason=STOP_ADMISSION_BUSY,
+                        )
+                    )
+                    final_summary = summary
+                    final_stop_reason = STOP_ADMISSION_BUSY
+                    break
+                except fig_loop.FigLoopAdmissionInvalid as exc:
+                    binding = fig_loop_admission.get("binding")
+                    if isinstance(binding, dict):
+                        plan_binding = binding
+                    steps.append(
+                        _step_payload(
+                            index=index,
+                            summary=summary,
+                            would_execute=True,
+                            executed=False,
+                            stop_reason=STOP_ADMISSION_INVALID,
+                        )
+                    )
+                    admission_diagnostic = _admission_diagnostic(exc)
+                    final_summary = summary
+                    final_stop_reason = STOP_ADMISSION_INVALID
+                    break
+                except fig_loop.FigLoopError as exc:
+                    admitted_summary = fig_loop_admission.get("summary", summary)
+                    binding = fig_loop_admission.get("binding")
+                    if isinstance(binding, dict):
+                        plan_binding = binding
+                    result = CommandResult(
+                        returncode=1,
+                        stdout="",
+                        stderr=f"fig_loop.py: {exc}\n",
+                    )
+                else:
+                    admitted_summary = fig_loop_admission["summary"]
+                    plan_binding = fig_loop_admission["binding"]
+                    result = CommandResult(
+                        returncode=0,
+                        stdout=(
+                            json.dumps(
+                                fig_loop.json_stdout_summary(run_dir),
+                                sort_keys=True,
+                            )
+                            + "\n"
+                        ),
+                        stderr="",
+                    )
+
+                final_summary = admitted_summary
+                command = admitted_summary["safe_command"]
+                signature = (admitted_summary["action"], command)
+                if signature in executed_signatures:
+                    steps.append(
+                        _step_payload(
+                            index=index,
+                            summary=admitted_summary,
+                            would_execute=False,
+                            executed=False,
+                            stop_reason=STOP_REPEATED_ACTION,
+                        )
+                    )
+                    final_stop_reason = STOP_REPEATED_ACTION
+                    break
+                queue_first_step_pending = False
+                executed_count += 1
+                executed_signatures.add(signature)
+                stop_reason = STOP_COMMAND_FAILED if result.returncode != 0 else None
+                step_execution_evidence = fig_loop_admission.get("execution_evidence")
+                if not isinstance(step_execution_evidence, dict):
+                    evidence_capture = fig_loop_admission.get("evidence_capture")
+                    if result.returncode == 0:
+                        step_execution_evidence = _missing_step_execution_evidence(
+                            fixture=name,
+                            action=admitted_summary["action"],
+                            reason="PostRunCallbackNotInvoked",
+                        )
+                    elif isinstance(
+                        evidence_capture,
+                        (execution_evidence.StepCapture, dict),
+                    ):
+                        step_execution_evidence = _finish_step_execution_evidence(
+                            evidence_capture,
+                            fixture=name,
+                            action=admitted_summary["action"],
+                            returncode=result.returncode,
+                        )
+                    else:
+                        step_execution_evidence = _missing_step_execution_evidence(
+                            fixture=name,
+                            action=admitted_summary["action"],
+                            reason="CaptureNotStarted",
+                        )
+                steps.append(
+                    _step_payload(
+                        index=index,
+                        summary=admitted_summary,
+                        would_execute=True,
+                        executed=True,
+                        stop_reason=stop_reason,
+                        result=result,
+                        step_execution_evidence=step_execution_evidence,
+                    )
+                )
+                if result.returncode != 0:
+                    final_stop_reason = STOP_COMMAND_FAILED
+                    break
+                continue
+
+        requires_step_lease = summary.get("action") in LEASED_EXECUTABLE_ACTIONS
+        if not requires_step_lease and summary.get("action") != fig_driver.ACTION_RUN_FIG_LOOP:
+            raise ValueError("executable action missing admission policy")
+
+        admission_validation_active = requires_step_lease
+        try:
+            admission_context = (
+                closed_loop_attempt_state.fixture_admission_lock(repo_root, name)
+                if requires_step_lease
+                else nullcontext()
+            )
+            with admission_context:
+                admitted_summary = summary
+                if requires_step_lease:
+                    admitted_summary = _driver_summary_under_admission(
+                        name,
+                        mode=mode,
+                        goal=goal,
+                        repo_root=repo_root,
+                    )
+                    admitted_would_execute = _would_execute(
+                        admitted_summary,
+                        name=name,
+                        goal=goal,
+                        repo_root=repo_root,
+                    )
+                    if queue_first_step_pending:
+                        assert expected_first_action is not None
+                        assert expected_first_safe_command is not None
+                        binding_basis = "queue_first_step"
+                        binding_action = expected_first_action
+                        binding_command = expected_first_safe_command
+                    else:
+                        binding_basis = "live_prelock"
+                        binding_action = summary["action"]
+                        binding_command = summary["safe_command"]
+                    admission_binding = _step_plan_binding(
+                        planned_action=binding_action,
+                        planned_safe_command=binding_command,
+                        live_summary=admitted_summary,
+                        basis=binding_basis,
+                        step_index=index,
+                        live_would_execute=admitted_would_execute,
+                    )
+                    if queue_first_step_pending or admission_binding["state"] == "stale":
+                        plan_binding = admission_binding
+                    final_summary = admitted_summary
+                    if admission_binding["state"] == "stale":
+                        steps.append(
+                            _step_payload(
+                                index=index,
+                                summary=admitted_summary,
+                                would_execute=False,
+                                executed=False,
+                                stop_reason=STOP_STALE_PLAN,
+                            )
+                        )
+                        final_stop_reason = STOP_STALE_PLAN
+                        break
+                command = admitted_summary["safe_command"]
+                signature = (admitted_summary["action"], command)
+                if signature in executed_signatures:
+                    steps.append(
+                        _step_payload(
+                            index=index,
+                            summary=admitted_summary,
+                            would_execute=False,
+                            executed=False,
+                            stop_reason=STOP_REPEATED_ACTION,
+                        )
+                    )
+                    final_stop_reason = STOP_REPEATED_ACTION
+                    break
+                admission_validation_active = False
+                evidence_capture = _begin_step_execution_evidence(
+                    repo_root,
+                    fixture=name,
+                    action=admitted_summary["action"],
+                )
+                result = _run_command(command, repo_root=repo_root)
+                step_execution_evidence = _finish_step_execution_evidence(
+                    evidence_capture,
+                    fixture=name,
+                    action=admitted_summary["action"],
+                    returncode=result.returncode,
+                )
+        except closed_loop_attempt_state.FixtureAdmissionLeaseBusy:
             steps.append(
                 _step_payload(
                     index=index,
                     summary=summary,
-                    would_execute=False,
+                    would_execute=True,
                     executed=False,
-                    stop_reason=STOP_REPEATED_ACTION,
+                    stop_reason=STOP_ADMISSION_BUSY,
                 )
             )
-            final_stop_reason = STOP_REPEATED_ACTION
+            final_summary = summary
+            final_stop_reason = STOP_ADMISSION_BUSY
+            break
+        except (
+            closed_loop_attempt_state.ClosedLoopAttemptStateError,
+            repair_transaction.RepairTransactionError,
+        ) as exc:
+            if not admission_validation_active:
+                raise
+            steps.append(
+                _step_payload(
+                    index=index,
+                    summary=summary,
+                    would_execute=True,
+                    executed=False,
+                    stop_reason=STOP_ADMISSION_INVALID,
+                )
+            )
+            admission_diagnostic = _admission_diagnostic(exc)
+            final_summary = summary
+            final_stop_reason = STOP_ADMISSION_INVALID
             break
 
-        result = _run_command(command, repo_root=repo_root)
+        queue_first_step_pending = False
         executed_count += 1
         executed_signatures.add(signature)
         stop_reason = STOP_COMMAND_FAILED if result.returncode != 0 else None
         steps.append(
             _step_payload(
                 index=index,
-                summary=summary,
+                summary=admitted_summary,
                 would_execute=True,
                 executed=True,
                 stop_reason=stop_reason,
                 result=result,
+                step_execution_evidence=step_execution_evidence,
             )
         )
         if result.returncode != 0:
@@ -571,7 +2535,7 @@ def run_workflow(
 
     if final_summary is None:
         raise ValueError("driver did not produce a summary")
-    return _result_payload(
+    payload = _result_payload(
         name=name,
         mode=mode,
         goal=goal,
@@ -582,6 +2546,11 @@ def run_workflow(
         final_stop_reason=final_stop_reason,
         executed_count=executed_count,
     )
+    if plan_binding is not None:
+        payload["plan_binding"] = plan_binding
+    if admission_diagnostic is not None:
+        payload["admission_diagnostic"] = admission_diagnostic
+    return payload
 
 
 def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
@@ -591,6 +2560,23 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     parser.add_argument("--goal", required=True)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)
+    parser.add_argument("--closed-loop-state", type=Path, default=None)
+    parser.add_argument("--closed-loop-response", type=Path, default=None)
+    parser.add_argument("--closed-loop-initial-review-response", type=Path, default=None)
+    parser.add_argument("--closed-loop-initial-adjudication", type=Path, default=None)
+    parser.add_argument("--closed-loop-initial-attribution-binding", type=Path, default=None)
+    parser.add_argument("--closed-loop-repair-response", type=Path, default=None)
+    parser.add_argument("--closed-loop-repair-packet", type=Path, default=None)
+    parser.add_argument("--closed-loop-candidate-response", type=Path, default=None)
+    parser.add_argument(
+        "--closed-loop-materialization-preview",
+        type=Path,
+        default=None,
+    )
+    parser.add_argument("--closed-loop-authorization", type=Path, default=None)
+    parser.add_argument("--closed-loop-development-verdict", type=Path, default=None)
+    parser.add_argument("--closed-loop-attempt-manifest", type=Path, default=None)
+    parser.add_argument("--closed-loop-parent-state", type=Path, default=None)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--record", action="store_true")
     parser.add_argument("--no-record", action="store_true")
@@ -605,6 +2591,19 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
             goal=args.goal,
             execute=args.execute,
             max_steps=args.max_steps,
+            closed_loop_state=args.closed_loop_state,
+            closed_loop_response=args.closed_loop_response,
+            closed_loop_initial_review_response=args.closed_loop_initial_review_response,
+            closed_loop_initial_adjudication=args.closed_loop_initial_adjudication,
+            closed_loop_initial_attribution_binding=args.closed_loop_initial_attribution_binding,
+            closed_loop_repair_response=args.closed_loop_repair_response,
+            closed_loop_repair_packet=args.closed_loop_repair_packet,
+            closed_loop_candidate_response=args.closed_loop_candidate_response,
+            closed_loop_materialization_preview=(args.closed_loop_materialization_preview),
+            closed_loop_authorization=args.closed_loop_authorization,
+            closed_loop_development_verdict=args.closed_loop_development_verdict,
+            closed_loop_attempt_manifest=args.closed_loop_attempt_manifest,
+            closed_loop_parent_state=args.closed_loop_parent_state,
             repo_root=repo_root,
         )
     except ValueError as exc:
@@ -612,6 +2611,42 @@ def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
         return 2
     completed_at = _utc_now()
     should_record = not args.no_record and (args.execute or args.record)
+    if args.closed_loop_state is not None and not args.execute:
+        should_record = False
+    if args.closed_loop_attempt_manifest is not None:
+        should_record = False
+    if args.closed_loop_response is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
+        should_record = False
+    if args.closed_loop_initial_review_response is not None and not payload.get(
+        "closed_loop", {}
+    ).get("created", False):
+        should_record = False
+    if args.closed_loop_initial_adjudication is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
+        should_record = False
+    if args.closed_loop_initial_attribution_binding is not None and not payload.get(
+        "closed_loop", {}
+    ).get("created", False):
+        should_record = False
+    if args.closed_loop_repair_response is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
+        should_record = False
+    if args.closed_loop_repair_packet is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
+        should_record = False
+    if args.closed_loop_authorization is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
+        should_record = False
+    if args.closed_loop_development_verdict is not None and not payload.get("closed_loop", {}).get(
+        "created", False
+    ):
+        should_record = False
     if should_record:
         try:
             payload = write_run_journal(

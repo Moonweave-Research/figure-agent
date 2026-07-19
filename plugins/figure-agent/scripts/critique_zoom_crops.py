@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -29,6 +30,36 @@ def _safe_stem(value: str) -> str:
 
 def _relative_to_example(example_dir: Path, path: Path) -> str:
     return str(path.relative_to(example_dir))
+
+
+def _validated_output_path(
+    example_dir: Path,
+    value: Path,
+    *,
+    label: str,
+) -> Path:
+    raw = Path(value)
+    if ".." in raw.parts:
+        raise ValueError(f"{label} must not contain parent traversal")
+    candidate = raw if raw.is_absolute() else example_dir / raw
+    lexical_root = Path(os.path.abspath(example_dir))
+    lexical = Path(os.path.abspath(candidate))
+    try:
+        relative = lexical.relative_to(lexical_root)
+    except ValueError as exc:
+        raise ValueError(f"{label} must be inside example_dir") from exc
+    current = lexical_root
+    if current.is_symlink():
+        raise ValueError(f"{label} must not traverse a symlink")
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError(f"{label} must not traverse a symlink")
+    try:
+        lexical.resolve(strict=False).relative_to(lexical_root.resolve())
+    except ValueError as exc:
+        raise ValueError(f"{label} must resolve inside example_dir") from exc
+    return lexical
 
 
 def _grid_boxes(width: int, height: int, *, columns: int, rows: int) -> list[list[int]]:
@@ -570,8 +601,11 @@ def _write_crop_manifest(
     example_dir: Path,
     render_path: Path,
     crops: list[dict[str, Any]],
+    manifest_path: Path | None = None,
 ) -> None:
-    output_path = example_dir / "build" / "audit_crops" / "manifest.json"
+    output_path = manifest_path or (
+        example_dir / "build" / "audit_crops" / "manifest.json"
+    )
     manifest_crops: list[dict[str, Any]] = []
     for crop in crops:
         item = dict(crop)
@@ -586,6 +620,7 @@ def _write_crop_manifest(
         "schema": CROP_MANIFEST_SCHEMA,
         "fixture": example_dir.name,
         "render_path": _relative_to_example(example_dir, render_path),
+        "render_sha256": file_sha256(render_path),
         "required_crop_ids": [str(item.get("id") or "") for item in manifest_crops],
         "crops": manifest_crops,
     }
@@ -603,8 +638,25 @@ def build_zoom_crop_pack(
     panel_crop_paths: tuple[Path, ...],
     spec: dict[str, Any] | None = None,
     pdf_page_size_cm: tuple[float, float] | None = None,
+    output_dir: Path | None = None,
+    manifest_path: Path | None = None,
+    include_detector_crops: bool = True,
 ) -> list[dict[str, Any]]:
-    output_dir = example_dir / "build" / "audit_crops"
+    output_dir = _validated_output_path(
+        example_dir,
+        output_dir or example_dir / "build" / "audit_crops",
+        label="output_dir",
+    )
+    expected_manifest = output_dir / "manifest.json"
+    manifest_path = _validated_output_path(
+        example_dir,
+        manifest_path or expected_manifest,
+        label="manifest_path",
+    )
+    if manifest_path != expected_manifest:
+        raise ValueError("manifest_path must equal output_dir/manifest.json")
+    if output_dir.exists() and any(path.is_symlink() for path in output_dir.rglob("*")):
+        raise ValueError("output_dir must not contain symlink artifacts")
     panel_specs = _panel_specs_by_id(spec)
     crops = _write_quadrants(
         source_path=render_path,
@@ -620,21 +672,22 @@ def build_zoom_crop_pack(
             example_dir=example_dir,
         )
     )
-    crops.extend(
-        _write_visual_clash_crops(
-            source_path=render_path,
-            output_dir=output_dir,
-            example_dir=example_dir,
+    if include_detector_crops:
+        crops.extend(
+            _write_visual_clash_crops(
+                source_path=render_path,
+                output_dir=output_dir,
+                example_dir=example_dir,
+            )
         )
-    )
-    crops.extend(
-        _write_label_path_crops(
-            source_path=render_path,
-            output_dir=output_dir,
-            example_dir=example_dir,
-            pdf_page_size_cm=pdf_page_size_cm,
+        crops.extend(
+            _write_label_path_crops(
+                source_path=render_path,
+                output_dir=output_dir,
+                example_dir=example_dir,
+                pdf_page_size_cm=pdf_page_size_cm,
+            )
         )
-    )
     for panel_crop_path in panel_crop_paths:
         try:
             panel_crop_path.relative_to(example_dir)
@@ -675,5 +728,10 @@ def build_zoom_crop_pack(
                     example_dir=example_dir,
                 )
             )
-    _write_crop_manifest(example_dir=example_dir, render_path=render_path, crops=crops)
+    _write_crop_manifest(
+        example_dir=example_dir,
+        render_path=render_path,
+        crops=crops,
+        manifest_path=manifest_path,
+    )
     return crops

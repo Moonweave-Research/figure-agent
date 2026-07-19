@@ -29,9 +29,71 @@ def test_compile_script_pins_uv_project_after_changing_to_workspace_fixture() ->
 def test_compile_passes_top_level_fixture_spec_to_nested_source_checker() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 
-    assert 'FIGURE_SPEC="${WORKFLOW_DIR}/examples/${FIXTURE_NAME}/spec.yaml"' in script
+    assert 'FIXTURE_WORKSPACE="${FIGURE_AGENT_WORKSPACE:-$WORKFLOW_DIR}"' in script
+    assert 'FIGURE_SPEC="${FIXTURE_WORKSPACE}/examples/${FIXTURE_NAME}/spec.yaml"' in script
     assert 'UNDECLARED_GEOMETRY_SPEC_ARGS=(--spec "$FIGURE_SPEC")' in script
     assert '${UNDECLARED_GEOMETRY_SPEC_ARGS[@]+"${UNDECLARED_GEOMETRY_SPEC_ARGS[@]}"}' in script
+    assert 'TEX_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")' in script
+    assert '${TEX_ASSERTION_SPEC_ARGS[@]+"${TEX_ASSERTION_SPEC_ARGS[@]}"}' in script
+
+
+def test_compile_passes_top_level_fixture_spec_to_all_clearance_detectors() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    for variable in (
+        "TEXT_BOUNDARY_SPEC_ARGS",
+        "LABEL_PATH_SPEC_ARGS",
+        "VECTOR_CLEARANCE_SPEC_ARGS",
+    ):
+        assert f'{variable}=(--spec "$FIGURE_SPEC")' in script
+        assert f'${{{variable}[@]+"${{{variable}[@]}}"}}' in script
+
+
+def test_compile_live_repair_verification_does_not_use_historical_gate_relaxation() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'LIVE_REPAIR_VERIFY="${FIGURE_AGENT_LIVE_REPAIR_VERIFY:-0}"' in script
+    assert 'LIVE_ASSERTION_TARGET=1' in script
+    assert 'if [[ $LIVE_ASSERTION_TARGET -eq 1' in script
+    assert 'if [[ $LIVE_ASSERTION_TARGET -eq 0' in script
+
+
+def test_compile_runs_opt_in_state_field_geometry_checks_from_the_fixture_spec() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    state_field_call = (
+        'run_report_check "${UV_RUN[@]}" python3 '
+        '"$WORKFLOW_DIR/scripts/checks/check_state_field_geometry.py"'
+    )
+    assert state_field_call in script
+    assert '--tex "$FILE"' in script
+    assert '--json-output "${BUILD_DIR}/state_field_geometry.json"' in script
+
+
+def test_compile_uses_known_false_positive_allowlist_in_every_mode() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'VISUAL_CLASH_ARGS=(--ignore-known-fp)' in script
+    assert 'VISUAL_CLASH_ARGS=(--strict --ignore-known-fp)' in script
+
+
+def test_compile_applies_fixture_layout_contract_to_nested_repairs() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'LAYOUT_CONTRACT="${FIXTURE_ROOT}/layout_lanes.yaml"' in script
+    assert '--pdf "$PWD/$PDF_OUT"' in script
+    assert '--layout-contract "$LAYOUT_CONTRACT"' in script
+    assert '--json-output "${BUILD_DIR}/layout_lanes.json"' in script
+
+
+def test_compile_keeps_parent_physics_grounding_for_prospective_candidates() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'PHYSICS_GROUNDING_DIR="$PWD"' in script
+    assert '"$TEX_INPUT_ABS" == "$FIXTURE_ROOT/review/"*' in script
+    assert 'PHYSICS_GROUNDING_DIR="$FIXTURE_ROOT"' in script
+    assert 'check_physics_grounding.py" \\' in script
+    assert '--json-output "${BUILD_DIR}/physics_grounding.json" "$PHYSICS_GROUNDING_DIR"' in script
 
 
 def test_compile_serializes_shared_fixture_reports() -> None:
@@ -42,6 +104,31 @@ def test_compile_serializes_shared_fixture_reports() -> None:
     assert 'lockf -s -t 0 9' in script
     assert 'flock -n 9' in script
     assert "another figure-agent compile is active for this fixture" in script
+
+
+def test_compile_defers_vector_clearance_strict_failure_until_evidence_is_written() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    vector_clearance_call = (
+        'run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/vector_clearance.py"'
+    )
+    assert vector_clearance_call in script
+    assert script.index(vector_clearance_call) < script.index(
+        '"$WORKFLOW_DIR/scripts/checks/check_tex_assertions.py"'
+    )
+    assert script.index(vector_clearance_call) < script.index(
+        '"$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"'
+    )
+
+
+def test_compile_writes_explicit_strict_outcome_receipt_before_final_gate() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    receipt_call = '"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/strict_status.py"'
+    final_gate = 'echo "ERROR: strict detector gate failed after review evidence generation"'
+    assert receipt_call in script
+    assert '--json-output "${BUILD_DIR}/strict_status.json"' in script
+    assert script.index(receipt_call) < script.index(final_gate)
 
 
 @pytest.mark.skipif(

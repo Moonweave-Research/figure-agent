@@ -1,0 +1,433 @@
+{
+  "gate": "check_visual_clash.py --strict --ignore-known-fp",
+  "generated_for": "C4 = comparable-v3-repair-c4/repaired.tex",
+  "human_review_summary": {
+    "genuine_or_ambiguous_needs_author": [
+      "constant",
+      "voltage",
+      "probe",
+      "cantilever"
+    ],
+    "likely_false_positive_pending_grounds": [
+      "poly(S-r-DIB)",
+      "HERO",
+      "E",
+      "F",
+      "ISPD",
+      "Vs"
+    ],
+    "note": "strict left RED by design: the 10-candidate residue could not be proven false-positive without a recall-reducing rule (a real line grazing a label within 4px is metrically indistinguishable from a bold glyph's own antialiasing halo)."
+  },
+  "renders": {
+    "B": {
+      "after_blocking": 10,
+      "after_report_only": 25,
+      "before_all_blocking": 35,
+      "blocking_by_human_bucket": {
+        "a_glyph_antialias": 2,
+        "b_intended_style": 4,
+        "d_real_or_ambiguous": 4
+      },
+      "blocking_residue": [
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC003",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.032,
+            "edge": 0.007
+          },
+          "review_note": "bold panel title on white near a thin frame line",
+          "text": "poly(S-r-DIB)"
+        },
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC022",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.046,
+            "edge": 0.01
+          },
+          "review_note": "olive bold panel title on white below the panel frame line",
+          "text": "HERO"
+        },
+        {
+          "human_bucket": "a_glyph_antialias",
+          "id": "VC024",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.039,
+            "edge": 0.008
+          },
+          "review_note": "panel letter on white; own-glyph halo, no path within 34px",
+          "text": "E"
+        },
+        {
+          "human_bucket": "a_glyph_antialias",
+          "id": "VC026",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.037,
+            "edge": 0.008
+          },
+          "review_note": "panel letter on white; own-glyph halo, no path within 34px",
+          "text": "F"
+        },
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC027",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.048,
+            "edge": 0.013
+          },
+          "review_note": "bold panel title on white near a thin frame line",
+          "text": "ISPD"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC030",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.213,
+            "edge": 0.032
+          },
+          "review_note": "label sits on the apparatus box top edge; human should confirm clearance",
+          "text": "constant"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC031",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.208,
+            "edge": 0.032
+          },
+          "review_note": "label sits on the apparatus box top edge; human should confirm clearance",
+          "text": "voltage"
+        },
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC032",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.151,
+            "edge": 0.027
+          },
+          "review_note": "V_s centred inside its own meter display box",
+          "text": "Vs"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC034",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.187,
+            "edge": 0.03
+          },
+          "review_note": "horizontal apparatus line runs along the top of the word",
+          "text": "probe"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC035",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.143,
+            "edge": 0.009
+          },
+          "review_note": "word overlaps the beam and a charge sphere sits on the 'e'",
+          "text": "cantilever"
+        }
+      ],
+      "candidates_by_human_bucket": {
+        "a_glyph_antialias": 5,
+        "b_intended_style": 10,
+        "c_atom_glyph": 16,
+        "d_real_or_ambiguous": 4
+      },
+      "report_only_by_grounds": {
+        "near_miss_band": 9,
+        "own_glyph_enclosure": 16
+      },
+      "strict_result": "RED"
+    },
+    "C1": {
+      "after_blocking": 10,
+      "after_report_only": 26,
+      "before_all_blocking": 36,
+      "blocking_by_human_bucket": {
+        "a_glyph_antialias": 2,
+        "b_intended_style": 4,
+        "d_real_or_ambiguous": 4
+      },
+      "blocking_residue": [
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC003",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.032,
+            "edge": 0.007
+          },
+          "review_note": "bold panel title on white near a thin frame line",
+          "text": "poly(S-r-DIB)"
+        },
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC022",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.046,
+            "edge": 0.01
+          },
+          "review_note": "olive bold panel title on white below the panel frame line",
+          "text": "HERO"
+        },
+        {
+          "human_bucket": "a_glyph_antialias",
+          "id": "VC024",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.038,
+            "edge": 0.008
+          },
+          "review_note": "panel letter on white; own-glyph halo, no path within 34px",
+          "text": "E"
+        },
+        {
+          "human_bucket": "a_glyph_antialias",
+          "id": "VC026",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.037,
+            "edge": 0.008
+          },
+          "review_note": "panel letter on white; own-glyph halo, no path within 34px",
+          "text": "F"
+        },
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC027",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.048,
+            "edge": 0.013
+          },
+          "review_note": "bold panel title on white near a thin frame line",
+          "text": "ISPD"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC030",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.213,
+            "edge": 0.032
+          },
+          "review_note": "label sits on the apparatus box top edge; human should confirm clearance",
+          "text": "constant"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC031",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.208,
+            "edge": 0.032
+          },
+          "review_note": "label sits on the apparatus box top edge; human should confirm clearance",
+          "text": "voltage"
+        },
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC032",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.149,
+            "edge": 0.027
+          },
+          "review_note": "V_s centred inside its own meter display box",
+          "text": "Vs"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC034",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.187,
+            "edge": 0.03
+          },
+          "review_note": "horizontal apparatus line runs along the top of the word",
+          "text": "probe"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC036",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.14,
+            "edge": 0.009
+          },
+          "review_note": "word overlaps the beam and a charge sphere sits on the 'e'",
+          "text": "cantilever"
+        }
+      ],
+      "candidates_by_human_bucket": {
+        "a_glyph_antialias": 5,
+        "b_intended_style": 11,
+        "c_atom_glyph": 16,
+        "d_real_or_ambiguous": 4
+      },
+      "report_only_by_grounds": {
+        "near_miss_band": 10,
+        "own_glyph_enclosure": 16
+      },
+      "strict_result": "RED"
+    },
+    "C4": {
+      "after_blocking": 10,
+      "after_report_only": 27,
+      "before_all_blocking": 37,
+      "blocking_by_human_bucket": {
+        "a_glyph_antialias": 2,
+        "b_intended_style": 4,
+        "d_real_or_ambiguous": 4
+      },
+      "blocking_residue": [
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC003",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.032,
+            "edge": 0.007
+          },
+          "review_note": "bold panel title on white near a thin frame line",
+          "text": "poly(S-r-DIB)"
+        },
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC022",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.046,
+            "edge": 0.01
+          },
+          "review_note": "olive bold panel title on white below the panel frame line",
+          "text": "HERO"
+        },
+        {
+          "human_bucket": "a_glyph_antialias",
+          "id": "VC024",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.038,
+            "edge": 0.008
+          },
+          "review_note": "panel letter on white; own-glyph halo, no path within 34px",
+          "text": "E"
+        },
+        {
+          "human_bucket": "a_glyph_antialias",
+          "id": "VC026",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.037,
+            "edge": 0.008
+          },
+          "review_note": "panel letter on white; own-glyph halo, no path within 34px",
+          "text": "F"
+        },
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC027",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.048,
+            "edge": 0.013
+          },
+          "review_note": "bold panel title on white near a thin frame line",
+          "text": "ISPD"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC030",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.213,
+            "edge": 0.032
+          },
+          "review_note": "label sits on the apparatus box top edge; human should confirm clearance",
+          "text": "constant"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC031",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.208,
+            "edge": 0.032
+          },
+          "review_note": "label sits on the apparatus box top edge; human should confirm clearance",
+          "text": "voltage"
+        },
+        {
+          "human_bucket": "b_intended_style",
+          "id": "VC032",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.149,
+            "edge": 0.027
+          },
+          "review_note": "V_s centred inside its own meter display box",
+          "text": "Vs"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC035",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.187,
+            "edge": 0.03
+          },
+          "review_note": "horizontal apparatus line runs along the top of the word",
+          "text": "probe"
+        },
+        {
+          "human_bucket": "d_real_or_ambiguous",
+          "id": "VC036",
+          "kind": "text_on_path",
+          "metric": {
+            "dark": 0.112,
+            "edge": 0.013
+          },
+          "review_note": "word overlaps the beam and a charge sphere sits on the 'e'",
+          "text": "cantilever"
+        }
+      ],
+      "candidates_by_human_bucket": {
+        "a_glyph_antialias": 5,
+        "b_intended_style": 12,
+        "c_atom_glyph": 16,
+        "d_real_or_ambiguous": 4
+      },
+      "report_only_by_grounds": {
+        "near_miss_band": 11,
+        "own_glyph_enclosure": 16
+      },
+      "strict_result": "RED"
+    }
+  },
+  "rules": [
+    {
+      "basis": "near_miss is the detector's own sub-clash band (dark below the text_on_path bar); not a confirmed overlap",
+      "grounds": "near_miss_band"
+    },
+    {
+      "basis": "glyph-scale label wrapped by a contour whose ink decays outward (near annulus dark>=0.12 and far<0.6*near); the ring ink is the label's own container, not a crossing path",
+      "grounds": "own_glyph_enclosure"
+    }
+  ],
+  "schema": "figure-agent.visual-clash-strict-filter-replay.v1"
+}

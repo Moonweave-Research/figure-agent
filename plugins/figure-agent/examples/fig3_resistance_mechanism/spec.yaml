@@ -1,52 +1,158 @@
 name: fig3_resistance_mechanism
-title: "Fig 3 — Trapping-during-conduction mechanism: transient I(t) power-law (CvS) and composition-tunable trap-energy breadth (schematic)"
+title: "Fig 3 — Trapping during conduction: qualitative transient response and composition-dependent trap-energy landscape"
 style_profile: polymer-paper
 undeclared_geometry_profile: schematic
-visual_clash_cap: 10
+geometry_coverage_policy:
+  minimum_parsed_ratio: 0.8
+  required_source_geometry:
+    to_curve: 5
+    analytic_plot: 1
+  minimum_rendered_curved_semantic_paths: 5
+visual_clash_cap: 4
+state_field_geometry_assertions:
+  - id: fig3-s80-irregular-state-field
+    kind: horizontal_state_field
+    source_object: s80_continuous_support
+    min_marks: 12
+    min_vertical_span_cm: 1.4
+    min_center_std_cm: 0.35
+    max_width_abs_midpoint_correlation: -0.35
+tex_assertions:
+  - id: carrier-sequence-repeated-capture
+    source_name: fig3_resistance_mechanism.tex
+    anchor_style: xfer
+    axis: y
+    direction: decreasing
+    minimum_matches: 2
+    require_unidirectional_arrow: true
+  - id: carrier-sequence-repeated-release
+    source_name: fig3_resistance_mechanism.tex
+    anchor_style: xfer
+    axis: y
+    direction: increasing
+    minimum_matches: 2
+    require_unidirectional_arrow: true
+named_endpoint_assertions:
+  - id: carrier-sequence-binds-every-transfer-to-a-declared-state
+    source_name: fig3_resistance_mechanism.tex
+    anchor_style: xfer
+    minimum_paths: 5
+    required_anchors:
+      - carrier_shallow_in
+      - carrier_shallow_out
+      - carrier_mid_in
+      - carrier_mid_out
+      - carrier_deep_in
+      - trap_shallow
+      - trap_mid
+      - trap_slow_release
+    allowed_anchors:
+      - carrier_shallow_in
+      - carrier_shallow_out
+      - carrier_mid_in
+      - carrier_mid_out
+      - carrier_deep_in
+      - trap_shallow
+      - trap_mid
+      - trap_slow_release
+  - id: terminal-state-label-binds-to-terminal-trap
+    source_name: fig3_resistance_mechanism.tex
+    anchor_style: terminalLabelLeader
+    minimum_paths: 1
+    required_anchors:
+      - trap_slow_release
+      - slow_release_label_anchor
+    allowed_anchors:
+      - trap_slow_release
+      - slow_release_label_anchor
+    required_node_bindings:
+      - node: slow_release_label
+        anchor: slow_release_label_anchor
+semantic_assertions:
+  - id: fig3-capture-before-release
+    relation: left_of
+    subject: capture
+    reference: release
+  - id: fig3-release-before-slow-release
+    relation: left_of
+    subject: release
+    reference: slow-release
+  - id: fig3-mechanism-before-response
+    relation: left_of
+    subject: slow-release
+    reference: response
+  - id: fig3-response-before-landscape
+    relation: left_of
+    subject: response
+    reference: S60
+  - id: fig3-s60-before-s80
+    relation: left_of
+    subject: S60
+    reference: S80
+text_boundary_checks:
+  - id: panel-c-s60-label-clears-sample-top
+    kind: horizontal_line
+    role: sample_surface_top
+    y_pdf_cm: 1.81
+    x_range_pdf_cm: [10.10, 11.60]
+    clearance_pt: 1.0
+  - id: panel-c-s80-label-clears-sample-top
+    kind: horizontal_line
+    role: sample_surface_top
+    y_pdf_cm: 1.81
+    x_range_pdf_cm: [12.16, 14.34]
+    clearance_pt: 1.0
 panels:
   - id: A
-    caption: Cell under applied V — charge carrier (sign-agnostic) undergoes dispersive, repeated trapping; transient current decays (I ∝ t^-n) so resistance rises
-    bbox_pdf_cm: [0.00, 0.00, 5.80, 4.80]
+    caption: Applied-bias sulfur-polymer cell with temporally ordered sign-agnostic trapping
+    bbox_pdf_cm: [0.00, 0.00, 5.10, 4.80]
   - id: B
-    caption: Trap energy distribution g(E) — discrete (S60, single deep) evolving to continuous broad (S80); n = breadth of the distribution, ρ60s = magnitude
-    bbox_pdf_cm: [6.00, 0.00, 11.60, 4.80]
+    caption: Qualitative, non-measured Curie-von Schweidler transient-current response
+    bbox_pdf_cm: [5.10, 0.00, 9.25, 4.80]
+  - id: C
+    caption: Discrete S60 and continuous broad S80 trap-energy landscapes in a shared energy grammar
+    bbox_pdf_cm: [9.25, 0.00, 15.20, 4.80]
 composition_model:
   panels:
     A:
       objects:
-        carrier_walk:
-          kind: path
+        carrier_sequence:
+          kind: state_sequence
           truth_bearing: true
-          semantic_claim: sign-agnostic carrier undergoes repeated trapping
-          invariant: carrier_sign_agnostic_repeated_trapping
-          allowed_creative_ops:
-            - reshape_path
-            - reduce_arrowheads
-        current_sparkline:
-          kind: inset_plot
-          truth_bearing: true
-          semantic_claim: transient current decays as I proportional to t^-n
-          invariant: current_decay_power_law
-          anchor_target: carrier_walk
-          allowed_creative_ops:
-            - anchor_plot
-            - consolidate_label
+          semantic_claim: sign-agnostic carrier undergoes temporally ordered repeated trapping with a representative slow-release occupancy
+          invariant: carrier_sign_agnostic_temporal_state_sequence_not_deep_only_retention
+          annotation_grammar:
+            terminal_state_label: slow-release
+            style: unboxed_neutral_text_in_deliberate_whitespace
+            forbidden_style: opaque_knockout_as_detector_workaround
+          allowed_creative_ops: [reshape_path, reduce_arrowheads]
     B:
       objects:
-        n_breadth:
-          kind: measurement_span
+        qualitative_current_decay:
+          kind: qualitative_relation
           truth_bearing: true
-          semantic_claim: n represents trap-distribution breadth, not density
-          invariant: distribution_breadth_not_density
-          allowed_creative_ops:
-            - externalize_span
-            - reduce_arrow_clutter
+          semantic_claim: trapping produces a qualitative Curie-von Schweidler current decay
+          invariant: qualitative_not_measured_and_current_decay_implies_resistance_increase
+          allowed_creative_ops: [reshape_qualitative_curve, consolidate_annotation]
+    C:
+      objects:
+        s60_discrete_states:
+          kind: energy_landscape
+          truth_bearing: true
+          semantic_claim: low-sulfur S60 has a representative discrete state set
+          invariant: low_sulfur_discrete_state_set_not_spectrum_bar_chart
+          allowed_creative_ops: [vary_illustrative_state_count, preserve_non_quantitative_status]
+        s80_continuous_support:
+          kind: energy_landscape
+          truth_bearing: true
+          semantic_claim: high-sulfur S80 has continuous broad energy support
+          invariant: high_sulfur_dense_irregular_support_not_envelope_or_quantitative_plot_frame_or_width_to_n_mapping
+          semantic_encoding:
+            primitive: dense_irregular_horizontal_state_field
+            required_visible_cues: [greater_state_density_than_s60, irregular_positions, broader_vertical_energy_span]
+            allowed_visible_cues: [restrained_sample_grouping_surface]
+            forbidden_visible_cues: [symmetric_density_silhouette, closed_contour, quantitative_plot_frame]
+          allowed_creative_ops: [vary_support_density, preserve_non_quantitative_status]
 notes: |
-  figure-agent figure (the REAL paper Fig 3 per the 2026-06-22 figure plan:
-  characterization -> mechanism synthesis). SCHEMATIC ONLY — this is the explanatory
-  half of a composite figure; the real I(t)∝t^-n data curves + composition series are
-  produced by the data pipeline (Origin / Graph Hub) and composited beside this schematic.
-  Bboxes approximate (first pass); expected to move during element-iteration.
-  Physics is grounded in 02_Surfur_Polymer docs (CvS power-law; n = trap-distribution
-  breadth NOT density; carrier-agnostic dispersive transport; discrete->continuous
-  evolution with sulfur). See briefing.md for the binding physics-correctness rules.
+  Three-column explanatory schematic only. The middle I(t) curve has no quantitative data claim.
+  A clean machine gate is bounded screening evidence; publication acceptance requires human review.

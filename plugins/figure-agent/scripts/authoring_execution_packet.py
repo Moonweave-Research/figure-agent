@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,27 @@ ALLOWED_REPOSITORY_READ_PATHS = (
 )
 ATTEMPT_ROOT = Path("review/failure-first")
 ATTEMPT_NAME = re.compile(r"execution-binding-v[1-9][0-9]*")
+COMPARISON_NAME = re.compile(r"comparable-v[1-9][0-9]*")
+COMPARISON_OUTPUT_NAMES = frozenset(
+    {
+        "raw_generated.tex",
+        "verified_generated.tex",
+        "repaired_generated.tex",
+        "free_composition_generated.tex",
+        "assisted_composition_generated.tex",
+    }
+)
+COMPARISON_ARTIFACT_NAMES = frozenset(
+    f"{arm}_{kind}{suffix}"
+    for arm in (
+        "raw",
+        "verified",
+        "repaired",
+        "free_composition",
+        "assisted_composition",
+    )
+    for kind, suffix in (("packet", ".json"), ("prompt", ".md"))
+)
 ORRO_LANE_ID = re.compile(r"[a-z0-9][a-z0-9-]*")
 
 
@@ -319,12 +341,22 @@ def _resolve_regular_file(workspace_root: Path, value: str, *, label: str) -> Pa
 def _validate_output_path(workspace_root: Path, name: str, value: str) -> Path:
     relative = _safe_relative_path(value, label="output path")
     required_root = Path("examples") / name / ATTEMPT_ROOT
-    if (
-        relative.parent.parent != required_root
-        or not ATTEMPT_NAME.fullmatch(relative.parent.name)
-    ):
+    if relative.parent.parent != required_root:
         raise AuthoringExecutionPacketError(
-            "output path must remain inside a versioned execution-binding-v directory"
+            "output path must remain inside a versioned execution-binding-v or "
+            "comparable-v directory"
+        )
+    directory_name = relative.parent.name
+    is_execution_attempt = bool(ATTEMPT_NAME.fullmatch(directory_name))
+    is_comparison = bool(COMPARISON_NAME.fullmatch(directory_name))
+    if not is_execution_attempt and not is_comparison:
+        raise AuthoringExecutionPacketError(
+            "output path must remain inside a versioned execution-binding-v or "
+            "comparable-v directory"
+        )
+    if is_comparison and relative.name not in COMPARISON_OUTPUT_NAMES:
+        raise AuthoringExecutionPacketError(
+            "output path must name a declared comparable arm"
         )
     if relative.suffix != ".tex":
         raise AuthoringExecutionPacketError("output path must end in .tex")
@@ -349,13 +381,22 @@ def resolve_attempt_artifact_path(
     """Resolve a new packet-side artifact inside the fixture attempt directory."""
     relative = _safe_relative_path(value, label="attempt artifact")
     required_root = Path("examples") / name / ATTEMPT_ROOT
-    if (
-        relative.parent.parent != required_root
-        or not ATTEMPT_NAME.fullmatch(relative.parent.name)
-        or relative.suffix != suffix
-    ):
+    if relative.parent.parent != required_root or relative.suffix != suffix:
         raise AuthoringExecutionPacketError(
-            f"attempt artifact must be a {suffix} file inside execution-binding-vN"
+            f"attempt artifact must be a {suffix} file inside execution-binding-vN "
+            "or comparable-vN"
+        )
+    directory_name = relative.parent.name
+    is_execution_attempt = bool(ATTEMPT_NAME.fullmatch(directory_name))
+    is_comparison = bool(COMPARISON_NAME.fullmatch(directory_name))
+    if not is_execution_attempt and not is_comparison:
+        raise AuthoringExecutionPacketError(
+            f"attempt artifact must be a {suffix} file inside execution-binding-vN "
+            "or comparable-vN"
+        )
+    if is_comparison and relative.name not in COMPARISON_ARTIFACT_NAMES:
+        raise AuthoringExecutionPacketError(
+            "attempt artifact must name a declared comparable artifact"
         )
     path = workspace_root.resolve() / relative
     current = workspace_root.resolve()
@@ -396,6 +437,23 @@ def _contract_lines(context_pack: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _authoring_rule_lines(context_pack: dict[str, Any]) -> list[str]:
+    lines: list[str] = []
+    for catalog_key, label in (
+        ("project_rule_catalog", "Project rule"),
+        ("rule_catalog", "Paper rule"),
+    ):
+        catalog = context_pack.get(catalog_key) or {}
+        for rule in catalog.get("rules", []):
+            rule_id = rule.get("id")
+            rule_text = rule.get("rule")
+            if isinstance(rule_id, str) and isinstance(rule_text, str):
+                lines.append(f"- {label} [{rule_id}]: {rule_text}")
+    if not lines:
+        lines.append("- No project or paper authoring rules are enabled.")
+    return lines
+
+
 def _fixture_briefing_lines(context_pack: dict[str, Any]) -> list[str]:
     lines = ["- Required panels:"]
     for panel in context_pack.get("fixture", {}).get("panels", []):
@@ -405,6 +463,30 @@ def _fixture_briefing_lines(context_pack: dict[str, Any]) -> list[str]:
         lines.extend(["- Binding fixture briefing (verbatim):", "", briefing])
     else:
         lines.append("- No fixture briefing was provided.")
+    return lines
+
+
+def _required_panel_markers(context_pack: dict[str, Any]) -> list[str]:
+    markers: list[str] = []
+    for panel in context_pack.get("fixture", {}).get("panels", []):
+        panel_id = panel.get("id") if isinstance(panel, dict) else None
+        if isinstance(panel_id, str) and panel_id.strip():
+            markers.append(f"% Panel {panel_id.strip()}")
+    return markers
+
+
+def _visual_asset_lines(context_pack: dict[str, Any]) -> list[str]:
+    selected = context_pack.get("visual_assets", {}).get("selected", [])
+    if not selected:
+        return ["- No curated visual assets selected."]
+    lines: list[str] = []
+    for asset in selected:
+        lines.append(f"- Curated asset [{asset['id']}]: [{asset['path']}]")
+        lines.extend(f"  - {item}" for item in asset.get("authoring_directives", []))
+        for pitfall in asset.get("known_pitfalls", []):
+            lines.append(f"  - Known pitfall: {pitfall}")
+        for anti_pattern in asset.get("anti_patterns", []):
+            lines.append(f"  - Do not transfer: {anti_pattern}")
     return lines
 
 
@@ -435,6 +517,18 @@ def render_authoring_prompt(
         "## Mandatory standalone TikZ source requirements",
         *[f"- {requirement}" for requirement in MANDATORY_SOURCE_REQUIREMENTS],
         "",
+        "## Required source attribution markers",
+        *(
+            [
+                f"- Add exactly one canonical marker [{marker}] immediately before "
+                "that panel's editable body. Keep markers in narrative order."
+                for marker in _required_panel_markers(context_pack)
+            ]
+            or ["- No panel markers are required for this fixture."]
+        ),
+        "- These comments do not prescribe coordinates or layout; they bind rendered "
+        "findings back to editable source regions.",
+        "",
         "## Style Lock authoring requirements",
         *[f"- {requirement}" for requirement in STYLE_LOCK_AUTHORING_REQUIREMENTS],
         "",
@@ -443,6 +537,12 @@ def render_authoring_prompt(
         "",
         *_contract_lines(context_pack),
         "- Do not imply physics or quantitative relations absent from the declared contracts.",
+        "",
+        "## Project and paper authoring rules",
+        *_authoring_rule_lines(context_pack),
+        "",
+        "## Curated visual assets",
+        *_visual_asset_lines(context_pack),
         "",
         "## Declared layout directives",
     ]
@@ -459,6 +559,15 @@ def render_authoring_prompt(
         )
     else:
         lines.append("- No optional shape profile selected.")
+    lines.extend(["", "## Optional composition-profile directives"])
+    composition_profile = context_pack.get("composition_profile")
+    if composition_profile:
+        lines.extend(
+            f"- {item}"
+            for item in composition_profile.get("authoring_directives", [])
+        )
+    else:
+        lines.append("- No optional composition profile selected.")
     lines.extend(
         [
             "",
@@ -487,6 +596,7 @@ def compile_authoring_execution_packet(
     execution_cwd: str = ".",
     layout_contract: str | None = None,
     shape_profile: str | None = None,
+    composition_profile: str | None = None,
 ) -> tuple[dict[str, object], str]:
     """Compile one deterministic packet without executing an authoring model."""
     if not model_id.strip():
@@ -501,20 +611,35 @@ def compile_authoring_execution_packet(
     repository_output_path = (
         Path(bound_execution_cwd) / relative_output
     ).as_posix()
-    allowed_repository_read_paths = tuple(
-        (Path(bound_execution_cwd) / path).as_posix()
-        for path in ALLOWED_REPOSITORY_READ_PATHS
-    )
     context_pack = authoring_context_pack.build_context_pack(
         name,
         plugin_root=plugin_root,
         workspace_root=workspace_root,
         layout_contract=layout_contract,
         shape_profile=shape_profile,
+        composition_profile=composition_profile,
     )
+    allowed_repository_read_paths = list(
+        (Path(bound_execution_cwd) / path).as_posix()
+        for path in ALLOWED_REPOSITORY_READ_PATHS
+    )
+    runtime_visual_assets = deepcopy(context_pack["visual_assets"])
+    runtime_visual_assets["root"] = {
+        "kind": "plugin_root",
+        "path": str(plugin_root.resolve()),
+    }
+    for asset in runtime_visual_assets.get("selected", []):
+        asset["resolved_read_paths"] = [
+            str((plugin_root.resolve() / path).resolve())
+            for path in asset.get("read_paths", [])
+        ]
+        allowed_repository_read_paths.extend(asset["resolved_read_paths"])
+    allowed_repository_read_paths = tuple(dict.fromkeys(allowed_repository_read_paths))
     context_hash = _sha256_bytes(_canonical_json_bytes(context_pack))
     base_context_pack = {
-        key: value for key, value in context_pack.items() if key != "shape_profile"
+        key: value
+        for key, value in context_pack.items()
+        if key not in {"shape_profile", "composition_profile"}
     }
     prompt = render_authoring_prompt(
         name=name,
@@ -564,7 +689,21 @@ def compile_authoring_execution_packet(
             if shape_profile
             else None
         ),
+        "composition_profile": (
+            {
+                "path": context_pack["composition_profile"]["path"],
+                "sha256": context_pack["composition_profile"]["sha256"],
+                "policy": context_pack["composition_profile"]["policy"],
+                "authoring_directives": context_pack["composition_profile"][
+                    "authoring_directives"
+                ],
+            }
+            if composition_profile
+            else None
+        ),
+        "visual_assets": runtime_visual_assets,
         "mandatory_source_requirements": list(MANDATORY_SOURCE_REQUIREMENTS),
+        "required_panel_markers": _required_panel_markers(context_pack),
         "style_lock_authoring_requirements": list(STYLE_LOCK_AUTHORING_REQUIREMENTS),
         "allowed_repository_read_paths": list(allowed_repository_read_paths),
         "forbidden_import_classes": [
@@ -582,6 +721,62 @@ def compile_authoring_execution_packet(
     }
     packet["packet_sha256"] = canonical_packet_sha256(packet)
     return packet, prompt
+
+
+def validate_visual_asset_bindings(packet: dict[str, object]) -> None:
+    """Revalidate byte-bound plugin assets immediately before/after execution."""
+    visual_assets = packet.get("visual_assets")
+    if not isinstance(visual_assets, dict):
+        raise AuthoringExecutionPacketError("visual_assets binding invalid")
+    root_record = visual_assets.get("root")
+    if not isinstance(root_record, dict) or root_record.get("kind") != "plugin_root":
+        raise AuthoringExecutionPacketError("visual_assets root binding invalid")
+    root_value = root_record.get("path")
+    if not isinstance(root_value, str) or not Path(root_value).is_absolute():
+        raise AuthoringExecutionPacketError("visual_assets root binding invalid")
+    root = Path(root_value).resolve(strict=True)
+
+    records: list[tuple[str, str]] = []
+    catalog_path = visual_assets.get("catalog_path")
+    catalog_sha256 = visual_assets.get("catalog_sha256")
+    if isinstance(catalog_path, str) and isinstance(catalog_sha256, str):
+        records.append((catalog_path, catalog_sha256))
+    selected = visual_assets.get("selected")
+    if not isinstance(selected, list):
+        raise AuthoringExecutionPacketError("visual_assets selection invalid")
+    allowed_paths = packet.get("allowed_repository_read_paths")
+    if not isinstance(allowed_paths, list):
+        raise AuthoringExecutionPacketError("allowed repository read paths invalid")
+    for asset in selected:
+        if not isinstance(asset, dict):
+            raise AuthoringExecutionPacketError("visual_assets selection invalid")
+        records.append((str(asset.get("path", "")), str(asset.get("sha256", ""))))
+        for key in ("contract", "transfer_receipt"):
+            binding = asset.get(key)
+            if isinstance(binding, dict):
+                records.append(
+                    (str(binding.get("path", "")), str(binding.get("sha256", "")))
+                )
+        expected_resolved = [str((root / path).resolve()) for path in asset.get("read_paths", [])]
+        if asset.get("resolved_read_paths") != expected_resolved:
+            raise AuthoringExecutionPacketError("visual asset resolved path drift")
+        if any(path not in allowed_paths for path in expected_resolved):
+            raise AuthoringExecutionPacketError("visual asset missing from read allowlist")
+
+    for relative_value, expected_hash in records:
+        relative = Path(relative_value)
+        if (
+            relative.is_absolute()
+            or not relative.parts
+            or any(part in {"", ".", ".."} for part in relative.parts)
+        ):
+            raise AuthoringExecutionPacketError("visual asset path invalid")
+        candidate = root / relative
+        resolved = candidate.resolve(strict=True)
+        if not resolved.is_relative_to(root) or candidate.is_symlink() or not candidate.is_file():
+            raise AuthoringExecutionPacketError("visual asset path invalid")
+        if _sha256_bytes(candidate.read_bytes()) != expected_hash:
+            raise AuthoringExecutionPacketError(f"visual asset byte drift: {relative_value}")
 
 
 def write_authoring_execution_packet(

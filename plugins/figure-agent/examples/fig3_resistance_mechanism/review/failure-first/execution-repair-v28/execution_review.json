@@ -1,0 +1,13 @@
+{
+  "decision": "human_target_resolved_overall_review_required",
+  "repair_result": "single discrete state is clear of the vertical axis and S60",
+  "external_compile": "passed",
+  "blocking_counts": {
+    "text_text": 0,
+    "text_on_path_or_fill": 4,
+    "semantic_path_crossing": 0
+  },
+  "next_human_target": "panel_b_magnitude_label",
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}

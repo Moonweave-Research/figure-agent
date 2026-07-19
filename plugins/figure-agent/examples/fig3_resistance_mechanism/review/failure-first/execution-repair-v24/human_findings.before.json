@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:88c2f9a64aaee2ff7b15a4884b0d40445e3badffb386913fa89dece3bf831a3f",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF008",
+      "subject": "panel_a_sign_agnostic_carrier_label",
+      "finding": "one-line label crosses two disorder dots"
+    }
+  ],
+  "publication_acceptance": "not_claimed"
+}

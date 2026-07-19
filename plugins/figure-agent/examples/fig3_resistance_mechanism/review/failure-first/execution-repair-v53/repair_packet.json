@@ -1,0 +1,78 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "move the S60 title and two-line descriptor as one stack so the descriptor clears both the y-axis and peak without contacting the title",
+      "id": "HF035",
+      "subject": "panel_b_s60_stack_coupled_retry"
+    },
+    "finding_id": "HF035",
+    "protected_invariants": [
+      "single discrete state",
+      "S60",
+      "(0.965,1.30)"
+    ],
+    "repair_family": "label_reflow",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/human_findings.before.json",
+    "selector": {
+      "anchor_end": "  % S80 is a broad continuous distribution; width, not depth, carries n.",
+      "anchor_start": "  \\draw[draw=cBlue!70, line width=0.35pt, dashed] (0.965,0)--(0.965,1.30);",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-s60-coupled-stack",
+      "source_hash": "sha256:a2342e45e070b684f562cdf764786aa2115453e5ebe7983c476ba3d3de865a8d"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:0c9b93c9463517071031c2ef166b13094a629dfde5a7649d94b1238905913509"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/repaired_generated.tex",
+  "packet_sha256": "sha256:faca33469cf5a94aca5e852c507cabf4f993eb4a2647f41c36307429aedb39ed",
+  "prompt": {
+    "sha256": "sha256:09954b064cd5bed75e3cff7c587d59f40791666de630a35e3112825963afbea4",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v51/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: label_reflow\n- Machine finding: {\"finding\": \"move the S60 title and two-line descriptor as one stack so the descriptor clears both the y-axis and peak without contacting the title\", \"id\": \"HF035\", \"subject\": \"panel_b_s60_stack_coupled_retry\"}\n- Change content only between the exact anchor lines [  \\draw[draw=cBlue!70, line width=0.35pt, dashed] (0.965,0)--(0.965,1.30);] and [  % S80 is a broad continuous distribution; width, not depth, carries n.].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [single discrete state].\n- Preserve the exact token [S60].\n- Preserve the exact token [(0.965,1.30)].\n\n## Bound editable source bytes\n```tex\n  \\node[label, text=cBlue, font=\\sffamily\\bfseries\\footnotesize] at (0.965,2.06) {S60};\n  \\node[compact label] at (0.965,1.68) {single discrete state};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v51/repaired_generated.tex",
+    "sha256": "sha256:a2342e45e070b684f562cdf764786aa2115453e5ebe7983c476ba3d3de865a8d"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/repair_targets.json",
+    "sha256": "sha256:26beb8900fe2d4a2ade44d49f0bbe92e0d8eec70931d9ce0824557763c4ca43d"
+  },
+  "verification": "external_sequential_compile_required"
+}

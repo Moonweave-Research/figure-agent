@@ -1,0 +1,15 @@
+{
+  "change_summary": "Protected the one-line carrier label with the film background so disorder cues cannot show through the text.",
+  "changed_lines": 4,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v24/repaired_generated.tex",
+  "output_sha256": "sha256:448ef8aba763ebd1f651bd2e1340ea62227f0bbc25b7cc9cbb32ad0a3b27e06e",
+  "packet_sha256": "sha256:33581bea3d8dbdbfe1f155ff3ca6788db967771a7a95ff9414592b3eb1bcf82e",
+  "preserved_boundary_blank_lines": 0,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:88c2f9a64aaee2ff7b15a4884b0d40445e3badffb386913fa89dece3bf831a3f"
+}

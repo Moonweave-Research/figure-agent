@@ -39,25 +39,33 @@ rendered evidence, and exports clean PDF/SVG.
 
 ---
 
-## Core commands
+## Command surface
+
+Primary route:
 
 ```
 /fig_new      Start a new figure — chat interview fills briefing.md + spec.yaml
-/fig_extract  (optional) reference PNG -> OCR + palette clusters + optional vtracer structural hints
 /fig_compile  Build the TikZ → PDF + PNG, run Style Lock + collision checks
 /fig_critique Have host Claude read the build PNG and write critique.md
 /fig_ground   Ground physics intent — author tex/semantic assertions from briefing §6/§7
 /fig_adjudicate Scaffold critique_adjudication.yaml after critique lint passes
-/fig_loop     Record a verify-only loop checkpoint
 /fig_export   Export final PDF / SVG / TIFF / PNG
 /fig_status   "Where am I?" — read-only stage check
-/fig_drive    Dry-run advisory driver — recommends one next action
 /fig_run      Bounded runner — executes safe mechanical steps, stops at gates
-/fig_improve  Loop-centered single-fixture improvement entry point
-/fig_queue    Multi-fixture driver queue — groups next actions by actor/gate
-/fig_queue_run Plan or execute the queue's workflow-agent subset
 /fig_closeout Read-only post-patch closeout checklist
 /fig_context_pack Read-only authoring context pack (JSON; accepts --json / --format json)
+```
+
+Compatibility and specialist adapters remain callable for historical workflows,
+but they are not co-equal default entry points:
+
+```
+/fig_extract  Optional reference evidence extraction
+/fig_drive    Internal-policy dry-run adapter
+/fig_loop     Verify-only checkpoint adapter used by /fig_run
+/fig_improve  Repeated compatibility wrapper over /fig_run
+/fig_queue    Multi-fixture compatibility queue
+/fig_queue_run Batch adapter delegating to /fig_run
 /fig_e2e_smoke Deterministic compile/export/status/loop smoke harness (JSON; accepts --json / --format json)
 ```
 
@@ -107,16 +115,15 @@ fig-agent helper critique_lint.py fig3_trap_concept
 /fig_export fig3_trap_concept
 ```
 
-**Iterating an existing figure.** For an already-scaffolded figure, the single
-canonical entry point is `/fig_improve <name> --goal "<goal>"`. It wraps the
-compile / critique / loop steps and stops at human or taste boundaries;
-`/fig_status <name>` remains the read-only "where am I?" check to run first,
-especially when resuming after a break.
+**Iterating an existing figure.** Run `/fig_status <name>` first, then use
+`/fig_run <name> --mode review --goal "<goal>" --execute` for safe mechanical
+progress. It stops at host, human, repair, polish, accepted/golden, and release
+boundaries.
 
-For agent-driven work, use `/fig_status <name>` or
-`/fig_drive <name> --mode review --goal "<goal>" --dry-run` as the canonical
-first check and follow the printed `Next:` / driver action. Export, release, or
-polish only when status or the driver explicitly routes there.
+`/fig_drive`, `/fig_loop`, and `/fig_improve` remain compatibility adapters over
+the same status/driver/run policy. They do not define separate canonical
+workflows. Export, release, or polish only when the current status/run boundary
+routes there.
 
 When the user asks the plugin to proceed autonomously through safe mechanical
 steps, use `/fig_run <name> --mode review --goal "<goal>" --execute`. It runs
@@ -133,16 +140,10 @@ choose the next action. Do not replay commands from a journal. The journal
 summary emits JSON; `--json` and `--format json` are accepted as explicit
 no-op output flags.
 
-When the user asks to keep improving one fixture through repeated critical
-loops, use `/fig_improve <name> --goal "<goal>" --execute --max-loops N`.
-It wraps `/fig_run`, summarizes the final actor boundary, and exposes optional
-improvement candidates when the fixture is already safe. It still stops before
-host critique, source patching, SVG polish, human decisions, accepted/golden
-roll-forward, and release mutation; after that actor acts, rerun
-`/fig_improve`.
+`/fig_improve` remains callable for historical repeated-loop workflows, but it
+is no longer the default route and cannot reactivate autonomous quality search.
 
-For multi-fixture work, start with the queue rather than running fixture commands
-one by one:
+For multi-fixture compatibility work, queue adapters remain available:
 
 ```bash
 fig-agent queue --mode review --goal "<goal>"
@@ -168,7 +169,7 @@ and closeout rows stay visible as blocked operator handoffs.
 | **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, and optional aesthetic intent, then writes structured `critique.md`. Host Claude only — no external API. |
 | **Single next-action summary** | `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout` expose the same compact read-only `next_action_summary`, including `decision_boundary` so agents can tell deterministic gates, human decisions, release decisions, SVG-polish handoffs, and advisory-only aesthetic improvements apart. |
 | **Bounded safe runner** | `/fig_run` wraps `/fig_drive` and executes only allowlisted deterministic shell actions, then re-queries state. It can execute compile, missing adjudication scaffold, verify-only loop checkpoints, and non-golden draft export; host/human/existing-adjudication/accepted/golden/release/polish boundaries remain explicit stops. |
-| **Loop-centered improvement orchestrator** | `/fig_improve` wraps `/fig_run` for repeated one-fixture improvement requests. It gives agents one default entry point for "loop until clean enough" while preserving host/human/patch/SVG/release boundaries and optional-improvement handoffs. |
+| **Loop-centered compatibility wrapper** | `/fig_improve` wraps `/fig_run` for historical repeated one-fixture workflows while preserving host/human/patch/SVG/release boundaries. It is not the default route and cannot reactivate autonomous quality search. |
 | **Operator queue** | `/fig_queue` scans real fixtures through `/fig_drive`, groups next work by actor/action/blocker, emits blocked-row `operator_handoff` packets, and `/fig_queue_run` delegates the workflow-agent subset to `/fig_run` after plan-only review. |
 | **Runner journal** | `/fig_run --execute` records `.scratch/fig-run-runs/<timestamp>-<name>/` evidence by default. Journals are not replayable and do not replace fresh `/fig_status` or `/fig_drive` checks. |
 | **Per-panel reference** | `spec.yaml.panels[i].reference_image` + `bbox_pdf_cm`. Each panel compared against its own reference. |
@@ -229,8 +230,8 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 ## Documentation map
 
 **Read these first:**
-- `docs/product-spec.md` — the single product authority. Start here.
-- `docs/execution-plan.md` — the single active forward implementation plan.
+- `docs/figure-agent.md` — the sole product contract and executable roadmap.
+  Start here.
 - `docs/architecture-overview.md` — the shipped layer-by-layer reference.
 - `docs/v0.9-operator-playbook.md` — release-candidate command sequence for
   single-fixture, queue, host critique, closeout, and release/golden operation.
@@ -244,8 +245,10 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 - `docs/trials/` — dated dogfood reports.
 
 **Frozen historical (do not maintain, kept for context):**
+- `docs/product-spec.md` and `docs/execution-plan.md` — the previous split
+  authorities, retained in place as legacy evidence.
 - `docs/quality-kernel-goal.md` — prior quality-kernel direction, superseded by
-  `docs/product-spec.md` and `docs/execution-plan.md`.
+  `docs/figure-agent.md`.
 - `docs/milestones-archive/2026-05-17-quality-state-hardening.md` — prior issue
   record for reference contracts, readiness states, manifest hashes, and TIFF
   quality gates.

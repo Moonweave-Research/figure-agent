@@ -1,0 +1,7 @@
+{
+  "decision": "materialization_escape_regression",
+  "repair_result": "literal escaped newline reached TeX and caused compilation failure",
+  "external_compile": "failed",
+  "human_review": "not_reached",
+  "publication_acceptance": "not_claimed"
+}

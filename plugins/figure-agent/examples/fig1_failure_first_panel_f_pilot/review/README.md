@@ -21,7 +21,7 @@ bash scripts/compile.sh \
   examples/fig1_failure_first_panel_f_pilot/review/states/raw.tex
 bash scripts/compile.sh \
   examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex
-uv run python -c 'from pathlib import Path; from scripts.quality.review_evidence_pack import build_review_evidence_pack; build_review_evidence_pack(Path("examples/fig1_failure_first_panel_f_pilot"))'
+uv run python -c 'from pathlib import Path; from scripts.quality.review_evidence_pack import verify_review_evidence_pack; verify_review_evidence_pack(Path("examples/fig1_failure_first_panel_f_pilot"))'
 uv run python -c 'from pathlib import Path; from scripts.quality.review_evidence_receipt import build_review_evidence_receipt; f=Path("examples/fig1_failure_first_panel_f_pilot"); build_review_evidence_receipt(f, f / "review" / "generated_receipt.json")'
 ```
 
@@ -29,10 +29,15 @@ The strict compile currently exits 1 on inherited whole-figure detector
 findings. This is recorded in `machine_gate.yaml`; it is not rewritten as a
 publication or human acceptance claim.
 
-Moon approved the current repaired Panel F panel view as the development
-baseline on 2026-07-12. That bounded decision is hash-bound in
-`human_verdict.yaml`; whole, object/relation, and zoom review remain pending.
-The baseline decision is not publication acceptance.
+Moon approved the pre-extraction repaired Panel F views as the development
+baseline on 2026-07-12. That historical decision remains hash-bound in
+`human_verdict.yaml`. Reuse through the shared TikZ primitive introduced a
+small rendered-pixel delta, so `generated_receipt.json` marks the current packet
+`pending_revalidation` until the current whole, panel, object/relation, and zoom
+views receive a new human verdict. Neither state is publication acceptance.
+Revalidation updates both `reviewed_source.panel_render_sha256` and
+`reviewed_source.review_input_hash` in `human_verdict.yaml`; matching only one
+view cannot transfer a multi-scale verdict.
 
 The named human findings from the pre-revision repaired packet are recorded in
 `human_findings.yaml` and admitted to `benchmarks/llm_failure_corpus.yaml` with

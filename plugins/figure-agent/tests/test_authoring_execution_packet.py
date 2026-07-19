@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -17,10 +18,20 @@ def _sha256_text(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def _write_context_fixture(workspace: Path, name: str = "context_demo") -> Path:
+def _write_context_fixture(
+    workspace: Path,
+    name: str = "context_demo",
+    *,
+    visual_asset_ids: tuple[str, ...] = (),
+) -> Path:
     fixture = workspace / "examples" / name
     review = fixture / "review"
     review.mkdir(parents=True)
+    visual_assets = ""
+    if visual_asset_ids:
+        visual_assets = "  visual_asset_ids:\n" + "".join(
+            f"    - {asset_id}\n" for asset_id in visual_asset_ids
+        )
     (fixture / "spec.yaml").write_text(
         f"""
 name: {name}
@@ -28,7 +39,7 @@ title: Context Demo
 style_profile: polymer-paper
 authoring_context_pack:
   enabled: true
-panels:
+{visual_assets}panels:
   - id: C
     caption: Trap energy diagram
     semantic_claims:
@@ -54,6 +65,40 @@ panels:
     return fixture
 
 
+def test_packet_allows_and_binds_selected_curated_visual_asset(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        visual_asset_ids=("panel_f_floating_cantilever",),
+    )
+
+    packet, prompt = _compile(workspace)
+
+    assert packet["allowed_repository_read_paths"] == [
+        "AGENTS.md",
+        "styles/polymer-paper-preamble.sty",
+        str(PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.tex"),
+        str(PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.contract.yaml"),
+        str(PLUGIN_ROOT / "styles/snippets/panel-f-floating-cantilever.transfer.yaml"),
+    ]
+    assert packet["visual_assets"]["selected"][0]["id"] == (
+        "panel_f_floating_cantilever"
+    )
+    assert "## Curated visual assets" in prompt
+    assert "Do not redraw its owned geometry" in prompt
+    authoring_execution_packet.validate_visual_asset_bindings(packet)
+    assert all(
+        Path(path).is_file() for path in packet["allowed_repository_read_paths"][2:]
+    )
+    drifted = json.loads(json.dumps(packet))
+    drifted["allowed_repository_read_paths"].pop()
+    with pytest.raises(
+        authoring_execution_packet.AuthoringExecutionPacketError,
+        match="visual asset missing from read allowlist",
+    ):
+        authoring_execution_packet.validate_visual_asset_bindings(drifted)
+
+
 def _compile(
     workspace: Path,
     *,
@@ -64,6 +109,7 @@ def _compile(
         "control_generated.tex"
     ),
     execution_cwd: str = ".",
+    composition_profile: str | None = None,
 ) -> tuple[dict[str, object], str]:
     return authoring_execution_packet.compile_authoring_execution_packet(
         "context_demo",
@@ -74,7 +120,45 @@ def _compile(
         blank_start=blank_start,
         output_path=output_path,
         execution_cwd=execution_cwd,
+        composition_profile=composition_profile,
     )
+
+
+def test_composition_profile_is_an_explicit_base_equal_intervention(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    profile = fixture / "review/composition.yaml"
+    profile.write_text(
+        "schema: figure-agent.composition-profile.v1\n"
+        "status: experimental_attempt_scoped\n"
+        "policy: preserve_llm_composition\n"
+        "requirements:\n"
+        "  - semantic_load_controls_area\n"
+        "  - related_panels_are_grouped\n"
+        "  - negative_space_is_reserved\n"
+        "forbidden:\n"
+        "  - fixed_coordinates\n"
+        "  - fixed_panel_rectangles\n"
+        "  - primitive_geometry\n"
+        "  - palette_override\n",
+        encoding="utf-8",
+    )
+
+    control, control_prompt = _compile(workspace)
+    assisted, assisted_prompt = _compile(
+        workspace, composition_profile="review/composition.yaml"
+    )
+
+    assert control["context_pack"]["base_sha256"] == assisted["context_pack"][
+        "base_sha256"
+    ]
+    assert control["context_pack"]["sha256"] != assisted["context_pack"]["sha256"]
+    assert control["composition_profile"] is None
+    assert assisted["composition_profile"]["policy"] == "preserve_llm_composition"
+    assert "No optional composition profile selected" in control_prompt
+    assert "do not default to equal-size panels" in assisted_prompt
 
 
 def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
@@ -82,6 +166,10 @@ def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
     _write_context_fixture(workspace)
 
     packet, prompt = _compile(workspace)
+
+    assert packet["required_panel_markers"] == ["% Panel C"]
+    assert "## Required source attribution markers" in prompt
+    assert "- Add exactly one canonical marker [% Panel C]" in prompt
 
     assert packet["schema"] == "figure-agent.authoring-execution-packet.v1"
     assert packet["prompt"]["utf8"] == prompt
@@ -293,6 +381,101 @@ def test_accepts_a_new_versioned_attempt_directory(tmp_path: Path) -> None:
     assert packet["output_path"].endswith("execution-binding-v2/control_generated.tex")
 
 
+def test_accepts_declared_comparable_arm_output(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    packet, prompt = _compile(
+        workspace,
+        output_path=(
+            "examples/context_demo/review/failure-first/comparable-v2/"
+            "verified_generated.tex"
+        ),
+    )
+
+    assert packet["output_path"].endswith(
+        "comparable-v2/verified_generated.tex"
+    )
+    assert "Use only the preamble palette tokens" in prompt
+    assert (
+        "Write exactly one new source to "
+        "[examples/context_demo/review/failure-first/comparable-v2/"
+        "verified_generated.tex]."
+    ) in prompt
+
+
+def test_rejects_undeclared_comparable_output_name(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    with pytest.raises(
+        authoring_execution_packet.AuthoringExecutionPacketError,
+        match="declared comparable arm",
+    ):
+        _compile(
+            workspace,
+            output_path=(
+                "examples/context_demo/review/failure-first/comparable-v2/"
+                "invented_generated.tex"
+            ),
+        )
+
+
+def test_accepts_named_composition_comparison_arms(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    for arm in ("free_composition", "assisted_composition"):
+        packet, _ = _compile(
+            workspace,
+            output_path=(
+                "examples/context_demo/review/failure-first/comparable-v2/"
+                f"{arm}_generated.tex"
+            ),
+        )
+        assert packet["output_path"].endswith(f"{arm}_generated.tex")
+
+
+def test_resolves_declared_comparable_packet_artifact(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    path = authoring_execution_packet.resolve_attempt_artifact_path(
+        workspace,
+        "context_demo",
+        (
+            "examples/context_demo/review/failure-first/comparable-v2/"
+            "verified_packet.json"
+        ),
+        suffix=".json",
+    )
+
+    assert path == (
+        workspace
+        / "examples/context_demo/review/failure-first/comparable-v2/"
+        "verified_packet.json"
+    )
+
+
+def test_rejects_undeclared_comparable_packet_artifact(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    with pytest.raises(
+        authoring_execution_packet.AuthoringExecutionPacketError,
+        match="declared comparable artifact",
+    ):
+        authoring_execution_packet.resolve_attempt_artifact_path(
+            workspace,
+            "context_demo",
+            (
+                "examples/context_demo/review/failure-first/comparable-v2/"
+                "invented_packet.json"
+            ),
+            suffix=".json",
+        )
+
+
 def test_rejects_duplicate_mandatory_requirements() -> None:
     prompt = "\n".join(
         [
@@ -397,6 +580,9 @@ def _write_arm(
     arm: str,
     *,
     model_id: str = "gpt-5.5",
+    plugin_root: Path = PLUGIN_ROOT,
+    shape_profile: str | None = None,
+    composition_profile: str | None = None,
 ) -> tuple[Path, Path]:
     output = (
         "examples/context_demo/review/failure-first/execution-binding-v1/"
@@ -404,12 +590,14 @@ def _write_arm(
     )
     packet, prompt = authoring_execution_packet.compile_authoring_execution_packet(
         "context_demo",
-        plugin_root=PLUGIN_ROOT,
+        plugin_root=plugin_root,
         workspace_root=workspace,
         model_id=model_id,
         budget_contract="examples/context_demo/review/budget.yaml",
         blank_start="examples/context_demo/review/blank.txt",
         output_path=output,
+        shape_profile=shape_profile,
+        composition_profile=composition_profile,
     )
     attempt = workspace / "examples/context_demo/review/failure-first/execution-binding-v1"
     packet_path = attempt / f"{arm}_packet.json"
@@ -421,6 +609,40 @@ def _write_arm(
         prompt=prompt,
     )
     return packet_path, prompt_path
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        "styles/snippets/panel-f-floating-cantilever.tex",
+        "styles/snippets/panel-f-floating-cantilever.contract.yaml",
+        "styles/snippets/panel-f-floating-cantilever.transfer.yaml",
+    ],
+)
+def test_preflight_rejects_visual_asset_byte_drift(
+    tmp_path: Path, relative_path: str
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        visual_asset_ids=("panel_f_floating_cantilever",),
+    )
+    plugin_root = tmp_path / "plugin"
+    shutil.copytree(PLUGIN_ROOT / "styles", plugin_root / "styles")
+    control, _ = _write_arm(
+        workspace, "control", plugin_root=plugin_root
+    )
+    treatment, _ = _write_arm(
+        workspace, "treatment", plugin_root=plugin_root
+    )
+    asset = plugin_root / relative_path
+    asset.write_text(asset.read_text(encoding="utf-8") + "% drift\n", encoding="utf-8")
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="visual asset byte drift",
+    ):
+        authoring_execution_preflight.preflight_authoring_pair(control, treatment)
 
 
 def test_preflight_accepts_equal_contracts_with_disjoint_outputs(tmp_path: Path) -> None:
@@ -437,12 +659,182 @@ def test_preflight_accepts_equal_contracts_with_disjoint_outputs(tmp_path: Path)
     assert result["schema"] == "figure-agent.authoring-execution-preflight.v1"
     assert result["decision"] == "pass"
     assert result["filesystem_read_isolation"] == "unavailable"
+    assert result["intervention_field"] is None
     assert result["control"]["packet_sha256"] != result["treatment"]["packet_sha256"]
     assert result["control"]["packet_path"] == (
         "examples/context_demo/review/failure-first/execution-binding-v1/"
         "control_packet.json"
     )
     assert not Path(result["control"]["prompt_path"]).is_absolute()
+
+
+def test_preflight_accepts_equal_triplet_with_disjoint_outputs(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    raw, _ = _write_arm(workspace, "raw")
+    verified, _ = _write_arm(workspace, "verified")
+    repaired, _ = _write_arm(workspace, "repaired")
+
+    result = authoring_execution_preflight.preflight_authoring_triplet(
+        raw,
+        verified,
+        repaired,
+    )
+
+    assert result["schema"] == "figure-agent.authoring-execution-preflight.v1"
+    assert result["decision"] == "pass"
+    assert result["filesystem_read_isolation"] == "unavailable"
+    assert set(result["conditions"]) == {"raw", "verified", "repaired"}
+    assert {
+        item["output_path"] for item in result["conditions"].values()
+    } == {
+        "examples/context_demo/review/failure-first/execution-binding-v1/"
+        f"{arm}_generated.tex"
+        for arm in ("raw", "verified", "repaired")
+    }
+    assert len(
+        {item["packet_sha256"] for item in result["conditions"].values()}
+    ) == 3
+
+
+def test_preflight_rejects_shape_and_composition_changing_together(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    (fixture / "review/shape.yaml").write_text(
+        "schema: figure-agent.shape-profile.v1\n"
+        "status: experimental_attempt_scoped\n"
+        "objects:\n"
+        "  - id: s60\n"
+        "    role: discrete_distribution\n"
+        "  - id: s80\n"
+        "    role: continuous_broad_distribution\n"
+        "relations:\n"
+        "  - kind: wider_than\n"
+        "    subject: s80\n"
+        "    object: s60\n"
+        "  - kind: same_encoding_family\n"
+        "    members: [s60, s80]\n"
+        "forbidden_claims: [fixed_peak_count, monotonic_disorder, decay_direction]\n"
+        "composition_header: increasing sulfur content\n",
+        encoding="utf-8",
+    )
+    (fixture / "review/composition.yaml").write_text(
+        "schema: figure-agent.composition-profile.v1\n"
+        "status: experimental_attempt_scoped\n"
+        "policy: preserve_llm_composition\n"
+        "requirements:\n"
+        "  - semantic_load_controls_area\n"
+        "  - related_panels_are_grouped\n"
+        "  - negative_space_is_reserved\n"
+        "forbidden:\n"
+        "  - fixed_coordinates\n"
+        "  - fixed_panel_rectangles\n"
+        "  - primitive_geometry\n"
+        "  - palette_override\n",
+        encoding="utf-8",
+    )
+    control, _ = _write_arm(workspace, "control")
+    treatment, _ = _write_arm(
+        workspace,
+        "treatment",
+        shape_profile="review/shape.yaml",
+        composition_profile="review/composition.yaml",
+    )
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="multiple intervention fields differ",
+    ):
+        authoring_execution_preflight.preflight_authoring_pair(control, treatment)
+
+
+def test_preflight_triplet_rejects_a_mismatched_third_model_contract(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    raw, _ = _write_arm(workspace, "raw")
+    verified, _ = _write_arm(workspace, "verified")
+    repaired, _ = _write_arm(workspace, "repaired", model_id="other-model")
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="model_id mismatch",
+    ):
+        authoring_execution_preflight.preflight_authoring_triplet(
+            raw,
+            verified,
+            repaired,
+        )
+
+
+def test_preflight_triplet_rejects_packet_to_prompt_output_path_drift(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    raw, _ = _write_arm(workspace, "raw")
+    verified, _ = _write_arm(workspace, "verified")
+    repaired, _ = _write_arm(workspace, "repaired")
+    payload = json.loads(repaired.read_text(encoding="utf-8"))
+    payload["output_path"] = (
+        "examples/context_demo/review/failure-first/execution-binding-v1/"
+        "raw_generated.tex"
+    )
+    payload["repository_output_path"] = (
+        "examples/context_demo/review/failure-first/execution-binding-v1/"
+        "raw_generated.tex"
+    )
+    payload["packet_sha256"] = authoring_execution_packet.canonical_packet_sha256(
+        payload
+    )
+    repaired.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="prompt output path drift",
+    ):
+        authoring_execution_preflight.preflight_authoring_triplet(
+            raw,
+            verified,
+            repaired,
+        )
+
+
+def test_authoring_preflight_triplet_cli(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    attempt_rel = "examples/context_demo/review/failure-first/execution-binding-v1"
+    for arm in ("raw", "verified", "repaired"):
+        _write_arm(workspace, arm)
+    env = os.environ.copy()
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-preflight-triplet",
+            "--raw",
+            f"{attempt_rel}/raw_packet.json",
+            "--verified",
+            f"{attempt_rel}/verified_packet.json",
+            "--repaired",
+            f"{attempt_rel}/repaired_packet.json",
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["decision"] == "pass"
+    assert set(payload["conditions"]) == {"raw", "verified", "repaired"}
 
 
 def test_preflight_rejects_unequal_model_contract(tmp_path: Path) -> None:

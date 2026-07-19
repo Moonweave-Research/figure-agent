@@ -1,0 +1,11 @@
+{
+  "decision": "failed_exact_repair",
+  "repair_result": "retained path clash removed but title collision introduced",
+  "text_text_after": 1,
+  "text_on_path_or_fill_after": 8,
+  "semantic_path_crossing_after": 0,
+  "remaining_priority": "retained_label_title_collision",
+  "band_shape_authority": "blocked_pending_physics_math_review",
+  "human_review": "not_requested_failed_machine_gate",
+  "publication_acceptance": "not_claimed"
+}

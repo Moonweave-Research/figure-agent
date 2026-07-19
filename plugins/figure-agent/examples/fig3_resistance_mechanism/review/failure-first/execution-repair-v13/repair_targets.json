@@ -1,0 +1,30 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/verified_generated.tex",
+  "source_sha256": "sha256:dc9e386c96660134ec58cc6831055b59c38c17ebeecaaff20f29eb734ace3d37",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v13/collisions.before.json",
+        "id": "TC001"
+      },
+      "attribution": {
+        "state": "exact"
+      },
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-b-heading-and-progression",
+        "anchor_start": "% Panel B: composition-dependent trap-energy distribution.",
+        "anchor_end": "\\begin{scope}[shift={(6.58,0.86)}]"
+      },
+      "repair_family": "local_reposition",
+      "protected_invariants": [
+        "I(t)\\propto t^{-n}",
+        "$n$: distribution breadth",
+        "$\\rho_{60\\mathrm{s}}$: magnitude",
+        "S60",
+        "S80"
+      ]
+    }
+  ]
+}

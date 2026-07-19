@@ -1,0 +1,15 @@
+{
+  "change_summary": "Moved the sign-agnostic carrier label into the lower film safe area above the panel boundary and away from the left electrode.",
+  "changed_lines": 2,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v21/repaired_generated.tex",
+  "output_sha256": "sha256:e5a4fe84eeecac61f57b9255956d5f3c28be6805f322ed32878744a92387d27a",
+  "packet_sha256": "sha256:71979ef33c7ea91d210cad4c981d303f26765e95ca557b0d055002b590bb14ef",
+  "preserved_boundary_blank_lines": 0,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:5732a79106c1e42572c2eaf9e3a9d6ccd33213f69bc07259bc33ca4b632595d2"
+}

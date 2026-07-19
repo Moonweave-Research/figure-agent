@@ -1,0 +1,15 @@
+{
+  "change_summary": "Expanded the matching film-background padding to fully mask the residual disorder dot behind the label.",
+  "changed_lines": 5,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v25/repaired_generated.tex",
+  "output_sha256": "sha256:6de7a4b3aba6963317d4006bf0d3820ecf14aecbbdb854c551774804416bcd6a",
+  "packet_sha256": "sha256:3754cc8f827a54607f729e63ba81fe8b38396e41f96c6045e64c8acf9c59bd14",
+  "preserved_boundary_blank_lines": 0,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:448ef8aba763ebd1f651bd2e1340ea62227f0bbc25b7cc9cbb32ad0a3b27e06e"
+}

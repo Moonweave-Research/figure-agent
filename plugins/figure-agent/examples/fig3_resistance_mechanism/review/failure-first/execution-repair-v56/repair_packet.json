@@ -1,0 +1,76 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "the bottom discrete-to-continuous sentence duplicates the title arrow and distribution labels while occupying the only safe external dimension lane",
+      "id": "HF038",
+      "subject": "remove_redundant_panel_b_bottom_summary"
+    },
+    "finding_id": "HF038",
+    "protected_invariants": [
+      "magnitude"
+    ],
+    "repair_family": "label_reflow",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v56/human_findings.before.json",
+    "selector": {
+      "anchor_end": "\\end{tikzpicture}",
+      "anchor_start": "  \\node[compact label, text=cBrown, rotate=90] at (4.58,0.765) {magnitude};",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-redundant-bottom-summary",
+      "source_hash": "sha256:38a1e4a84be346ffa23890cfc123ddc6fdf34e7f034bfdfd0806dd8d92e704d6"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v56/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:155edba7823e30dc45b2b5d0d5a629461440726ddc8a7f75415999035683a847"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v56/repaired_generated.tex",
+  "packet_sha256": "sha256:71671b7645aa4742d2098a208434408a2c19cd4910af594c26eb4129e00c9d37",
+  "prompt": {
+    "sha256": "sha256:77fdbebf17f30b4560ebd8b2b05521258ae9436798b44ea39f00822c35ce8173",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v56/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: label_reflow\n- Machine finding: {\"finding\": \"the bottom discrete-to-continuous sentence duplicates the title arrow and distribution labels while occupying the only safe external dimension lane\", \"id\": \"HF038\", \"subject\": \"remove_redundant_panel_b_bottom_summary\"}\n- Change content only between the exact anchor lines [  \\node[compact label, text=cBrown, rotate=90] at (4.58,0.765) {magnitude};] and [\\end{tikzpicture}].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [magnitude].\n\n## Bound editable source bytes\n```tex\n\\end{scope}\n\n\\node[label, align=center] at (8.94,0.18)\n  {discrete S60 $\\longrightarrow$ continuous broad S80};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v56/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v53/repaired_generated.tex",
+    "sha256": "sha256:38a1e4a84be346ffa23890cfc123ddc6fdf34e7f034bfdfd0806dd8d92e704d6"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v56/repair_targets.json",
+    "sha256": "sha256:538f710c374aace0d0f4109af30fcfdd814d851e2c966c077d60006955efc4eb"
+  },
+  "verification": "external_sequential_compile_required"
+}

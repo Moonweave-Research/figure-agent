@@ -1,0 +1,304 @@
+{
+  "schema": "figure-agent.declared-boundary-replay.v1",
+  "purpose": "R5.2c evidence: replay the source-derived panel-frame boundary coverage on parent C2 and child C3 to show that the two repaired accidental frame-crossing labels (floating polymer cantilever -> F-left; driven electrode -> F-right) no longer cross, while the two deliberately-left-open labels (grounded substrate, grounded source return) still do. Crossings 6 -> 4.",
+  "mechanism": "check_panel_boundary_coverage.evaluate_panel_boundary_coverage; frame geometry from source, affine pinned by the rendered frame, boundary lines fed to the existing text-boundary detector unchanged. No product-code frame constants; panel-count agnostic.",
+  "parent_C2": {
+    "attempt": "review/failure-first/comparable-v3-repair-c2",
+    "source": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c2/repaired.tex",
+    "render_pdf": "build/repaired.pdf",
+    "frame_crossings_total": 6,
+    "coverage": {
+      "A": "covered",
+      "B": "covered",
+      "C": "zero_coverage",
+      "D": "covered",
+      "E": "covered",
+      "F": "covered"
+    },
+    "checked_edges": 20,
+    "candidates": [
+      {
+        "bbox_pt": [
+          132.529,
+          385.173038,
+          152.739941,
+          389.601235
+        ],
+        "boundary_id": "panel-D-frame-right",
+        "boundary_pt": {
+          "x": 138.991343,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_D_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB001",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "D",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          132.529,
+          385.173038,
+          152.739941,
+          389.601235
+        ],
+        "boundary_id": "panel-E-frame-left",
+        "boundary_pt": {
+          "x": 146.078045,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_E_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB002",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "E",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          286.531,
+          416.237038,
+          301.952219,
+          420.665235
+        ],
+        "boundary_id": "panel-F-frame-left",
+        "boundary_pt": {
+          "x": 287.812091,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB003",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "floating"
+      },
+      {
+        "bbox_pt": [
+          406.414,
+          353.845038,
+          426.624941,
+          358.273235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB004",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          422.092495,
+          359.624038,
+          434.585174,
+          364.052235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB005",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "return"
+      },
+      {
+        "bbox_pt": [
+          406.981,
+          414.899038,
+          426.654436,
+          419.327235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB006",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "electrode"
+      }
+    ]
+  },
+  "child_C3": {
+    "attempt": "review/failure-first/comparable-v3-repair-c3",
+    "source": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c3/repaired.tex",
+    "render_pdf": "build/repaired.pdf",
+    "frame_crossings_total": 4,
+    "coverage": {
+      "A": "covered",
+      "B": "covered",
+      "C": "zero_coverage",
+      "D": "covered",
+      "E": "covered",
+      "F": "covered"
+    },
+    "checked_edges": 20,
+    "candidates": [
+      {
+        "bbox_pt": [
+          132.529,
+          385.173038,
+          152.739941,
+          389.601235
+        ],
+        "boundary_id": "panel-D-frame-right",
+        "boundary_pt": {
+          "x": 138.991343,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_D_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB001",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "D",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          132.529,
+          385.173038,
+          152.739941,
+          389.601235
+        ],
+        "boundary_id": "panel-E-frame-left",
+        "boundary_pt": {
+          "x": 146.078045,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_E_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB002",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "E",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          406.414,
+          353.845038,
+          426.624941,
+          358.273235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB003",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          422.092495,
+          359.624038,
+          434.585174,
+          364.052235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB004",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "return"
+      }
+    ]
+  },
+  "primary_claim": {
+    "crossings_before_C3": 6,
+    "crossings_after_C3": 4,
+    "repaired_labels": [
+      {
+        "label": "floating polymer cantilever",
+        "panel": "F",
+        "removed": [
+          "panel_F_frame_left (floating)"
+        ]
+      },
+      {
+        "label": "driven electrode",
+        "panel": "F",
+        "removed": [
+          "panel_F_frame_right (electrode)"
+        ]
+      }
+    ],
+    "left_open_labels": [
+      {
+        "label": "grounded substrate",
+        "panel": "E",
+        "remaining": [
+          "panel_D_frame_right (grounded)",
+          "panel_E_frame_left (grounded)"
+        ],
+        "reason": "boxed between left frame and substrate rect; no position/anchor-only fit"
+      },
+      {
+        "label": "grounded source return",
+        "panel": "F",
+        "remaining": [
+          "panel_F_frame_right (grounded)",
+          "panel_F_frame_right (return)"
+        ],
+        "reason": "clearing the right frame overlaps HV wiring/motif and its own referent (verified new text_on_path source dark=0.162)"
+      }
+    ]
+  },
+  "unadjudicated_additional_crossings": {
+    "note": "None beyond the 4 adjudicated labels. Frameless visual-hero Panel C remains zero_coverage by design (no frame)."
+  },
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

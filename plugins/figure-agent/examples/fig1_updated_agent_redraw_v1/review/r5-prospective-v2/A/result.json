@@ -1,0 +1,22 @@
+{
+  "model": "gpt-5.6-sol",
+  "effort": "medium",
+  "attempt": 1,
+  "source_sha256": "0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476",
+  "forbidden_input_compliance": {
+    "compliant": true,
+    "read_only": [
+      "task.md",
+      "model_contract.yaml",
+      "budget_contract.yaml"
+    ],
+    "not_read": [
+      "condition B or C",
+      "prior v1",
+      "existing fig1 source",
+      "art-direction vault",
+      "context packs",
+      "historical generated sources"
+    ]
+  }
+}

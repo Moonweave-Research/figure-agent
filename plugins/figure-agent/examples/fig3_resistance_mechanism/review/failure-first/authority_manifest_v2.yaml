@@ -1,0 +1,25 @@
+schema: figure-agent.reference-authority-manifest.v2
+fixture: fig3_resistance_mechanism
+supersedes_for_future_runs: input_packet.yaml
+historical_packet_policy: preserve_byte_identity
+authoritative_inputs:
+  - role: briefing
+    path: briefing.md
+    sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
+  - role: specification
+    path: spec.yaml
+    sha256: sha256:f6df543ef344c87b279d4231fe0f4ee7daa2cdb6f575540e8e7b90e9f3e5cadb
+  - role: authoring_contract
+    path: authoring_contract.md
+    sha256: sha256:7292289b4ab25320adc7f34304d8a67ddfcf5739a4bf1dea3ddd763583f7df04
+  - role: panel_goals
+    path: panel_goals.md
+    sha256: sha256:36f9764365b82fb3fe6b44b06489099170e050b70d928bf67eb1f1b6ae8d068a
+  - role: editable_source
+    path: fig3_resistance_mechanism.tex
+    sha256: sha256:3eb8349ae637664d76e8a2f4d33e3d583da0b7a687d0cc3efb80ace83d603179
+semantic_boundary:
+  fitted_n: Curie-von Schweidler exponent
+  distribution_breadth: schematic mechanism cue
+  mapping: model_or_calibration_required
+publication_acceptance: not_claimed

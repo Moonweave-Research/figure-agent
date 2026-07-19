@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 
@@ -273,6 +275,109 @@ def test_payload_structure():
     assert payload["total"] == 0
 
 
+def test_fig3_declares_visible_temporal_and_composition_ordering_contracts():
+    plugin_root = Path(__file__).resolve().parents[1]
+    spec = yaml.safe_load(
+        (plugin_root / "examples" / "fig3_resistance_mechanism" / "spec.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assertions = parse_assertions(spec)
+
+    assert {
+        (assertion["id"], assertion["relation"], assertion["subject"], assertion["reference"])
+        for assertion in assertions
+    } >= {
+        ("fig3-capture-before-release", "left_of", "capture", "release"),
+        ("fig3-release-before-slow-release", "left_of", "release", "slow-release"),
+        ("fig3-s60-before-s80", "left_of", "S60", "S80"),
+    }
+
+
+def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar() -> None:
+    plugin_root = Path(__file__).resolve().parents[1]
+    fixture = plugin_root / "examples" / "fig3_resistance_mechanism"
+    spec = yaml.safe_load((fixture / "spec.yaml").read_text(encoding="utf-8"))
+    source = (fixture / "fig3_resistance_mechanism.tex").read_text(encoding="utf-8")
+    objects = spec["composition_model"]["panels"]
+
+    assert objects["B"]["objects"]["qualitative_current_decay"]["invariant"] == (
+        "qualitative_not_measured_and_current_decay_implies_resistance_increase"
+    )
+    assert objects["C"]["objects"]["s60_discrete_states"]["invariant"] == (
+        "low_sulfur_discrete_state_set_not_spectrum_bar_chart"
+    )
+    assert spec["visual_clash_cap"] == 4
+    assert "object=qualitative_current_decay panel=B kind=qualitative_relation" in source
+    assert "object=s60_discrete_states panel=C kind=energy_landscape" in source
+    assert "(trap_slow_release)" in source
+    assert "(slow_release_label)" in source
+    assert "{slow-release};" in source
+    slow_release_label = source.split("(slow_release_label)", 1)[0].rsplit("\\node[", 1)[-1]
+    assert "fill=" not in slow_release_label
+    assert objects["A"]["objects"]["carrier_sequence"]["invariant"] == (
+        "carrier_sign_agnostic_temporal_state_sequence_not_deep_only_retention"
+    )
+    assert objects["C"]["objects"]["s80_continuous_support"]["invariant"] == (
+        "high_sulfur_dense_irregular_support_not_envelope_or_quantitative_plot_frame_or_width_to_n_mapping"
+    )
+    assert objects["C"]["objects"]["s80_continuous_support"]["semantic_encoding"] == {
+        "primitive": "dense_irregular_horizontal_state_field",
+        "required_visible_cues": [
+            "greater_state_density_than_s60",
+            "irregular_positions",
+            "broader_vertical_energy_span",
+        ],
+        "allowed_visible_cues": ["restrained_sample_grouping_surface"],
+        "forbidden_visible_cues": [
+            "symmetric_density_silhouette",
+            "closed_contour",
+            "quantitative_plot_frame",
+        ],
+    }
+    assert spec["state_field_geometry_assertions"] == [
+        {
+            "id": "fig3-s80-irregular-state-field",
+            "kind": "horizontal_state_field",
+            "source_object": "s80_continuous_support",
+            "min_marks": 12,
+            "min_vertical_span_cm": 1.4,
+            "min_center_std_cm": 0.35,
+            "max_width_abs_midpoint_correlation": -0.35,
+        }
+    ]
+    assert "Dense, irregular state marks indicate continuous qualitative support" in source
+    assert "rounded corners=1.15mm" not in source
+    assert "$\\rho_{60" not in source
+    assert {
+        (assertion["id"], assertion["relation"], assertion["subject"], assertion["reference"])
+        for assertion in parse_assertions(spec)
+    } >= {
+        ("fig3-mechanism-before-response", "left_of", "slow-release", "response"),
+        ("fig3-response-before-landscape", "left_of", "response", "S60"),
+    }
+
+
+def test_fig3_qualitative_current_trace_is_a_shallowing_power_law_not_a_terminal_drop() -> None:
+    plugin_root = Path(__file__).resolve().parents[1]
+    source = (
+        plugin_root / "examples" / "fig3_resistance_mechanism" / "fig3_resistance_mechanism.tex"
+    ).read_text(encoding="utf-8")
+
+    assert "(1+2.8*(\\x-5.98)/2.82)^(-0.85)" in source
+    assert "((8.80-\\x)/2.82)^0.52" not in source
+    assert "dashed, line width=0.35pt] (5.98,1.62) -- (8.80,1.62)" not in source
+
+    def current_at(normalized_time: float) -> float:
+        return 1.18 + 2.05 * (1 + 2.8 * normalized_time) ** -0.85
+
+    values = [current_at(time) for time in (0.0, 0.25, 0.5, 0.75, 1.0)]
+    drops = [values[index] - values[index + 1] for index in range(len(values) - 1)]
+    assert all(later < earlier for earlier, later in zip(values, values[1:]))
+    assert all(later < earlier for earlier, later in zip(drops, drops[1:]))
+
+
 def test_load_spec_missing_returns_empty(tmp_path: Path) -> None:
     from semantic_assertions import _load_spec
 
@@ -329,3 +434,37 @@ def test_main_passes_when_spec_missing(tmp_path: Path) -> None:
 
     # No spec.yaml -> nothing declared -> pass without touching the PDF.
     assert main([str(pdf)]) == 0
+
+
+def test_main_uses_explicit_fixture_spec_for_nested_repair_pdf(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import semantic_assertions
+
+    nested_build = tmp_path / "attempt" / "repair-packet" / "build"
+    nested_build.mkdir(parents=True)
+    pdf = nested_build / "materialized-repair.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")
+    spec = tmp_path / "fixture-spec.yaml"
+    spec.write_text(
+        "semantic_assertions:\n"
+        "  - id: capture-before-release\n"
+        "    relation: left_of\n"
+        "    subject: capture\n"
+        "    reference: release\n",
+        encoding="utf-8",
+    )
+    output = nested_build / "semantic_assertions.json"
+    monkeypatch.setattr(
+        semantic_assertions,
+        "extract_pdf_words_and_page",
+        lambda _path: ([_word("capture", 10, 10), _word("release", 100, 10)], {}),
+    )
+
+    assert (
+        semantic_assertions.main(
+            [str(pdf), "--spec", str(spec), "--json-output", str(output), "--strict"]
+        )
+        == 0
+    )
+    assert output.is_file()

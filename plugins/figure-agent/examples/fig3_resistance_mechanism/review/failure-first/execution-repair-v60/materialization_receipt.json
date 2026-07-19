@@ -1,0 +1,15 @@
+{
+  "change_summary": "Replace the path prefix with a smooth arrowed trajectory through four trap contacts while leaving the terminal segment bounded separately.",
+  "changed_lines": 6,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v60/repaired_generated.tex",
+  "output_sha256": "sha256:e6325df479898043bf7520e3a9af66681993c3458667479610949bf5c8c359d8",
+  "packet_sha256": "sha256:4840025732802514cea6cb39dfa9058cf3325a24a363634bea7f92f032451935",
+  "preserved_boundary_blank_lines": 0,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:38a1e4a84be346ffa23890cfc123ddc6fdf34e7f034bfdfd0806dd8d92e704d6"
+}

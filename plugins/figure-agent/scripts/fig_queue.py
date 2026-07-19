@@ -12,6 +12,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import closed_loop_attempt_state  # noqa: E402
 import design_direction_packet  # noqa: E402
 import fig_driver  # noqa: E402
 import runtime_paths  # noqa: E402
@@ -114,8 +115,20 @@ _ACTORS = (
     "workflow_agent",
     "host_llm",
     "human",
+    "human_adjudicator",
+    "human_attributor",
+    "human_repair_authorizer",
+    "human_reviewer",
     "release_operator",
     "svg_editor",
+)
+_NEXT_ACTION_EVIDENCE_KEYS = (
+    "required_actor",
+    "evidence_refs",
+    "allowed_scope",
+    "forbidden_scope",
+    "publication_acceptance",
+    "decision_boundary",
 )
 _EXECUTABLE_ACTIONS = frozenset(
     {
@@ -143,12 +156,12 @@ def _fixture_names(repo_root: Path, fixtures: list[str] | None) -> list[str]:
     if fixtures:
         return list(fixtures)
     examples_dir = repo_root / "examples"
-    if not examples_dir.is_dir():
+    if examples_dir.is_symlink() or not examples_dir.is_dir():
         return []
     return sorted(
         path.name
         for path in examples_dir.iterdir()
-        if path.is_dir() and (path / "spec.yaml").is_file()
+        if path.is_symlink() or (path.is_dir() and (path / "spec.yaml").is_file())
     )
 
 
@@ -156,6 +169,14 @@ def _workspace_diagnostic(repo_root: Path, fixtures: list[str] | None) -> dict[s
     if fixtures:
         return None
     examples_dir = repo_root / "examples"
+    if examples_dir.is_symlink():
+        return {
+            "schema": WORKSPACE_DIAGNOSTIC_SCHEMA,
+            "state": "fixture_symlink",
+            "workspace_root": str(repo_root),
+            "missing": [],
+            "message": "implicit queue discovery refused symlinked examples/ directory",
+        }
     if examples_dir.is_dir():
         return None
     return {
@@ -182,7 +203,10 @@ def _print_workspace_diagnostic(queue: dict[str, Any]) -> None:
 
 def workspace_diagnostic_exit_code(queue: dict[str, Any]) -> int:
     diagnostic = queue.get("workspace_diagnostic")
-    if isinstance(diagnostic, dict) and diagnostic.get("state") == "missing_examples":
+    if isinstance(diagnostic, dict) and diagnostic.get("state") in {
+        "fixture_symlink",
+        "missing_examples",
+    }:
         return 2
     return 0
 
@@ -201,6 +225,10 @@ def _first_blocker(summary: dict[str, Any]) -> str | None:
     if not stripped or stripped == "none":
         return None
     return stripped
+
+
+def _next_action_evidence_fields(value: dict[str, Any]) -> dict[str, Any]:
+    return {key: value[key] for key in _NEXT_ACTION_EVIDENCE_KEYS if key in value}
 
 
 def _row_from_summary(
@@ -251,6 +279,8 @@ def _row_from_summary(
         "blocking_source": blocking_source_for_driver_summary(summary),
         "requires_human": requires_human_for_driver_summary(summary),
     }
+    if isinstance(next_action, dict):
+        row.update(_next_action_evidence_fields(next_action))
     release_decision = status.get("release_decision")
     if isinstance(release_decision, dict):
         row["release_decision"] = release_decision
@@ -1333,6 +1363,23 @@ def _operator_handoff(row: dict[str, Any], *, reason: str) -> dict[str, Any]:
                     "forbidden_scope": common_forbidden,
                     "closeout_checks": ["rerun /fig_queue in the next broader mode"],
                 }
+    if row.get("action") == fig_driver.ACTION_CLOSED_LOOP_HANDOFF_STOP:
+        return {
+            "schema": OPERATOR_HANDOFF_SCHEMA,
+            "fixture": fixture,
+            "required_actor": actor,
+            "next_step": (
+                "Continue only from the exact hash-bound closed-loop state with "
+                f"the recorded actor {actor}."
+            ),
+            "command": None,
+            "reason": reason,
+            **_next_action_evidence_fields(row),
+            "closeout_checks": [
+                "resolve the recorded closed-loop actor boundary",
+                "rerun live /fig_status before continuing",
+            ],
+        }
     if actor == "host_llm":
         details = _host_llm_handoff_details(row)
         return {
@@ -1489,6 +1536,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
                 "design_direction_state": row.get("design_direction_state"),
                 "design_direction_summary": row.get("design_direction_summary"),
+                **_next_action_evidence_fields(row),
             }
             if row.get("svg_polish_evidence_state") is not None:
                 item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
@@ -1501,6 +1549,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "action": row.get("action"),
                 "safe_command": row.get("safe_command"),
                 "required_actor": row.get("required_actor"),
+                **_next_action_evidence_fields(row),
             }
             if row.get("svg_polish_evidence_state") is not None:
                 item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
@@ -1519,6 +1568,7 @@ def build_command_plan(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "style_benchmark_comparison_state": row.get("style_benchmark_comparison_state"),
             "design_direction_state": row.get("design_direction_state"),
             "design_direction_summary": row.get("design_direction_summary"),
+            **_next_action_evidence_fields(row),
         }
         if row.get("svg_polish_evidence_state") is not None:
             item["svg_polish_evidence_state"] = row.get("svg_polish_evidence_state")
@@ -2162,14 +2212,21 @@ def build_queue(
                 )
             )
             continue
-        example_dir = repo_root / "examples" / name
-        if not example_dir.is_dir():
+        try:
+            closed_loop_attempt_state.validate_workspace_fixture(repo_root, name)
+        except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+            error_code = str(exc)
+            stop_boundary = "fixture_not_found" if error_code == "fixture_missing" else error_code
             rows.append(
                 _error_row(
                     name,
                     mode=mode,
-                    stop_boundary="fixture_not_found",
-                    error=f"examples/{name}/ not found",
+                    stop_boundary=stop_boundary,
+                    error=(
+                        f"examples/{name}/ not found"
+                        if error_code == "fixture_missing"
+                        else stop_boundary
+                    ),
                 )
             )
             continue

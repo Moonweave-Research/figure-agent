@@ -1,0 +1,26 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v35/repaired_generated.tex",
+  "source_sha256": "sha256:5ee4eeb0be71d586b8e1026c36555fcfbddff5a1b95ec13e2355674cbafa1a60",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/human_findings.before.json",
+        "id": "HF018"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel-a-external-key-proportion",
+        "anchor_start": "\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};",
+        "anchor_end": "% Qualitative inset only: no ticks, values, or sampled data markers."
+      },
+      "repair_family": "label_reflow",
+      "protected_invariants": [
+        "capture $\\leftrightarrow$ release repeats",
+        "filled endpoint: retained",
+        "(3.02,3.02)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "change_summary": "Restored the descriptor to one line in a right-shifted slot below S60, clear of both the vertical axis and title.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v28/repaired_generated.tex",
+  "output_sha256": "sha256:6da9ec0561c2ce13b5f708048ccf11c38f97ff33830322af6de48781f6860a34",
+  "packet_sha256": "sha256:4c9f1aba0c44f3bee8ea75493b5bac10bc7da74493eda8566072d6664674ff36",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:4922003053a28d6d1959fcf6f5ddca7a43cb8a740751614bac57d8211d9f8b46"
+}

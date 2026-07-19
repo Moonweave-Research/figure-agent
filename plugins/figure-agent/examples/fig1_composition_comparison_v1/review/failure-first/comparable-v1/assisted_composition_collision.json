@@ -1,0 +1,37 @@
+{
+  "schema": "figure-agent.text-collisions.v1",
+  "fixture": "fig1_composition_comparison_v1",
+  "render_pdf": "review/failure-first/comparable-v1/build/assisted_composition_generated.pdf",
+  "iou_threshold": 0.05,
+  "word_count": 85,
+  "collisions": [
+    {
+      "id": "TC001",
+      "texts": [
+        "level",
+        "trapped"
+      ],
+      "iou": 0.096587,
+      "a": {
+        "text": "level",
+        "bbox_pdf": [
+          313.217884,
+          124.96804,
+          323.668382,
+          129.673
+        ]
+      },
+      "b": {
+        "text": "trapped",
+        "bbox_pdf": [
+          319.498,
+          126.92204,
+          336.731566,
+          131.627
+        ]
+      },
+      "source_mapping": null
+    }
+  ],
+  "total": 1
+}

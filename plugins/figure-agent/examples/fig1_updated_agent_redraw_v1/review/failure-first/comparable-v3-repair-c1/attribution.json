@@ -1,0 +1,43 @@
+{
+  "schema": "figure-agent.semantic-finding-attribution.v1",
+  "finding_id": "HA001",
+  "parent_source": {
+    "path": "../comparable-v3/verified_generated.tex",
+    "sha256": "54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f"
+  },
+  "selector": {
+    "kind": "unique_literal_text_in_panel_block",
+    "panel_marker": "% Panel A",
+    "literal": "sulfur segment",
+    "uniqueness_verified": true,
+    "match_count": 1,
+    "source_line_in_parent": 25,
+    "parent_line_text": "  \\node[body label, anchor=east] at (1.13,2.45) {sulfur segment};",
+    "note": "Line number recorded for orientation only; the stable identity is the unique literal 'sulfur segment' within the '% Panel A' marker block. VC002's 'Sulfur-rich' (line 23) is a different literal in the same block and is NOT this target."
+  },
+  "semantic_object": {
+    "id": "panelA.sulfur_segment_label",
+    "role": "body_label",
+    "denotes": "the left S-S-S-S homocatenated sulfur run of the poly(S-r-DIB) repeat unit",
+    "sibling_parallel": "panelA.dib_derived_segment_label (line 47, sits below its ring at y=1.42)"
+  },
+  "semantic_relation": {
+    "labels": "panelA.sulfur_chain (four S atoms at panel-x 1.55/2.00/2.45/2.90, y=2.45)",
+    "must_not_imply": "membership of the label glyphs in the panel border geometry or the neighboring atom circles"
+  },
+  "protected_invariants": [
+    "panel_A_frame_rectangle: (0,0)-(7.2,5.0) unchanged",
+    "sulfur_chain_atoms: centers and 2.8mm size unchanged",
+    "sibling_label_dib_derived_segment: unchanged",
+    "all_other_panels_B_through_F: byte-identical to parent",
+    "label_text_literal: 'sulfur segment' unchanged (reposition only, no re-wording)"
+  ],
+  "editable_target": {
+    "scope": "single \\node line for literal 'sulfur segment'",
+    "edit_budget": "one node line; attributes and coordinates only, no new draw/leader commands",
+    "allowed_change": "node anchor and (x,y) placement",
+    "forbidden_change": "text content, font/style token, any other line"
+  },
+  "attribution_state": "exact",
+  "publication_acceptance": "not_claimed"
+}

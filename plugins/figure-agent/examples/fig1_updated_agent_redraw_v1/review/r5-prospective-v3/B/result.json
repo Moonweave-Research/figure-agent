@@ -1,0 +1,70 @@
+{
+  "schema": "figure-agent.r5-prospective-result.v1",
+  "condition": "B",
+  "role": "canonical_packet_authoring",
+  "status": "authored_lint_passed",
+  "model_id": "gpt-5.6-sol",
+  "authoring_attempts": 1,
+  "feedback_rounds": 0,
+  "manual_repairs": 0,
+  "publication_acceptance": "not_claimed",
+  "blank_start": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/r5-prospective-v3/B/blank-start.tex",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "context_pack": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/r5-prospective-v3/generated/context-pack.json",
+    "file_sha256": "8e382205d32715a8a1908e23c453843101a8d0b34b5d2116862f3ae60fc2891a",
+    "canonical_sha256": "sha256:3c69d58eae7b9141cc1242879b72e73eb873c878af3e2a910ac54c1552c1a9fd"
+  },
+  "authoring_packet": {
+    "canonical_path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v2/verified_packet.json",
+    "snapshot_path": "examples/fig1_updated_agent_redraw_v1/review/r5-prospective-v3/generated/authoring-packet.json",
+    "copies_byte_identical": true,
+    "file_sha256": "8aa6bb795cbdf0ac23f559cea87b0374bef5fadeff26c2b965cddd3b0a6fd247",
+    "packet_sha256": "sha256:77bccc1024e4793a9ebf9c27803741f3abf7e0b1f42397345b2936b0e4b29f89",
+    "visual_asset_bindings_valid": true
+  },
+  "authoring_prompt": {
+    "canonical_path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v2/verified_prompt.md",
+    "snapshot_path": "examples/fig1_updated_agent_redraw_v1/review/r5-prospective-v3/generated/authoring-prompt.md",
+    "copies_byte_identical": true,
+    "sha256": "5ff3e9e9e2fc0d11bc119ae994efeba2eb262ecb06683828f6508cb3111fb6f4",
+    "exact_asset_import_present": "\\input{snippets/panel-f-floating-cantilever.tex}",
+    "vertical_rule_present": "polymer_paper_project.cantilever-vertical-clip-top",
+    "global_clearance_rule_present": "polymer_paper_project.panel-header-and-label-clearance"
+  },
+  "output": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v2/verified_generated.tex",
+    "sha256": "04523d940216d8c1f59ab5695de91dcf83e772eb1244993b5de0288d9b88422a",
+    "source_lines": 169,
+    "maximum_source_lines": 260
+  },
+  "lint": {
+    "command": "python scripts/lint_tex.py examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v2/verified_generated.tex",
+    "exit_code": 0,
+    "stdout": "",
+    "blockers": [],
+    "source_modified_after_lint": false
+  },
+  "compliance": {
+    "task_and_bound_prompt_only": true,
+    "bound_read_allowlist_only": true,
+    "forbidden_inputs_read": false,
+    "mandatory_source_requirements_once_each": true,
+    "exact_asset_import_in_source": true,
+    "curated_panel_f_macro_invocations": 1,
+    "local_explicit_line_width_below_0_25pt": 0,
+    "local_tiny_or_scriptsize_overrides": 0,
+    "author_selected_unequal_composition": true,
+    "panel_c_is_visual_hero": true,
+    "global_header_bands_reserved": true,
+    "panel_f_vertical_top_clip": true,
+    "panel_f_force_away_from_electrode": true,
+    "sample_and_cantilever_floating": true,
+    "source_return_grounded": true,
+    "compile_run": false,
+    "visual_claim_made": false
+  }
+}

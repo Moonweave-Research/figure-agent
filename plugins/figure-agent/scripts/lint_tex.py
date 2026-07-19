@@ -63,6 +63,9 @@ _RE_STRAIGHT_SEGMENT = re.compile(
     r"\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)\s*--\s*"
     r"\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)"
 )
+_RE_NUMERIC_NODE_ANCHOR = re.compile(
+    r"\(\s*(?P<node>[A-Za-z][A-Za-z0-9:_-]*)\.(?P<anchor>\d+(?:\.\d+)?)\s*\)"
+)
 
 # WARN tier constants.
 # flagship_macros_unused fires once per file iff zero calls to any flagship
@@ -235,6 +238,21 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
                     category="raw_hex",
                     snippet=snippet,
                     message="raw hex color is forbidden; use a palette macro",
+                    severity="blocker",
+                )
+            )
+
+        for coordinate_match in _RE_NUMERIC_NODE_ANCHOR.finditer(stripped):
+            violations.append(
+                Violation(
+                    line=line_num,
+                    category="malformed_numeric_node_anchor",
+                    snippet=snippet,
+                    message=(
+                        f"numeric TikZ anchor '.{coordinate_match.group('anchor')}' on "
+                        f"node '{coordinate_match.group('node')}' is invalid; if this was "
+                        "intended as a literal coordinate, write an explicit (x,y) pair"
+                    ),
                     severity="blocker",
                 )
             )

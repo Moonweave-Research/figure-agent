@@ -451,7 +451,12 @@ def _rect_candidates(
     return candidates
 
 
-def text_boundary_clash_payload(pdf_path: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]:
+def text_boundary_clash_payload(
+    pdf_path: Path,
+    candidates: list[dict[str, Any]],
+    *,
+    checked: int,
+) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
     return {
@@ -460,6 +465,7 @@ def text_boundary_clash_payload(pdf_path: Path, candidates: list[dict[str, Any]]
         "render_pdf": f"build/{pdf_path.name}",
         "source": "spec.yaml:text_boundary_checks",
         "candidates": candidates,
+        "checked": checked,
         "total": len(candidates),
     }
 
@@ -502,7 +508,7 @@ def main() -> int:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 
-    payload = text_boundary_clash_payload(args.pdf, candidates)
+    payload = text_boundary_clash_payload(args.pdf, candidates, checked=len(checks))
     if args.json_output is not None:
         _write_json(args.json_output, payload)
 

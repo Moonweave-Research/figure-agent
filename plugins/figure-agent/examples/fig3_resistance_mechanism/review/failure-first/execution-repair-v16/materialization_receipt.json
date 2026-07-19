@@ -1,0 +1,15 @@
+{
+  "change_summary": "Shortened the breadth label and split the span into two outward arrows so neither semantic path crosses the label.",
+  "changed_lines": 6,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v16/repaired_generated.tex",
+  "output_sha256": "sha256:29dd017cb1f9b6d65991f4e481ac111b9c8f76278d855522fd1eb86ba3fb8b91",
+  "packet_sha256": "sha256:650d9caa57c0bfbc5a80acf0990a973b12a2d35d71b3a9d197def77167c42703",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:4a02302c81adf66b04ce3e10a7e06a73cc7a89be00a0c699e9eb82e87a0e6c52"
+}

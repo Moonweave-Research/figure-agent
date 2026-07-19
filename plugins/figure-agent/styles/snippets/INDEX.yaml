@@ -10,7 +10,8 @@
 #
 # Schema (per snippet entry):
 #   file:          string  — path relative to plugin root
-#   status:        enum    — planned | vendored | integrated_wip | shipped | deferred
+#   status:        enum    — planned | vendored | integrated_wip | shipped |
+#                            reviewed_reusable | deferred
 #   track:         string  — A1..A4 (macro) | V1..V6 (vendor) | null
 #
 #   domain:                — what scientific subject is depicted
@@ -63,6 +64,52 @@ narrative_source: styles/snippets/README.md
 #   0.1 (2026-05-05): initial schema. 8 active snippets + 2 deferred.
 
 snippets:
+
+  panel_f_floating_cantilever:
+    file: styles/snippets/panel-f-floating-cantilever.tex
+    status: reviewed_reusable
+    track: failure_first_panel_f
+    domain:
+      primary: apparatus
+      tags: [cantilever, floating, electrode, grounded-source-return, coulomb]
+    role:
+      level: composite
+      placement: panel-element
+      depicts: "floating charge-trapping cantilever opposite a driven electrode"
+    axes:
+      type: none
+      data_grounded: false
+    api:
+      kind: macro
+      signature: '\PanelFFloatingCantilever{prefix}{(x,y)}'
+      tunable: [prefix, origin]
+    preconditions:
+      preamble: styles/polymer-paper-preamble.sty
+      palette_tokens: [cAmber, cBlue, cRed, cGray]
+      requires_macros: []
+      compile_engine: lualatex
+    contract: styles/snippets/panel-f-floating-cantilever.contract.yaml
+    transfer_receipt: styles/snippets/panel-f-floating-cantilever.transfer.yaml
+    known_pitfalls:
+      - "caller owns panel labels, force arrows, and whole-panel composition"
+      - "do not connect the floating cantilever to the source-return ground"
+      - "do not reinterpret the fixed mechanical boundary as an electrical contact"
+    briefing_hooks:
+      - "floating cantilever"
+      - "grounded source return"
+      - "Coulomb response"
+    anti_patterns:
+      - "grounded sample or grounded cantilever"
+      - "bidirectional actuation sequence"
+    smoke_fixture: examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex
+    consumed_by:
+      - "examples/fig1_failure_first_panel_f_pilot"
+      - "examples/fig1_overview_v5f_art_direction_001_vault"
+    discoverability:
+      keywords: [floating cantilever, grounded source return, Coulomb response]
+      reference_hints:
+        palette_clusters: [cAmber, cBlue, cRed, cGray]
+        ocr_terms: [floating, cantilever, electrode, Coulomb]
 
   polymer_chain:
     file: styles/snippets/polymer_chain.snippet.tex

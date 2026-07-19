@@ -374,6 +374,7 @@ def _load_spec(spec_path: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check declared spatial semantic assertions.")
     parser.add_argument("pdf", type=Path)
+    parser.add_argument("--spec", type=Path, default=None)
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--json-output", type=Path, default=None)
     args = parser.parse_args(argv)
@@ -382,7 +383,7 @@ def main(argv: list[str] | None = None) -> int:
     if not pdf_path.is_file():
         print(f"ERROR: missing PDF: {pdf_path}", file=sys.stderr)
         return 2
-    spec_path = pdf_path.parent.parent / "spec.yaml"
+    spec_path = args.spec or pdf_path.parent.parent / "spec.yaml"
     try:
         assertions = parse_assertions(_load_spec(spec_path))
     except (SemanticAssertionError, yaml.YAMLError) as exc:

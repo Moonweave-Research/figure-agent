@@ -1,0 +1,10 @@
+{
+  "decision": "failed_exact_repair",
+  "repair_result": "sample title cleared electrodes but collided with retained label",
+  "text_text_after": 2,
+  "text_on_path_or_fill_after": 7,
+  "semantic_path_crossing_after": 0,
+  "remaining_priority": "sample_title_retained_vertical_clearance",
+  "human_review": "not_requested_structural_gate_failed",
+  "publication_acceptance": "not_claimed"
+}

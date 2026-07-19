@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"failed_exact_repair","repair_result":"removing the redundant summary improved hierarchy but changed the page crop enough to expose a new filled-endpoint text/path blocker","next_human_target":"repair_panel_a_path_semantics_before_retrying_summary_removal","publication_acceptance":"not_claimed"}

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -10,10 +12,332 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+FIG3_FIXTURE = REPO_ROOT / "examples" / "fig3_resistance_mechanism"
+HISTORICAL_LAYOUT_TRANSFER_RECEIPT = (
+    FIG3_FIXTURE
+    / "review"
+    / "failure-first"
+    / "historical_layout_transfer_receipt_v1.yaml"
+)
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "checks"))
 
 import check_layout_drift  # noqa: E402
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _git_blob_sha256(repo_root: Path, commit: str, path: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "show", f"{commit}:{path}"],
+        check=True,
+        capture_output=True,
+    )
+    return "sha256:" + hashlib.sha256(result.stdout).hexdigest()
+
+
+def test_fig3_history_preserves_a_recorded_v64_to_v66_collision_snapshot() -> None:
+    """Ignored report fields remain an explicitly unverified historical record."""
+    receipt = yaml.safe_load(
+        HISTORICAL_LAYOUT_TRANSFER_RECEIPT.read_text(encoding="utf-8")
+    )
+    energy = "breadth_clear_of_declared_neighbors:energy_axis_label"
+
+    assert receipt["schema"] == "figure-agent.historical-layout-transfer-receipt.v1"
+    assert receipt["fixture"] == "fig3_resistance_mechanism"
+    assert receipt["rule"] == {
+        "id": energy,
+        "minimum_clearance": 0.008,
+    }
+    assert receipt["evidence_verification"] == {
+        "tracked_sources": "verified_in_clean_checkout",
+        "ignored_layout_reports": "recorded_unverifiable_ignored_artifact",
+        "capture_commit_layout_report_content": "not_tracked",
+    }
+    assert receipt["never_recompile_historical_sources"] is True
+    repo_root = REPO_ROOT.parents[1]
+    capture_commit = receipt["tracked_sources_capture_commit"]
+    for version in ("v64", "v66"):
+        record = receipt["versions"][version]
+        source = FIG3_FIXTURE / record["tracked_source_path"]
+        source_repo_path = source.relative_to(repo_root).as_posix()
+        assert source.is_file()
+        assert record["tracked_source_sha256"] == _sha256(source)
+        assert record["tracked_source_sha256"] == _git_blob_sha256(
+            repo_root, capture_commit, source_repo_path
+        )
+        snapshot = record["recorded_ignored_layout_snapshot"]
+        assert snapshot["evidence_verification"] == (
+            "recorded_unverifiable_ignored_artifact"
+        )
+        assert snapshot["path"].endswith(
+            f"execution-repair-{version}/build/layout_lanes.json"
+        )
+        ignored_report = FIG3_FIXTURE / snapshot["path"]
+        ignored_report_repo_path = ignored_report.relative_to(repo_root).as_posix()
+        tracked_at_capture = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo_root),
+                "ls-tree",
+                "-r",
+                "--name-only",
+                capture_commit,
+                "--",
+                ignored_report_repo_path,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert tracked_at_capture.stdout == ""
+        tracked_now = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo_root),
+                "ls-files",
+                "--",
+                ignored_report_repo_path,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert tracked_now.stdout == ""
+    assert receipt["versions"]["v64"]["recorded_ignored_layout_snapshot"] == {
+        "path": (
+            "review/failure-first/execution-repair-v64/build/layout_lanes.json"
+        ),
+        "recorded_sha256": (
+            "sha256:26b5e6a831b1add1deea12652eaec8df009da33f43bcb5f7caa4a24bbc1dc701"
+        ),
+        "recorded_status": "ok",
+        "recorded_clearance": 0.019776,
+        "evidence_verification": "recorded_unverifiable_ignored_artifact",
+    }
+    assert receipt["versions"]["v66"]["recorded_ignored_layout_snapshot"] == {
+        "path": (
+            "review/failure-first/execution-repair-v66/build/layout_lanes.json"
+        ),
+        "recorded_sha256": (
+            "sha256:77dc1204f15ca39e42ef2c86df0b1b4f41767e51a823fac28f25dc9475b37d8e"
+        ),
+        "recorded_status": "violation",
+        "recorded_clearance": 0.004272,
+        "evidence_verification": "recorded_unverifiable_ignored_artifact",
+    }
+    assert receipt["publication_acceptance"] == "not_claimed"
+
+
+def test_fig3_layout_contract_is_fail_closed_for_missing_breadth_label() -> None:
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+    words = [
+        _word("trap", 100, 100, 120, 112),
+        _word("energy", 122, 100, 150, 112),
+        _word("E", 152, 100, 158, 112),
+    ]
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        words,
+        (400.0, 200.0),
+        artifact_path=Path("next-layout-attempt/build/repaired_generated.pdf"),
+    )
+
+    assert payload.get("applicable", True) is True
+    assert payload["failure_count"] == 2
+    assert {result["status"] for result in payload["results"]} == {
+        "missing_label_group"
+    }
+
+
+def test_fig3_layout_contract_does_not_rejudge_pre_v64_history() -> None:
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        [],
+        (400.0, 200.0),
+        artifact_path=Path("execution-repair-v12/build/repaired_generated.pdf"),
+    )
+
+    assert payload["applicable"] is False
+    assert payload["failure_count"] == 0
+    assert payload["results"] == []
+
+
+def test_fig3_layout_contract_still_checks_the_live_fixture_build() -> None:
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        [],
+        (400.0, 200.0),
+        artifact_path=Path(
+            "examples/fig3_resistance_mechanism/build/fig3_resistance_mechanism.pdf"
+        ),
+    )
+
+    assert payload.get("applicable", True) is True
+    assert payload["failure_count"] == 2
+    assert {result["status"] for result in payload["results"]} == {
+        "missing_label_group"
+    }
+
+
+def test_fig3_live_source_exposes_the_live_layout_relation_anchors() -> None:
+    source = (FIG3_FIXTURE / "fig3_resistance_mechanism.tex").read_text(
+        encoding="utf-8"
+    )
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+    phrases = {
+        group["id"]: group["required_phrase"] for group in contract["label_groups"]
+    }
+
+    assert phrases == {
+        "response_equation": "I(t)",
+        "energy_axis_label": "energy, E",
+        "energy_support_label": "energy support",
+        "panel_c_heading": "composition-dependent",
+        "sulfur_content_annotation": "sulfur content",
+    }
+    rules = {rule["id"]: rule for rule in contract["rules"]}
+    assert rules["panel_c_heading_clear_of_sulfur_content_annotation"] == {
+        "id": "panel_c_heading_clear_of_sulfur_content_annotation",
+        "kind": "minimum_clearance",
+        "first": "panel_c_heading",
+        "second": "sulfur_content_annotation",
+        "minimum_normalized_clearance": 0.015,
+    }
+    assert "qualitative CvS decay" not in source
+    assert "not measured data" not in source
+    assert "at (9.53,4.60) {c};" in source
+    assert "at (9.87,4.60)" in source
+    assert "at (12.24,4.13) {sulfur content $\\uparrow$};" in source
+    assert "energy, $E$" in source
+    assert "$\\rho_{60" not in source
+    assert "$n$ = breadth" not in source
+
+
+def test_fig3_layout_contract_applies_to_unfamiliar_future_artifact_names() -> None:
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+    words = [
+        _word("trap", 100, 100, 120, 112),
+        _word("energy", 122, 100, 150, 112),
+        _word("E", 152, 100, 158, 112),
+    ]
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        words,
+        (400.0, 200.0),
+        artifact_path=Path("next-layout-attempt/build/candidate.pdf"),
+    )
+
+    assert payload.get("applicable", True) is True
+    assert payload["failure_count"] == 2
+    assert {result["status"] for result in payload["results"]} == {
+        "missing_label_group"
+    }
+
+
+def test_direct_cli_reports_when_a_legacy_artifact_is_explicitly_excluded(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    contract_path = tmp_path / "layout_lanes.yaml"
+    contract_path.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "figure-agent.layout-lanes.v1",
+                "exclude_path_regex": r"(?:^|/)legacy/",
+                "label_groups": [],
+                "rules": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    pdf_path = tmp_path / "legacy" / "build" / "candidate.pdf"
+    pdf_path.parent.mkdir(parents=True)
+    pdf_path.write_bytes(b"%PDF-1.4\n%%EOF\n")
+    monkeypatch.setattr(
+        check_layout_drift,
+        "extract_pdf_words_and_page",
+        lambda _path: ([], (400.0, 200.0)),
+    )
+
+    exit_code = check_layout_drift.main(
+        [
+            "--pdf",
+            str(pdf_path),
+            "--layout-contract",
+            str(contract_path),
+            "--strict",
+        ]
+    )
+
+    assert exit_code == 0
+    assert capsys.readouterr().out.strip() == (
+        "SKIP layout contract: artifact_path_matches_exclude_path_regex "
+        f"for artifact {pdf_path}"
+    )
+
+
+def test_layout_contract_preserves_v1_include_path_compatibility() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "applies_to_path_regex": r"(?:^|/)accepted/",
+        "label_groups": [],
+        "rules": [],
+    }
+
+    payload = check_layout_drift.layout_lane_payload(
+        contract,
+        [],
+        (400.0, 200.0),
+        artifact_path=Path("legacy/build/candidate.pdf"),
+    )
+
+    assert payload["applicable"] is False
+    assert payload["exclusion_reason"] == "artifact_path_outside_applies_to_path_regex"
+
+
+def test_fig3_strict_compile_does_not_rejudge_v64_to_v66_with_live_contract(
+) -> None:
+    receipt = yaml.safe_load(
+        HISTORICAL_LAYOUT_TRANSFER_RECEIPT.read_text(encoding="utf-8")
+    )
+    contract = yaml.safe_load(
+        (FIG3_FIXTURE / "layout_lanes.yaml").read_text(encoding="utf-8")
+    )
+
+    assert receipt["never_recompile_historical_sources"] is True
+    for record in receipt["versions"].values():
+        source_path = Path(record["tracked_source_path"])
+        payload = check_layout_drift.layout_lane_payload(
+            contract,
+            [],
+            (400.0, 200.0),
+            artifact_path=source_path.parent / "build" / "repaired_generated.pdf",
+        )
+        assert payload["applicable"] is False
+        assert payload["failure_count"] == 0
+        assert payload["results"] == []
 
 
 def _word(text: str, x0: float, y0: float, x1: float, y1: float) -> dict:
@@ -174,7 +498,9 @@ def test_layout_lane_contract_flags_narrative_group_overlapping_bias_marker() ->
         _word("conduction", 170, 20, 230, 30),
     ]
 
-    results = check_layout_drift.evaluate_layout_lanes(contract, words, (400.0, 200.0))
+    results = check_layout_drift.evaluate_layout_lanes(
+        contract, words, (400.0, 200.0)
+    )
 
     assert len(results) == 1
     assert results[0].rule_id == "narrative_clear_of_bias"
@@ -219,6 +545,175 @@ def test_layout_lane_contract_accepts_separated_groups_and_reports_missing_terms
     assert clear[0].clearance is not None and clear[0].clearance > 0.05
     assert missing[0].status == "missing_label_group"
     assert missing[0].missing_groups == ("title",)
+
+
+def test_layout_contract_checks_one_moved_group_against_each_declared_neighbor() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "moved_label", "required_phrase": "distribution breadth"},
+            {"id": "axis_label", "required_phrase": "trap energy E"},
+            {"id": "magnitude_label", "required_phrase": "magnitude"},
+        ],
+        "rules": [
+            {
+                "id": "moved_label_neighbor_clearance",
+                "kind": "minimum_clearance_from_groups",
+                "group": "moved_label",
+                "other_groups": ["axis_label", "magnitude_label"],
+                "minimum_normalized_clearance": 0.01,
+            }
+        ],
+    }
+    words = [
+        _word("distribution", 100, 100, 150, 112),
+        _word("breadth", 152, 100, 182, 112),
+        _word("trap", 140, 110, 160, 122),
+        _word("energy", 162, 110, 190, 122),
+        _word("E", 192, 110, 198, 122),
+        _word("magnitude", 300, 100, 350, 112),
+    ]
+
+    results = check_layout_drift.evaluate_layout_lanes(contract, words, (400.0, 200.0))
+
+    assert [(result.rule_id, result.status) for result in results] == [
+        ("moved_label_neighbor_clearance:axis_label", "violation"),
+        ("moved_label_neighbor_clearance:magnitude_label", "ok"),
+    ]
+
+
+def test_group_clearance_rule_fails_closed_or_explicitly_skips_missing_target() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "moved", "required_phrase": "distribution breadth"},
+            {"id": "axis", "required_phrase": "trap energy E"},
+            {"id": "magnitude", "required_phrase": "magnitude"},
+        ],
+        "rules": [
+            {
+                "id": "moved_neighbors",
+                "kind": "minimum_clearance_from_groups",
+                "group": "moved",
+                "other_groups": ["axis", "magnitude"],
+                "minimum_normalized_clearance": 0.01,
+            }
+        ],
+    }
+    words = [
+        _word("trap", 10, 10, 30, 20),
+        _word("energy", 32, 10, 60, 20),
+        _word("E", 62, 10, 68, 20),
+        _word("magnitude", 100, 10, 150, 20),
+    ]
+
+    failed = check_layout_drift.evaluate_layout_lanes(contract, words, (400, 200))
+    contract["rules"][0]["missing_policy"] = "skip_rule"
+    skipped = check_layout_drift.evaluate_layout_lanes(contract, words, (400, 200))
+
+    assert [result.status for result in failed] == [
+        "missing_label_group",
+        "missing_label_group",
+    ]
+    assert all(result.missing_groups == ("moved",) for result in failed)
+    assert [result.status for result in skipped] == [
+        "not_applicable",
+        "not_applicable",
+    ]
+
+
+@pytest.mark.parametrize(
+    "other_groups",
+    [["axis", "axis"], ["moved"], ["unknown"]],
+)
+def test_group_clearance_rule_rejects_invalid_neighbor_sets(
+    other_groups: list[str],
+) -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "moved", "required_phrase": "distribution breadth"},
+            {"id": "axis", "required_phrase": "trap energy E"},
+        ],
+        "rules": [
+            {
+                "id": "moved_neighbors",
+                "kind": "minimum_clearance_from_groups",
+                "group": "moved",
+                "other_groups": other_groups,
+                "minimum_normalized_clearance": 0.01,
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="group-clearance rule is invalid"):
+        check_layout_drift.evaluate_layout_lanes(contract, [], (400, 200))
+
+
+def test_layout_contract_rejects_colliding_expanded_result_ids() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "moved", "required_phrase": "distribution breadth"},
+            {"id": "axis", "required_phrase": "trap energy E"},
+        ],
+        "rules": [
+            {
+                "id": "moved_neighbors",
+                "kind": "minimum_clearance_from_groups",
+                "group": "moved",
+                "other_groups": ["axis"],
+                "minimum_normalized_clearance": 0.01,
+            },
+            {
+                "id": "moved_neighbors:axis",
+                "kind": "minimum_clearance",
+                "first": "moved",
+                "second": "axis",
+                "minimum_normalized_clearance": 0.01,
+            },
+        ],
+    }
+
+    with pytest.raises(ValueError, match="duplicate layout lane result id"):
+        check_layout_drift.evaluate_layout_lanes(contract, [], (400, 200))
+
+
+def test_layout_lane_rule_can_explicitly_skip_when_a_group_is_not_applicable() -> None:
+    contract = {
+        "schema": "figure-agent.layout-lanes.v1",
+        "label_groups": [
+            {"id": "breadth", "required_phrase": "distribution breadth"},
+            {"id": "axis", "required_phrase": "trap energy E"},
+        ],
+        "rules": [
+            {
+                "id": "breadth_clear_of_axis",
+                "kind": "minimum_clearance",
+                "first": "breadth",
+                "second": "axis",
+                "minimum_normalized_clearance": 0.01,
+                "missing_policy": "skip_rule",
+            }
+        ],
+    }
+
+    axis_words = [
+        _word("trap", 20, 20, 30, 30),
+        _word("energy", 32, 20, 50, 30),
+        _word("E", 52, 20, 58, 30),
+    ]
+    results = check_layout_drift.evaluate_layout_lanes(
+        contract, axis_words, (100.0, 100.0)
+    )
+
+    assert results[0].status == "not_applicable"
+    assert results[0].missing_groups == ("breadth",)
+    assert check_layout_drift.layout_lane_payload(
+        contract,
+        axis_words,
+        (100.0, 100.0),
+    )["failure_count"] == 0
 
 
 def test_direct_layout_lane_cli_writes_machine_readable_failure_evidence(

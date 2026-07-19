@@ -1,0 +1,64 @@
+{
+  "schema": "figure-agent.text-collisions.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "build/repaired_generated.pdf",
+  "iou_threshold": 0.05,
+  "word_count": 60,
+  "collisions": [
+    {
+      "id": "TC001",
+      "texts": [
+        "film",
+        "retained"
+      ],
+      "iou": 0.099489,
+      "a": {
+        "text": "film",
+        "bbox_pdf": [
+          75.306136,
+          39.227384,
+          85.377176,
+          45.223901
+        ]
+      },
+      "b": {
+        "text": "retained",
+        "bbox_pdf": [
+          62.075,
+          43.420384,
+          85.478252,
+          49.416901
+        ]
+      },
+      "source_mapping": null
+    },
+    {
+      "id": "TC002",
+      "texts": [
+        "sulfur–polymer",
+        "retained"
+      ],
+      "iou": 0.055097,
+      "a": {
+        "text": "sulfur–polymer",
+        "bbox_pdf": [
+          31.042,
+          39.227384,
+          73.512362,
+          45.223901
+        ]
+      },
+      "b": {
+        "text": "retained",
+        "bbox_pdf": [
+          62.075,
+          43.420384,
+          85.478252,
+          49.416901
+        ]
+      },
+      "source_mapping": null
+    }
+  ],
+  "total": 2
+}

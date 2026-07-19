@@ -1,0 +1,78 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "the horizontal magnitude word occupies the same label row as continuous broad and visually merges with it",
+      "id": "HF026",
+      "subject": "panel_b_magnitude_descriptor_clearance"
+    },
+    "finding_id": "HF026",
+    "protected_invariants": [
+      "$\\rho_{60\\mathrm{s}}$",
+      "magnitude",
+      "(4.78,1.35)"
+    ],
+    "repair_family": "label_reflow",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v44/human_findings.before.json",
+    "selector": {
+      "anchor_end": "\\node[label, align=center] at (8.94,0.18)",
+      "anchor_start": "  \\draw[draw=cBrown, line width=0.65pt, {Stealth}-{Stealth}] (4.78,0.18)--(4.78,1.35);",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-magnitude-label-lanes",
+      "source_hash": "sha256:e359209aeab84f0a51cdbe92d02ca163487252d3cf4b0ada6b1315030494738d"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v44/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:089953dbee9422640309e56de96efd1e2dc6190dc446d0b2141a6a6fb47f6945"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v44/repaired_generated.tex",
+  "packet_sha256": "sha256:06d6718af96a01641c6204afb95ea6c903abd1703d14e3a293c7e2aa32c560b7",
+  "prompt": {
+    "sha256": "sha256:eda7982a81a7c7b0c38daeccce8a796015d817723f613f57a5c4aa5d9f96f0eb",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v44/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v43/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: label_reflow\n- Machine finding: {\"finding\": \"the horizontal magnitude word occupies the same label row as continuous broad and visually merges with it\", \"id\": \"HF026\", \"subject\": \"panel_b_magnitude_descriptor_clearance\"}\n- Change content only between the exact anchor lines [  \\draw[draw=cBrown, line width=0.65pt, {Stealth}-{Stealth}] (4.78,0.18)--(4.78,1.35);] and [\\node[label, align=center] at (8.94,0.18)].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [$\\rho_{60\\mathrm{s}}$].\n- Preserve the exact token [magnitude].\n- Preserve the exact token [(4.78,1.35)].\n\n## Bound editable source bytes\n```tex\n  \\node[compact label, text=cBrown, anchor=south, align=center, fill=white, inner sep=1.0pt] at (4.78,1.42) {$\\rho_{60\\mathrm{s}}$\\\\magnitude};\n\\end{scope}\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v44/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v43/repaired_generated.tex",
+    "sha256": "sha256:e359209aeab84f0a51cdbe92d02ca163487252d3cf4b0ada6b1315030494738d"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v44/repair_targets.json",
+    "sha256": "sha256:74186acb6f1686a4cb2942a21b1d88bb452a6d21023e82c3f940323f570f80fa"
+  },
+  "verification": "external_sequential_compile_required"
+}

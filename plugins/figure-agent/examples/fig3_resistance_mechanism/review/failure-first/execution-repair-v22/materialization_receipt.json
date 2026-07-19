@@ -1,0 +1,15 @@
+{
+  "change_summary": "Reflowed the sign-agnostic carrier label to one line in the lower central clearance below the carrier path.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v22/repaired_generated.tex",
+  "output_sha256": "sha256:ac0767df2fe25c94e69a0d60431524ed88d19779b1ed2c8640929b8c310eecac",
+  "packet_sha256": "sha256:3a4aca77726a46cc7eff6e024160ffaed78f3a9d3dd74565b903201e62e360f7",
+  "preserved_boundary_blank_lines": 0,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:e5a4fe84eeecac61f57b9255956d5f3c28be6805f322ed32878744a92387d27a"
+}

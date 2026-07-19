@@ -1,0 +1,106 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "a": {
+        "bbox_pdf": [
+          75.306136,
+          45.463384,
+          85.377176,
+          51.459901
+        ],
+        "text": "film"
+      },
+      "b": {
+        "bbox_pdf": [
+          61.393,
+          46.423384,
+          84.796252,
+          52.419901
+        ],
+        "text": "retained"
+      },
+      "id": "TC001",
+      "iou": 0.312538,
+      "source_mapping": null,
+      "texts": [
+        "film",
+        "retained"
+      ]
+    },
+    "finding_id": "TC001",
+    "protected_invariants": [
+      "disordered",
+      "sulfur--polymer film",
+      "electrode",
+      "retained"
+    ],
+    "repair_family": "local_reposition",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v20/collisions.before.json",
+    "selector": {
+      "anchor_end": "\\draw[draw=cGray, line width=0.45pt]",
+      "anchor_start": "  at (3.515,2.44) {electrode};",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-sample-title-vertical-clearance",
+      "source_hash": "sha256:5578cf356365b2f4378f44f9834ee04ff35beae380d27471450e562380a25ac3"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v20/collisions.before.json",
+      "schema": "figure-agent.text-collisions.v1",
+      "sha256": "sha256:26c27dbd60db0d18dce466d545712b164fa8fcc86d8ca69c2a00a59c800cacbb"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v20/repaired_generated.tex",
+  "packet_sha256": "sha256:5c0d39f3654750932ef4e326c0f5c5db48215346f50026e3a87920fe7c6b3bc0",
+  "prompt": {
+    "sha256": "sha256:6530d5589c8081fb3d670a3bcf0b28590607c67909b3881cf33d5fc30e271e50",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v20/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: local_reposition\n- Machine finding: {\"a\": {\"bbox_pdf\": [75.306136, 45.463384, 85.377176, 51.459901], \"text\": \"film\"}, \"b\": {\"bbox_pdf\": [61.393, 46.423384, 84.796252, 52.419901], \"text\": \"retained\"}, \"id\": \"TC001\", \"iou\": 0.312538, \"source_mapping\": null, \"texts\": [\"film\", \"retained\"]}\n- Change content only between the exact anchor lines [  at (3.515,2.44) {electrode};] and [\\draw[draw=cGray, line width=0.45pt]].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [disordered].\n- Preserve the exact token [sulfur--polymer film].\n- Preserve the exact token [electrode].\n- Preserve the exact token [retained].\n\n## Bound editable source bytes\n```tex\n\\node[compact label, align=center, anchor=north] at (1.92,3.61)\n  {disordered\\\\sulfur--polymer film};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v20/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [
+    {
+      "attribution": "unbound",
+      "finding_id": "TC002"
+    }
+  ],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v19/repaired_generated.tex",
+    "sha256": "sha256:5578cf356365b2f4378f44f9834ee04ff35beae380d27471450e562380a25ac3"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v20/repair_targets.json",
+    "sha256": "sha256:977078dac0b62cc323a6d7e1b9b6705976925274c0e4ab91e0ab754a6450765a"
+  },
+  "verification": "external_sequential_compile_required"
+}

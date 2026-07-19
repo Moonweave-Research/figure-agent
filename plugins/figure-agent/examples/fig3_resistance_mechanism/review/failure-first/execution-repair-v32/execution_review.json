@@ -1,0 +1,8 @@
+{
+  "decision": "human_target_resolved_overall_review_required",
+  "repair_result": "duplicate transition boxes removed and carrier path exposed without a new structural blocker",
+  "external_compile": "passed",
+  "next_human_target": "panel_a_arrow_direction_consistency",
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}

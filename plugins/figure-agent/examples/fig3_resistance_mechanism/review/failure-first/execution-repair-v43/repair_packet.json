@@ -1,0 +1,78 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "retry the centered S60 stack from v41 with more name-to-descriptor clearance",
+      "id": "HF025",
+      "subject": "panel_b_s60_stack_clearance_retry"
+    },
+    "finding_id": "HF025",
+    "protected_invariants": [
+      "S60",
+      "single discrete state",
+      "(0.965,1.30)"
+    ],
+    "repair_family": "label_reflow",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v43/human_findings.before.json",
+    "selector": {
+      "anchor_end": "  % S80 is a broad continuous distribution; width, not depth, carries n.",
+      "anchor_start": "  \\draw[draw=cBlue!70, line width=0.35pt, dashed] (0.965,0)--(0.965,1.30);",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-s60-label-stack-clearance",
+      "source_hash": "sha256:337d690891fb85b9d5e2aaba3f12e1da5ff28a21c33565b69bed29e071473868"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v43/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:94570a669d4b2efffc7dffa681089c01306f76ca740237969dd6aedbe3978882"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v43/repaired_generated.tex",
+  "packet_sha256": "sha256:a61100f564d01226c1c32fbf4afc86541d5598ce4b3121d01dad2add2423f76f",
+  "prompt": {
+    "sha256": "sha256:c0fe4dac03961471c5f076162104e01cbad40f625498ca758bf2d2a7dd72bf8c",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v43/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v41/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: label_reflow\n- Machine finding: {\"finding\": \"retry the centered S60 stack from v41 with more name-to-descriptor clearance\", \"id\": \"HF025\", \"subject\": \"panel_b_s60_stack_clearance_retry\"}\n- Change content only between the exact anchor lines [  \\draw[draw=cBlue!70, line width=0.35pt, dashed] (0.965,0)--(0.965,1.30);] and [  % S80 is a broad continuous distribution; width, not depth, carries n.].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [S60].\n- Preserve the exact token [single discrete state].\n- Preserve the exact token [(0.965,1.30)].\n\n## Bound editable source bytes\n```tex\n  \\node[label, text=cBlue, font=\\sffamily\\bfseries\\footnotesize] at (0.965,1.76) {S60};\n  \\node[compact label, anchor=north west] at (0.36,1.58) {single discrete state};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v43/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v41/repaired_generated.tex",
+    "sha256": "sha256:337d690891fb85b9d5e2aaba3f12e1da5ff28a21c33565b69bed29e071473868"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v43/repair_targets.json",
+    "sha256": "sha256:68b8c9fc040dd029f32c93d3f107ff10f6d227f0714d286ecff98e7edb5ae920"
+  },
+  "verification": "external_sequential_compile_required"
+}

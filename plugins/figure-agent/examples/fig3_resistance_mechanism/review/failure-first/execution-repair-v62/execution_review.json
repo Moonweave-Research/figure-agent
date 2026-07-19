@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"accepted_as_nonregressing_scaffold","repair_result":"the final trajectory segment now enters the retained endpoint continuously with no new blocker","next_human_target":"panel_a_path_semantics_key","publication_acceptance":"not_claimed"}

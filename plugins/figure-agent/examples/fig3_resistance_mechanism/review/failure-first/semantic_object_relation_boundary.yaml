@@ -1,37 +1,37 @@
 schema: figure-agent.semantic-object-relation-boundary.v1
 fixture: fig3_resistance_mechanism
-declared_scope: schematic_half_of_composite_fig3
+declared_scope: three_column_explanatory_schematic_of_composite_fig3
 panels:
   A:
     required_objects:
       - applied_bias_cell
       - sign_agnostic_carrier_walk
       - repeated_trap_release
-      - current_decay_relation
     required_relations:
       - applied_bias_cell_encloses_disordered_sulfur_polymer_film
       - carrier_walk_contains_repeated_capture_and_release
-      - repeated_trapping_causes_transient_current_decay
-      - current_decay_implies_resistance_increase_under_applied_voltage
   B:
     required_objects:
-      - discrete_s60_distribution
-      - continuous_broad_s80_distribution
-      - n_breadth_span
-      - rho60s_magnitude_span
+      - qualitative_cvs_current_decay
+      - applied_voltage_resistance_relation
     required_relations:
-      - sulfur_increase_evolves_discrete_to_continuous_broad_distribution
-      - n_breadth_span_measures_distribution_width
-      - rho60s_magnitude_span_is_orthogonal_to_n_breadth
-      - distribution_breadth_is_not_trap_density
+      - repeated_trapping_causes_qualitative_transient_current_decay
+      - current_decay_implies_resistance_increase_under_applied_voltage
+      - qualitative_curve_is_not_quantitative_measured_data
+  C:
+    required_objects:
+      - discrete_s60_energy_states
+      - continuous_broad_s80_energy_support
+    required_relations:
+      - sulfur_increase_evolves_discrete_to_continuous_broad_energy_support
+      - broader_energy_support_is_not_numeric_n_mapping
 cross_panel_relations:
-  - repeated_trapping_causes_transient_current_decay
-  - n_encodes_distribution_breadth_not_density
-  - rho60s_is_orthogonal_magnitude_cue
-  - sulfur_increase_evolves_discrete_to_continuous_broad_distribution
+  - trapping_mechanism_explains_qualitative_current_decay
+  - qualitative_current_decay_connects_to_composition_dependent_energy_landscape
 out_of_scope_claims:
   - carrier_polarity
   - trap_chemistry
   - quantitative_measured_data
   - spatial_trap_network
+  - numerical_breadth_to_n_mapping
 publication_acceptance: not_claimed

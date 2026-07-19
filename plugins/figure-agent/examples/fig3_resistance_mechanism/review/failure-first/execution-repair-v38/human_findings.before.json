@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:1c1630b9edd27936edbb81c2dc3affe2c04e00419632ac8e4457bf58bce4696d",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [{
+    "id": "HF020",
+    "subject": "panel_a_inset_axis_label_ownership",
+    "finding": "I(t) and t are attached to arrow endpoints instead of reading as owned y- and x-axis labels"
+  }],
+  "publication_acceptance": "not_claimed"
+}

@@ -1,0 +1,32 @@
+schema: figure-agent.historical-layout-transfer-receipt.v1
+fixture: fig3_resistance_mechanism
+tracked_sources_capture_commit: 9ada6c890bf042535c3651c9e675a5da99b40331
+rule:
+  id: breadth_clear_of_declared_neighbors:energy_axis_label
+  minimum_clearance: 0.008
+evidence_verification:
+  tracked_sources: verified_in_clean_checkout
+  ignored_layout_reports: recorded_unverifiable_ignored_artifact
+  capture_commit_layout_report_content: not_tracked
+versions:
+  v64:
+    tracked_source_path: review/failure-first/execution-repair-v64/repaired_generated.tex
+    tracked_source_sha256: sha256:014e417ca80c55714491b73f62a2e0fbab06d54cd0ffdbf90df359e09a63613f
+    recorded_ignored_layout_snapshot:
+      path: review/failure-first/execution-repair-v64/build/layout_lanes.json
+      recorded_sha256: sha256:26b5e6a831b1add1deea12652eaec8df009da33f43bcb5f7caa4a24bbc1dc701
+      recorded_status: ok
+      recorded_clearance: 0.019776
+      evidence_verification: recorded_unverifiable_ignored_artifact
+  v66:
+    tracked_source_path: review/failure-first/execution-repair-v66/repaired_generated.tex
+    tracked_source_sha256: sha256:f5e9a880bb933d22e9fdbd4fb091c91ed5f89475c3b096df93994b52ad6c9afb
+    recorded_ignored_layout_snapshot:
+      path: review/failure-first/execution-repair-v66/build/layout_lanes.json
+      recorded_sha256: sha256:77dc1204f15ca39e42ef2c86df0b1b4f41767e51a823fac28f25dc9475b37d8e
+      recorded_status: violation
+      recorded_clearance: 0.004272
+      evidence_verification: recorded_unverifiable_ignored_artifact
+never_recompile_historical_sources: true
+clean_checkout_validation: tracked_source_hashes_only
+publication_acceptance: not_claimed

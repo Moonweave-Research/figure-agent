@@ -1,0 +1,64 @@
+{
+  "schema": "figure-agent.text-collisions.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "build/repaired_generated.pdf",
+  "iou_threshold": 0.05,
+  "word_count": 61,
+  "collisions": [
+    {
+      "id": "TC001",
+      "texts": [
+        "broad",
+        "ρ"
+      ],
+      "iou": 0.139216,
+      "a": {
+        "text": "broad",
+        "bbox_pdf": [
+          293.825127,
+          63.297384,
+          310.388724,
+          69.293901
+        ]
+      },
+      "b": {
+        "text": "ρ",
+        "bbox_pdf": [
+          301.9,
+          65.467559,
+          305.719674,
+          70.775651
+        ]
+      },
+      "source_mapping": null
+    },
+    {
+      "id": "TC002",
+      "texts": [
+        "broad",
+        "60"
+      ],
+      "iou": 0.07717,
+      "a": {
+        "text": "broad",
+        "bbox_pdf": [
+          293.825127,
+          63.297384,
+          310.388724,
+          69.293901
+        ]
+      },
+      "b": {
+        "text": "60",
+        "bbox_pdf": [
+          305.719,
+          67.309964,
+          312.499573,
+          71.733376
+        ]
+      },
+      "source_mapping": null
+    }
+  ],
+  "total": 2
+}

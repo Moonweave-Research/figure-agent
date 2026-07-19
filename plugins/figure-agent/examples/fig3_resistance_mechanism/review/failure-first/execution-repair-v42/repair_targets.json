@@ -1,0 +1,20 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v41/repaired_generated.tex",
+  "source_sha256": "sha256:337d690891fb85b9d5e2aaba3f12e1da5ff28a21c33565b69bed29e071473868",
+  "targets": [{
+    "finding": {
+      "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v42/human_findings.before.json",
+      "id": "HF024"
+    },
+    "attribution": {"state": "exact"},
+    "selector": {
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-s60-label-stack",
+      "anchor_start": "  \\draw[draw=cBlue!70, line width=0.35pt, dashed] (0.965,0)--(0.965,1.30);",
+      "anchor_end": "  % S80 is a broad continuous distribution; width, not depth, carries n."
+    },
+    "repair_family": "label_reflow",
+    "protected_invariants": ["S60", "single discrete state", "(0.965,1.30)"]
+  }]
+}

@@ -1,0 +1,44 @@
+{
+  "attempt_dir": "review/failure-first/comparable-v3",
+  "attribution_states": {
+    "ambiguous": 18,
+    "exact": 16,
+    "unbound": 1
+  },
+  "collisions": 0,
+  "declared_check_coverage": {
+    "label_path_proximity": 0,
+    "text_boundary_clash": 0,
+    "vector_clearance": 0
+  },
+  "execution_receipt": {
+    "path": "execution-receipt.json",
+    "sha256": "sha256:ae6c1b7de654946820d2190a6c59c829de98ec04442779318a4f348a993aa722"
+  },
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "human_review": "pending",
+  "normal_compile": "passed",
+  "promotion_queue": {
+    "path": "build/promotion_queue.json",
+    "sha256": "sha256:4991d150d33c9e14f584f9e70eb136c9a059e6221ab2d7c76fb617f7a4e1057f"
+  },
+  "publication_acceptance": "not_claimed",
+  "render": {
+    "path": "build/verified_generated.png",
+    "sha256": "sha256:25ae1c6af24a8ae584ed409923114b3f3d37e7aa6b69612e039a6b1adc4c8e93"
+  },
+  "repair_performed": false,
+  "run": "r5-prospective-v4",
+  "schema": "figure-agent.r5-attribution-metrics.v1",
+  "source": {
+    "path": "verified_generated.tex",
+    "sha256": "sha256:54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f"
+  },
+  "strict_compile": "failed",
+  "undeclared_geometry_actionable": 3,
+  "visual_clash": {
+    "path": "build/visual_clash.json",
+    "sha256": "sha256:63f0765c6da6ec7cfb5d6a9d304648a492fa58a867d19fd192bf41c494d706e6",
+    "total": 35
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\draw[draw=cBlue, line width=0.95pt, rounded corners=2.5pt]\n  (1.08,1.62) -- (1.34,2.02) -- (1.07,2.42) -- (1.61,3.03)\n  -- (2.02,2.72) -- (2.31,2.59) -- (2.02,2.18) -- (2.68,1.98)\n  -- (2.49,1.52) -- (3.02,3.02);",
+  "change_summary": "Remove four independently overdrawn arrow fragments while preserving the continuous carrier path."
+}

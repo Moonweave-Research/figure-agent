@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import closed_loop_attempt_state  # noqa: E402
 import fig_loop as fig_loop_mod  # noqa: E402
 from fig_loop import FigLoopError, ensure_safe_command, run_loop  # noqa: E402
 from fig_loop_escalation import escalation_summary  # noqa: E402
@@ -31,6 +33,514 @@ def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
     )
     (fixture / "briefing.md").write_text("briefing", encoding="utf-8")
     return fixture
+
+
+def _publish_current_attempt(repo: Path, fixture: Path, *, actor: str) -> None:
+    source = fixture / "loop_demo.tex"
+    render = fixture / "build" / "loop_demo.png"
+    manifest = fixture / f"{actor}-attempt-manifest.json"
+    source.write_text("source", encoding="utf-8")
+    render.parent.mkdir(exist_ok=True)
+    render.write_bytes(b"render")
+    manifest.write_text("{}\n", encoding="utf-8")
+    state = closed_loop_attempt_state.start_attempt(
+        workspace_root=repo,
+        fixture=fixture.name,
+        actor=actor,
+        actor_role="authoring_agent",
+        evidence={
+            "attempt_manifest": manifest,
+            "authored_source": source,
+            "render": render,
+        },
+    )
+    closed_loop_attempt_state.publish_state(state, workspace_root=repo)
+
+
+def test_current_canonical_attempt_blocks_legacy_loop_before_scratch_output(
+    tmp_path: Path,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _publish_current_attempt(tmp_path, fixture, actor="author-1")
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with pytest.raises(
+        fig_loop_mod.FigLoopAdmissionInvalid,
+        match="canonical_attempt_resolution:current",
+    ) as exc:
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+
+    assert "publication_acceptance" not in str(exc.value)
+    assert not runs_root.exists()
+
+
+@pytest.mark.parametrize("resolution", ["invalid", "ambiguous"])
+def test_invalid_or_ambiguous_canonical_resolution_blocks_legacy_loop_before_scratch_output(
+    tmp_path: Path, resolution: str
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    if resolution == "invalid":
+        (fixture / "review" / "closed-loop" / "attempt-bad").mkdir(parents=True)
+    else:
+        _publish_current_attempt(tmp_path, fixture, actor="author-1")
+        _publish_current_attempt(tmp_path, fixture, actor="author-2")
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with pytest.raises(
+        fig_loop_mod.FigLoopAdmissionInvalid,
+        match=f"canonical_attempt_resolution:{resolution}",
+    ) as exc:
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+
+    assert "publication_acceptance" not in str(exc.value)
+    assert not runs_root.exists()
+
+
+def test_admission_lease_blocks_legacy_loop_before_scratch_output(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with closed_loop_attempt_state.fixture_admission_lock(tmp_path, fixture.name):
+        with pytest.raises(
+            fig_loop_mod.FigLoopAdmissionBusy,
+            match="canonical_admission_legacy_coordination_busy",
+        ):
+            run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+
+    assert not runs_root.exists()
+
+
+def test_admission_callback_rejection_runs_under_lease_before_loop_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    lease_held = False
+    callback_observations: list[bool] = []
+
+    @contextmanager
+    def _observed_lock(workspace_root: Path, fixture_name: str):
+        nonlocal lease_held
+        assert workspace_root == tmp_path
+        assert fixture_name == fixture.name
+        lease_held = True
+        try:
+            yield
+        finally:
+            lease_held = False
+
+    monkeypatch.setattr(
+        fig_loop_mod.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _observed_lock,
+    )
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "_run_loop_after_admission",
+        lambda *args, **kwargs: pytest.fail("loop helper ran after rejected admission"),
+    )
+
+    with pytest.raises(fig_loop_mod.FigLoopAdmissionRejected):
+        run_loop(
+            fixture.name,
+            "inspect",
+            repo_root=tmp_path,
+            runs_root=runs_root,
+            admission_check=lambda: callback_observations.append(lease_held) or False,
+        )
+
+    assert callback_observations == [True]
+    assert lease_held is False
+    assert not runs_root.exists()
+
+
+def test_post_run_callback_runs_under_lease_and_cannot_change_success(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    run_dir = runs_root / "run-1"
+    lease_held = False
+    observations: list[tuple[Path, bool]] = []
+
+    @contextmanager
+    def _observed_lock(workspace_root: Path, fixture_name: str):
+        nonlocal lease_held
+        lease_held = True
+        try:
+            yield
+        finally:
+            lease_held = False
+
+    def _fake_loop(*args, **kwargs) -> Path:
+        run_dir.mkdir(parents=True)
+        return run_dir
+
+    monkeypatch.setattr(
+        fig_loop_mod.closed_loop_attempt_state,
+        "fixture_admission_lock",
+        _observed_lock,
+    )
+    monkeypatch.setattr(fig_loop_mod, "_run_loop_after_admission", _fake_loop)
+
+    def _post_run(path: Path) -> None:
+        observations.append((path, lease_held))
+        raise RuntimeError("capture callback must not change loop success")
+
+    result = run_loop(
+        fixture.name,
+        "inspect",
+        repo_root=tmp_path,
+        runs_root=runs_root,
+        post_run_callback=_post_run,
+    )
+
+    assert result == run_dir
+    assert observations == [(run_dir, True)]
+    assert lease_held is False
+
+
+def test_noncanonical_workspace_runs_root_is_rejected_before_loop_writes(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    unsafe_root = fixture / "review" / "legacy-runs"
+
+    with pytest.raises(FigLoopError, match="runs_root_noncanonical_workspace"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=unsafe_root)
+
+    assert not unsafe_root.exists()
+    assert not (tmp_path / ".scratch").exists()
+
+
+def test_external_alias_into_noncanonical_workspace_runs_root_is_rejected(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    alias = tmp_path.parent / "external-runs-alias"
+    alias.symlink_to(fixture / "review" / "legacy-runs")
+
+    with pytest.raises(FigLoopError, match="runs_root_noncanonical_workspace"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=alias)
+
+    assert not (fixture / "review" / "legacy-runs").exists()
+    assert not (tmp_path / ".scratch").exists()
+
+
+def test_external_temp_runs_root_remains_supported(tmp_path: Path) -> None:
+    _make_fixture(tmp_path)
+    external_runs_root = tmp_path.parent / "external-loop-runs"
+
+    run_dir = run_loop(
+        "loop_demo", "inspect", repo_root=tmp_path, runs_root=external_runs_root
+    )
+
+    assert run_dir.is_relative_to(external_runs_root)
+    assert (run_dir / "run_manifest.json").is_file()
+    assert not (tmp_path / ".scratch").exists()
+
+
+def test_external_alias_to_nonsymlinked_canonical_runs_root_remains_supported(
+    tmp_path: Path,
+) -> None:
+    _make_fixture(tmp_path)
+    canonical_runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    canonical_runs_root.mkdir(parents=True)
+    alias = tmp_path.parent / "canonical-runs-alias"
+    alias.symlink_to(canonical_runs_root)
+
+    run_dir = run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=alias)
+
+    assert run_dir.is_relative_to(canonical_runs_root)
+    assert (run_dir / "run_manifest.json").is_file()
+
+
+@pytest.mark.parametrize("component", ["scratch", "runs_root"])
+def test_canonical_runs_root_symlink_is_rejected_before_loop_checkpoint(
+    tmp_path: Path, component: str
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    target = fixture / "review" / "legacy-runs"
+    target.mkdir(parents=True)
+    scratch = tmp_path / ".scratch"
+    canonical_runs_root = scratch / "fig-loop-runs"
+    if component == "scratch":
+        scratch.symlink_to(target)
+    else:
+        scratch.mkdir()
+        canonical_runs_root.symlink_to(target)
+
+    with pytest.raises(FigLoopError, match="runs_root_canonical_symlink"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=canonical_runs_root)
+
+    assert not (target / "loop_demo").exists()
+    assert not list(target.glob("*/run_manifest.json"))
+
+
+def test_loop_rejects_cyclic_scratch_before_checkpoint(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    scratch = tmp_path / ".scratch"
+    scratch.symlink_to(scratch.name)
+    workspace_entries = sorted(path.name for path in tmp_path.iterdir())
+
+    with pytest.raises(FigLoopError, match="runs_root_path_resolution_error"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path)
+
+    assert not (fixture / "build").exists()
+    assert not (fixture / "exports").exists()
+    assert sorted(path.name for path in tmp_path.iterdir()) == workspace_entries
+
+
+def test_loop_main_reports_cyclic_scratch_without_stdout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    scratch = tmp_path / ".scratch"
+    scratch.symlink_to(scratch.name)
+    workspace_entries = sorted(path.name for path in tmp_path.iterdir())
+    real_run_loop = fig_loop_mod.run_loop
+
+    def run_loop_in_fixture_root(
+        name: str, goal: str, *, runs_root: Path | None = None
+    ) -> Path:
+        return real_run_loop(name, goal, repo_root=tmp_path, runs_root=runs_root)
+
+    monkeypatch.setattr(fig_loop_mod, "run_loop", run_loop_in_fixture_root)
+
+    exit_code = fig_loop_mod.main([fixture.name, "--goal", "inspect", "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert captured.err == "fig_loop.py: runs_root_path_resolution_error\n"
+    assert not (fixture / "build").exists()
+    assert not (fixture / "exports").exists()
+    assert sorted(path.name for path in tmp_path.iterdir()) == workspace_entries
+
+
+def test_symlinked_loop_source_is_rejected_before_scratch_output(tmp_path: Path) -> None:
+    fixture = _make_fixture(tmp_path)
+    outside = tmp_path.parent / "outside.tex"
+    outside.write_text("outside", encoding="utf-8")
+    source = fixture / "loop_demo.tex"
+    source.symlink_to(outside)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with pytest.raises(FigLoopError, match="canonical_preflight:source_symlink"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+
+    assert not runs_root.exists()
+
+
+def test_loop_cli_reports_unsafe_runs_root_without_stdout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    original = fig_loop_mod.run_loop
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "run_loop",
+        lambda name, goal, *, runs_root=None: original(
+            name, goal, repo_root=tmp_path, runs_root=runs_root
+        ),
+    )
+
+    exit_code = fig_loop_mod.main(
+        ["loop_demo", "--goal", "inspect", "--runs-root", str(fixture / "review")]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert captured.err == "fig_loop.py: runs_root_noncanonical_workspace\n"
+    assert not (fixture / "review").exists()
+
+
+@pytest.mark.parametrize("critique_state", ["MISSING", "STALE"])
+def test_verify_only_loop_never_runs_auto_remedy_or_rewrites_stop_reason(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, critique_state: str
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    before = _fixture_files(fixture)
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "infer_stage",
+        lambda _example_dir: {
+            "stage": 1,
+            "render_state": "FRESH",
+            "critique_state": critique_state,
+            "export_state": "MISSING",
+            "acceptance_state": "NOT_ACCEPTED",
+            "workflow_ready": False,
+            "golden_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+            "notes": [],
+            "next": "run critique",
+        },
+    )
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "_run_auto_remedy_command",
+        lambda *_args, **_kwargs: pytest.fail("verify-only loop invoked a command runner"),
+    )
+
+    run_dir = run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+
+    assert iteration["auto_remedy"] is None
+    assert iteration["stop_reason"] != "remedy_ineffective"
+    assert manifest["command_results"] == []
+    assert _fixture_files(fixture) == before
+
+
+def test_verify_only_loop_never_remedies_stale_detector_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    before = _fixture_files(fixture)
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "infer_stage",
+        lambda _example_dir: {
+            "stage": 1,
+            "render_state": "FRESH",
+            "critique_state": "FRESH",
+            "export_state": "MISSING",
+            "acceptance_state": "NOT_ACCEPTED",
+            "workflow_ready": False,
+            "golden_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+            "notes": [],
+            "next": "inspect detector evidence",
+        },
+    )
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "build_stop_diagnosis",
+        lambda *_args, **_kwargs: {
+            "dominant_premature_cause": "stale_detector_evidence",
+            "dominant_premature_count": 1,
+            "cause_histogram": {"stale_detector_evidence": 1},
+            "subregions": [
+                {
+                    "subregion_id": "detector",
+                    "evidence": [{"signal_key": "stale_detector_evidence"}],
+                }
+            ],
+        },
+    )
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "_run_auto_remedy_command",
+        lambda *_args, **_kwargs: pytest.fail("verify-only loop invoked strict compile"),
+    )
+
+    run_dir = run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+    iteration = json.loads((run_dir / "iteration_001.json").read_text(encoding="utf-8"))
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+
+    assert iteration["auto_remedy"] is None
+    assert iteration["stop_reason"] != "remedy_ineffective"
+    assert manifest["command_results"] == []
+    assert _fixture_files(fixture) == before
+
+
+def test_main_reports_canonical_stop_without_stdout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    _publish_current_attempt(tmp_path, fixture, actor="author-1")
+    original = fig_loop_mod.run_loop
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "run_loop",
+        lambda name, goal, *, runs_root=None: original(
+            name, goal, repo_root=tmp_path, runs_root=runs_root
+        ),
+    )
+
+    exit_code = fig_loop_mod.main(["loop_demo", "--goal", "inspect", "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert "canonical_attempt_resolution:current" in captured.err
+    assert "publication_acceptance" not in captured.err
+
+
+@pytest.mark.parametrize("symlink_kind", ["fixture", "examples"])
+def test_symlinked_fixture_root_keeps_legacy_loop_cli_contract(
+    tmp_path: Path,
+    symlink_kind: str,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    target_root = tmp_path / "target"
+    _make_fixture(target_root)
+    examples = tmp_path / "examples"
+    if symlink_kind == "fixture":
+        examples.mkdir()
+        (examples / "loop_demo").symlink_to(target_root / "examples" / "loop_demo")
+    else:
+        examples.symlink_to(target_root / "examples")
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+
+    with pytest.raises(FigLoopError, match="canonical_preflight:fixture_symlink"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+    assert not runs_root.exists()
+
+    original = fig_loop_mod.run_loop
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "run_loop",
+        lambda name, goal, *, runs_root=None: original(
+            name, goal, repo_root=tmp_path, runs_root=runs_root
+        ),
+    )
+    exit_code = fig_loop_mod.main(["loop_demo", "--goal", "inspect", "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert captured.err == "fig_loop.py: canonical_preflight:fixture_symlink\n"
+    assert not runs_root.exists()
+
+
+def test_resolver_oserror_keeps_legacy_loop_cli_contract(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _make_fixture(tmp_path)
+    runs_root = tmp_path / ".scratch" / "fig-loop-runs"
+    monkeypatch.setattr(
+        fig_loop_mod.closed_loop_current_state,
+        "resolve_current_attempt",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("resolver unavailable")),
+    )
+
+    with pytest.raises(FigLoopError, match="canonical_state_resolution_error"):
+        run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=runs_root)
+    assert not runs_root.exists()
+
+    original = fig_loop_mod.run_loop
+    monkeypatch.setattr(
+        fig_loop_mod,
+        "run_loop",
+        lambda name, goal, *, runs_root=None: original(
+            name, goal, repo_root=tmp_path, runs_root=runs_root
+        ),
+    )
+    exit_code = fig_loop_mod.main(["loop_demo", "--goal", "inspect", "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert captured.err == "fig_loop.py: canonical_state_resolution_error\n"
+    assert not runs_root.exists()
 
 
 def _write_reference_learning_metric_fixture(fixture: Path) -> None:

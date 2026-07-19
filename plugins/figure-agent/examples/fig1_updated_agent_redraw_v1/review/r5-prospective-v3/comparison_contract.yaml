@@ -1,0 +1,37 @@
+schema: figure-agent.r5-incremental-comparison.v1
+fixture_family: fig1_updated_agent_redraw_v1
+supersedes_run: ../r5-prospective-v2
+task_path: task.md
+model_contract_path: model_contract.yaml
+budget_contract_path: budget_contract.yaml
+control:
+  role: immutable_raw_authoring_control
+  source: ../r5-prospective-v2/A/generated.tex
+  sha256: 0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476
+treatment:
+  role: canonical_packet_authoring
+  canonical_output: ../failure-first/comparable-v2/verified_generated.tex
+  canonical_packet: ../failure-first/comparable-v2/verified_packet.json
+  canonical_prompt: ../failure-first/comparable-v2/verified_prompt.md
+  required_system_deltas:
+    - exact_compilable_visual_asset_import
+    - malformed_numeric_node_anchor_blocker
+    - global_panel_header_and_label_clearance_rule
+  layout_author_selected: true
+  equal_grid_forbidden_as_a_requirement: true
+  visual_hero: trap_landscape
+  required_rule_ids:
+    - polymer_paper_project.cantilever-vertical-clip-top
+    - polymer_paper_project.panel-header-and-label-clearance
+  required_visual_asset_id: panel_f_floating_cantilever
+  forbidden_inputs:
+    - ../r5-prospective-v2/A/generated.tex
+    - ../r5-prospective-v2/B/
+    - ../r5-prospective-v1/
+    - ../../fig1_updated_agent_redraw_v1.tex
+    - ../../../fig1_overview_v5f_art_direction_001_vault/
+admission:
+  strict_compile_required_before_visual_claim: true
+  machine_gate_is_not_publication_acceptance: true
+  named_human_verdict_required: true
+publication_acceptance: not_claimed

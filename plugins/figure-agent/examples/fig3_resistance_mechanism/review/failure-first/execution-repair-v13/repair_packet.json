@@ -1,0 +1,102 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "a": {
+        "bbox_pdf": [
+          188.723,
+          19.715401,
+          208.213107,
+          27.095723
+        ],
+        "text": "sulfur"
+      },
+      "b": {
+        "bbox_pdf": [
+          193.9,
+          24.668559,
+          209.201205,
+          29.976651
+        ],
+        "text": "g(E)"
+      },
+      "id": "TC001",
+      "iou": 0.182533,
+      "source_mapping": null,
+      "texts": [
+        "sulfur",
+        "g(E)"
+      ]
+    },
+    "finding_id": "TC001",
+    "protected_invariants": [
+      "I(t)\\propto t^{-n}",
+      "$n$: distribution breadth",
+      "$\\rho_{60\\mathrm{s}}$: magnitude",
+      "S60",
+      "S80"
+    ],
+    "repair_family": "local_reposition",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v13/collisions.before.json",
+    "selector": {
+      "anchor_end": "\\begin{scope}[shift={(6.58,0.86)}]",
+      "anchor_start": "% Panel B: composition-dependent trap-energy distribution.",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-heading-and-progression",
+      "source_hash": "sha256:dc9e386c96660134ec58cc6831055b59c38c17ebeecaaff20f29eb734ace3d37"
+    }
+  },
+  "execution_cwd": "plugins/figure-agent",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v13/collisions.before.json",
+      "schema": "figure-agent.text-collisions.v1",
+      "sha256": "sha256:814aa65e358a8fe1c152f0b84eeec3343468b0330323cf4bb675a167bd066ce3"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v13/repaired_generated.tex",
+  "packet_sha256": "sha256:dd37a92a39374150a91d07eb7d67ec1f056709e48942783a45c8229f3225b026",
+  "prompt": {
+    "sha256": "sha256:4a744a99b5e925c2e4f1552602e1f3247cff9a6f85e8b7f67219cd0eb475ff28",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v13/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/verified_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: local_reposition\n- Machine finding: {\"a\": {\"bbox_pdf\": [188.723, 19.715401, 208.213107, 27.095723], \"text\": \"sulfur\"}, \"b\": {\"bbox_pdf\": [193.9, 24.668559, 209.201205, 29.976651], \"text\": \"g(E)\"}, \"id\": \"TC001\", \"iou\": 0.182533, \"source_mapping\": null, \"texts\": [\"sulfur\", \"g(E)\"]}\n- Change content only between the exact anchor lines [% Panel B: composition-dependent trap-energy distribution.] and [\\begin{scope}[shift={(6.58,0.86)}]].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [I(t)\\propto t^{-n}].\n- Preserve the exact token [$n$: distribution breadth].\n- Preserve the exact token [$\\rho_{60\\mathrm{s}}$: magnitude].\n- Preserve the exact token [S60].\n- Preserve the exact token [S80].\n\n## Bound editable source bytes\n```tex\n\\node[panel title] at (6.37,4.42) {(b) Trap-energy landscape};\n\\node[label, anchor=west] at (6.40,4.03) {sulfur content increases};\n\\draw[draw=cAmber, line width=0.55pt, -{Stealth}] (8.18,4.03)--(11.36,4.03);\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v13/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/verified_generated.tex",
+    "sha256": "sha256:dc9e386c96660134ec58cc6831055b59c38c17ebeecaaff20f29eb734ace3d37"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v13/repair_targets.json",
+    "sha256": "sha256:07b7444b4d0caf302a17f286517ee7467c547d3b1ab32a8338a98e16a75a0f26"
+  },
+  "verification": "external_sequential_compile_required"
+}

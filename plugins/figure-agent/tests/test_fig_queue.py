@@ -76,6 +76,110 @@ def _write_fixture(root: Path, name: str) -> None:
     (fixture / "spec.yaml").write_text(f"name: {name}\npanels: []\n", encoding="utf-8")
 
 
+def test_queue_rejects_explicit_symlink_fixture_before_driver_invocation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    examples = tmp_path / "examples"
+    examples.mkdir()
+    external = tmp_path / "external"
+    external.mkdir()
+    (external / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
+    (examples / "demo").symlink_to(external, target_is_directory=True)
+    monkeypatch.setattr(
+        fig_queue.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: pytest.fail("symlink fixture reached driver"),
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path, mode="review", goal="triage", fixtures=["demo"]
+    )
+
+    assert queue["rows"] == [
+        {
+            **fig_queue._error_row(
+                "demo",
+                mode="review",
+                stop_boundary="fixture_symlink",
+                error="fixture_symlink",
+            )
+        }
+    ]
+
+
+def test_queue_implicit_discovery_keeps_symlink_entry_as_controlled_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "real")
+    external = tmp_path / "external"
+    external.mkdir()
+    (external / "spec.yaml").write_text("name: linked\n", encoding="utf-8")
+    (tmp_path / "examples" / "linked").symlink_to(external, target_is_directory=True)
+    seen: list[str] = []
+
+    def fake_driver(name: str, **_kwargs: Any) -> dict[str, Any]:
+        seen.append(name)
+        return _summary(
+            name,
+            action=fig_queue.fig_driver.ACTION_COMPLETE,
+            stop_boundary=None,
+            first_blocker="none",
+        )
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path, mode="review", goal="triage", fixtures=None
+    )
+
+    assert seen == ["real"]
+    assert [(row["fixture"], row["stop_boundary"]) for row in queue["rows"]] == [
+        ("linked", "fixture_symlink"),
+        ("real", None),
+    ]
+
+
+def test_queue_implicit_examples_symlink_is_nonzero_workspace_diagnostic(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    external_examples = tmp_path / "external-examples"
+    fixture = external_examples / "demo"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
+    (tmp_path / "examples").symlink_to(external_examples, target_is_directory=True)
+    monkeypatch.setattr(
+        fig_queue.fig_driver,
+        "build_driver_summary",
+        lambda *_args, **_kwargs: pytest.fail("symlinked examples reached driver"),
+    )
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path, mode="review", goal="triage", fixtures=None
+    )
+
+    assert queue["rows"] == []
+    assert queue["workspace_diagnostic"] == {
+        "schema": fig_queue.WORKSPACE_DIAGNOSTIC_SCHEMA,
+        "state": "fixture_symlink",
+        "workspace_root": str(tmp_path),
+        "missing": [],
+        "message": "implicit queue discovery refused symlinked examples/ directory",
+    }
+    assert fig_queue.workspace_diagnostic_exit_code(queue) == 2
+
+
+def test_queue_implicit_empty_real_examples_directory_remains_healthy(tmp_path: Path) -> None:
+    (tmp_path / "examples").mkdir()
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path, mode="review", goal="triage", fixtures=None
+    )
+
+    assert queue["rows"] == []
+    assert "workspace_diagnostic" not in queue
+    assert fig_queue.workspace_diagnostic_exit_code(queue) == 0
+
+
 def test_queue_surfaces_missing_style_benchmark_pack_non_fatal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -2195,6 +2299,79 @@ def test_build_queue_can_include_command_plan(
             "rerun /fig_queue",
         ],
     }
+
+
+def test_queue_and_command_plan_preserve_next_action_evidence_contract(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_fixture(tmp_path, "executable")
+    _write_fixture(tmp_path, "blocked")
+    contracts = {
+        "executable": {
+            "required_actor": "workflow_agent",
+            "evidence_refs": ["review/closed-loop/attempt-a/state-005.json"],
+            "allowed_scope": ["bounded repair packet"],
+            "forbidden_scope": ["accepted artifact mutation"],
+            "publication_acceptance": "not_claimed",
+            "decision_boundary": {
+                "kind": "deterministic_plugin_gate",
+                "authority": "plugin",
+            },
+        },
+        "blocked": {
+            "required_actor": "host_llm",
+            "evidence_refs": ["review/closed-loop/attempt-b/state-007.json"],
+            "allowed_scope": ["visual re-review only"],
+            "forbidden_scope": ["source mutation"],
+            "publication_acceptance": "not_claimed",
+            "decision_boundary": {
+                "kind": "host_vision_gate",
+                "authority": "host_llm",
+            },
+        },
+    }
+
+    def fake_driver(name: str, *, mode: str, goal: str, repo_root: Path) -> dict[str, Any]:
+        if name == "executable":
+            summary = _summary(
+                name,
+                action="run_fig_loop",
+                stop_boundary=None,
+                first_blocker="acceptance_not_declared",
+                safe_command="fig-agent loop executable --goal triage --json",
+            )
+        else:
+            summary = _summary(
+                name,
+                action="closed_loop_handoff_stop",
+                stop_boundary="host_llm_post_review_required",
+                first_blocker="post_review_required",
+            )
+        summary["next_action_summary"].update(contracts[name])
+        return summary
+
+    monkeypatch.setattr(fig_queue.fig_driver, "build_driver_summary", fake_driver)
+
+    queue = fig_queue.build_queue(
+        repo_root=tmp_path,
+        mode="review",
+        goal="triage",
+        fixtures=None,
+        include_command_plan=True,
+    )
+
+    rows = {row["fixture"]: row for row in queue["rows"]}
+    for fixture, contract in contracts.items():
+        for key, value in contract.items():
+            assert rows[fixture][key] == value
+
+    executable = queue["command_plan"]["executable"][0]
+    blocked = queue["command_plan"]["blocked"][0]
+    for key, value in contracts["executable"].items():
+        assert executable[key] == value
+    for key, value in contracts["blocked"].items():
+        assert blocked[key] == value
+        assert blocked["operator_handoff"][key] == value
 
 
 def test_command_plan_treats_next_action_complete_as_complete(

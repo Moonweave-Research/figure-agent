@@ -19,6 +19,14 @@ rules:
       locator: "examples/fig1_overview_v2_pair_001_vault/authoring_contract.md"
       quote: "Shallow traps are blue and deep traps are red across Panels C, F, and G"
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.panel-header-and-label-clearance
+    category: panel_layout
+    rule: "Reserve a clear header band inside every panel for the panel letter and title. Keep body geometry and subtitles out of that band. Every label must clear other text, apparatus geometry, semantic paths, and the panel frame; use whitespace or a leader when direct placement does not fit. Do not solve clearance by forcing an equal-cell grid: composition remains author-selected."
+    source:
+      kind: iteration_comment
+      locator: "Fig1 R5 prospective v2 adversarial review (2026-07-18)"
+      quote: "아직 내가 굳이 안집어줘도 많을 정도로 완성도는 부족"
+    transfer_policy: use_as_constraint
 ---
 
 # Project authoring rule catalog (polymer_paper_project)

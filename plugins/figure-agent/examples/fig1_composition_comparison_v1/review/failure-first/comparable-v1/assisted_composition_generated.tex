@@ -1,0 +1,202 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+\input{snippets/panel-f-floating-cantilever.tex}
+
+\tikzset{
+  panel letter/.style={
+    font=\sffamily\bfseries\fontsize{9.0}{10.5}\selectfont,
+    text=black,
+    anchor=west
+  },
+  panel title/.style={
+    font=\sffamily\bfseries\fontsize{7.0}{8.4}\selectfont,
+    text=cGray,
+    anchor=west
+  },
+  note/.style={
+    font=\sffamily\fontsize{5.8}{7.0}\selectfont,
+    text=cGray,
+    align=center
+  },
+  small note/.style={
+    font=\sffamily\fontsize{5.1}{6.2}\selectfont,
+    text=cGray,
+    align=center
+  },
+  evidence axis/.style={
+    draw=cGray,
+    line width=0.42pt,
+    -{Stealth[length=3.0pt,width=2.2pt]}
+  },
+  causal/.style={
+    draw=cGray!55,
+    line width=0.36pt,
+    -{Stealth[length=3.0pt,width=2.2pt]}
+  },
+  force arrow/.style={
+    draw=cRed,
+    line width=0.72pt,
+    -{Stealth[length=4.0pt,width=3.0pt]}
+  }
+}
+
+\begin{document}
+\begin{tikzpicture}[line cap=round, line join=round]
+  \path[use as bounding box] (-0.35,-0.35) rectangle (18.65,11.25);
+
+  % A — material identity.
+  \node[panel letter] at (0.00,10.83) {A};
+  \node[panel title] at (0.36,10.83) {Sulfur-rich polymer};
+  \draw[cGray!65, line width=0.62pt]
+    (0.35,9.78) .. controls (0.85,10.22) and (1.18,9.35) .. (1.72,9.78)
+    .. controls (2.17,10.14) and (2.55,9.46) .. (3.13,9.83);
+  \foreach \x/\y in {0.48/9.88,1.00/9.74,1.47/9.70,1.94/9.85,2.43/9.68,2.94/9.78} {
+    \fill[cLGray!55] (\x,\y) circle (0.105);
+    \draw[cGray!72, line width=0.28pt] (\x,\y) circle (0.105);
+  }
+  \foreach \x/\y in {0.76/9.55,1.27/10.02,1.70/9.48,2.20/10.03,2.72/9.48} {
+    \fill[cAmberSphere] (\x,\y) circle (0.135);
+    \draw[cAmber, line width=0.34pt] (\x,\y) circle (0.135);
+  }
+  \node[small note, anchor=west] at (0.34,9.18)
+    {polymer backbone with sulfur-rich motifs};
+
+  % B — qualitative composition series.
+  \node[panel letter] at (4.18,10.83) {B};
+  \node[panel title] at (4.54,10.83) {Sulfur-content series};
+  \foreach \x/\label in {4.52/lower S,6.08/intermediate,7.64/higher S} {
+    \path[fill=cLGray!20, draw=cGray!70, line width=0.38pt, rounded corners=1.2pt]
+      (\x,9.36) rectangle ++(1.15,0.72);
+    \node[small note] at ({\x+0.575},9.12) {\label};
+  }
+  \foreach \x/\y in {4.72/9.55,5.31/9.83,5.46/9.52} {
+    \fill[cAmberSphere] (\x,\y) circle (0.075);
+  }
+  \foreach \x/\y in {6.22/9.55,6.48/9.84,6.77/9.52,7.02/9.78,7.09/9.46} {
+    \fill[cAmberSphere] (\x,\y) circle (0.075);
+  }
+  \foreach \x/\y in {7.78/9.49,8.02/9.83,8.25/9.58,8.52/9.90,8.63/9.49,8.35/9.75,7.91/9.68} {
+    \fill[cAmberSphere] (\x,\y) circle (0.075);
+  }
+  \draw[causal] (4.66,8.78) -- (8.58,8.78);
+  \node[small note, fill=white, inner sep=1.2pt] at (6.62,8.78)
+    {increasing sulfur content};
+
+  % C — primary explanatory scene: localized trapping landscape.
+  \node[panel letter] at (0.00,7.92) {C};
+  \node[panel title] at (0.36,7.92) {Localized shallow and deep traps coexist};
+  \begin{scope}[shift={(0.52,4.22)}]
+    \draw[evidence axis] (0,0.00) -- (0,3.22);
+    \node[small note, rotate=90] at (-0.34,1.62) {energy};
+    \node[small note, anchor=west] at (0.10,2.91) {higher};
+    \draw[cGray!42, line width=0.34pt, dashed]
+      (0.42,2.48) -- (10.55,2.48);
+    \node[small note, anchor=east, fill=white, inner sep=1.0pt]
+      at (10.45,2.68) {transport level};
+
+    \path[fill=cTeal!8, draw=none]
+      (0.42,2.48)
+      .. controls (1.20,2.36) and (1.58,2.18) .. (2.10,2.20)
+      .. controls (2.52,2.22) and (2.62,1.58) .. (3.08,1.48)
+      .. controls (3.54,1.58) and (3.66,2.25) .. (4.22,2.30)
+      .. controls (5.02,2.35) and (5.50,2.02) .. (6.05,1.92)
+      .. controls (6.46,1.78) and (6.47,0.58) .. (7.17,0.43)
+      .. controls (7.88,0.58) and (7.82,1.94) .. (8.53,2.06)
+      .. controls (9.18,2.14) and (9.62,2.32) .. (10.55,2.48)
+      -- (10.55,0.02) -- (0.42,0.02) -- cycle;
+    \draw[cTeal, line width=0.92pt]
+      (0.42,2.48)
+      .. controls (1.20,2.36) and (1.58,2.18) .. (2.10,2.20)
+      .. controls (2.52,2.22) and (2.62,1.58) .. (3.08,1.48)
+      .. controls (3.54,1.58) and (3.66,2.25) .. (4.22,2.30)
+      .. controls (5.02,2.35) and (5.50,2.02) .. (6.05,1.92)
+      .. controls (6.46,1.78) and (6.47,0.58) .. (7.17,0.43)
+      .. controls (7.88,0.58) and (7.82,1.94) .. (8.53,2.06)
+      .. controls (9.18,2.14) and (9.62,2.32) .. (10.55,2.48);
+
+    \fill[cBlue] (3.08,1.72) circle (0.085);
+    \fill[cBlue] (7.17,0.67) circle (0.085);
+    \draw[cBlue!72, line width=0.42pt, dashed, -{Stealth[length=3.0pt,width=2.1pt]}]
+      (3.08,1.83) -- (3.08,2.38);
+    \draw[cBlue!72, line width=0.42pt, dashed, -{Stealth[length=3.0pt,width=2.1pt]}]
+      (7.17,0.78) -- (7.17,2.38);
+    \node[note, text=cTeal] at (3.08,1.05) {shallow trap};
+    \node[note, text=cTeal] at (7.17,0.09) {deep trap};
+    \node[small note, anchor=west] at (8.44,1.22)
+      {lower state = deeper well};
+  \end{scope}
+
+  % Narrative links into the explanatory scene and evidence.
+  \draw[causal] (2.05,8.62) to[out=-90,in=150] (2.76,7.68);
+  \draw[causal] (6.62,8.52) to[out=-90,in=70] (6.45,7.56);
+
+  % D — transient-current kinetic evidence.
+  \node[panel letter] at (0.00,3.45) {D};
+  \node[panel title] at (0.36,3.45) {Transient-current kinetics};
+  \begin{scope}[shift={(0.58,0.42)}]
+    \draw[evidence axis] (0,0) -- (4.55,0);
+    \draw[evidence axis] (0,0) -- (0,2.42);
+    \node[small note] at (4.30,-0.31) {time};
+    \node[small note, rotate=90] at (-0.35,2.16) {$I(t)$};
+    \draw[cBlue, line width=0.92pt]
+      plot[smooth] coordinates {
+        (0.18,2.15) (0.48,1.82) (0.88,1.48) (1.38,1.14)
+        (2.05,0.82) (2.82,0.58) (3.65,0.41) (4.30,0.32)
+      };
+    \node[small note, anchor=west, text=cBlue] at (2.55,1.40)
+      {trap-mediated decay};
+    \node[small note, anchor=west] at (0.20,0.31) {constant applied $V$};
+  \end{scope}
+
+  % E — noncontact surface-potential-derived trap evidence.
+  \node[panel letter] at (5.78,3.45) {E};
+  \node[panel title] at (6.14,3.45) {ISPD-derived trap distribution};
+  \begin{scope}[shift={(6.30,0.42)}]
+    \draw[evidence axis] (0,0) -- (4.90,0);
+    \draw[evidence axis] (0,0) -- (0,2.42);
+    \node[small note] at (4.55,-0.31) {trap energy};
+    \node[small note, rotate=90] at (-0.38,1.92) {$g(E)$};
+    \path[fill=cRed!13, draw=none]
+      (0.18,0.05)
+      .. controls (0.72,0.12) and (1.03,0.62) .. (1.48,1.04)
+      .. controls (1.93,1.52) and (2.34,1.86) .. (2.82,1.72)
+      .. controls (3.34,1.55) and (3.68,0.86) .. (4.58,0.12)
+      -- (4.58,0.05) -- cycle;
+    \draw[cRed, line width=0.92pt]
+      (0.18,0.05)
+      .. controls (0.72,0.12) and (1.03,0.62) .. (1.48,1.04)
+      .. controls (1.93,1.52) and (2.34,1.86) .. (2.82,1.72)
+      .. controls (3.34,1.55) and (3.68,0.86) .. (4.58,0.12);
+    \draw[cGray!45, line width=0.30pt, dashed] (2.82,0) -- (2.82,1.72);
+    \node[small note, anchor=west] at (0.22,0.34) {shallower};
+    \node[small note, anchor=east] at (4.52,0.34) {deeper};
+    \node[small note, anchor=west, text=cRed] at (3.05,1.70)
+      {derived evidence};
+  \end{scope}
+
+  \draw[causal] (4.12,4.02) to[out=-90,in=90] (3.10,3.62);
+  \draw[causal] (7.50,4.02) to[out=-90,in=90] (8.45,3.62);
+
+  % F — curated floating cantilever motif with caller-owned semantic overlays.
+  \node[panel letter] at (12.34,10.83) {F};
+  \node[panel title] at (12.70,10.83) {Floating cantilever response};
+  \PanelFFloatingCantilever{f}{(15.34,9.55)}
+  \node[small note, anchor=east, text=cAmber] at (14.83,8.98)
+    {floating cantilever};
+  \node[small note, anchor=west] at (16.98,8.17) {driven electrode};
+  \node[small note, anchor=west, text=cBlue] at (17.08,10.25)
+    {grounded source return};
+  \draw[force arrow]
+    ($(fTrappedCharge)+(-0.12,-0.42)$) -- ++(-1.05,-0.18);
+  \node[small note, anchor=south, text=cRed]
+    at ($(fTrappedCharge)+(-0.78,-0.46)$) {Coulomb force};
+  \draw[causal]
+    (11.22,5.78) to[out=10,in=190] (13.34,7.70);
+  \node[small note, fill=white, inner sep=1.2pt]
+    at (12.35,6.83) {trapped charge\to mechanical response};
+
+  \node[small note, anchor=east, text=cGray!80]
+    at (18.55,-0.15) {schematic concepts; D--E encode experimental evidence};
+\end{tikzpicture}
+\end{document}

@@ -18,12 +18,71 @@ fig-agent run <name> --mode review --goal "<goal>" --no-record
 fig-agent helper fig_run_journal.py <name>
 ```
 
+### Root attempt admission
+
+For a fresh real render with no canonical attempt, pass exactly one explicit
+`--closed-loop-attempt-manifest <manifest.json>` input. The manifest must
+hash-bind the fixture, named `authoring_agent`, source and render paths/hashes,
+task/model/budget provenance, and `publication_acceptance: not_claimed`.
+The runner never discovers a manifest beside a render.
+
+Plan-only validates the manifest and reports the exact proposed
+`authored_rendered` state path without writing. `--execute` revalidates under
+the shared transition lock and publishes that one root state, then stops.
+Admission invokes neither host nor human actor.
+Existing current attempts of every disposition are rejected; an identical
+concurrent publication is recovered idempotently, while a conflicting one is
+rejected. Admission is lifecycle provenance only: it does not create critique,
+review, adjudication, attribution, repair, authorization, verdict, accepted or
+golden evidence, and never claims visual or publication acceptance.
+Admission deliberately does not write a run journal: the canonical state is its
+only execute-time publication.
+
 `/fig_run` is a conservative executor over `/fig_drive`. It asks the driver
 for one next action, executes only allowlisted deterministic shell actions, then
 asks the driver again. It stops when the next action requires host vision,
 human judgment, patch handoff, SVG polish handoff, existing adjudication repair,
 accepted state, tracked-golden export, golden roll-forward, release approval, or
 any unsupported mutation.
+
+The internal `run_workflow` API also accepts an optional paired
+`expected_first_action` and `expected_first_safe_command`. `/fig_queue_run`
+uses this pair to bind the first admitted live driver step to the queue row it
+selected. Both values must be present together and cannot be combined with
+explicit closed-loop lifecycle inputs. Direct `/fig_run` calls omit them.
+
+In execute mode, `run_compile`, `run_adjudicate`, and `run_export` each acquire
+the shared fixture admission lease independently. The runner identifies a
+pre-lock candidate, acquires the lease, re-queries the driver, and revalidates
+the exact action, command, absence of a stop boundary, and every action-specific
+safety predicate while the lease is held. It holds the lease through subprocess
+completion and post-step execution-evidence fingerprinting, releases it, and
+reacquires separately for a later mutation step.
+A direct call compares the pre-lock candidate with the under-lock live result.
+A queue-bound first step compares the queued expectation with that under-lock
+result. Any mismatch or lost safety predicate stops as `stale_plan` before
+mutation and records `plan_binding.scope: step_admission`.
+
+If the fixture lease is already held, the runner stops as retryable
+`admission_busy`, starts no subprocess, leaves `executed_count` unchanged, and
+returns a read-only workflow-agent handoff. Plan-only runs acquire no lease.
+If the fixture path or non-busy lock state becomes invalid during acquisition
+or under-lock validation, the runner instead stops as non-retryable
+`admission_invalid`. It preserves the eligible pre-lock step as
+`would_execute: true`, executes nothing, and emits a sanitized
+`admission_diagnostic` without filesystem paths.
+
+Direct `run_fig_loop` execution remains on the existing self-leased `fig_loop`
+path and is never wrapped in an outer runner lease. For a queue-bound first
+`run_fig_loop` step, the runner calls that same internal self-leased API with an
+admission callback. While `fig_loop` holds the lease, the callback re-queries
+the driver and exact-matches the queued action, command, absent stop boundary,
+and action safety. Drift stops as `stale_plan` before scratch creation; busy and
+invalid preflight map to the existing admission stops. A match writes one loop
+checkpoint, invokes an internal evidence finalizer with the exact returned run
+directory before releasing the self-owned lease, records stdout exactly as
+`fig_loop --json`, and then returns to fresh live driver selection. The
+finalizer is not a CLI surface and cannot change loop success.
 
 Default mode is plan-only. Without `--execute`, the command emits what would be
 run and does not mutate fixture source, exports, accepted state, or golden
@@ -76,7 +135,9 @@ because that is a host-vision operation, not a shell command.
 | `final_safe_command` | string or null | last command selected by driver |
 | `final_stop_boundary` | string or null | last driver stop boundary |
 | `final_stop_reason` | string | runner reason for stopping |
-| `executed_count` | int | number of shell commands actually run |
+| `executed_count` | int | number of mutation steps actually executed by the runner, including an admitted internal `fig_loop` API step as well as subprocess-backed steps |
+| `plan_binding` | object, optional | step-admission comparison with `basis: queue_first_step | live_prelock`, planned/live action and command evidence, and `matched` or `stale` state |
+| `admission_diagnostic` | object, optional | sanitized non-retryable fixture/lock diagnostic for `admission_invalid`; no filesystem paths |
 | `boundary_handoff` | object, optional | present for non-`complete` stops; explanatory only |
 | `journal` | object, optional | reference to the non-authoritative `.scratch/fig-run-runs/` record unless `--no-record` is used |
 | `journal_error` | object, optional | recording failure details; run payload remains usable |
@@ -85,6 +146,33 @@ Step entries include the embedded `/fig_drive` JSON under `driver` so an outer
 agent can inspect the exact status, blocker, and next-action evidence used for
 the decision. A successful executed step may have `stop_reason: null`; the
 runner then re-queries the driver for the next action.
+
+Every step also includes `execution_evidence`. It is `null` when the step was
+not executed. Executed steps use
+`schema: figure-agent.step-execution-evidence.v1`:
+
+| Field | Type | Notes |
+|---|---|---|
+| `fixture`, `action` | string | exact step binding |
+| `state` | string | `captured` or `captured_with_diagnostics` |
+| `artifacts` | list | sorted allowlisted regular files only |
+| `diagnostics` | list | sorted sanitized capture diagnostics |
+
+Each artifact records `role`, repo-relative POSIX `path`, content-derived
+`change: created | modified | unchanged`, `size_bytes`, and lowercase
+`sha256`. Capture uses pre/post content fingerprints, never mtime, does not
+follow symlinks, and cannot change `returncode` or `final_stop_reason`.
+Required-output absence after a successful command is diagnostic only. Any
+unexpected evidence-capture exception is reduced to a sanitized
+`capture_internal_error:<ExceptionType>` diagnostic envelope; the original
+command result and runner stop remain authoritative.
+
+The allowlist is action-specific: compile render/report/perception outputs,
+the exact adjudication YAML, the fixture's four export formats, and the
+fixture-bound fig-loop run files. Queue-bound fig-loop uses the exact returned
+run directory and fingerprints it before the self-owned lease is released.
+Direct fig-loop requires exactly one newly created
+fixture-matching immediate child and never selects a latest run by mtime.
 
 ### Run Journal
 
@@ -170,6 +258,16 @@ action is `patch_handoff_stop`, the handoff reports
 - `not_executable_action` — driver selected an unsupported action, or an
   allowlisted action failed its extra safety predicate.
 - `command_failed` — an executed command returned non-zero.
+- `stale_plan` — the under-lock live driver action/command or safety state no
+  longer matches the queued first step or direct pre-lock candidate; no mutation
+  is attempted.
+- `admission_busy` — the fixture admission lease is held; no subprocess starts
+  and the read-only handoff may be retried from fresh live state.
+- `admission_invalid` — the fixture path, lock state, or under-lock validation
+  became unsafe; no subprocess starts and the boundary must be repaired before
+  a new live run.
+- `run_fig_loop_admission_integration_pending` — deprecated compatibility
+  token retained for older consumers; current runner paths do not generate it.
 - `complete` — driver selected `complete`.
 - `repeated_executable_action` — a successful command was followed by the same
   driver action and shell command again, so the runner stopped instead of
@@ -189,3 +287,5 @@ copy-paste for deterministic shell work the driver already selected.
 `/fig_drive --mode final --dry-run` is intentionally driver-only; `/fig_run`
 does not execute final mode because final readiness is an explanatory
 human/release preset, not a new automation lane.
+Admission success is a machine safety result only and never claims visual,
+human-development, release, or publication acceptance.

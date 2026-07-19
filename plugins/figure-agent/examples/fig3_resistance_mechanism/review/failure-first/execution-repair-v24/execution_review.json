@@ -1,0 +1,7 @@
+{
+  "decision": "partial_visual_repair",
+  "repair_result": "dot overlap masked except for one amber sliver above the label hyphen",
+  "external_compile": "passed",
+  "human_review": "corrections_required",
+  "publication_acceptance": "not_claimed"
+}

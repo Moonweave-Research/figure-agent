@@ -1,0 +1,15 @@
+{
+  "change_summary": "Shifted the sulfur-content label and its arrow start rightward to clear the g(E) label while preserving Panel B meaning and styling.",
+  "changed_lines": 4,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v13/repaired_generated.tex",
+  "output_sha256": "sha256:e1005bc24cea1e45f646a0b98389ae501454b07e1b6071a27028430499ea3569",
+  "packet_sha256": "sha256:dd37a92a39374150a91d07eb7d67ec1f056709e48942783a45c8229f3225b026",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:dc9e386c96660134ec58cc6831055b59c38c17ebeecaaff20f29eb734ace3d37"
+}

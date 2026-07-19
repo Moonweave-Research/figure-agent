@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:337d690891fb85b9d5e2aaba3f12e1da5ff28a21c33565b69bed29e071473868",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [{
+    "id": "HF025",
+    "subject": "panel_b_s60_stack_clearance_retry",
+    "finding": "retry the centered S60 stack from v41 with more name-to-descriptor clearance"
+  }],
+  "publication_acceptance": "not_claimed"
+}

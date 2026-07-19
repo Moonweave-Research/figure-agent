@@ -1,0 +1,24 @@
+schema: figure-agent.layout-lanes.v1
+exclude_path_regex: '(?:^|/)execution-repair-v[0-9]+/'
+label_groups:
+  - id: response_equation
+    required_phrase: I(t)
+  - id: energy_axis_label
+    required_phrase: energy, E
+  - id: energy_support_label
+    required_phrase: energy support
+  - id: panel_c_heading
+    required_phrase: composition-dependent
+  - id: sulfur_content_annotation
+    required_phrase: sulfur content
+rules:
+  - id: energy_support_clear_of_energy_axis_label
+    kind: minimum_clearance
+    first: energy_support_label
+    second: energy_axis_label
+    minimum_normalized_clearance: 0.008
+  - id: panel_c_heading_clear_of_sulfur_content_annotation
+    kind: minimum_clearance
+    first: panel_c_heading
+    second: sulfur_content_annotation
+    minimum_normalized_clearance: 0.015

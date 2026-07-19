@@ -23,6 +23,20 @@ def _canonical_hash(payload: Any) -> str:
     return "sha256:" + sha256(encoded).hexdigest()
 
 
+def compute_plan_id(plan: dict[str, Any]) -> str:
+    """Return the stable identity bound to the plan's mutation-critical fields."""
+    created_from = plan.get("created_from") or {}
+    return _canonical_hash(
+        {
+            "fixture": plan.get("fixture"),
+            "operations": plan.get("operations"),
+            "source_hashes": created_from.get("source_hashes"),
+            "policy_version": "figure-agent.quality-patch-policy.v1",
+            "verification": plan.get("verification"),
+        }
+    )
+
+
 def _is_allowed_target(path_text: str, fixture: str) -> bool:
     path = Path(path_text)
     if path.is_absolute() or ".." in path.parts:
@@ -153,7 +167,7 @@ def _operation_from_defect(
             "summary": (
                 manual_reason
                 or suggested.get("summary")
-                or f"Manual edit required at {location} to address {defect['id']}"
+                or f"Manual edit required in {source_file} to address {defect['id']}"
             ),
             "patch": "",
             "manual_only": True,
@@ -236,15 +250,7 @@ def build_quality_patch_plan(
         "rollback": {"strategy": "reverse_patch"},
         "refusals": refusals,
     }
-    base["plan_id"] = _canonical_hash(
-        {
-            "fixture": name,
-            "operations": operations,
-            "source_hashes": created_from["source_hashes"],
-            "policy_version": "figure-agent.quality-patch-policy.v1",
-            "verification": verification,
-        }
-    )
+    base["plan_id"] = compute_plan_id(base)
     return base
 
 

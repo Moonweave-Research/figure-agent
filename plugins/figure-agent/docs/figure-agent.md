@@ -1,0 +1,319 @@
+<!-- FIGURE_AGENT:AUTHORITY -->
+# Figure Agent Product Contract and Execution Roadmap
+
+**Status:** Active and authoritative
+
+**Effective date:** 2026-07-18
+
+**Committed baseline:** `c6a28e40` (`codex/figure-agent-closed-loop-reset`)
+
+This is the sole product specification and forward execution authority for Figure Agent. Other specifications, plans, roadmaps, milestone notes, fixture reviews,
+and generated packets are implementation references or historical evidence. They
+cannot change product direction or the next implementation step.
+
+The baseline names a reproducible starting commit, not a release, quality, or
+publication verdict. A clean worktree at this commit passed 235 targeted baseline
+tests. Future claims require fresh evidence from the slice that makes the claim.
+
+## 1. Outcome
+
+Figure Agent does not compete with an LLM as a second general drawing model. The
+LLM remains free to interpret the scientific narrative, propose a composition,
+choose an analogy, and author editable TikZ or another declared representation.
+
+Figure Agent complements that capability where an unconstrained LLM is
+reliably weak:
+
+- preserving scientific objects, relations, and forbidden implications;
+- seeing the rendered artifact at whole-figure, panel, object, and zoom scales;
+- detecting collisions, clipping, broken paths, weak hierarchy, and ownership
+  ambiguity;
+- attributing a visible defect to an exact semantic object and editable source;
+- repairing one bounded region without silently changing neighboring meaning;
+- reproducing the result from declared inputs and tool versions; and
+- separating machine evidence from human scientific and publication judgment.
+
+The operating rule is: **Let the LLM propose freely.** Make Figure Agent constrain,
+observe, localize, repair, reproduce, and prove.
+
+Figure production is not Figure Agent product development. A hand-tuned fixture
+becomes a product capability only when the same declared mechanism transfers
+across different figure families without fixture coordinates or hidden human edits.
+
+## 2. Product boundaries
+
+### 2.1 Representation roles
+
+- **TikZ/TeX** is the current default editable publication-authoring path.
+- **SVG** is a derived export, inspection, interchange, or bounded fragment surface.
+  Direct-SVG generation is not an active backend-development target.
+- **Python** is the control plane for contracts, compilation, observation,
+  attribution, repair, provenance, and evaluation, not an illustration language.
+- **PDF and PNG** are rendered evidence surfaces, not editable authority.
+- Exact chemical structures and quantitative plots should use their domain
+  authorities when needed; the general LLM must not imitate them freehand when
+  a deterministic renderer or data pipeline owns the truth.
+
+Backend selection is closed until comparative evidence shows a failure the control
+plane cannot address. During closed-loop slices, do not add a renderer, Illustrator
+clone, whole-page grammar, or fixture-specific coordinates to reusable code.
+
+### 2.2 Knowledge and model boundaries
+
+Read-only authoring context packs compile durable paper-specific knowledge. They
+may bind explicit paper-local files, Style Lock tokens, reviewed assets, semantic
+objects, relations, protected invariants, and human-declared non-coordinate aesthetic levers.
+They are not LLM prompt plumbing, prompt-loop revival,
+generation execution, or automatic physics detection.
+
+The plugin may prepare crops and briefs, but host vision review occurs outside it.
+Figure Agent accepts only a receipt binding actor, model or tool, request hash,
+transcript hash, and inspected artifacts. Detectors, critiques, and scores are not
+scientific truth; ambiguity remains visible and routes to the responsible human.
+
+## 3. Closed-loop architecture
+
+The canonical attempt lifecycle is:
+
+```text
+scientific task + references + declared invariants
+                         |
+                         v
+              context and authoring packet
+                         |
+                         v
+                 free LLM authoring
+                         |
+                         v
+          deterministic compile and render
+                         |
+                         v
+      machine checks + perception + review crops
+                         |
+                         v
+             fresh host vision critique
+                         |
+                         v
+          adjudicated actionable finding
+                         |
+                         v
+        exact semantic and source attribution
+                         |
+                         v
+       human-authorized bounded repair packet
+                         |
+                         v
+          materialize, compile, and re-render
+                         |
+                         v
+      fresh post-repair visual and regression review
+                         |
+                         v
+        named human development-baseline verdict
+```
+
+The first priority is connecting observed critique to attributable bounded repair
+and fresh post-repair visual review. Reuse existing detectors, crops, attribution,
+repair transactions, and provenance before adding mechanisms.
+
+Zero-feedback authoring is only a controlled benchmark arm, not the normal
+workflow. In an A/B/C comparison:
+
+- **A** is raw LLM authoring from the neutral scientific task;
+- **B** is the same LLM and task plus Figure Agent's declared contracts; and
+- **C** is the hash-bound child of B after exact attribution and bounded repair,
+  not a third independent authoring call.
+
+## 4. Evidence contract
+
+Every attempt must hash-bind the task, model, budget, source commit, starting and
+generated artifacts, context packet, toolchain, review inputs, and evidence. A line
+number is not source identity; use stable selectors and reject missing, duplicate,
+or stale anchors.
+
+Evidence remains layered:
+
+1. **Machine-valid:** schemas, hashes, compilation, declared assertions, and
+   deterministic checks pass.
+2. **Visually re-reviewed:** the current render and review crops are fresh, and
+   post-repair regression review is complete.
+3. **Human development accepted:** a named reviewer accepts the current
+   artifact as a development baseline.
+4. **Publication accepted:** an external editorial outcome outside Figure
+   Agent's authority.
+
+No lower state implies a higher one. Machine gates and model critiques use
+`publication_acceptance: not_claimed`; any external record is evidence, not plugin
+authority.
+
+Promotion requires two materially different figure families, prospectively recorded correction time, named human outcomes, no semantic/relation regression, and reproducible evidence.
+Reports require passing `correction_time_gate` and `lineage_gate`: A/B share task/model/budget/start; C is B's hash-bound repair child, not an independent generation.
+Rejected and neutral attempts remain failure evidence.
+
+## 5. Executable roadmap
+
+Execute one slice at a time with the smallest failing test first. Keep it
+reviewable; open the next slice only after recording stop conditions and evidence.
+
+### R0 — Establish the authority baseline
+
+- [x] Start from committed baseline `c6a28e40` in a clean worktree.
+- [x] Collapse product specification and execution direction into this file.
+- [x] Preserve previous authorities in place as legacy evidence.
+- [x] Run authority, package, and entrypoint contract tests after consolidation.
+
+**Exit:** exactly one active authority marker exists; every entrypoint routes here.
+
+### R1 — Specify the closed-loop attempt state
+
+- [x] Add failing-first tests for adjudicated repair binding and hash-bound
+  post-repair visual-review evidence.
+- [x] Define attempt identity, lineage, freshness, actor boundary, and terminal
+  fields without a new renderer or workflow shell.
+- [x] Reject stale adjudication, ambiguous attribution, and missing repair
+  evidence at the supported critique-to-target bridge.
+- [x] Express and prove the complete lifecycle, including unadjudicated and
+  unbound starts, through one shared attempt-state contract.
+
+**Exit:** tests cover authored render through re-review and each fail-closed boundary.
+
+### R2 — Connect critique to bounded repair
+
+- [x] Convert one adjudicated visual finding into declared semantic object and
+  relation references.
+- [x] Bind one machine-backed finding to exact source attribution, one editable
+  selector, and declared protected invariants.
+- [x] Carry it through repair packet, materialization, finalization, rollback, and
+  bounded edit-budget surfaces as one transaction.
+- [x] Keep ambiguous or evidence-missing bridge inputs as fail-closed stops.
+- [x] Route unbound semantic or relation findings to an explicit human handoff.
+
+**Exit:** one reviewed finding produces safe repair without hidden source selection.
+
+### R3 — Require fresh post-repair vision and regression evidence
+
+- [x] Bind verified repaired-source/render hashes and full, target, neighboring,
+  and print-scale artifacts in the post-repair review request.
+- [x] Reject drift, missing inspection roles, unresolved targets, and present or
+  uncertain regression.
+- [x] Require a hash-valid external host-review execution receipt before a
+  non-uncertain response can advance to visual re-review pending human judgment.
+- [x] Wire fresh crops and a request-bound host handoff into the canonical run
+  without performing or impersonating the external host review.
+- [x] Consume a receipt-bound external host response through the same run.
+- [x] Controlled-fault replay on maintained Fig3 source proves current v4 rejects
+  a target fix that creates a declared neighboring collision.
+- [x] Preserve hash-bound before/after evidence; execute identity-safe, crash-recoverable rollback with explicit legacy opt-in.
+- [ ] Repeat on a prospective real defect; controlled fault is not acceptance.
+
+**Exit:** `machine_repaired` needs fresh evidence to become `visually_re_reviewed`.
+
+### R4 — Make the lifecycle the canonical run path
+
+- [ ] Route the existing canonical run through R1-R3 state transitions.
+- [x] Project the unique hash-validated current attempt into `status`, `drive`,
+  and default `run`; fail closed on invalid, ambiguous, stale, or symlinked
+  lineage instead of falling through to a legacy loop.
+- [x] Wire `machine_repaired -> post_review_requested` through default `run`:
+  plan-only writes nothing; execute creates the bound request/crops/state and
+  stops before host invocation.
+- [x] Consume an explicitly supplied post-review response against the canonical
+  projected `post_review_requested` path and hash, then revalidate the canonical
+  current leaf under the publication lock; do not discover responses or invoke
+  the host automatically.
+- [x] Consume an explicitly supplied, hash-bound repair response only from the
+  canonical `repair_authorized` state. Reuse materialize/finalize/rollback: strict
+  success publishes `machine_repaired`; strict failure rolls back and publishes
+  `repair_required`. Never discover a response, invoke a host, accept legacy
+  packets implicitly, or claim publication acceptance.
+- [x] Consume explicit hash-bound human authorization only from canonical `repair_candidate_ready`; publish the named reviewer without inventing approval.
+- [x] Consume an explicit v4 packet, response, and recomputed dry-run preview only
+  from `repair_bound`; validate binding authority and stop for named authorization.
+- [x] Bind one explicit named human verdict to canonical `visually_re_reviewed`; publish only development acceptance, rejection, or a new-repair requirement, never release or publication acceptance.
+- [x] Compatibility bypass guard: `e2e-smoke` leases/resolves each repeat through status; `loop` is scratch-only verify-only; `improve` rejects aggressive search. No prospective-proof or publication-acceptance claim.
+- [x] Stop at host-vision, scientific, human authorization, accepted/golden,
+  release, and publication boundaries.
+- [x] The initial compatibility registry covers only `loop`, `improve`, and `e2e-smoke`; its schema is `figure-agent.compatibility-command-contract-registry.v1`, `write_authority` records the maximum tested mutation boundary, not permission, release, acceptance, or publication authority, and publication acceptance remains unclaimed.
+- [x] Preserve exact actor, evidence references, allowed/forbidden scope, and
+  `publication_acceptance` through queue and plan-only queue-run projections;
+  aggressive candidate search may not cross a human boundary.
+- [x] Preserve additive, content-hashed per-step execution artifacts for
+  compile, adjudication scaffold, export, and fig-loop runs without changing
+  the selected action, command return code, or final stop reason.
+- [ ] Give every remaining specialist/internal adapter an explicit canonical
+  successor and evidence contract before compacting the surface.
+- [ ] Expose a compact default command surface only after compatibility tests
+  prove no evidence path is lost.
+
+**Exit:** status drives safe deterministic work to one truthful next actor/action.
+
+### R5 — Cross-family proof and capability promotion
+- [x] Require ordered `% Panel <id>` markers; exact-bind only unique rendered literals and leave repeated text ambiguous.
+- [x] Apply the schematic geometry profile: v3's 53 generic-shape candidates become INFO while one semantic-path crossing remains actionable.
+- [x] R5.1: fresh B reproduced and queued without repair; attribution is 16 exact, 18 ambiguous, and 1 unbound across 35 candidates.
+- [x] R5.2: adjudicated one certain defect (Panel A `sulfur segment` label crossing the left panel frame; named human Choe Mun-yeong, 2026-07-18), bound it to the unique `% Panel A` literal selector, derived C as B's hash-bound single-node bounded-repair child, and ran fresh neighbor/full/print review. Evidence: `examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c1/`. Measured repair: label protrusion 0.262 cm past the frame removed; same-line placement was infeasible (1.230 cm span < 1.268 cm label), so the label was repositioned below the chain (parallel to the sibling DIB label) with 1.586 cm frame clearance and ~0.78 cm chain clearance. Normal compile passes; strict stays blocked only by the pre-existing, unrelated Panel B arrow/label overlap; regression shows no new/worsened real Panel A defect (the one new `I(t)` near_miss is a sub-threshold page-offset coordinate artifact). Named human development verdict pending (step 10); `publication_acceptance: not_claimed`. R5.2b (second instance of the same B->C bounded-repair mechanism): a hash-bound child C2 (`examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c2/`, parent the development-accepted C1) repairs that very Panel B arrow/label overlap — the machine-backed `increasing sulfur content` crossing (`check_undeclared_geometry` UG001-003, distance_pt 0.0), host+orchestrator-adjudicated as an accidental (not gapped) crossing — by splitting the single arrow into a measured interrupted-arrow (left 1.25->2.53, right 4.66->5.95 on y=4.02, >=0.146 cm gaps behind the rendered label, arrowhead/direction/endpoints and the label node preserved); undeclared_geometry drops 3->0 with byte-identical visual_clash/collision/boundary sets and unchanged page geometry (no coordinate artifact). Honest correction to R5.2's "sole cause" wording: strict still does NOT flip to PASS because `check_visual_clash --strict` is a co-existing pre-existing strict failure identical in C1 (36 untiered candidates); it is unrelated to this repair and not chased. C2 development-baseline accepted (Choe Mun-yeong, "응 괜찮아"). R5.2c (third child C3, `comparable-v3-repair-c3/`, parent C2): under the named human's live delegation for routine same-class judgments ("이 정도는 그냥 너가 판단해도 되는 수준"), the orchestrator adjudicated the 6 remaining panel-frame crossings as 4 accidental frame-crossing labels and repaired 2 with position/anchor-only moves (Panel F `floating polymer cantilever` -> 0.100 cm left-frame clearance; `driven electrode` -> 0.102 cm right-frame clearance), dropping boundary crossings 6 -> 4; the other 2 (`grounded substrate` boxed by the substrate rect, `grounded source return` would overlap the HV/motif and its own referent) were honestly left open. undeclared_geometry stays 0, page geometry unchanged, one disclosed sub-threshold near_miss on `driven` (0.019, untiered); strict still blocked by the pre-existing visual_clash failure. C3 development-baseline accepted (orchestrator under delegation). R5.2d (fourth child C4, `comparable-v3-repair-c4/`, parent C3): with line re-stacking allowed, repaired the last cleanly-fixable open label — Panel E `grounded substrate` restacked to two lines plus a 0.06 cm nudge of the sibling `sample` label (a two-label position edit) to open the vertical band, removing both frame crossings with ZERO new findings and unchanged page geometry (boundary crossings 4 -> 2). Panel F `grounded source return` is recorded as a permanently-open declared defect: its ground-symbol referent sits only 0.60 cm from the right frame, so label-only position/anchor/restack vocabulary is geometrically exhausted and its fix belongs to a future authoring/layout iteration. C4 development-baseline accepted under delegation. R5.2e (fifth child C5, `comparable-v3-repair-c5/`, parent C4): closed the `check_visual_clash --strict` residue — the orchestrator crop-reviewed the 10 blocking candidates into 3 real text_on_path defects, repaired by bounded position moves (Panel D `constant voltage` off the box top border, Panel E `probe` centered under its wire, Panel F `floating polymer cantilever` up clear of the trapped-charge sphere with the C3 left-frame win preserved), and 6 confirmed false positives declared via the existing fixture-scoped known-FP mechanism (`_known_false_positives.yaml`, glyph-scoped, tight bounds, ground text). visual_clash raw removed exactly the 4 defect candidates with zero new; strict blocking 10 → 0 and **strict compile is GREEN for the first time across the lineage** (0 blocking, 27 report-only, 6 suppressed, undeclared 0), boundary coverage unchanged at 2. Strict-green is a machine-valid layer ONLY (not visual/human/release/publication); Panel F `grounded source return` stays permanently open. C5 accepted under delegation; `publication_acceptance: not_claimed`.
+- [ ] R5.3: add minimal declared-check coverage and expose zero coverage; never encode the six-panel layout or fixture coordinates as grammar. Partial (first slice): `scripts/checks/check_panel_boundary_coverage.py` derives per-panel text-boundary line checks from the authored source itself — the ordered `% Panel <id>` marker blocks and each block's `panel frame` styled rectangle plus its enclosing scope shift — with the source-to-PDF affine pinned by the rendered frame, then feeds the existing `check_text_boundary_clash` detector unchanged (additive; no threshold change). Frame geometry never comes from product-code constants; the mechanism is panel-count agnostic (no 2x3/six-panel grammar). A declared per-panel `intentional_overflow` allowlist distinguishes an intended overhang from an accidental crossing (text is not forced inside frames). Panels with no frame report `zero_coverage` loudly rather than passing silently. Tests: `tests/test_panel_boundary_coverage.py` (synthetic tex, hermetic — no compile), covering protruding-node flagged, intentional-overflow suppressed and panel-scoped, inside-clean, duplicate/missing/multi-frame markers fail-closed, and loud zero-coverage exposure. Replay on the real R5.2 case (evidence, `examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c1/declared-boundary-replay.json`): the Panel A `sulfur` left-frame crossing — invisible at zero coverage in R5.2 — is now flagged in B and absent in C (B 7 crossings, C 6; the single difference is the repaired sulfur label; Panel A coverage restored from zero to covered). The other six D/E/F floating-cantilever label straddles appear in both B and C and are left as human-adjudicated intentional-vs-accidental, not machine-classified as defects; frameless visual-hero Panel C is reported `zero_coverage`. Remaining before checking the box: canonical pipeline wiring (still opt-in module/CLI, deliberately unwired to avoid worsening other-fixture false positives), human adjudication of the D/E/F crossings, and Fig3 transfer. `publication_acceptance: not_claimed`.
+- [ ] R5.4: deepen A, B, or E semantics from paper authority and prove one fault injection.
+- [ ] R5.5: transfer the same mechanism to maintained Fig3 with no Fig1-private imports.
+- [ ] Record correction minutes, named human verdicts, defect reduction, new-defect rate, semantic preservation, and reproducibility.
+The v3 B render is failure evidence, not a quality baseline: 33 visual candidates were detected but historically unbound; declared checks also had zero coverage, and A/B/E semantics remain shallow. B need not be machine-valid before C repair—confirmed defects are the repair input. Stop on stale evidence, ambiguity, uncertain science, or missing exact attribution. Aesthetics and composition remain human-reviewed; machine gates never claim publication acceptance.
+**Exit:** two families show lower correction burden without reducing open LLM authoring, plus the required named human scaffold/review verdict; otherwise keep the mechanism experimental or retire it.
+
+## 6. Mandatory stop conditions
+
+The workflow must stop and report the required actor when any of these holds:
+
+- the render, crop manifest, critique, adjudication, selector, or parent hash is
+  missing or stale;
+- attribution is ambiguous, unbound, or resolves to more than one editable
+  target;
+- protected scientific invariants or the repair budget are incomplete;
+- the proposed edit crosses its declared semantic or source boundary;
+- compile, semantic, collision, neighboring-region, or visual regression checks
+  fail after repair;
+- the repair makes another confirmed defect worse or introduces a new one;
+- the decision requires scientific interpretation, aesthetic preference,
+  accepted/golden promotion, release authority, or publication judgment; or
+- the next change would add a renderer, broad grammar, dependency, public API,
+  or materially larger product surface without new comparative evidence.
+
+Do not work around a stop by weakening a gate, relabeling a third generation as
+repair, estimating retrospective correction time, or claiming that machine
+success is publication acceptance.
+
+## 7. Current implementation boundary
+
+Reuse the established compile/export, perception, critique, attribution, repair, materialization, provenance, and human-review surfaces.
+
+The code is an R1-R3 foundation with several R4 canonical transitions, not a completed loop. Its attempt state binds identity, append-only lineage, freshness, evidence roles, actors, legal transitions, and terminal development outcomes. Default status/run finds one current attempt without mtime, projects exact actor/path/hash, and stops instead of selecting a legacy loop. Evidence-role presence is not domain validation or actor authentication; adapters validate each receipt against recorded identity.
+
+One adjudicated binding crosses packet compilation, authorized materialization, rollback, and finalization. New packets use v4 authority; stored v3 packets need explicit compatibility and cannot enter post-repair review. Finalization and rollback revalidate v4 authority and hash-bound failure evidence under recovery.
+
+The binding now hash-binds declared semantic object and relation references to the same editable selector as the repair target. Missing semantic authority, ambiguous attribution, or missing references can emit only a named `human_attributor` handoff; they cannot create a repair binding or packet.
+An approved initial review requires one human-authored, attempt-local v2 attribution binding that hash-binds the selected finding, handoff, root authored source, selector registry, and semantic contract. R4.13a derives a same-attempt immutable authority plus packet/prompt/source sandbox at `repair_bound`; R4.13b consumes only an explicit response and recomputed preview, requires a named human authorization for that exact packet, and writes only adjacent `materialized-repair.tex` while preserving immutable `repaired.tex`. Strict success stops at `machine_repaired` for `human_or_host_post_repair_review`; it invokes no host/model/review and claims no publication acceptance.
+R4.14 now publishes a separate attempt-local v2 post-repair request from that machine-verified state. It preserves all six initial inspection crops, creates deterministic after-render crops, advances only to `post_review_requested`, and stops at the external review boundary; it does not reuse the legacy target/neighbor-bbox request contract or infer a visual verdict.
+
+Default `run` consumes an explicit bound packet/response/preview at `repair_bound`, human authorization at `repair_candidate_ready`, the same response again at `repair_authorized`, and one state-bound named human verdict at `visually_re_reviewed`. That verdict can accept the development baseline, reject the artifact, or require a separately authorized repair attempt. Materialize/strict-finalize/rollback publishes
+`machine_repaired` or `repair_required`; completed receipts recover state publication. `repair_failure_record` is a schema-heterogeneous reason-for-repair role, so consumers must validate its referenced schema and decision rather than assume a machine failure.
+Pre-R4.8 candidate-ready v1 states without response evidence fail closed and cannot restart in place; a named human must authorize the exact leaf path/state/file hashes, then explicitly run `python3 scripts/closed_loop_legacy_candidate_quarantine.py --fixture <name> --state <leaf.json> --authorization <record.json> --execute` to preserve the retired leaf and authorization outside canonical discovery before restarting its verified `repair_bound` parent. They are never auto-migrated or discarded.
+Canonical state publishers share one recoverable transition lock and temporarily dual-lock legacy paths. Root `run` admission accepts only one explicit hash-bound `figure-agent.root-attempt-manifest.v1` while current resolution is absent; plan-only is write-free, while execute publishes `authored_rendered` and its hash-bound outbound-only `initial_review_requested` crop/request handoff before stopping at `host_llm`. It discovers no other input, invokes no host, admits no legacy packet, and claims no publication acceptance. A legacy direct critique edge remains evidence-readable only; canonical root execution uses the initial-request edge. It advances `machine_repaired` to `post_review_requested`, stops at `host_llm`, binds the response, and closes only the named development outcome. Maintained-Fig3 controlled-fault replay is mechanism evidence, not an actual defect or publication verdict; prospective proof and R4-R5 remain.
+Direct legacy `fig_loop` shares a recoverable fixture-root admission lease with root admission: it holds that lease from canonical resolution through scratch evidence writing, and rejects current, invalid, ambiguous, or busy resolution before creating `.scratch/fig-loop-runs/` output.
+The bounded runner acquires that lease separately for each compile, adjudication-scaffold, or export step. It re-queries the driver and revalidates the exact action, command, stop boundary, and action-specific safety while holding the lease through subprocess completion and post-step execution-evidence fingerprinting, then releases it before selecting the next step. Driver drift stops as `stale_plan`; busy admission stops as retryable `admission_busy`; fixture-path, non-busy lock, or under-lock validation failure stops as non-retryable `admission_invalid`. None starts an unadmitted subprocess or increments the executed count. Plan-only calls acquire no lease.
+
+Direct `fig_run` delegation to `fig_loop` remains on the existing self-leased path and is not wrapped in an outer lease. Queue-bound delegation uses that same API with an internal under-lock callback that exact-matches the queued action and command before canonical/source preflight or scratch creation. Drift stops as `stale_plan`; busy or invalid admission maps to the typed runner stops. A match writes the normal verify-only checkpoint and invokes an internal post-run evidence finalizer with the exact run directory before the self-owned lease is released. Finalizer failures are diagnostic-only and cannot alter loop success. The runner preserves CLI-equivalent JSON stdout and returns to fresh live replanning. The retired admission-pending token remains only as a compatibility constant, and the queue summary field is always zero. These machine gates do not establish visual, human-development, release, or publication acceptance.
+
+Every `figure-agent.run.v1` step now carries additive `execution_evidence`. Unexecuted steps use `null`; executed steps use `figure-agent.step-execution-evidence.v1` with the fixture/action binding, sorted sanitized diagnostics, and sorted allowlisted regular-file artifacts. Each artifact records its repo-relative POSIX path, role, byte size, SHA-256, and `created`, `modified`, or `unchanged` state from pre/post content fingerprints rather than mtime. Collection never follows symlinks and never changes the command return code or runner stop. A successful command that omits a required output receives only a capture diagnostic. An unexpected capture exception becomes a sanitized `capture_internal_error:<ExceptionType>` diagnostic envelope without changing the original command result or stop reason.
+
+Compile evidence is limited to the named render, detector/report, convention, and perception outputs; adjudication evidence is the exact `critique_adjudication.yaml`; export evidence is the fixture's PDF, SVG, PNG, and TIFF. Queue-bound fig-loop capture uses the exact returned run directory and completes fingerprinting before the self-owned lease is released. Direct fig-loop capture accepts exactly one newly created immediate child of `.scratch/fig-loop-runs/` whose manifest names the fixture, never a latest/mtime guess. Queue-run preserves the nested `figure-agent.run.v1` payload as-is and does not wrap or duplicate step evidence.
+
+Closed-loop handoffs use these contracts rather than another workflow shell:
+`figure-agent.repair-materialization-preview.v1`, `figure-agent.repair-materialization-receipt.v2`,
+`figure-agent.repair-execution-packet.v4`, `figure-agent.repair-authority-contract.v1`,
+`figure-agent.closed-loop-attempt-state.v1`, `figure-agent.closed-loop-current-state.v1`, `figure-agent.legacy-candidate-quarantine-authorization.v1`,
+`figure-agent.adjudicated-repair-binding.v1`, `figure-agent.semantic-finding-attribution.v1`,
+`figure-agent.attribution-handoff.v1`, `figure-agent.post-repair-visual-review-request.v1`,
+`figure-agent.host-review-execution-receipt.v1`, `figure-agent.post-repair-visual-review-response.v1`,
+`figure-agent.post-repair-visual-review-receipt.v1`, `figure-agent.initial-visual-review-request.v1`,
+`figure-agent.attempt-local-post-repair-review-request.v2`, `figure-agent.attempt-local-host-review-execution-receipt.v2`, `figure-agent.attempt-local-post-repair-review-response.v2`,
+`figure-agent.attempt-local-post-repair-review-receipt.v2`,
+`figure-agent.initial-visual-review-response.v1`, `figure-agent.initial-human-adjudication.v1`, `figure-agent.initial-attribution-handoff.v1`, `figure-agent.initial-attribution-binding.v2`, `figure-agent.closed-loop-development-verdict.v1`, and the internal-only `figure-agent.prospective-evidence-receipt.v1` recorder in `prospective_evidence_receipt.py`.

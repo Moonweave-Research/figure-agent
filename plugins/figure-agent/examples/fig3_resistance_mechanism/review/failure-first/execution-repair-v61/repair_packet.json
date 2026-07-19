@@ -1,0 +1,76 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "two intermediate carrier circles still make one temporal path read as multiple simultaneous carriers; retain only the open start and solid retained endpoint",
+      "id": "HF043",
+      "subject": "panel_a_remove_intermediate_carrier_glyphs"
+    },
+    "finding_id": "HF043",
+    "protected_invariants": [
+      "cBlue!18"
+    ],
+    "repair_family": "relation_restore",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v61/human_findings.before.json",
+    "selector": {
+      "anchor_end": "\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};",
+      "anchor_start": "\\node[carrier] at (1.08,1.62) {};",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-intermediate-carrier-glyphs",
+      "source_hash": "sha256:e6325df479898043bf7520e3a9af66681993c3458667479610949bf5c8c359d8"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v61/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:58658c8447264f9d4c24ab9b3d2c64bf5d872db72533e63aa329a0ff92723636"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v61/repaired_generated.tex",
+  "packet_sha256": "sha256:dbf3606884549a9e07d85d194f31a413aba549903d17dde2b9f65909c28ff396",
+  "prompt": {
+    "sha256": "sha256:f490bde0fbf9e3f9fa4019c65cd7e8c42485f68fd925427555a7ebf430795439",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v61/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v60/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: relation_restore\n- Machine finding: {\"finding\": \"two intermediate carrier circles still make one temporal path read as multiple simultaneous carriers; retain only the open start and solid retained endpoint\", \"id\": \"HF043\", \"subject\": \"panel_a_remove_intermediate_carrier_glyphs\"}\n- Change content only between the exact anchor lines [\\node[carrier] at (1.08,1.62) {};] and [\\node[carrier, fill=cBlue!18] at (3.02,3.02) {};].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [cBlue!18].\n\n## Bound editable source bytes\n```tex\n\\node[carrier] at (1.34,2.02) {};\n\\node[carrier] at (2.31,2.59) {};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v61/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v60/repaired_generated.tex",
+    "sha256": "sha256:e6325df479898043bf7520e3a9af66681993c3458667479610949bf5c8c359d8"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v61/repair_targets.json",
+    "sha256": "sha256:d62af303c152931e92a19a4f6ae9d094c8d56d867d211a6f25d9d0b4bebb3864"
+  },
+  "verification": "external_sequential_compile_required"
+}

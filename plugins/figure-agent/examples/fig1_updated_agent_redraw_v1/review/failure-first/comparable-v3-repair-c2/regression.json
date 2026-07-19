@@ -1,0 +1,43 @@
+{
+  "schema": "figure-agent.post-repair-visual-review-response.v1",
+  "attempt_local": true,
+  "finding_id": "HA002",
+  "compared": {
+    "parent_C1_build": "../comparable-v3-repair-c1/build",
+    "child_C2_build": "build"
+  },
+  "page_geometry": {
+    "parent_C1_pt": [441.894, 461.832],
+    "child_C2_pt": [441.894, 461.832],
+    "verdict": "identical page size; the edit preserved both arrow endpoints (1.25 tail, 5.95 head) so the figure bounding box is unchanged and there are NO absolute-pixel coordinate artifacts (cleaner than the C1 repair, which narrowed the page and produced the VC035 near_miss)."
+  },
+  "detector_diff": {
+    "collisions": {"C1": 0, "C2": 0, "verdict": "identical"},
+    "text_boundary_clash": {"C1": 0, "C2": 0, "verdict": "identical (detector blind: no spec check for this fixture)"},
+    "label_path_proximity": {"C1": 0, "C2": 0, "verdict": "identical"},
+    "vector_clearance": {"C1": 0, "C2": 0, "verdict": "identical"},
+    "undeclared_geometry": {
+      "C1": 3, "C2": 0,
+      "removed": ["UG001 content", "UG002 increasing", "UG003 sulfur"],
+      "verdict": "TARGET RESOLVED: the 3 label_crosses_semantic_path candidates (the Panel B arrow-over-label crossing) are gone; the interrupted-arrow gap moves both rendered segments clear of the label word bboxes (>=0.146 cm each side). downranked INFO count 35 -> 36 (the split adds one more benign horizontal-rule fragment under the schematic profile; not actionable)."
+    },
+    "visual_clash": {
+      "C1": 36, "C2": 36,
+      "new_in_C2": [],
+      "removed_in_C2": [],
+      "verdict": "byte-identical candidate set (kind|text|panel|dark|edge signatures match exactly; 25 text_on_path + 11 near_miss, all promotion_tier=null). The Panel B arrow edit introduces and removes nothing here."
+    },
+    "panel_boundary_coverage": {
+      "C1": {"total": 6, "by_panel": {"D": 1, "E": 1, "F": 4}, "panel_B": 0},
+      "C2": {"total": 6, "by_panel": {"D": 1, "E": 1, "F": 4}, "panel_B": 0},
+      "verdict": "identical; Panel B frame-boundary crossings did not increase (0 -> 0). The arrow-label crossing is a semantic-path crossing (check_undeclared_geometry), not a frame-boundary crossing, so it never appeared here in either variant."
+    }
+  },
+  "panel_B_focus": {
+    "attributed_new_clash_candidates_C2": 0,
+    "verdict": "the interrupted-arrow split introduces NO new clash/collision/boundary finding in Panel B or anywhere else; the only detector delta across the whole figure is undeclared_geometry 3 -> 0."
+  },
+  "regression_verdict": "PASS (machine): the 3 targeted undeclared_geometry findings are removed with zero new/worsened findings anywhere; page geometry unchanged so no coordinate artifacts. Strict compile does NOT flip to PASS because check_visual_clash --strict is a PRE-EXISTING residual failure identical in C1 (see provenance.compile.strict_failure_cause); it is unrelated to this repair and deliberately not chased.",
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

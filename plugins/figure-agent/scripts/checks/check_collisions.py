@@ -7,6 +7,7 @@ Output: WARN lines for overlapping labels. Default is report-only exit 0;
 """
 
 import argparse
+import hashlib
 import html
 import json
 import re
@@ -96,6 +97,7 @@ def collision_payload(
     iou_thresh: float,
     *,
     fixture: str | None = None,
+    render_image: Path | None = None,
 ) -> dict:
     ordered = sorted(
         collisions,
@@ -112,10 +114,13 @@ def collision_payload(
         fixture_dir = Path(*pdf_path.parts[: examples_index + 2])
     except (ValueError, IndexError):
         fixture_dir = pdf_path.parent.parent
-    return {
+    payload = {
         "schema": "figure-agent.text-collisions.v1",
         "fixture": fixture or fixture_dir.name,
         "render_pdf": str(pdf_path.relative_to(fixture_dir)),
+        "render_pdf_sha256": (
+            "sha256:" + hashlib.sha256(pdf_path.read_bytes()).hexdigest()
+        ),
         "iou_threshold": iou_thresh,
         "word_count": len(words),
         "collisions": [
@@ -131,6 +136,12 @@ def collision_payload(
         ],
         "total": len(ordered),
     }
+    if render_image is not None:
+        payload["render_path"] = str(render_image.relative_to(fixture_dir))
+        payload["render_sha256"] = (
+            "sha256:" + hashlib.sha256(render_image.read_bytes()).hexdigest()
+        )
+    return payload
 
 
 def main() -> int:
@@ -157,12 +168,19 @@ def main() -> int:
         "--fixture",
         help="compile.sh가 cwd를 변경한 경우 보존할 fixture 이름",
     )
+    parser.add_argument(
+        "--render-image",
+        type=Path,
+        help="PNG render whose bytes produced this collision report",
+    )
     args = parser.parse_args()
 
     if not args.pdf.exists():
         raise FileNotFoundError(f"PDF not found: {args.pdf}")
     if args.fixture and len(Path(args.fixture).parts) != 1:
         parser.error("fixture must be one safe path component")
+    if args.render_image is not None and not args.render_image.is_file():
+        raise FileNotFoundError(f"render image not found: {args.render_image}")
 
     words = extract_word_bboxes(args.pdf)
     collisions = find_collisions(words, args.iou_thresh)
@@ -176,6 +194,7 @@ def main() -> int:
                     collisions,
                     args.iou_thresh,
                     fixture=args.fixture,
+                    render_image=args.render_image,
                 ),
                 indent=2,
                 ensure_ascii=False,

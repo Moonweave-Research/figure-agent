@@ -323,6 +323,82 @@ def detect_visual_clashes(
     return issues
 
 
+# --- promotion tiering ----------------------------------------------------
+# The strict gate blocks only on candidates that clear the clash evidence bar.
+# Two classes are demoted to a report-only ledger — still serialized and
+# counted in the JSON, never silently dropped, but non-blocking:
+#   * near_miss_band — the detector's OWN sub-clash band (dark below the
+#     text_on_path bar). A "near" miss is, by construction, not a confirmed
+#     overlap, so it has not cleared the evidence bar.
+#   * own_glyph_enclosure — a glyph-scale label wrapped by a contour whose ink
+#     DECAYS outward (an atom sphere, an instrument badge). The ring ink is the
+#     label's own container, not a path crossing it. A path crossing keeps ink
+#     at the same intensity further out (no decay) and therefore still blocks.
+BLOCKING_TIER = "blocking"
+REPORT_ONLY_TIER = "report_only"
+# A container contour must carry real ink immediately around the glyph...
+ENCLOSURE_NEAR_MIN = 0.12
+# ...and that ink must fall off substantially in the next annulus out. A
+# through-path (far/near ~ 1.0) fails this and stays blocking.
+ENCLOSURE_FAR_DECAY = 0.6
+
+
+def _annulus_dark(
+    image: Image.Image, bbox: tuple[int, int, int, int], r_in: int, r_out: int
+) -> float:
+    """Dark-pixel ratio in the square annulus between +r_in and +r_out px."""
+    x1, y1, x2, y2 = bbox
+    width, height = image.size
+    ox1, oy1 = max(0, x1 - r_out), max(0, y1 - r_out)
+    ox2, oy2 = min(width, x2 + r_out), min(height, y2 + r_out)
+    if ox2 <= ox1 or oy2 <= oy1:
+        return 0.0
+    arr = np.asarray(image.crop((ox1, oy1, ox2, oy2)).convert("L"), dtype=np.float32)
+    mask = np.ones(arr.shape, dtype=bool)
+    ix1, iy1 = max(0, x1 - r_in), max(0, y1 - r_in)
+    ix2, iy2 = min(width, x2 + r_in), min(height, y2 + r_in)
+    mask[iy1 - oy1 : iy2 - oy1, ix1 - ox1 : ix2 - ox1] = False
+    ring = arr[mask]
+    if ring.size == 0:
+        return 0.0
+    return float(np.mean(ring < 180))
+
+
+def is_own_glyph_enclosure(image: Image.Image, issue: VisualIssue) -> bool:
+    """True when a glyph-scale label is wrapped by its own container contour.
+
+    Scale-invariant: the two annuli radii track the text height, so the same
+    signature holds regardless of render DPI. A container (atom sphere, meter
+    badge) produces a strong dark ring hugging the glyph that decays outward.
+    A path crossing the glyph keeps ink at the same intensity further out, so
+    the decay test fails and the candidate is not suppressed.
+    """
+    if issue.kind not in ("text_on_path", "near_miss"):
+        return False
+    stripped = issue.text.strip()
+    if not stripped or len(stripped) > 2 or any(char.isspace() for char in stripped):
+        return False
+    x1, y1, x2, y2 = issue.bbox
+    height = y2 - y1
+    if height <= 0:
+        return False
+    near_in = max(2, round(0.1 * height))
+    mid = max(near_in + 1, round(0.4 * height))
+    far = max(mid + 1, round(1.0 * height))
+    near_dark = _annulus_dark(image, issue.bbox, near_in, mid)
+    far_dark = _annulus_dark(image, issue.bbox, mid, far)
+    return near_dark >= ENCLOSURE_NEAR_MIN and far_dark < near_dark * ENCLOSURE_FAR_DECAY
+
+
+def classify_promotion_tier(image: Image.Image, issue: VisualIssue) -> tuple[str, str | None]:
+    """Assign a candidate to the blocking or report-only tier with grounds."""
+    if is_own_glyph_enclosure(image, issue):
+        return REPORT_ONLY_TIER, "own_glyph_enclosure"
+    if issue.kind == "near_miss":
+        return REPORT_ONLY_TIER, "near_miss_band"
+    return BLOCKING_TIER, None
+
+
 def load_known_false_positive_patterns(path: Path = KNOWN_FALSE_POSITIVES_PATH) -> list[dict]:
     if not path.exists():
         return []
@@ -459,9 +535,19 @@ def visual_clash_payload(
     *,
     attribution_context: dict | None = None,
     fixture: str | None = None,
+    tiers: list[tuple[str, str | None]] | None = None,
 ) -> dict:
-    """Return the stable machine-readable visual-clash report."""
+    """Return the stable machine-readable visual-clash report.
+
+    Tiering is a strict-gate concept: the ``promotion_tier`` /
+    ``report_only_grounds`` per-candidate fields and the ``blocking_total`` /
+    ``report_only_total`` counts are emitted ONLY when ``tiers`` is supplied
+    (strict mode). Report-only callers pass no tiers and get the legacy schema
+    unchanged, so pinned report-mode snapshots stay byte-stable.
+    """
     candidates = []
+    blocking_total = 0
+    report_only_total = 0
     for index, issue in enumerate(issues, start=1):
         candidate = {
             "id": f"VC{index:03d}",
@@ -471,6 +557,14 @@ def visual_clash_payload(
             "metric": _metric_from_detail(issue.detail),
             "tex_lines": None,
         }
+        if tiers is not None:
+            tier, grounds = tiers[index - 1]
+            if tier == BLOCKING_TIER:
+                blocking_total += 1
+            else:
+                report_only_total += 1
+            candidate["promotion_tier"] = tier
+            candidate["report_only_grounds"] = grounds
         if attribution_context is not None:
             from visual_finding_attribution import attribute_visual_finding
 
@@ -479,12 +573,16 @@ def visual_clash_payload(
                 **attribution_context,
             )
         candidates.append(candidate)
-    return {
+    payload = {
         "fixture": fixture or _fixture_name(pdf_path),
         "render_pdf": _render_pdf_field(pdf_path),
         "candidates": candidates,
         "total": len(candidates),
     }
+    if tiers is not None:
+        payload["blocking_total"] = blocking_total
+        payload["report_only_total"] = report_only_total
+    return payload
 
 
 def write_visual_clash_json(
@@ -493,11 +591,12 @@ def write_visual_clash_json(
     output_path: Path,
     *,
     fixture: str | None = None,
+    tiers: list[tuple[str, str | None]] | None = None,
 ) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(
-            visual_clash_payload(pdf_path, issues, fixture=fixture),
+            visual_clash_payload(pdf_path, issues, fixture=fixture, tiers=tiers),
             indent=2,
             sort_keys=True,
         )
@@ -561,12 +660,22 @@ def main() -> int:
             load_known_false_positive_patterns(),
             args.fixture or _fixture_name(args.pdf),
         )
+    # Tiering is a strict-gate concept. In report mode the JSON keeps its legacy
+    # schema (no tier fields) so pinned report-mode snapshots stay byte-stable;
+    # only under --strict do we classify, serialize tiers, and gate on the
+    # blocking count.
+    tiers = [classify_promotion_tier(image, issue) for issue in issues] if args.strict else None
+    blocking_count = (
+        sum(1 for tier, _ in tiers if tier == BLOCKING_TIER) if tiers is not None else len(issues)
+    )
+    report_only_count = len(issues) - blocking_count
     if args.json_output:
         write_visual_clash_json(
             args.pdf,
             issues,
             args.json_output,
             fixture=args.fixture,
+            tiers=tiers,
         )
 
     print(f"visual clash report: {args.pdf.name} ({len(words)} words)")
@@ -584,18 +693,24 @@ def main() -> int:
     if args.json_output:
         print(f"WARN visual_clash: candidates serialized to {args.json_output}")
     else:
-        for issue in issues:
+        for index, issue in enumerate(issues):
             x1, y1, x2, y2 = issue.bbox
-            print(f'WARN {issue.kind}: "{issue.text}" [{x1},{y1},{x2},{y2}] {issue.detail}')
+            line = f'WARN {issue.kind}: "{issue.text}" [{x1},{y1},{x2},{y2}] {issue.detail}'
+            if tiers is not None:
+                tier, grounds = tiers[index]
+                line += f" ({tier if grounds is None else f'{tier}:{grounds}'})"
+            print(line)
         print(f"\n{len(issues)} visual clash candidate(s)")
 
+    if tiers is not None:
+        print(f"{blocking_count} blocking, {report_only_count} report-only")
     if args.overlay:
         write_overlay(image, issues, args.overlay)
         print(f"overlay: {args.overlay}")
     if args.ignore_known_fp:
         print(f"{suppressed_count} suppressed (use --no-ignore-known-fp to see all)")
 
-    return 1 if args.strict else 0
+    return 1 if (args.strict and blocking_count > 0) else 0
 
 
 if __name__ == "__main__":

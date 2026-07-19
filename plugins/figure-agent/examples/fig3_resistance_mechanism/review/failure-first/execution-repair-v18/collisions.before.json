@@ -1,0 +1,24 @@
+{
+  "schema": "figure-agent.text-collisions.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "build/repaired_generated.pdf",
+  "iou_threshold": 0.05,
+  "word_count": 61,
+  "collisions": [
+    {
+      "id": "TC001",
+      "texts": ["sulfur–polymer", "retained"],
+      "iou": 0.148277,
+      "a": {
+        "text": "sulfur–polymer",
+        "bbox_pdf": [47.237142, 38.070384, 89.707504, 44.066901]
+      },
+      "b": {
+        "text": "retained",
+        "bbox_pdf": [62.527, 41.887384, 85.930252, 47.883901]
+      },
+      "source_mapping": null
+    }
+  ],
+  "total": 1
+}

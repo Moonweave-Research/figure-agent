@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fig1 composition comparison — blind first-pass review</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, sans-serif; }
+    body { margin: 0; background: #f3f4f6; color: #16181d; }
+    main { max-width: 1500px; margin: 0 auto; padding: 28px; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    .scope { margin: 0 0 24px; color: #565b66; line-height: 1.5; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    figure { margin: 0; padding: 16px; background: white; border: 1px solid #d7dae0; border-radius: 10px; }
+    figcaption { margin-bottom: 12px; font-size: 18px; font-weight: 700; }
+    img { display: block; width: 100%; height: auto; border: 1px solid #eceef2; }
+    .criteria { margin-top: 22px; padding: 18px 22px; background: white; border: 1px solid #d7dae0; border-radius: 10px; }
+    .criteria li { margin: 8px 0; line-height: 1.4; }
+    .warning { color: #8a4b00; font-weight: 700; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Blind first-pass composition review</h1>
+    <p class="scope">
+      This is an illustrative, weakly masked first-pass pair. Both figures use the
+      same declared model, authoring budget, blank start, and reviewed Panel F asset,
+      and neither received feedback or manual repair. One arm omitted a required
+      scientific object, so this surface may reveal defects and preferences but
+      cannot establish a causal composition-assistance benefit.
+    </p>
+    <section class="grid" aria-label="Blind comparison">
+      <figure>
+        <figcaption>Option A</figcaption>
+        <img src="option-a.png" alt="Composition option A">
+      </figure>
+      <figure>
+        <figcaption>Option B</figcaption>
+        <img src="option-b.png" alt="Composition option B">
+      </figure>
+    </section>
+    <section class="criteria">
+      <strong>Review criteria</strong>
+      <ol>
+        <li>Which option has the clearer scientific reading order and semantic hierarchy?</li>
+        <li>Which option uses canvas area and negative space more deliberately?</li>
+        <li>Mark only definite clipping, overlap, ambiguous connector, or illegible-label defects.</li>
+        <li>Which option is closer to publication-ready visual finish before any repair loop?</li>
+        <li>Give an overall verdict: A, B, tie, or neither.</li>
+      </ol>
+      <p class="warning">This pair is invalid for a causal effectiveness claim. A machine pass is not publication acceptance.</p>
+    </section>
+  </main>
+</body>
+</html>

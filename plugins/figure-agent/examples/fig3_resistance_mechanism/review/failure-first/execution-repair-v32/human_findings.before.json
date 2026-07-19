@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:193ee3ab936d77f864b803db1e4618a9312491eb5c0feeeb95d43afd85a322c6",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF014",
+      "subject": "panel_a_duplicate_transition_labels",
+      "finding": "two capture release boxes duplicate the external transition key and obscure the carrier path"
+    }
+  ],
+  "publication_acceptance": "not_claimed"
+}

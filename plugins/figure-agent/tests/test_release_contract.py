@@ -139,6 +139,18 @@ def test_authoring_context_pack_docs_preserve_quality_kernel_boundary() -> None:
         assert "automatic physics" in text, doc_path
 
 
+def test_ssot_bounds_initial_compatibility_registry_authority() -> None:
+    authority = (REPO_ROOT / "docs" / "figure-agent.md").read_text()
+
+    assert (
+        "initial compatibility registry covers only `loop`, `improve`, and `e2e-smoke`"
+        in authority
+    )
+    assert "maximum tested mutation boundary" in authority
+    assert "not permission, release, acceptance, or publication authority" in authority
+    assert "publication acceptance remains unclaimed" in authority
+
+
 def test_package_descriptions_name_quality_kernel_direction() -> None:
     plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
     pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
@@ -284,7 +296,7 @@ def test_current_readme_documents_release_boundaries() -> None:
     for required in [
         "single next-action summary",
         "Bounded safe runner",
-        "Loop-centered improvement orchestrator",
+        "Loop-centered compatibility wrapper",
         "Operator queue",
         "multi-fixture",
         "journal style-pack catalog",
@@ -626,37 +638,40 @@ def test_completed_issue_headers_do_not_claim_branch_or_worktree_only() -> None:
     assert stale_headers == []
 
 
-def test_readme_documents_status_and_driver_first_workflow() -> None:
+def test_readme_documents_status_and_run_first_workflow() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
 
     assert "/fig_drive" in readme
     assert "/fig_status fig3_trap_concept" in readme
     assert "canonical first check" in readme
-    assert "Export, release, or\npolish only when" in readme
+    assert "Run `/fig_status <name>` first, then use\n`/fig_run" in readme
+    assert "They do not define separate canonical\nworkflows" in readme
 
 
-def test_readme_core_commands_cover_command_docs() -> None:
+def test_readme_command_surface_covers_command_docs() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
-    core_commands_section = readme.partition("## Core commands")[2].partition(
+    command_surface_section = readme.partition("## Command surface")[2].partition(
         "## A typical figure"
     )[0]
 
     missing = []
     for command_doc in sorted((REPO_ROOT / "commands").glob("fig_*.md")):
         command = f"/{command_doc.stem}"
-        if command not in core_commands_section:
+        if command not in command_surface_section:
             missing.append(command)
 
     assert missing == []
 
 
-def test_skill_quick_command_list_covers_readme_core_commands() -> None:
+def test_skill_quick_command_list_covers_readme_command_surface() -> None:
     readme = (REPO_ROOT / "README.md").read_text()
     skill = (REPO_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text()
-    core_commands_section = readme.partition("## Core commands")[2].partition(
+    command_surface_section = readme.partition("## Command surface")[2].partition(
         "## A typical figure"
     )[0]
-    readme_commands = set(re.findall(r"^/(fig_[a-z0-9_]+)", core_commands_section, re.M))
+    readme_commands = set(
+        re.findall(r"^/(fig_[a-z0-9_]+)", command_surface_section, re.M)
+    )
     skill_commands = set(re.findall(r"^/(fig_[a-z0-9_]+)", skill, re.M))
     missing = sorted(readme_commands - skill_commands)
 
@@ -819,8 +834,10 @@ def test_schema_module_map_covers_script_schema_constants() -> None:
         / "issues"
         / "2026-06-01-issue-100hi-schema-module-map.md"
     ).read_text()
-    active_authority = "\n".join(
+    documented_contracts = "\n".join(
         (
+            module_map,
+            (REPO_ROOT / "docs" / "figure-agent.md").read_text(),
             (REPO_ROOT / "docs" / "product-spec.md").read_text(),
             (REPO_ROOT / "docs" / "execution-plan.md").read_text(),
         )
@@ -847,7 +864,7 @@ def test_schema_module_map_covers_script_schema_constants() -> None:
                     and critique_shorthand in module_map
                 ):
                     continue
-                if schema not in module_map and schema not in active_authority:
+                if schema not in documented_contracts:
                     missing.append(f"{schema} ({script_path.relative_to(REPO_ROOT)})")
 
     assert missing == []

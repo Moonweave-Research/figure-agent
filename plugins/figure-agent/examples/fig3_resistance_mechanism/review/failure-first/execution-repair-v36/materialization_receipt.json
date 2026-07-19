@@ -1,0 +1,15 @@
+{
+  "change_summary": "Compress the external key to two unboxed lines while preserving transition and retained-endpoint semantics.",
+  "changed_lines": 5,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/repaired_generated.tex",
+  "output_sha256": "sha256:3db2a595dda981bd7de97feb5a912d567c14bcd4bde72d6b3bd7e7a617464f60",
+  "packet_sha256": "sha256:0f91720463a7c4e47d230e194037a05b828135ebbd3c19f2852d620b355df385",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:5ee4eeb0be71d586b8e1026c36555fcfbddff5a1b95ec13e2355674cbafa1a60"
+}

@@ -7,6 +7,7 @@ Plan: `docs/architecture-v0.3-snippet-library.md`.
 
 | Snippet | Macro | Status | Source / License |
 |---|---|---|---|
+| `panel-f-floating-cantilever.tex` | `\PanelFFloatingCantilever{prefix}{(x,y)}` | reviewed reusable, 2026-07-15 | extracted from the reviewed Fig1 Panel F repair; own work, MIT-style |
 | `polymer_chain.snippet.tex` | `\PolymerChain{x}{y}{n_monomers}{s_csv}` | A1 integrated WIP | hand-curated TikZ; snippet code MIT-style |
 | `log_plot.snippet.tex` | (no macro — `paper loglog/.style` key in preamble) | A2 integrated WIP, 2026-05-04 | PGFPlots (LPPL 1.3) — TeX Live; style key MIT-style |
 | `isometric_exploded.snippet.tex` | (no macro — raw composition) | V1 vendored 2026-05-04 (archived asset port) | own work, MIT-style; sourced from `[tikz-paper-workflow]/test_quality/isometric_exploded_slab.tex` |
@@ -44,6 +45,26 @@ A snippet ships only if:
   hardcoded values for things callers will want to tune).
 - Attribution + license recorded in this README.
 - One smoke fixture in `examples/_snippet_smoke/<name>/` compiles.
+
+## `panel-f-floating-cantilever.tex` — reviewed reusable
+
+**Purpose:** preserve the reviewed electrical and mechanical topology of a
+floating charge-trapping cantilever opposite a driven electrode. The macro owns
+the cantilever, trapped-charge markers, electrode, fixed boundary, and the one
+grounded voltage-source return. The caller owns the panel title, force arrow,
+air-gap dimension, and surrounding composition.
+
+**Signature:** `\PanelFFloatingCantilever{prefix}{(x,y)}`. `prefix` namespaces
+internal coordinates; `(x,y)` translates the complete motif. Do not connect the
+cantilever to ground or reinterpret the fixed mechanical boundary as an
+electrical contact.
+
+**Contract and provenance:**
+`styles/snippets/panel-f-floating-cantilever.contract.yaml` and
+`styles/snippets/panel-f-floating-cantilever.transfer.yaml`.
+
+**Smoke fixture:**
+`examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex`.
 
 ## `log_plot.snippet.tex` — A2 (integrated WIP, 2026-05-04)
 

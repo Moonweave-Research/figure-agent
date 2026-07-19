@@ -1,0 +1,27 @@
+{
+  "control_sha256": "0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476",
+  "human_review": {
+    "named_reviewer": null,
+    "publication_acceptance": "not_claimed",
+    "status": "pending"
+  },
+  "product_claim": "not_authorized",
+  "run": "r5-prospective-v4",
+  "schema": "figure-agent.r5-run-status.v1",
+  "treatment": {
+    "normal_compile_state": "passed",
+    "render": "../failure-first/comparable-v3/build/verified_generated.png",
+    "render_sha256": "25ae1c6af24a8ae584ed409923114b3f3d37e7aa6b69612e039a6b1adc4c8e93",
+    "repair_admission": "open_after_named_human_adjudication_of_exact_finding",
+    "sha256": "54db798db315e4760389e68ce29f69709c3ac7b1066b00d856fdeec0bfa4c63f",
+    "source": "../failure-first/comparable-v3/verified_generated.tex",
+    "source_attribution": {
+      "ambiguous": 18,
+      "exact": 16,
+      "unbound": 1
+    },
+    "status": "authored_reproducible_strict_blocked_review_ready",
+    "strict_compile_state": "failed",
+    "visual_candidates": 35
+  }
+}

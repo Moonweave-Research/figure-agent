@@ -1,0 +1,19 @@
+schema: figure-agent.prospective-detail-candidate.v1
+fixture: fig3_resistance_mechanism
+candidate_id: prospective-detail-v1
+parent_source:
+  path: fig3_resistance_mechanism.tex
+  sha256: sha256:148d9bda59c6344f31a587b0b3517ee07d9c47bfff32980c21111a803d377955
+authoring_intent:
+  path: aesthetic_intent.yaml
+  sha256: sha256:f68f73c70327d43219dad40c13b3fb9b36edd1bb511fd7a0efa28b8c2c3c3740
+allowed_detail_levers:
+  - material_state_hierarchy
+  - irregular_support_field
+candidate_source: fig3_resistance_mechanism.tex
+review_scaffold: review_scaffold.md
+acceptance_state: not_declared
+publication_acceptance: not_claimed
+notes:
+  - Baseline fixture source and its authority manifest remain untouched.
+  - Candidate requires fresh visual critique and a human development verdict before any source adoption.

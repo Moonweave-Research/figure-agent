@@ -1,0 +1,15 @@
+{
+  "change_summary": "Move breadth outside the plot as an unboxed dimension with end ticks below the x-axis.",
+  "changed_lines": 6,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v55/repaired_generated.tex",
+  "output_sha256": "sha256:5f81b2932010948d29c64c33c64eab2aaff9732e5e37eace136272f481e4c29c",
+  "packet_sha256": "sha256:0ad1ef3d7e721cf4f447ce14fdd0ddffa33de40c73ce53d89304062a47516135",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:38a1e4a84be346ffa23890cfc123ddc6fdf34e7f034bfdfd0806dd8d92e704d6"
+}

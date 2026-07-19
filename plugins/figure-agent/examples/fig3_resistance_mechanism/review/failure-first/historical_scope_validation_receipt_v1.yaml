@@ -1,0 +1,32 @@
+schema: figure-agent.historical-scope-validation-receipt.v1
+fixture: fig3_resistance_mechanism
+historical_delta:
+  base_ref: 09cd206ab59badef37b037d93462724e7a844908
+  head_ref: fe8e0b51623e398c9c1a2a797726f8aee922173c
+  diff_mode: two_dot_name_only
+  path_order: utf8_lexicographic
+  digest_algorithm: sha256_newline_terminated_utf8
+  path_count: 16
+  paths_sha256: sha256:ed75794b2037b085610c5e3188a8f017f487bf6e1d1b89d403383b49653d768e
+  paths:
+    - plugins/figure-agent/docs/execution-plan.md
+    - plugins/figure-agent/docs/product-spec.md
+    - plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/authority_manifest_v2.yaml
+    - plugins/figure-agent/examples/fig3_resistance_mechanism/review/failure-first/scope_extension_v10.yaml
+    - plugins/figure-agent/examples/fig3_resistance_mechanism/spec.yaml
+    - plugins/figure-agent/scripts/checks/check_tex_assertions.py
+    - plugins/figure-agent/scripts/compile.sh
+    - plugins/figure-agent/scripts/promotion_wiring.py
+    - plugins/figure-agent/tests/test_check_layout_drift.py
+    - plugins/figure-agent/tests/test_check_tex_assertions.py
+    - plugins/figure-agent/tests/test_document_authority.py
+    - plugins/figure-agent/tests/test_fig1_failure_first_panel_f_pilot.py
+    - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+    - plugins/figure-agent/tests/test_g4_promotion_wiring.py
+    - plugins/figure-agent/tests/test_hybrid_fragment_contract.py
+    - plugins/figure-agent/tests/test_undeclared_geometry.py
+scope_chain_tip:
+  path: review/failure-first/scope_extension_v40.yaml
+  sha256: sha256:b62b73a5a5b5724299234197d8fd47eb3cc7f79cfdd5b1b7652fce8024a02c34
+violations: []
+publication_acceptance: not_claimed

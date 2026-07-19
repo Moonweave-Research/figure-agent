@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[compact label, align=center, anchor=north, fill=cAmberSphere!22,\n      inner xsep=1.5pt, inner ysep=2pt] at (1.92,1.03)\n  {sign-agnostic carrier\\\\repeated capture $\\leftrightarrow$ release};",
+  "change_summary": "Moved the carrier legend below the cell and made it the single textual key for repeated capture and release, creating an annotation lane outside the transport path."
+}

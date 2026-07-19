@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:c4a74be300d37451cf73638c0637daadb57b33a8abe1253ec317443996c27113",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [
+    {
+      "id": "HF015",
+      "subject": "panel_a_arrow_direction_consistency",
+      "finding": "upper-left arrow points opposite to the declared carrier path order"
+    }
+  ],
+  "publication_acceptance": "not_claimed"
+}

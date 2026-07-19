@@ -1,0 +1,13 @@
+{
+  "schema": "figure-agent.visual-clash.v1",
+  "candidates": [
+    {
+      "bbox_px": [132, 834, 451, 884],
+      "id": "VC003",
+      "kind": "text_on_path",
+      "metric": {"dark": 0.09, "edge": 0.004},
+      "tex_lines": null,
+      "text": "sign-agnostic"
+    }
+  ]
+}

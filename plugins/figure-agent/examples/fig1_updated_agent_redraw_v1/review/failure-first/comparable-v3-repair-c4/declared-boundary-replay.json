@@ -1,0 +1,202 @@
+{
+  "schema": "figure-agent.declared-boundary-replay.v1",
+  "purpose": "R5.2d evidence: replay source-derived panel-frame boundary coverage on parent C3 and child C4. Panel E \"grounded substrate\" is repaired via a two-line restack plus a minimal sibling-label nudge (crossings removed), while Panel F \"grounded source return\" is declared permanently open. Crossings 4 -> 2.",
+  "mechanism": "check_panel_boundary_coverage.evaluate_panel_boundary_coverage; frame geometry from source, affine pinned by rendered frame; no product-code frame constants; panel-count agnostic.",
+  "parent_C3": {
+    "attempt": "review/failure-first/comparable-v3-repair-c3",
+    "source": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c3/repaired.tex",
+    "render_pdf": "build/repaired.pdf",
+    "frame_crossings_total": 4,
+    "coverage": {
+      "A": "covered",
+      "B": "covered",
+      "C": "zero_coverage",
+      "D": "covered",
+      "E": "covered",
+      "F": "covered"
+    },
+    "checked_edges": 20,
+    "candidates": [
+      {
+        "bbox_pt": [
+          132.529,
+          385.173038,
+          152.739941,
+          389.601235
+        ],
+        "boundary_id": "panel-D-frame-right",
+        "boundary_pt": {
+          "x": 138.991343,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_D_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB001",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "D",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          132.529,
+          385.173038,
+          152.739941,
+          389.601235
+        ],
+        "boundary_id": "panel-E-frame-left",
+        "boundary_pt": {
+          "x": 146.078045,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_E_frame_left",
+        "clearance_pt": 0.0,
+        "id": "PB002",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "E",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          406.414,
+          353.845038,
+          426.624941,
+          358.273235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB003",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          422.092495,
+          359.624038,
+          434.585174,
+          364.052235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB004",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "return"
+      }
+    ]
+  },
+  "child_C4": {
+    "attempt": "review/failure-first/comparable-v3-repair-c4",
+    "source": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c4/repaired.tex",
+    "render_pdf": "build/repaired.pdf",
+    "frame_crossings_total": 2,
+    "coverage": {
+      "A": "covered",
+      "B": "covered",
+      "C": "zero_coverage",
+      "D": "covered",
+      "E": "covered",
+      "F": "covered"
+    },
+    "checked_edges": 20,
+    "candidates": [
+      {
+        "bbox_pt": [
+          406.414,
+          353.845038,
+          426.624941,
+          358.273235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB001",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          422.092495,
+          359.624038,
+          434.585174,
+          364.052235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB002",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "return"
+      }
+    ]
+  },
+  "primary_claim": {
+    "crossings_before_C4": 4,
+    "crossings_after_C4": 2,
+    "repaired_labels": [
+      {
+        "label": "grounded substrate",
+        "panel": "E",
+        "method": "two-line restack + 0.06cm sibling nudge",
+        "removed": [
+          "panel_D_frame_right (grounded)",
+          "panel_E_frame_left (grounded)"
+        ]
+      }
+    ],
+    "declared_permanently_open": [
+      {
+        "label": "grounded source return",
+        "panel": "F",
+        "remaining": [
+          "panel_F_frame_right (grounded)",
+          "panel_F_frame_right (return)"
+        ],
+        "reason": "referent (ground symbol) 0.60cm from right frame; label-only vocabulary exhausted; needs future authoring/layout iteration"
+      }
+    ]
+  },
+  "unadjudicated_additional_crossings": {
+    "note": "None. Frameless visual-hero Panel C remains zero_coverage by design."
+  },
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

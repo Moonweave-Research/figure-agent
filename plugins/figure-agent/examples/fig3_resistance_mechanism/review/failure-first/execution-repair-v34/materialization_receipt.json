@@ -1,0 +1,15 @@
+{
+  "change_summary": "Remove the detached white label box and bind retained to the adjacent filled endpoint carrier.",
+  "changed_lines": 5,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v34/repaired_generated.tex",
+  "output_sha256": "sha256:728bcef88b98886953c5a404b9d5eb769767878d5deef82daa8d5152700801c4",
+  "packet_sha256": "sha256:2a6b05823829e72263efbe7b9935c600ef5a98c5ed02de3d95c6bf0898a3c537",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:48c9f3225f909853b570fa3c0475e90b55384d5cef2e924b63c407ef025b51a2"
+}

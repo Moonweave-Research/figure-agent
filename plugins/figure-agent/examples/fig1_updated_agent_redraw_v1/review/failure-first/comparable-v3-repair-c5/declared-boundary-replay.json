@@ -1,0 +1,138 @@
+{
+  "schema": "figure-agent.declared-boundary-replay.v1",
+  "purpose": "R5.2e evidence: the C5 strict-residue repair (3 label moves closing real text_on_path defects) must NOT regress any panel-frame clearance. Replay parent C4 vs child C5: crossings stay 2 (the declared-open Panel F grounded-source-return pair).",
+  "mechanism": "check_panel_boundary_coverage.evaluate_panel_boundary_coverage; frame geometry from source, affine pinned by rendered frame; panel-count agnostic.",
+  "parent_C4": {
+    "attempt": "review/failure-first/comparable-v3-repair-c4",
+    "source": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c4/repaired.tex",
+    "render_pdf": "build/repaired.pdf",
+    "frame_crossings_total": 2,
+    "coverage": {
+      "A": "covered",
+      "B": "covered",
+      "C": "zero_coverage",
+      "D": "covered",
+      "E": "covered",
+      "F": "covered"
+    },
+    "checked_edges": 20,
+    "candidates": [
+      {
+        "bbox_pt": [
+          406.414,
+          353.845038,
+          426.624941,
+          358.273235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB001",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          422.092495,
+          359.624038,
+          434.585174,
+          364.052235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB002",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "return"
+      }
+    ]
+  },
+  "child_C5": {
+    "attempt": "review/failure-first/comparable-v3-repair-c5",
+    "source": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/repaired.tex",
+    "render_pdf": "build/repaired.pdf",
+    "frame_crossings_total": 2,
+    "coverage": {
+      "A": "covered",
+      "B": "covered",
+      "C": "zero_coverage",
+      "D": "covered",
+      "E": "covered",
+      "F": "covered"
+    },
+    "checked_edges": 20,
+    "candidates": [
+      {
+        "bbox_pt": [
+          406.414,
+          353.845038,
+          426.624941,
+          358.273235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB001",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "grounded"
+      },
+      {
+        "bbox_pt": [
+          422.092495,
+          359.624038,
+          434.585174,
+          364.052235
+        ],
+        "boundary_id": "panel-F-frame-right",
+        "boundary_pt": {
+          "x": 422.459434,
+          "y_range": [
+            334.379376,
+            457.687996
+          ]
+        },
+        "boundary_role": "panel_F_frame_right",
+        "clearance_pt": 0.0,
+        "id": "PB002",
+        "kind": "text_crosses_vertical_boundary",
+        "panel": "F",
+        "text": "return"
+      }
+    ]
+  },
+  "primary_claim": {
+    "crossings_before_C5": 2,
+    "crossings_after_C5": 2,
+    "unchanged": true,
+    "remaining": "Panel F grounded source return pair (declared permanently open since C4)"
+  },
+  "unadjudicated_additional_crossings": {
+    "note": "None. The 3 C5 label moves are interior (Panel D constant voltage, Panel E probe, Panel F cantilever) and do not touch any panel frame; the Panel F floating-cantilever left-frame clearance (C3 win, x unchanged) is preserved."
+  },
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

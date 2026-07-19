@@ -1,0 +1,36 @@
+{
+  "blocking_counts": {
+    "semantic_path_crossing": 0,
+    "text_on_path_or_fill": 8,
+    "text_text": 1
+  },
+  "coverage_gaps": [
+    "label_path",
+    "panel_boundary"
+  ],
+  "declared_coverage": {
+    "label_path": false,
+    "panel_boundary": false
+  },
+  "publication_acceptance": "not_claimed",
+  "review_counts": {
+    "visual_near_miss": 10
+  },
+  "schema": "figure-agent.structural-collision-gate.v1",
+  "source_reports": {
+    "collisions": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v17/collisions.json",
+      "sha256": "sha256:912cf9e756ca420fbae8d75f5bdacb52b448552cc2162712fe4275b86e7dee4d"
+    },
+    "undeclared_geometry": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v17/undeclared_geometry.json",
+      "sha256": "sha256:9078e2b6d4189a979b4c448bbf27210d90635192198b8241646ed60b192ff377"
+    },
+    "visual_clash": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v17/visual_clash.json",
+      "sha256": "sha256:d939e1af0d4085df9004744534f501f6ae739d5af728e2fc9d490a53f7e88dad"
+    }
+  },
+  "state": "failed",
+  "structural_pass": false
+}

@@ -1,0 +1,11 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v29.yaml
+extends_sha256: sha256:4e34ba2dceefeba88d6bbfb42d35135af1c43bcf0bc756728b0847d60f2d0d10
+reason: create the conservative current-critique adjudication scaffold without deciding the pending human art-direction finding
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v30.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/examples/fig3_resistance_mechanism/critique_adjudication.yaml
+publication_acceptance: not_claimed

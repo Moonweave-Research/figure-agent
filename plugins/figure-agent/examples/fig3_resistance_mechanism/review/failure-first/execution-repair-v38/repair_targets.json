@@ -1,0 +1,20 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v37/repaired_generated.tex",
+  "source_sha256": "sha256:1c1630b9edd27936edbb81c2dc3affe2c04e00419632ac8e4457bf58bce4696d",
+  "targets": [{
+    "finding": {
+      "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/human_findings.before.json",
+      "id": "HF020"
+    },
+    "attribution": {"state": "exact"},
+    "selector": {
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-inset-axis-labels",
+      "anchor_start": "\\begin{scope}[shift={(4.05,1.40)}]",
+      "anchor_end": "  \\draw[draw=cTeal, line width=1.00pt]"
+    },
+    "repair_family": "label_reflow",
+    "protected_invariants": ["$I(t)$", "$t$", "(0,1.65)"]
+  }]
+}

@@ -1,0 +1,14 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v3.yaml
+extends_sha256: sha256:83e516de4b9ca2fe9be1faf6dc5fe23d1615c0f7ab71d92d912a5c3a4a7c8fbe
+reason: authorize additive magnitude-key repair evidence without rewriting prior attempts
+allowed_review_prefixes:
+  - review/failure-first/execution-repair-v29/
+  - review/failure-first/execution-repair-v30/
+allowed_review_paths:
+  - review/failure-first/scope_extension_v4.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/docs/execution-plan.md
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed

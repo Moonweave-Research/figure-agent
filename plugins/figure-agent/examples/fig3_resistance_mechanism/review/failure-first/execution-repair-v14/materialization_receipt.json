@@ -1,0 +1,15 @@
+{
+  "change_summary": "Moved only the progression arrow start beyond the rendered label so the arrow no longer crosses the word increases.",
+  "changed_lines": 2,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v14/repaired_generated.tex",
+  "output_sha256": "sha256:66601ea8cb800d29f4e4b993a696c8d41ad6674b042bf4ac23086500396a6579",
+  "packet_sha256": "sha256:7b58d6bbb6ff42df758ba6ab4c37f26db00fb78509328b8302cdf7fe2a12efd8",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:e1005bc24cea1e45f646a0b98389ae501454b07e1b6071a27028430499ea3569"
+}

@@ -1,0 +1,132 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\begin{tikzpicture}[
+  x=1cm,
+  y=1cm,
+  line cap=round,
+  line join=round,
+  font=\sffamily\fontsize{6.2}{7.4}\selectfont,
+  panel/.style={draw=cLGray, fill=white, rounded corners=2pt, line width=0.45pt},
+  panel title/.style={font=\sffamily\bfseries\fontsize{8.2}{9.8}\selectfont, text=black, anchor=west},
+  label/.style={font=\sffamily\fontsize{6.2}{7.4}\selectfont, text=cGray, align=center},
+  small label/.style={font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray, align=center},
+  axis/.style={draw=cGray, line width=0.42pt, -{Stealth[length=2.5pt,width=1.8pt]}},
+  mechanism arrow/.style={draw=cTeal, line width=0.85pt, -{Stealth[length=3.2pt,width=2.2pt]}},
+  trap mark/.style={draw=cAmber, line width=0.8pt}
+]
+
+% Compact two-block schematic
+\draw[panel] (0,0) rectangle (5.75,4.75);
+\draw[panel] (5.95,0) rectangle (11.55,4.75);
+\node[panel title] at (0.20,4.47) {(a) Trapping during conduction};
+\node[panel title] at (6.15,4.47) {(b) Trap-energy distribution};
+
+% Panel A: applied bias cell
+\draw[fill=cGray, draw=cGray, line width=0.35pt, rounded corners=0.5pt]
+  (0.48,1.05) rectangle (0.72,3.36);
+\draw[fill=cGray, draw=cGray, line width=0.35pt, rounded corners=0.5pt]
+  (2.34,1.05) rectangle (2.58,3.36);
+\draw[fill=cLGray!30, draw=cGray, line width=0.38pt]
+  (0.72,1.05) rectangle (2.34,3.36);
+\node[small label, text=white, rotate=90] at (0.60,2.20) {electrode};
+\node[small label, text=white, rotate=90] at (2.46,2.20) {electrode};
+
+\node[label, text=black, anchor=east] at (1.20,3.74) {applied};
+\node[font=\sffamily\bfseries\fontsize{7.0}{8.4}\selectfont, text=cBlue, anchor=west]
+  at (1.53,3.74) {$V$};
+\draw[draw=cBlue, line width=0.62pt, {Stealth[length=2.5pt,width=1.8pt]}-{Stealth[length=2.5pt,width=1.8pt]}]
+  (0.58,3.48) -- (2.48,3.48);
+\node[small label, text=black] at (1.53,0.78) {disordered sulfur--polymer film};
+
+% Unlabelled trap sites and a non-ballistic, repeated-trapping walk
+\foreach \x/\y in {0.97/1.37,1.66/1.38,1.21/1.76,2.03/1.92,1.50/2.25,0.99/2.64,1.89/2.89}{
+  \draw[trap mark] (\x-0.055,\y-0.055) -- (\x+0.055,\y+0.055)
+                   (\x-0.055,\y+0.055) -- (\x+0.055,\y-0.055);
+}
+\draw[mechanism arrow]
+  (1.02,3.03)
+  .. controls (1.52,3.29) and (2.03,2.91) .. (1.50,2.25)
+  .. controls (1.10,1.91) and (1.17,1.57) .. (1.66,1.38)
+  .. controls (2.11,1.21) and (2.19,1.70) .. (2.03,1.92)
+  .. controls (1.78,2.26) and (1.43,2.04) .. (1.21,1.76);
+\draw[draw=cTeal, fill=white, line width=0.65pt] (1.02,3.03) circle (0.09);
+\node[small label, text=cTeal, anchor=west, align=left] at (0.78,3.19)
+  {sign-agnostic carrier};
+\node[small label, text=black] at (1.54,0.50)
+  {tortuous walk $\cdot$ repeated trapping};
+
+% Qualitative transient-current inset
+\draw[axis] (3.03,1.12) -- (5.27,1.12)
+  node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray, below left=1pt] {$t$};
+\draw[axis] (3.03,1.12) -- (3.03,3.34)
+  node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray, below right=1pt] {$I$};
+\draw[draw=cBlue, line width=1.0pt]
+  (3.20,3.10) .. controls (3.50,2.24) and (4.07,1.60) .. (5.10,1.31);
+\node[label, text=black, anchor=west, align=left] at (3.16,3.55)
+  {absorption current};
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont, text=cBlue,
+  fill=white, inner sep=1.2pt] at (4.12,2.30) {$I(t)\propto t^{-n}$};
+\node[font=\sffamily\bfseries\fontsize{6.5}{7.8}\selectfont, text=cBrown,
+  fill=cAmberSphere!35, rounded corners=1.5pt, inner xsep=4pt, inner ysep=2.5pt]
+  at (4.15,0.58) {$I\!\downarrow\ \Rightarrow\ R\!\uparrow$};
+\draw[draw=cGray, line width=0.45pt, -{Stealth[length=2.5pt,width=1.8pt]}]
+  (2.70,2.18) -- (2.95,2.18);
+
+% Panel B: common energy-distribution axes
+\draw[axis] (6.46,1.02) -- (11.08,1.02)
+  node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray, below left=1pt]
+  {trap energy, $E$};
+\draw[axis] (6.46,1.02) -- (6.46,3.87)
+  node[font=\sffamily\fontsize{5.5}{6.6}\selectfont, text=cGray, below right=1pt]
+  {$g(E)$};
+
+% S60: discrete shallow state plus one dominant narrow deep state
+\draw[draw=cAmber, line width=0.95pt]
+  (6.70,1.02) .. controls (6.82,1.06) and (6.86,1.51) .. (6.95,1.84)
+  .. controls (7.04,1.51) and (7.09,1.06) .. (7.22,1.02);
+\draw[draw=cAmber, line width=1.05pt]
+  (7.45,1.02) .. controls (7.62,1.10) and (7.70,2.67) .. (7.86,3.22)
+  .. controls (8.02,2.67) and (8.12,1.10) .. (8.31,1.02);
+\node[label, text=cBrown] at (7.48,3.58)
+  {$\mathrm{S60}$: discrete shallow + deep};
+\node[small label, text=cBrown] at (7.86,2.62) {deep};
+
+% S80: continuous broad landscape
+\path[fill=cTeal!22, draw=none]
+  (8.48,1.02)
+  .. controls (8.84,1.11) and (9.16,2.22) .. (9.67,2.67)
+  .. controls (10.18,3.11) and (10.69,2.31) .. (10.96,1.02)
+  -- cycle;
+\draw[draw=cTeal, line width=1.05pt]
+  (8.48,1.02)
+  .. controls (8.84,1.11) and (9.16,2.22) .. (9.67,2.67)
+  .. controls (10.18,3.11) and (10.69,2.31) .. (10.96,1.02);
+\node[label, text=cTeal] at (9.75,3.58)
+  {$\mathrm{S80}$: continuous broad};
+
+% Breadth and magnitude are deliberately orthogonal cues
+\draw[draw=cTeal, line width=0.68pt,
+  {Stealth[length=2.5pt,width=1.8pt]}-{Stealth[length=2.5pt,width=1.8pt]}]
+  (8.64,1.47) -- (10.81,1.47);
+\node[font=\sffamily\bfseries\fontsize{6.1}{7.3}\selectfont, text=cTeal,
+  fill=white, inner sep=1pt] at (9.72,1.47) {$n$ = breadth};
+\draw[draw=cGray, line width=0.62pt,
+  {Stealth[length=2.5pt,width=1.8pt]}-{Stealth[length=2.5pt,width=1.8pt]}]
+  (11.20,1.08) -- (11.20,2.73);
+\node[font=\sffamily\fontsize{5.7}{6.8}\selectfont, text=cGray, rotate=90,
+  fill=white, inner sep=1pt] at (11.20,1.90)
+  {$\rho_{60\mathrm{s}}$ = magnitude};
+
+% Composition-driven evolution
+\draw[draw=cAmber, line width=0.70pt, -{Stealth[length=3pt,width=2pt]}]
+  (7.78,4.02) -- (9.88,4.02);
+\node[small label, text=cBrown, fill=white, inner sep=1pt] at (8.83,4.02)
+  {sulfur / disorder $\uparrow$};
+\node[label, text=black] at (8.76,0.42)
+  {discrete $\longrightarrow$ continuous broad landscape};
+
+\end{tikzpicture}
+\end{document}

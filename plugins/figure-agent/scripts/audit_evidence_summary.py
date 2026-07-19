@@ -456,7 +456,9 @@ def _crop_audit_counts(
     return counts, uncertain_crop_ids, logged_crop_ids
 
 
-def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
+def summarize_audit_evidence(
+    example_dir: Path, *, critique_is_current: bool | None = None
+) -> dict[str, Any]:
     """Return a compact read-only summary of fixture audit evidence state."""
     critique_path = example_dir / "critique.md"
     if not critique_path.is_file():
@@ -482,6 +484,27 @@ def summarize_audit_evidence(example_dir: Path) -> dict[str, Any]:
     critique_schema = frontmatter.get("schema")
     critique_schema_value = critique_schema if isinstance(critique_schema, str) else None
     summary = _base_summary(example_dir, critique_schema_value)
+    if critique_is_current is False:
+        counts = _raw_detector_candidate_counts(example_dir)
+        for key, count in counts.items():
+            summary["detector_feedback"][key]["candidate_count"] = count
+        total = sum(counts.values())
+        summary["detector_feedback"]["unadjudicated_candidate_count"] = total
+        summary["detector_feedback"]["summary"] = (
+            f"{total} current detector candidate(s) are awaiting a fresh critique"
+            if total
+            else "no current detector candidates; stale critique must still be refreshed"
+        )
+        return _finish(
+            summary,
+            state="stale_or_mismatched",
+            blocking_items=[],
+            next_action=f"/fig_critique {example_dir.name}",
+            reason=(
+                "critique.md is stale; its historical detector references are not applied "
+                "to the current render"
+            ),
+        )
     requires_visual_clash = critique_schema in VISUAL_CLASH_ACCOUNTING_SCHEMAS
     requires_text_boundary = critique_schema in TEXT_BOUNDARY_ACCOUNTING_SCHEMAS
     requires_label_path = critique_schema in LABEL_PATH_ACCOUNTING_SCHEMAS

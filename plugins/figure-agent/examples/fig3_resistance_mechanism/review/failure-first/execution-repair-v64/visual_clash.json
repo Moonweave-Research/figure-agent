@@ -1,0 +1,167 @@
+{
+  "candidates": [
+    {
+      "bbox_px": [
+        233,
+        62,
+        324,
+        131
+      ],
+      "id": "VC001",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.019,
+        "edge": 0.005
+      },
+      "tex_lines": null,
+      "text": "(a)"
+    },
+    {
+      "bbox_px": [
+        1738,
+        62,
+        1833,
+        131
+      ],
+      "id": "VC002",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.026,
+        "edge": 0.006
+      },
+      "tex_lines": null,
+      "text": "(b)"
+    },
+    {
+      "bbox_px": [
+        745,
+        157,
+        786,
+        216
+      ],
+      "id": "VC003",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.031,
+        "edge": 0.008
+      },
+      "tex_lines": null,
+      "text": "V"
+    },
+    {
+      "bbox_px": [
+        1694,
+        168,
+        1822,
+        213
+      ],
+      "id": "VC004",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.015,
+        "edge": 0.005
+      },
+      "tex_lines": null,
+      "text": "g(E)"
+    },
+    {
+      "bbox_px": [
+        1125,
+        882,
+        1242,
+        941
+      ],
+      "id": "VC005",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.026,
+        "edge": 0.006
+      },
+      "tex_lines": null,
+      "text": "I(t)"
+    },
+    {
+      "bbox_px": [
+        807,
+        989,
+        918,
+        1039
+      ],
+      "id": "VC006",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.019,
+        "edge": 0.004
+      },
+      "tex_lines": null,
+      "text": "solid"
+    },
+    {
+      "bbox_px": [
+        1291,
+        517,
+        1394,
+        561
+      ],
+      "id": "VC007",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.018,
+        "edge": 0.004
+      },
+      "tex_lines": null,
+      "text": "I(t)"
+    },
+    {
+      "bbox_px": [
+        1086,
+        563,
+        1130,
+        666
+      ],
+      "id": "VC008",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.022,
+        "edge": 0.007
+      },
+      "tex_lines": null,
+      "text": "I(t)"
+    },
+    {
+      "bbox_px": [
+        2936,
+        615,
+        2968,
+        660
+      ],
+      "id": "VC009",
+      "kind": "near_miss",
+      "metric": {
+        "dark": 0.019,
+        "edge": 0.005
+      },
+      "tex_lines": null,
+      "text": "\u03c1"
+    },
+    {
+      "bbox_px": [
+        2968,
+        631,
+        3024,
+        668
+      ],
+      "id": "VC010",
+      "kind": "text_on_path",
+      "metric": {
+        "dark": 0.052,
+        "edge": 0.008
+      },
+      "tex_lines": null,
+      "text": "60"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "build/repaired_generated.pdf",
+  "total": 10
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "figure-agent.repair-execution-review.v1",
+  "decision": "partial_repair_structural_gate_failed",
+  "source_attempt": "execution-repair-v15",
+  "normal_compile_exit_code": 0,
+  "target": "lower breadth and distribution arrow crossing",
+  "repair_result": "lower breadth and distribution crossings removed",
+  "structural_gate": {
+    "state": "failed",
+    "text_text": 0,
+    "text_on_path_or_fill": 8,
+    "semantic_path_crossing": 0,
+    "coverage_gaps": ["label_path", "panel_boundary"]
+  },
+  "remaining_priority": "panel_a_label_and_path_collisions",
+  "band_shape_authority": "blocked_pending_physics_math_review",
+  "human_review": "pending",
+  "publication_acceptance": "not_claimed"
+}

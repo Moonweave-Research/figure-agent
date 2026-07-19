@@ -1,0 +1,15 @@
+{
+  "change_summary": "Remove the two intermediate carrier circles so only the trajectory start and retained endpoint remain.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v61/repaired_generated.tex",
+  "output_sha256": "sha256:66db044fde528e090ce21c40db8c45d31b9dbad9a95d08859672f52f0b5201a8",
+  "packet_sha256": "sha256:dbf3606884549a9e07d85d194f31a413aba549903d17dde2b9f65909c28ff396",
+  "preserved_boundary_blank_lines": 0,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:e6325df479898043bf7520e3a9af66681993c3458667479610949bf5c8c359d8"
+}

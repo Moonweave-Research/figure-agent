@@ -1,0 +1,28 @@
+{
+  "schema": "figure-agent.r5-authoring-condition-result.v1",
+  "condition": "A",
+  "comparison_role": "raw_authoring",
+  "model_id": "gpt-5.6-sol",
+  "reasoning_effort": "medium",
+  "source_commit": "8ee29359db9cd8eb1e6d8dcd9436dbe74ec82d88",
+  "prompt_sha256": "sha256:a442d4a7990c78c51a3c0e6ff9dcc7c3998c8dca58a835c3bfb6f4e00bd214fd",
+  "task_sha256": "sha256:250aee80d5581b7952a85bd62b248f1d8fc22e86a1c30f24743530de55e6f039",
+  "budget_contract_sha256": "sha256:bfb7809ef2b6a92649f3158fb3d2f5667775f0dabddd4f8710d9d5324e88f992",
+  "generated_source_sha256": "sha256:6bd36c92c4bc96e1d4cc5324bbe4d69a6ba5427e309800285b7a4a1acb43f476",
+  "generated_source_lines": 192,
+  "authoring_attempts": 1,
+  "feedback_rounds": 0,
+  "figure_agent_compile": {
+    "state": "blocked_by_style_lock",
+    "returncode": 1,
+    "blockers": 48,
+    "warnings": 6
+  },
+  "diagnostic_render": {
+    "state": "failed",
+    "reason": "missing TikZ decorations.pathreplacing library for brace decoration"
+  },
+  "human_correction_minutes": null,
+  "human_verdict": "pending",
+  "publication_acceptance": "not_claimed"
+}

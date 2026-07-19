@@ -1,0 +1,78 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "I(t) and t are attached to arrow endpoints instead of reading as owned y- and x-axis labels",
+      "id": "HF020",
+      "subject": "panel_a_inset_axis_label_ownership"
+    },
+    "finding_id": "HF020",
+    "protected_invariants": [
+      "$I(t)$",
+      "$t$",
+      "(0,1.65)"
+    ],
+    "repair_family": "label_reflow",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/human_findings.before.json",
+    "selector": {
+      "anchor_end": "  \\draw[draw=cTeal, line width=1.00pt]",
+      "anchor_start": "\\begin{scope}[shift={(4.05,1.40)}]",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-a-inset-axis-labels",
+      "source_hash": "sha256:1c1630b9edd27936edbb81c2dc3affe2c04e00419632ac8e4457bf58bce4696d"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:62cea088509111a7d28a374f525e6b2f9b97e7cda151921f0b9505c3cd48b169"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/repaired_generated.tex",
+  "packet_sha256": "sha256:ef8a59b34ebd79f7d72b78a928da19e0d518e4e67ab5c075e4316e8f556bf7e7",
+  "prompt": {
+    "sha256": "sha256:822b21f07346c79e9db0d93d9a67f1f256b6c2f2ad85a387eee4b4d0cb578302",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v37/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: label_reflow\n- Machine finding: {\"finding\": \"I(t) and t are attached to arrow endpoints instead of reading as owned y- and x-axis labels\", \"id\": \"HF020\", \"subject\": \"panel_a_inset_axis_label_ownership\"}\n- Change content only between the exact anchor lines [\\begin{scope}[shift={(4.05,1.40)}]] and [  \\draw[draw=cTeal, line width=1.00pt]].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [$I(t)$].\n- Preserve the exact token [$t$].\n- Preserve the exact token [(0,1.65)].\n\n## Bound editable source bytes\n```tex\n  \\draw[axis] (0,0)--(1.62,0) node[compact label, below left=0pt] {$t$};\n  \\draw[axis] (0,0)--(0,1.65) node[compact label, above right=0pt] {$I(t)$};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v37/repaired_generated.tex",
+    "sha256": "sha256:1c1630b9edd27936edbb81c2dc3affe2c04e00419632ac8e4457bf58bce4696d"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/repair_targets.json",
+    "sha256": "sha256:df778b65c81f93a821f467d0f4e737903d1e26a8c1bd39801658ed4f93a9c4f5"
+  },
+  "verification": "external_sequential_compile_required"
+}

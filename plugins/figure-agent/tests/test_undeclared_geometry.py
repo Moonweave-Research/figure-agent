@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -15,9 +18,13 @@ from check_undeclared_geometry import (  # noqa: E402
     detect_rendered_boundary_crossings,
     detect_rendered_semantic_path_crossings,
     detect_undeclared_geometry,
+    geometry_coverage_gate,
     geometry_parse_coverage,
+    main,
+    measure_rendered_semantic_paths,
     partition_candidates_by_profile,
     rendered_curve_coverage,
+    resolve_rendered_semantic_arrows,
     undeclared_geometry_payload,
 )
 
@@ -153,6 +160,51 @@ def test_bezier_controls_parse_as_conservative_curve_hull() -> None:
     ]
 
 
+def test_tikz_to_curve_is_attributed_but_requires_rendered_path_evidence() -> None:
+    tex = r"\draw[xfer] (1.48,3.18) to[out=-105,in=82] (1.55,2.52);"
+
+    geometry = _parse_tikz_geometry(tex)
+
+    assert [item["kind"] for item in geometry] == ["to_curve"]
+    assert geometry[0]["start_pt"] == [41.952756, 90.141732]
+    assert geometry[0]["end_pt"] == [43.937008, 71.433071]
+    assert geometry[0]["tikz_to_options"] == "out=-105,in=82"
+    assert geometry[0]["clearance_mode"] == "rendered_path_required"
+    assert geometry[0]["semantic_role"] == "transfer_path"
+
+
+def test_named_tikz_to_curve_resolves_declared_endpoint_coordinates() -> None:
+    tex = "\n".join(
+        [
+            r"\coordinate (carrier) at (1.48,3.18);",
+            r"\coordinate (trap) at (1.55,2.52);",
+            r"\draw[xfer] (carrier) to[out=-105,in=82] (trap);",
+        ]
+    )
+
+    geometry = _parse_tikz_geometry(tex)
+
+    assert [item["kind"] for item in geometry] == ["to_curve"]
+    assert geometry[0]["start_pt"] == [41.952756, 90.141732]
+    assert geometry[0]["end_pt"] == [43.937008, 71.433071]
+    assert geometry[0]["source_endpoint_names"] == ["carrier", "trap"]
+
+
+def test_analytic_plot_is_attributed_without_claiming_its_scientific_shape() -> None:
+    tex = (
+        r"\draw[cBlue] plot[smooth, domain=2.2:4.0, samples=60] "
+        r"(\x, {2.55*exp(-((\x-3.1)^2)/0.05)});"
+    )
+
+    geometry = _parse_tikz_geometry(tex)
+
+    assert [item["kind"] for item in geometry] == ["analytic_plot"]
+    assert geometry[0]["domain_cm"] == [2.2, 4.0]
+    assert geometry[0]["samples"] == 60
+    assert geometry[0]["clearance_mode"] == "rendered_curve_required"
+    assert geometry[0]["scientific_shape_status"] == "human_review_required"
+
+
 def test_parse_coverage_reports_unknown_nonliteral_circle() -> None:
     tex = "\n".join(
         [
@@ -175,7 +227,7 @@ def test_parse_coverage_reports_unknown_nonliteral_circle() -> None:
 def test_parse_coverage_reports_specific_unknown_reasons() -> None:
     tex = "\n".join(
         [
-            r"\draw plot[smooth] coordinates {(0,0)(1,1)};",
+            r"\draw plot[smooth, domain=0:1, samples=2] (\x, {\x});",
             r"\fill[white] (7.78, 7.52) ellipse (1.8mm and 0.4mm);",
             r"\draw[xfer] (1.48,3.18) to[out=-105,in=82] (1.55,2.52);",
         ]
@@ -183,11 +235,12 @@ def test_parse_coverage_reports_specific_unknown_reasons() -> None:
 
     coverage = geometry_parse_coverage(tex)
 
-    assert coverage["unknown_operations"] == 3
-    assert coverage["unknown_reasons"] == {
-        "unsupported_ellipse": 1,
-        "unsupported_plot": 1,
-        "unsupported_to_curve": 1,
+    assert coverage["parsed_operations"] == 2
+    assert coverage["unknown_operations"] == 1
+    assert coverage["unknown_reasons"] == {"unsupported_ellipse": 1}
+    assert coverage["parsed_geometry_counts"] == {
+        "analytic_plot": 1,
+        "to_curve": 1,
     }
 
 
@@ -215,6 +268,8 @@ def test_payload_includes_geometry_parse_coverage() -> None:
     assert payload["geometry_parse_coverage"]["non_auto_promotable_geometry"] == [
         "circle_envelope",
         "curve_conservative_hull",
+        "to_curve_rendered_path_required",
+        "analytic_plot_human_review_required",
     ]
 
 
@@ -235,6 +290,116 @@ def test_payload_persists_rendered_curve_coverage() -> None:
     assert (
         payload["geometry_parse_coverage"]["rendered_curves"]["rendered_curve_count"] == 1
     )
+
+
+def test_geometry_coverage_gate_blocks_zero_finding_clean_claim_until_all_floors_pass() -> None:
+    coverage = {
+        "coverage_ratio": 0.8,
+        "parsed_geometry_counts": {"analytic_plot": 2, "to_curve": 5},
+    }
+    spec = {
+        "geometry_coverage_policy": {
+            "minimum_parsed_ratio": 0.8,
+            "required_source_geometry": {"analytic_plot": 2, "to_curve": 5},
+            "minimum_rendered_curved_semantic_paths": 5,
+        }
+    }
+
+    blocked = geometry_coverage_gate(
+        coverage,
+        [{"path_kind": "curved_arrow"}] * 4,
+        spec,
+    )
+    allowed = geometry_coverage_gate(
+        coverage,
+        [{"path_kind": "curved_arrow"}] * 5,
+        spec,
+    )
+
+    assert blocked["state"] == "failed"
+    assert blocked["clean_claim_allowed"] is False
+    assert blocked["failures"] == ["minimum_rendered_curved_semantic_paths"]
+    assert allowed["state"] == "passed"
+    assert allowed["clean_claim_allowed"] is True
+    assert allowed["scientific_shape_authority"] == "human_review_required"
+
+
+def test_payload_persists_rendered_semantic_path_metrics(tmp_path: Path) -> None:
+    pdf_path = tmp_path / "examples" / "demo" / "build" / "demo.pdf"
+    metrics = [
+        {
+            "path_id": "RA001",
+            "path_kind": "curved_arrow",
+            "tortuosity_ratio": 1.8,
+        }
+    ]
+
+    payload = undeclared_geometry_payload(
+        pdf_path,
+        [],
+        rendered_semantic_path_metrics=metrics,
+    )
+
+    assert payload["rendered_semantic_paths"] == metrics
+
+
+@pytest.mark.render
+def test_cli_persists_rendered_semantic_path_metrics_for_v64_without_mutating_history(
+    tmp_path: Path,
+) -> None:
+    plugin_root = Path(__file__).resolve().parents[1]
+    v64 = (
+        plugin_root
+        / "examples"
+        / "fig3_resistance_mechanism"
+        / "review"
+        / "failure-first"
+        / "execution-repair-v64"
+    )
+    output = tmp_path / "undeclared_geometry.json"
+    historical_tex = v64 / "repaired_generated.tex"
+    before_hash = hashlib.sha256(historical_tex.read_bytes()).hexdigest()
+    copied_tex = (
+        tmp_path
+        / "examples"
+        / "fig3_resistance_mechanism"
+        / "review"
+        / "failure-first"
+        / "execution-repair-v64"
+        / historical_tex.name
+    )
+    copied_tex.parent.mkdir(parents=True)
+    shutil.copy2(historical_tex, copied_tex)
+    compile_result = subprocess.run(
+        ["bash", str(plugin_root / "scripts" / "compile.sh"), str(copied_tex)],
+        cwd=plugin_root,
+        capture_output=True,
+        text=True,
+    )
+    assert compile_result.returncode == 0, compile_result.stdout + compile_result.stderr
+    historical_pdf = copied_tex.parent / "build" / "repaired_generated.pdf"
+
+    exit_code = main(
+        [
+            str(historical_pdf),
+            "--tex",
+            str(historical_tex),
+            "--spec",
+            str(plugin_root / "examples" / "fig3_resistance_mechanism" / "spec.yaml"),
+            "--json-output",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert [metric["path_id"] for metric in payload["rendered_semantic_paths"]] == [
+        "RA001",
+        "RA002",
+        "RA003",
+    ]
+    assert payload["rendered_semantic_paths"][1]["dominant_direction"] == "bidirectional"
+    assert hashlib.sha256(historical_tex.read_bytes()).hexdigest() == before_hash
 
 
 def test_circle_and_curve_do_not_emit_undeclared_geometry_candidates() -> None:
@@ -406,6 +571,7 @@ def test_rendered_semantic_arrow_crossing_uses_pdf_path_coordinates() -> None:
             "linewidth": 0.78,
             "stroking_color": (0.576, 0.288, 0.336),
             "fill": True,
+            "path": [("m", (351.1, 306.8)), ("l", (356.4, 305.0)), ("l", (356.4, 308.7)), ("h",)],
         }
     ]
 
@@ -423,6 +589,90 @@ def test_rendered_semantic_arrow_crossing_uses_pdf_path_coordinates() -> None:
     assert candidates[0]["evidence"].startswith("rendered semantic arrow crosses text")
 
 
+def test_resolve_rendered_semantic_arrow_uses_current_pdf_coordinates() -> None:
+    rendered_lines = [
+        {
+            "x0": 354.8,
+            "x1": 380.2,
+            "top": 306.8,
+            "bottom": 306.8,
+            "linewidth": 0.78,
+            "stroking_color": (0.576, 0.288, 0.336),
+        }
+    ]
+    rendered_curves = [
+        {
+            "x0": 351.1,
+            "x1": 356.4,
+            "top": 305.0,
+            "bottom": 308.7,
+            "linewidth": 0.78,
+            "stroking_color": (0.576, 0.288, 0.336),
+            "fill": True,
+            "path": [("m", (351.1, 306.8)), ("l", (356.4, 305.0)), ("l", (356.4, 308.7)), ("h",)],
+        }
+    ]
+
+    assert resolve_rendered_semantic_arrows(rendered_lines, rendered_curves) == [
+        {
+            "id": "RA001",
+            "kind": "axis_aligned_arrow",
+            "orientation": "horizontal",
+            "shaft": {
+                "kind": "horizontal_line",
+                "y": 306.8,
+                "x_range": [354.8, 380.2],
+            },
+            "arrowhead_count": 1,
+            "arrowhead_endpoints": ["start"],
+            "bbox_pt": [351.1, 305.0, 380.2, 308.7],
+            "stroke_color": [0.576, 0.288, 0.336],
+            "line_width_pt": 0.78,
+        }
+    ]
+
+
+def test_resolve_rendered_semantic_arrow_counts_both_heads() -> None:
+    rendered_lines = [
+        {
+            "x0": 346.4,
+            "x1": 346.4,
+            "top": 77.9,
+            "bottom": 103.6,
+            "linewidth": 0.78,
+            "stroking_color": (0.365, 0.282, 0.125),
+        }
+    ]
+    rendered_curves = [
+        {
+            "x0": 344.9,
+            "x1": 347.9,
+            "top": 75.1,
+            "bottom": 79.0,
+            "stroking_color": (0.365, 0.282, 0.125),
+            "fill": True,
+            "path": [("m", (346.4, 75.1)), ("l", (344.9, 79.0)), ("l", (347.9, 79.0)), ("h",)],
+        },
+        {
+            "x0": 344.9,
+            "x1": 347.9,
+            "top": 102.5,
+            "bottom": 106.4,
+            "stroking_color": (0.365, 0.282, 0.125),
+            "fill": True,
+            "path": [("m", (346.4, 106.4)), ("l", (344.9, 102.5)), ("l", (347.9, 102.5)), ("h",)],
+        },
+    ]
+
+    arrows = resolve_rendered_semantic_arrows(rendered_lines, rendered_curves)
+
+    assert len(arrows) == 1
+    assert arrows[0]["orientation"] == "vertical"
+    assert arrows[0]["arrowhead_count"] == 2
+    assert arrows[0]["arrowhead_endpoints"] == ["start", "end"]
+    assert arrows[0]["bbox_pt"] == [344.9, 75.1, 347.9, 106.4]
+
+
 def test_rendered_colored_line_without_arrowhead_is_not_semantic_path() -> None:
     words = [_word("shallow", 468.0, 69.0, 499.0, 77.0)]
     rendered_lines = [
@@ -437,6 +687,586 @@ def test_rendered_colored_line_without_arrowhead_is_not_semantic_path() -> None:
     ]
 
     assert detect_rendered_semantic_path_crossings(words, rendered_lines, []) == []
+
+
+def test_resolve_rendered_colored_line_without_arrowhead_returns_nothing() -> None:
+    rendered_lines = [
+        {
+            "x0": 484.0,
+            "x1": 484.0,
+            "top": 45.0,
+            "bottom": 128.0,
+            "linewidth": 0.6,
+            "stroking_color": (0.6, 0.3, 0.35),
+        }
+    ]
+
+    assert resolve_rendered_semantic_arrows(rendered_lines, []) == []
+
+
+def test_resolve_rendered_semantic_arrows_ignores_decorative_small_geometry() -> None:
+    rendered_lines = [
+        {
+            "x0": 100.0,
+            "x1": 120.0,
+            "top": 50.0,
+            "bottom": 50.0,
+            "linewidth": 0.6,
+            "stroking_color": (0.6, 0.3, 0.35),
+        }
+    ]
+    rendered_curves = [
+        {
+            "x0": 117.0,
+            "x1": 123.0,
+            "top": 48.0,
+            "bottom": 52.0,
+            "stroking_color": (0.6, 0.3, 0.35),
+            "fill": True,
+            "path": [
+                ("m", (120.0, 50.0)),
+                ("c", (120.0, 48.0), (123.0, 48.0), (123.0, 50.0)),
+                ("c", (123.0, 52.0), (120.0, 52.0), (120.0, 50.0)),
+                ("h",),
+            ],
+        }
+    ]
+
+    assert resolve_rendered_semantic_arrows(rendered_lines, rendered_curves) == []
+
+
+def test_resolved_semantic_arrow_ids_do_not_depend_on_input_order() -> None:
+    short_line = {
+        "x0": 100.0,
+        "x1": 120.0,
+        "top": 50.0,
+        "bottom": 50.0,
+        "linewidth": 0.6,
+        "stroking_color": (0.6, 0.3, 0.35),
+    }
+    long_line = {**short_line, "x1": 130.0}
+    rendered_curves = [
+        {
+            "x0": 118.0,
+            "x1": 122.0,
+            "top": 48.0,
+            "bottom": 52.0,
+            "stroking_color": (0.6, 0.3, 0.35),
+            "fill": True,
+            "path": [("m", (122.0, 50.0)), ("l", (118.0, 48.0)), ("l", (118.0, 52.0)), ("h",)],
+        },
+        {
+            "x0": 128.0,
+            "x1": 132.0,
+            "top": 48.0,
+            "bottom": 52.0,
+            "stroking_color": (0.6, 0.3, 0.35),
+            "fill": True,
+            "path": [("m", (132.0, 50.0)), ("l", (128.0, 48.0)), ("l", (128.0, 52.0)), ("h",)],
+        },
+    ]
+
+    forward = resolve_rendered_semantic_arrows([short_line, long_line], rendered_curves)
+    reversed_input = resolve_rendered_semantic_arrows([long_line, short_line], rendered_curves)
+
+    assert forward == reversed_input
+    assert [arrow["shaft"]["x_range"] for arrow in forward] == [
+        [100.0, 120.0],
+        [100.0, 130.0],
+    ]
+
+
+def test_resolve_rendered_semantic_arrow_reconstructs_bezier_carrier_path() -> None:
+    rendered_curves = [
+        {
+            "x0": 55.0,
+            "x1": 108.8,
+            "top": 50.9,
+            "bottom": 90.9,
+            "linewidth": 0.95,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": False,
+            "path": [
+                ("m", (55.0, 90.9)),
+                ("c", (70.0, 80.0), (95.0, 70.0), (108.8, 55.5)),
+            ],
+        },
+        {
+            "x0": 106.9,
+            "x1": 110.1,
+            "top": 52.5,
+            "bottom": 57.2,
+            "linewidth": 0.95,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": True,
+            "path": [
+                ("m", (109.6, 52.5)),
+                ("l", (106.9, 56.3)),
+                ("l", (108.9, 55.3)),
+                ("l", (110.1, 57.2)),
+                ("h",),
+            ],
+        },
+    ]
+
+    arrows = resolve_rendered_semantic_arrows([], rendered_curves)
+
+    assert arrows == [
+        {
+            "id": "RA001",
+            "kind": "curved_arrow",
+            "orientation": "freeform",
+            "shaft": {
+                "kind": "bezier_path",
+                "start_pt": [55.0, 90.9],
+                "segments": [
+                    {
+                        "command": "cubic_to",
+                        "control1_pt": [70.0, 80.0],
+                        "control2_pt": [95.0, 70.0],
+                        "end_pt": [108.8, 55.5],
+                    }
+                ],
+            },
+            "arrowhead_count": 1,
+            "arrowhead_endpoints": ["end"],
+            "bbox_pt": [55.0, 50.9, 110.1, 90.9],
+            "stroke_color": [0.267, 0.467, 0.667],
+            "line_width_pt": 0.95,
+        }
+    ]
+
+
+def test_resolve_rendered_semantic_arrow_ignores_tiny_decorative_curve() -> None:
+    rendered_curves = [
+        {
+            "x0": 10.0,
+            "x1": 14.0,
+            "top": 10.0,
+            "bottom": 13.0,
+            "linewidth": 0.6,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": False,
+            "path": [
+                ("m", (10.0, 13.0)),
+                ("c", (11.0, 10.0), (13.0, 10.0), (14.0, 13.0)),
+            ],
+        },
+        {
+            "x0": 13.0,
+            "x1": 15.0,
+            "top": 12.0,
+            "bottom": 14.0,
+            "linewidth": 0.6,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": True,
+            "path": [
+                ("m", (15.0, 13.0)),
+                ("l", (13.0, 12.0)),
+                ("l", (13.5, 13.0)),
+                ("l", (13.0, 14.0)),
+                ("h",),
+            ],
+        },
+    ]
+
+    assert resolve_rendered_semantic_arrows([], rendered_curves) == []
+
+
+def test_resolve_rendered_semantic_arrow_accepts_mixed_line_and_cubic_path() -> None:
+    rendered_curves = [
+        {
+            "x0": 10.0,
+            "x1": 40.0,
+            "top": 10.0,
+            "bottom": 30.0,
+            "linewidth": 0.8,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": False,
+            "path": [
+                ("m", (10.0, 30.0)),
+                ("l", (20.0, 20.0)),
+                ("c", (25.0, 10.0), (35.0, 10.0), (40.0, 20.0)),
+            ],
+        },
+        {
+            "x0": 38.0,
+            "x1": 42.0,
+            "top": 18.0,
+            "bottom": 22.0,
+            "linewidth": 0.8,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": True,
+            "path": [
+                ("m", (42.0, 20.0)),
+                ("l", (38.0, 18.0)),
+                ("l", (39.0, 20.0)),
+                ("l", (38.0, 22.0)),
+                ("h",),
+            ],
+        },
+    ]
+
+    arrows = resolve_rendered_semantic_arrows([], rendered_curves)
+
+    assert len(arrows) == 1
+    assert arrows[0]["shaft"]["segments"] == [
+        {"command": "line_to", "end_pt": [20.0, 20.0]},
+        {
+            "command": "cubic_to",
+            "control1_pt": [25.0, 10.0],
+            "control2_pt": [35.0, 10.0],
+            "end_pt": [40.0, 20.0],
+        },
+    ]
+
+
+def test_resolve_rendered_semantic_arrow_accepts_neutral_curve_only_when_source_opted_in() -> None:
+    rendered_curves = [
+        {
+            "x0": 10.0,
+            "x1": 40.0,
+            "top": 10.0,
+            "bottom": 30.0,
+            "linewidth": 0.8,
+            "stroking_color": (0.2, 0.2, 0.2),
+            "fill": False,
+            "path": [
+                ("m", (10.0, 30.0)),
+                ("c", (20.0, 10.0), (35.0, 10.0), (40.0, 20.0)),
+            ],
+        },
+        {
+            "x0": 38.0,
+            "x1": 42.0,
+            "top": 18.0,
+            "bottom": 22.0,
+            "linewidth": 0.8,
+            "stroking_color": (0.2, 0.2, 0.2),
+            "fill": True,
+            "path": [
+                ("m", (42.0, 20.0)),
+                ("l", (38.0, 18.0)),
+                ("l", (39.0, 20.0)),
+                ("l", (38.0, 22.0)),
+                ("h",),
+            ],
+        },
+    ]
+
+    assert resolve_rendered_semantic_arrows([], rendered_curves) == []
+    arrows = resolve_rendered_semantic_arrows(
+        [],
+        rendered_curves,
+        allow_neutral_curved=True,
+    )
+
+    assert len(arrows) == 1
+    assert arrows[0]["kind"] == "curved_arrow"
+
+
+def test_measure_rendered_semantic_path_reports_direction_and_tortuosity() -> None:
+    rendered_curves = [
+        {
+            "x0": 0.0,
+            "x1": 20.0,
+            "top": 10.0,
+            "bottom": 10.0,
+            "linewidth": 0.8,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": False,
+            "path": [
+                ("m", (0.0, 10.0)),
+                ("c", (5.0, 10.0), (15.0, 10.0), (20.0, 10.0)),
+            ],
+        },
+        {
+            "x0": 18.0,
+            "x1": 22.0,
+            "top": 8.0,
+            "bottom": 12.0,
+            "linewidth": 0.8,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": True,
+            "path": [
+                ("m", (22.0, 10.0)),
+                ("l", (18.0, 8.0)),
+                ("l", (19.0, 10.0)),
+                ("l", (18.0, 12.0)),
+                ("h",),
+            ],
+        },
+    ]
+    arrows = resolve_rendered_semantic_arrows([], rendered_curves)
+
+    assert measure_rendered_semantic_paths(arrows) == [
+        {
+            "path_id": "RA001",
+            "path_kind": "curved_arrow",
+            "arrowhead_endpoints": ["end"],
+            "net_displacement_pt": [20.0, 0.0],
+            "arc_length_pt": 20.0,
+            "has_net_progress": True,
+            "tortuosity_ratio": 1.0,
+            "dominant_axis": "x",
+            "dominant_direction": "positive",
+            "backtracking_ratio": 0.0,
+            "orthogonal_turn_count": 0,
+        }
+    ]
+
+
+def test_measure_rendered_semantic_path_counts_orthogonal_turns() -> None:
+    arrows = [
+        {
+            "id": "RA001",
+            "kind": "curved_arrow",
+            "arrowhead_endpoints": ["end"],
+            "shaft": {
+                "kind": "bezier_path",
+                "start_pt": [0.0, 0.0],
+                "segments": [
+                    {"command": "line_to", "end_pt": [5.0, 5.0]},
+                    {"command": "line_to", "end_pt": [10.0, -5.0]},
+                    {"command": "line_to", "end_pt": [15.0, 5.0]},
+                    {"command": "line_to", "end_pt": [20.0, 0.0]},
+                ],
+            },
+        }
+    ]
+
+    metrics = measure_rendered_semantic_paths(arrows)
+
+    assert metrics[0]["dominant_axis"] == "x"
+    assert metrics[0]["backtracking_ratio"] == 0.0
+    assert metrics[0]["orthogonal_turn_count"] == 3
+
+
+def test_measure_rendered_semantic_path_reports_closed_loop_without_crashing() -> None:
+    arrows = [
+        {
+            "id": "RA001",
+            "kind": "curved_arrow",
+            "arrowhead_endpoints": ["end"],
+            "shaft": {
+                "kind": "bezier_path",
+                "start_pt": [0.0, 0.0],
+                "segments": [
+                    {"command": "line_to", "end_pt": [10.0, 0.0]},
+                    {"command": "line_to", "end_pt": [10.0, 10.0]},
+                    {"command": "line_to", "end_pt": [0.0, 10.0]},
+                    {"command": "line_to", "end_pt": [0.0, 0.0]},
+                ],
+            },
+        }
+    ]
+
+    metrics = measure_rendered_semantic_paths(arrows)
+
+    assert metrics[0]["has_net_progress"] is False
+    assert metrics[0]["tortuosity_ratio"] is None
+    assert metrics[0]["dominant_axis"] is None
+    assert metrics[0]["dominant_direction"] is None
+    assert metrics[0]["backtracking_ratio"] is None
+
+
+def test_measure_rendered_semantic_path_preserves_collinear_cubic_backtracking() -> None:
+    arrows = [
+        {
+            "id": "RA001",
+            "kind": "curved_arrow",
+            "arrowhead_endpoints": ["end"],
+            "shaft": {
+                "kind": "bezier_path",
+                "start_pt": [0.0, 0.0],
+                "segments": [
+                    {
+                        "command": "cubic_to",
+                        "control1_pt": [20.0, 0.0],
+                        "control2_pt": [-10.0, 0.0],
+                        "end_pt": [10.0, 0.0],
+                    }
+                ],
+            },
+        }
+    ]
+
+    metrics = measure_rendered_semantic_paths(arrows)
+
+    assert metrics[0]["arc_length_pt"] == pytest.approx(18.944272, abs=0.05)
+    assert metrics[0]["tortuosity_ratio"] == pytest.approx(1.894427, abs=0.01)
+    assert metrics[0]["backtracking_ratio"] == pytest.approx(0.236068, abs=0.01)
+
+
+def test_measure_rendered_semantic_path_orients_start_head_from_tail_to_head() -> None:
+    arrows = [
+        {
+            "id": "RA001",
+            "kind": "axis_arrow",
+            "arrowhead_endpoints": ["start"],
+            "shaft": {
+                "kind": "horizontal_line",
+                "x_range": [0.0, 20.0],
+                "y": 10.0,
+            },
+        }
+    ]
+
+    metrics = measure_rendered_semantic_paths(arrows)
+
+    assert metrics[0]["net_displacement_pt"] == [-20.0, 0.0]
+    assert metrics[0]["dominant_axis"] == "x"
+    assert metrics[0]["dominant_direction"] == "negative"
+    assert metrics[0]["backtracking_ratio"] == 0.0
+
+
+def test_measure_rendered_semantic_path_reports_double_head_as_bidirectional() -> None:
+    arrows = [
+        {
+            "id": "RA001",
+            "kind": "axis_arrow",
+            "arrowhead_endpoints": ["start", "end"],
+            "shaft": {
+                "kind": "horizontal_line",
+                "x_range": [0.0, 20.0],
+                "y": 10.0,
+            },
+        }
+    ]
+
+    metrics = measure_rendered_semantic_paths(arrows)
+
+    assert metrics[0]["net_displacement_pt"] == [20.0, 0.0]
+    assert metrics[0]["dominant_axis"] == "x"
+    assert metrics[0]["dominant_direction"] == "bidirectional"
+    assert metrics[0]["backtracking_ratio"] is None
+
+
+def test_rendered_bezier_semantic_arrow_crossing_uses_curve_geometry() -> None:
+    words = [_word("carrier", 45.0, 70.0, 55.0, 80.0)]
+    rendered_curves = [
+        {
+            "x0": 0.0,
+            "x1": 100.0,
+            "top": 0.0,
+            "bottom": 75.0,
+            "linewidth": 0.95,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": False,
+            "path": [
+                ("m", (0.0, 0.0)),
+                ("c", (0.0, 100.0), (100.0, 100.0), (100.0, 0.0)),
+            ],
+        },
+        {
+            "x0": 98.0,
+            "x1": 102.0,
+            "top": -2.0,
+            "bottom": 2.0,
+            "linewidth": 0.95,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": True,
+            "path": [
+                ("m", (102.0, 0.0)),
+                ("l", (98.0, -2.0)),
+                ("l", (99.0, 0.0)),
+                ("l", (98.0, 2.0)),
+                ("h",),
+            ],
+        },
+    ]
+
+    candidates = detect_rendered_semantic_path_crossings(
+        words,
+        [],
+        rendered_curves,
+    )
+
+    assert [candidate["kind"] for candidate in candidates] == [
+        "label_crosses_semantic_path"
+    ]
+    assert candidates[0]["nearest_text"] == "carrier"
+
+
+def test_rendered_bezier_semantic_arrow_ignores_bbox_only_overlap() -> None:
+    words = [_word("label", 45.0, 5.0, 55.0, 15.0)]
+    rendered_curves = [
+        {
+            "x0": 0.0,
+            "x1": 100.0,
+            "top": 0.0,
+            "bottom": 75.0,
+            "linewidth": 0.95,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": False,
+            "path": [
+                ("m", (0.0, 0.0)),
+                ("c", (0.0, 100.0), (100.0, 100.0), (100.0, 0.0)),
+            ],
+        },
+        {
+            "x0": 98.0,
+            "x1": 102.0,
+            "top": -2.0,
+            "bottom": 2.0,
+            "linewidth": 0.95,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": True,
+            "path": [
+                ("m", (102.0, 0.0)),
+                ("l", (98.0, -2.0)),
+                ("l", (99.0, 0.0)),
+                ("l", (98.0, 2.0)),
+                ("h",),
+            ],
+        },
+    ]
+
+    assert detect_rendered_semantic_path_crossings(words, [], rendered_curves) == []
+
+
+def test_rendered_bezier_crossing_is_stable_for_high_curvature_segment() -> None:
+    words = [_word("detail", 80.09, -41.41, 80.59, -40.91)]
+    rendered_curves = [
+        {
+            "x0": 0.0,
+            "x1": 100.0,
+            "top": -45.0,
+            "bottom": 45.0,
+            "linewidth": 0.95,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": False,
+            "path": [
+                ("m", (0.0, 0.0)),
+                (
+                    "c",
+                    (30.4341, 145.8215),
+                    (64.8872, -144.49),
+                    (100.0, 0.0),
+                ),
+            ],
+        },
+        {
+            "x0": 98.0,
+            "x1": 102.0,
+            "top": -2.0,
+            "bottom": 2.0,
+            "linewidth": 0.95,
+            "stroking_color": (0.267, 0.467, 0.667),
+            "fill": True,
+            "path": [
+                ("m", (102.0, 0.0)),
+                ("l", (98.0, -2.0)),
+                ("l", (99.0, 0.0)),
+                ("l", (98.0, 2.0)),
+                ("h",),
+            ],
+        },
+    ]
+
+    candidates = detect_rendered_semantic_path_crossings(words, [], rendered_curves)
+
+    assert [candidate["nearest_text"] for candidate in candidates] == ["detail"]
 
 
 def test_label_crossing_ignores_non_frame_like_geometry() -> None:

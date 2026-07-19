@@ -1,0 +1,20 @@
+{
+  "control": {
+    "output_path": "examples/fig1_composition_comparison_v1/review/failure-first/comparable-v1/free_composition_generated.tex",
+    "packet_path": "examples/fig1_composition_comparison_v1/review/failure-first/comparable-v1/free_composition_packet.json",
+    "packet_sha256": "sha256:4fefa08678e1f6b06f4350a2ea7d8f7da9fdfd851bd01547829894241f6c0538",
+    "prompt_path": "examples/fig1_composition_comparison_v1/review/failure-first/comparable-v1/free_composition_prompt.md",
+    "prompt_sha256": "sha256:bfdc028af96c9c5f38d368f67b3d0827ab9367f30355cc4189712a2c698e8e35"
+  },
+  "decision": "pass",
+  "filesystem_read_isolation": "unavailable",
+  "intervention_field": "composition_profile",
+  "schema": "figure-agent.authoring-execution-preflight.v1",
+  "treatment": {
+    "output_path": "examples/fig1_composition_comparison_v1/review/failure-first/comparable-v1/assisted_composition_generated.tex",
+    "packet_path": "examples/fig1_composition_comparison_v1/review/failure-first/comparable-v1/assisted_composition_packet.json",
+    "packet_sha256": "sha256:eb8cffdf7a265281e08404031f2dae1f8f047dc56312a189177fb5712c160d49",
+    "prompt_path": "examples/fig1_composition_comparison_v1/review/failure-first/comparable-v1/assisted_composition_prompt.md",
+    "prompt_sha256": "sha256:916712fda19c4b60240b15839ee4b8858149fe38f857dec83ae483afc7f27ff5"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[compact label, align=center, anchor=north] at (1.92,1.03)\n  {capture $\\leftrightarrow$ release repeats\\\\filled endpoint: retained};\n% Transition and endpoint semantics share one external key.",
+  "change_summary": "Compress the external key to two unboxed lines while preserving transition and retained-endpoint semantics."
+}

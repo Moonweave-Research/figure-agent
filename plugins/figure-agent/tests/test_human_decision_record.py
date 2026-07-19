@@ -8,12 +8,15 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from human_decision_record import (  # noqa: E402
+    DEVELOPMENT_VERDICT_POLICIES,
+    DEVELOPMENT_VERDICT_SCHEMA,
     RELEASE_DECISION_PACKET_SCHEMA,
     SCHEMA,
     STYLE_CHOICE_DECISION_KINDS,
     STYLE_DIRECTION_PACKET_SCHEMA,
     HumanDecisionRecordError,
     validate_decision_record,
+    validate_development_verdict,
 )
 
 
@@ -34,6 +37,78 @@ def _record(**overrides: object) -> dict[str, object]:
     }
     record.update(overrides)
     return record
+
+
+def _development_verdict_record(
+    *,
+    decision_kind: str,
+    human_decision: str,
+    mutation_boundary: str,
+) -> dict[str, object]:
+    return {
+        "schema": DEVELOPMENT_VERDICT_SCHEMA,
+        "fixture": "demo",
+        "attempt_id": "attempt-0123456789abcdef01234567",
+        "reviewed_state_path": (
+            "examples/demo/review/closed-loop/attempt-0123456789abcdef01234567/"
+            "state-007-visually_re_reviewed.json"
+        ),
+        "reviewed_state_sha256": "sha256:" + "a" * 64,
+        "decision_kind": decision_kind,
+        "reviewer": "named-human-reviewer",
+        "human_decision": human_decision,
+        "human_note": "One exact terminal development verdict.",
+        "mutation_boundary": mutation_boundary,
+        "publication_acceptance": "not_claimed",
+    }
+
+
+@pytest.mark.parametrize(
+    ("decision_kind", "text_kind", "boundary_kind"),
+    [
+        (decision_kind, text_kind, boundary_kind)
+        for decision_kind in DEVELOPMENT_VERDICT_POLICIES
+        for text_kind in DEVELOPMENT_VERDICT_POLICIES
+        for boundary_kind in DEVELOPMENT_VERDICT_POLICIES
+    ],
+)
+def test_development_verdict_policy_matrix_requires_one_exact_contract(
+    decision_kind: str,
+    text_kind: str,
+    boundary_kind: str,
+) -> None:
+    text_policy = DEVELOPMENT_VERDICT_POLICIES[text_kind]
+    boundary_policy = DEVELOPMENT_VERDICT_POLICIES[boundary_kind]
+    record = _development_verdict_record(
+        decision_kind=decision_kind,
+        human_decision=str(text_policy["human_decision"]),
+        mutation_boundary=str(boundary_policy["mutation_boundary"]),
+    )
+    kwargs = {
+        "fixture": "demo",
+        "attempt_id": "attempt-0123456789abcdef01234567",
+        "state_path": str(record["reviewed_state_path"]),
+        "state_sha256": str(record["reviewed_state_sha256"]),
+    }
+
+    if decision_kind == text_kind == boundary_kind:
+        normalized = validate_development_verdict(record, **kwargs)
+        assert normalized["next_state"] == DEVELOPMENT_VERDICT_POLICIES[
+            decision_kind
+        ]["next_state"]
+        return
+
+    error = (
+        "development_verdict_not_approved"
+        if decision_kind == "accept_development_baseline" and decision_kind != text_kind
+        else (
+            "development_verdict_decision_text_invalid"
+            if decision_kind != text_kind
+            else "development_verdict_mutation_boundary_invalid"
+        )
+    )
+    with pytest.raises(HumanDecisionRecordError, match=error):
+        validate_development_verdict(record, **kwargs)
 
 
 def test_release_decision_record_validates_without_side_effects(tmp_path: Path) -> None:
@@ -214,6 +289,18 @@ def test_style_record_rejects_source_mutation_boundary() -> None:
                 decision_kind="request_restrained_tikz_refinement",
                 follow_up={"implementation_slice": "open a later bounded TikZ refinement slice"},
                 mutation_boundary="source_mutation_allowed",
+            )
+        )
+
+
+def test_generic_release_record_cannot_borrow_development_state_boundary() -> None:
+    with pytest.raises(
+        HumanDecisionRecordError,
+        match="mutation_boundary_unknown",
+    ):
+        validate_decision_record(
+            _record(
+                mutation_boundary="development_baseline_state_mutation_allowed",
             )
         )
 

@@ -1,0 +1,15 @@
+{
+  "change_summary": "Raised the two-line sample title into the film's upper safe area to preserve electrode clearance and clear the retained label.",
+  "changed_lines": 2,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v20/repaired_generated.tex",
+  "output_sha256": "sha256:5732a79106c1e42572c2eaf9e3a9d6ccd33213f69bc07259bc33ca4b632595d2",
+  "packet_sha256": "sha256:5c0d39f3654750932ef4e326c0f5c5db48215346f50026e3a87920fe7c6b3bc0",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:5578cf356365b2f4378f44f9834ee04ff35beae380d27471450e562380a25ac3"
+}

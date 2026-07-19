@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\draw[draw=cTeal, line width=0.65pt, {Stealth}-{Stealth}] (2.23,0.28)--(4.50,0.28);\n  \\node[compact label, text=cTeal, fill=white, inner sep=1.5pt] at (3.365,0.28)\n    {distribution breadth};",
+  "change_summary": "Replace the n-equals-breadth claim with a standard geometric distribution-breadth span."
+}

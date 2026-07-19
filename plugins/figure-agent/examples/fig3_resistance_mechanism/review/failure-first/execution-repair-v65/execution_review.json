@@ -1,0 +1,1 @@
+{"schema":"figure-agent.execution-review.v1","decision":"rejected_before_materialization","repair_result":"splitting the dimension and end ticks across two teal draw commands changed protected cTeal multiplicity","next_human_target":"single_owner_external_breadth_dimension","publication_acceptance":"not_claimed"}

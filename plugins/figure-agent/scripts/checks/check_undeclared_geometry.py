@@ -41,6 +41,34 @@ _BEZIER_RE = re.compile(
     rf"{_POINT_RE}\s*\.\.\s*controls\s*{_POINT_RE}\s*and\s*{_POINT_RE}\s*\.\.\s*{_POINT_RE}",
     re.DOTALL,
 )
+_TO_CURVE_RE = re.compile(
+    r"\(\s*(?P<start_x>-?\d+(?:\.\d+)?)\s*,\s*"
+    r"(?P<start_y>-?\d+(?:\.\d+)?)\s*\)\s*"
+    r"to\s*\[(?P<to_options>[^\]]+)\]\s*"
+    r"\(\s*(?P<end_x>-?\d+(?:\.\d+)?)\s*,\s*"
+    r"(?P<end_y>-?\d+(?:\.\d+)?)\s*\)"
+)
+_NAMED_TIKZ_COORD = r"[A-Za-z][A-Za-z0-9_-]*"
+_NAMED_TO_CURVE_RE = re.compile(
+    r"\(\s*(?P<start_name>" + _NAMED_TIKZ_COORD + r")\s*\)\s*"
+    r"to\s*\[(?P<to_options>[^\]]+)\]\s*"
+    r"\(\s*(?P<end_name>" + _NAMED_TIKZ_COORD + r")\s*\)"
+)
+_NAMED_COORD_DECL_RE = re.compile(
+    r"\\(?:coordinate|node)(?:\s*\[[^\]]*\])?\s*"
+    r"\(\s*(?P<name>" + _NAMED_TIKZ_COORD + r")\s*\)\s*at\s*\(\s*"
+    r"(?P<x>-?\d+(?:\.\d+)?)\s*,\s*(?P<y>-?\d+(?:\.\d+)?)\s*\)"
+)
+_ANALYTIC_PLOT_RE = re.compile(
+    r"\bplot\s*\[(?P<plot_options>[^\]]*)\]\s*"
+    r"\(\s*\\x\s*,\s*\{(?P<expression>.*?)\}\s*\)",
+    re.DOTALL,
+)
+_PLOT_DOMAIN_RE = re.compile(
+    r"(?:^|,)\s*domain\s*=\s*"
+    r"(?P<start>-?\d+(?:\.\d+)?)\s*:\s*(?P<end>-?\d+(?:\.\d+)?)\s*(?:,|$)"
+)
+_PLOT_SAMPLES_RE = re.compile(r"(?:^|,)\s*samples\s*=\s*(?P<samples>\d+)\s*(?:,|$)")
 _OPERATION_RE = re.compile(
     r"\\(?P<command>draw|fill|shade)(?:\[(?P<options>[^\]]*)\])?(?P<body>.*?);",
     re.DOTALL,
@@ -70,6 +98,7 @@ RENDERED_ARROW_COLOR_MATCH_MAX = 0.04
 RENDERED_ARROW_HEAD_MAX_SIZE_PT = 12.0
 RENDERED_ARROW_HEAD_ENDPOINT_TOLERANCE_PT = 4.0
 RENDERED_ARROW_SHAFT_MIN_LENGTH_PT = 8.0
+RENDERED_CURVE_FLATNESS_PT = 0.05
 
 # Conceptual-geometry kinds a pure schematic declares on purpose: axes, dividers,
 # region rectangles, and plot frames are intentional, not layout regions to police.
@@ -174,7 +203,23 @@ def _iter_tikz_operations(tex_text: str) -> list[dict[str, Any]]:
     return operations
 
 
-def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]:
+def _named_coordinates_cm(tex_text: str) -> dict[str, tuple[float, float]]:
+    """Resolve named literal TikZ coordinates, including enclosing scope shifts."""
+    coordinates: dict[str, tuple[float, float]] = {}
+    for match in _NAMED_COORD_DECL_RE.finditer(tex_text):
+        shift_x, shift_y = _scope_shift_cm(tex_text, match.start())
+        coordinates[match.group("name")] = (
+            float(match.group("x")) + shift_x,
+            float(match.group("y")) + shift_y,
+        )
+    return coordinates
+
+
+def _parse_operation_geometry(
+    operation: dict[str, Any],
+    *,
+    named_coordinates: dict[str, tuple[float, float]] | None = None,
+) -> list[dict[str, Any]]:
     text = str(operation["text"])
     source_line = int(operation["source_line"])
     command = str(operation["command"])
@@ -218,6 +263,21 @@ def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]
                     "options": options,
                 }
             )
+        else:
+            start_pt = _point_cm_to_pt(x0, y0)
+            end_pt = _point_cm_to_pt(x1, y1)
+            geometry.append(
+                {
+                    "kind": "line_segment",
+                    "start_pt": start_pt,
+                    "end_pt": end_pt,
+                    "bbox_pt": _bbox_from_points_pt([start_pt, end_pt]),
+                    "source_line": source_line,
+                    "command": command,
+                    "options": options,
+                    "clearance_mode": "segment_envelope",
+                }
+            )
     for match in _CIRCLE_RE.finditer(text):
         x, y, radius, unit = match.groups()
         center_pt = _point_cm_to_pt(float(x) + shift_x, float(y) + shift_y)
@@ -259,13 +319,83 @@ def _parse_operation_geometry(operation: dict[str, Any]) -> list[dict[str, Any]]
                 "clearance_mode": "conservative_hull",
             }
         )
+    for match in _TO_CURVE_RE.finditer(text):
+        start_pt = _point_cm_to_pt(
+            float(match.group("start_x")) + shift_x,
+            float(match.group("start_y")) + shift_y,
+        )
+        end_pt = _point_cm_to_pt(
+            float(match.group("end_x")) + shift_x,
+            float(match.group("end_y")) + shift_y,
+        )
+        geometry.append(
+            {
+                "kind": "to_curve",
+                "start_pt": start_pt,
+                "end_pt": end_pt,
+                "bbox_pt": _bbox_from_points_pt([start_pt, end_pt]),
+                "tikz_to_options": match.group("to_options").strip(),
+                "source_line": source_line,
+                "command": command,
+                "options": options,
+                "clearance_mode": "rendered_path_required",
+                "semantic_role": "transfer_path" if "xfer" in options else "curve",
+            }
+        )
+    for match in _NAMED_TO_CURVE_RE.finditer(text):
+        start = (named_coordinates or {}).get(match.group("start_name"))
+        end = (named_coordinates or {}).get(match.group("end_name"))
+        if start is None or end is None:
+            continue
+        start_pt = _point_cm_to_pt(*start)
+        end_pt = _point_cm_to_pt(*end)
+        geometry.append(
+            {
+                "kind": "to_curve",
+                "start_pt": start_pt,
+                "end_pt": end_pt,
+                "bbox_pt": _bbox_from_points_pt([start_pt, end_pt]),
+                "tikz_to_options": match.group("to_options").strip(),
+                "source_line": source_line,
+                "command": command,
+                "options": options,
+                "clearance_mode": "rendered_path_required",
+                "semantic_role": "transfer_path" if "xfer" in options else "curve",
+                "source_endpoint_names": [match.group("start_name"), match.group("end_name")],
+            }
+        )
+    for match in _ANALYTIC_PLOT_RE.finditer(text):
+        plot_options = match.group("plot_options")
+        domain_match = _PLOT_DOMAIN_RE.search(plot_options)
+        samples_match = _PLOT_SAMPLES_RE.search(plot_options)
+        if domain_match is None or samples_match is None:
+            continue
+        geometry.append(
+            {
+                "kind": "analytic_plot",
+                "domain_cm": [
+                    float(domain_match.group("start")),
+                    float(domain_match.group("end")),
+                ],
+                "samples": int(samples_match.group("samples")),
+                "source_expression": match.group("expression").strip(),
+                "source_line": source_line,
+                "command": command,
+                "options": options,
+                "clearance_mode": "rendered_curve_required",
+                "scientific_shape_status": "human_review_required",
+            }
+        )
     return geometry
 
 
 def _parse_tikz_geometry(tex_text: str) -> list[dict[str, Any]]:
     geometry: list[dict[str, Any]] = []
+    named_coordinates = _named_coordinates_cm(tex_text)
     for operation in _iter_tikz_operations(tex_text):
-        geometry.extend(_parse_operation_geometry(operation))
+        geometry.extend(
+            _parse_operation_geometry(operation, named_coordinates=named_coordinates)
+        )
     return geometry
 
 
@@ -289,11 +419,17 @@ def _operation_unknown_reasons(
         reasons.append("unsupported_ellipse")
     if re.search(r"\barc\b", text):
         reasons.append("unsupported_arc")
-    if re.search(r"\bplot\b", text):
+    plot_count = len(re.findall(r"\bplot\b", text))
+    if plot_count > parsed_kind_counts.get("analytic_plot", 0):
         reasons.append("unsupported_plot")
-    if re.search(r"\bto\s*\[", text):
+    to_curve_count = len(re.findall(r"\bto\s*\[", text))
+    if to_curve_count > parsed_kind_counts.get("to_curve", 0):
         reasons.append("unsupported_to_curve")
-    if not reasons and re.search(r"\([^)]*(?:\\|\{)[^)]*\)", text):
+    # The analytic plot parser deliberately owns its `\\x` coordinate and
+    # expression braces; do not reclassify that already-attributed syntax as a
+    # generic nonliteral coordinate. Other macro coordinates remain unknown.
+    unparsed_text = _ANALYTIC_PLOT_RE.sub("", text)
+    if not reasons and re.search(r"\([^)]*(?:\\|\{)[^)]*\)", unparsed_text):
         reasons.append("nonliteral_coordinate")
     if not parsed and not reasons:
         reasons.append("unsupported_geometry")
@@ -302,6 +438,7 @@ def _operation_unknown_reasons(
 
 def geometry_parse_coverage(tex_text: str) -> dict[str, Any]:
     operations = _iter_tikz_operations(tex_text)
+    named_coordinates = _named_coordinates_cm(tex_text)
     parsed_counts: dict[str, int] = {}
     unknown_reasons: dict[str, int] = {}
     unknown_samples: list[dict[str, Any]] = []
@@ -310,7 +447,7 @@ def geometry_parse_coverage(tex_text: str) -> dict[str, Any]:
     partial_unknown_operations = 0
     unknown_operations = 0
     for operation in operations:
-        parsed = _parse_operation_geometry(operation)
+        parsed = _parse_operation_geometry(operation, named_coordinates=named_coordinates)
         reasons = _operation_unknown_reasons(operation, parsed)
         if parsed:
             parsed_operations += 1
@@ -348,7 +485,100 @@ def geometry_parse_coverage(tex_text: str) -> dict[str, Any]:
         "non_auto_promotable_geometry": [
             "circle_envelope",
             "curve_conservative_hull",
+            "to_curve_rendered_path_required",
+            "analytic_plot_human_review_required",
         ],
+    }
+
+
+def _geometry_coverage_policy(spec: dict[str, Any]) -> dict[str, Any] | None:
+    raw_policy = spec.get("geometry_coverage_policy")
+    if raw_policy is None:
+        return None
+    if not isinstance(raw_policy, dict):
+        raise UndeclaredGeometryError("geometry_coverage_policy must be a mapping")
+
+    minimum_ratio = raw_policy.get("minimum_parsed_ratio")
+    if not isinstance(minimum_ratio, int | float) or not 0.0 <= float(minimum_ratio) <= 1.0:
+        raise UndeclaredGeometryError(
+            "geometry_coverage_policy.minimum_parsed_ratio must be between 0 and 1"
+        )
+    required_kinds = raw_policy.get("required_source_geometry")
+    if not isinstance(required_kinds, dict) or not required_kinds:
+        raise UndeclaredGeometryError(
+            "geometry_coverage_policy.required_source_geometry must be a non-empty mapping"
+        )
+    normalized_kinds: dict[str, int] = {}
+    for kind, count in required_kinds.items():
+        if not isinstance(kind, str) or not kind:
+            raise UndeclaredGeometryError(
+                "geometry coverage source kind must be a non-empty string"
+            )
+        if not isinstance(count, int) or count < 1:
+            raise UndeclaredGeometryError(
+                "geometry coverage source counts must be positive integers"
+            )
+        normalized_kinds[kind] = count
+    minimum_curved_paths = raw_policy.get("minimum_rendered_curved_semantic_paths")
+    if not isinstance(minimum_curved_paths, int) or minimum_curved_paths < 0:
+        raise UndeclaredGeometryError(
+            "geometry_coverage_policy.minimum_rendered_curved_semantic_paths must be an integer"
+        )
+    return {
+        "minimum_parsed_ratio": float(minimum_ratio),
+        "required_source_geometry": dict(sorted(normalized_kinds.items())),
+        "minimum_rendered_curved_semantic_paths": minimum_curved_paths,
+    }
+
+
+def geometry_coverage_gate(
+    coverage: dict[str, Any],
+    rendered_semantic_paths: list[dict[str, Any]],
+    spec: dict[str, Any],
+) -> dict[str, Any]:
+    """Evaluate declared evidence floors before a zero-finding clean claim.
+
+    The gate checks traceability and rendered path presence only. It never treats
+    a parsed analytic plot as proof that a physical energy distribution is valid.
+    """
+    policy = _geometry_coverage_policy(spec)
+    if policy is None:
+        return {
+            "configured": False,
+            "state": "not_configured",
+            "clean_claim_allowed": None,
+            "failures": [],
+        }
+
+    failures: list[str] = []
+    coverage_ratio = coverage.get("coverage_ratio")
+    if (
+        not isinstance(coverage_ratio, int | float)
+        or coverage_ratio < policy["minimum_parsed_ratio"]
+    ):
+        failures.append("minimum_parsed_ratio")
+    parsed_counts = coverage.get("parsed_geometry_counts")
+    parsed_counts = parsed_counts if isinstance(parsed_counts, dict) else {}
+    for kind, minimum in policy["required_source_geometry"].items():
+        if parsed_counts.get(kind, 0) < minimum:
+            failures.append(f"required_source_geometry:{kind}")
+    rendered_curved_count = sum(
+        1 for path in rendered_semantic_paths if path.get("path_kind") == "curved_arrow"
+    )
+    if rendered_curved_count < policy["minimum_rendered_curved_semantic_paths"]:
+        failures.append("minimum_rendered_curved_semantic_paths")
+    return {
+        "configured": True,
+        "state": "passed" if not failures else "failed",
+        "clean_claim_allowed": not failures,
+        "failures": failures,
+        "policy": policy,
+        "observed": {
+            "coverage_ratio": coverage_ratio,
+            "parsed_geometry_counts": dict(sorted(parsed_counts.items())),
+            "rendered_curved_semantic_paths": rendered_curved_count,
+        },
+        "scientific_shape_authority": "human_review_required",
     }
 
 
@@ -512,6 +742,132 @@ def _line_crosses_word(line: dict[str, Any], word: dict[str, Any]) -> bool:
     y = float(line["y"])
     x_start, x_end = line["x_range"]
     return y0 <= y <= y1 and _ranges_overlap([x0, x1], [x_start, x_end], 0.0)
+
+
+def _segment_crosses_rect(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    rect: tuple[float, float, float, float],
+) -> bool:
+    x, y = start
+    dx = end[0] - x
+    dy = end[1] - y
+    x0, y0, x1, y1 = rect
+    lower = 0.0
+    upper = 1.0
+    for direction, offset in (
+        (-dx, x - x0),
+        (dx, x1 - x),
+        (-dy, y - y0),
+        (dy, y1 - y),
+    ):
+        if abs(direction) < 1e-12:
+            if offset < 0.0:
+                return False
+            continue
+        ratio = offset / direction
+        if direction < 0.0:
+            lower = max(lower, ratio)
+        else:
+            upper = min(upper, ratio)
+        if lower > upper:
+            return False
+    return True
+
+
+def _point_line_distance(
+    point: tuple[float, float],
+    start: tuple[float, float],
+    end: tuple[float, float],
+) -> float:
+    dx = end[0] - start[0]
+    dy = end[1] - start[1]
+    length = math.hypot(dx, dy)
+    if length < 1e-12:
+        return math.hypot(point[0] - start[0], point[1] - start[1])
+    return abs(dy * point[0] - dx * point[1] + end[0] * start[1] - end[1] * start[0]) / length
+
+
+def _midpoint(
+    left: tuple[float, float],
+    right: tuple[float, float],
+) -> tuple[float, float]:
+    return ((left[0] + right[0]) / 2.0, (left[1] + right[1]) / 2.0)
+
+
+def _flatten_cubic(
+    start: tuple[float, float],
+    control1: tuple[float, float],
+    control2: tuple[float, float],
+    end: tuple[float, float],
+    *,
+    depth: int = 0,
+) -> list[tuple[float, float]]:
+    flatness = max(
+        _point_line_distance(control1, start, end),
+        _point_line_distance(control2, start, end),
+    )
+    chord_length = math.dist(start, end)
+    control_polygon_length = (
+        math.dist(start, control1)
+        + math.dist(control1, control2)
+        + math.dist(control2, end)
+    )
+    if (
+        flatness <= RENDERED_CURVE_FLATNESS_PT
+        and control_polygon_length - chord_length <= RENDERED_CURVE_FLATNESS_PT
+    ) or depth >= 14:
+        return [start, end]
+
+    start_control = _midpoint(start, control1)
+    controls = _midpoint(control1, control2)
+    control_end = _midpoint(control2, end)
+    left_control = _midpoint(start_control, controls)
+    right_control = _midpoint(controls, control_end)
+    split = _midpoint(left_control, right_control)
+    left = _flatten_cubic(
+        start,
+        start_control,
+        left_control,
+        split,
+        depth=depth + 1,
+    )
+    right = _flatten_cubic(
+        split,
+        right_control,
+        control_end,
+        end,
+        depth=depth + 1,
+    )
+    return [*left[:-1], *right]
+
+
+def _bezier_path_crosses_word(path: dict[str, Any], word: dict[str, Any]) -> bool:
+    rect = _word_bbox(word)
+    current = tuple(float(value) for value in path["start_pt"])
+    for segment in path["segments"]:
+        end = tuple(float(value) for value in segment["end_pt"])
+        if segment["command"] == "line_to":
+            if _segment_crosses_rect(current, end, rect):
+                return True
+            current = end
+            continue
+        control1 = tuple(float(value) for value in segment["control1_pt"])
+        control2 = tuple(float(value) for value in segment["control2_pt"])
+        points = _flatten_cubic(current, control1, control2, end)
+        previous = points[0]
+        for point in points[1:]:
+            if _segment_crosses_rect(previous, point, rect):
+                return True
+            previous = point
+        current = end
+    return False
+
+
+def _semantic_arrow_crosses_word(shaft: dict[str, Any], word: dict[str, Any]) -> bool:
+    if shaft["kind"] == "bezier_path":
+        return _bezier_path_crosses_word(shaft, word)
+    return _line_crosses_word(shaft, word)
 
 
 def _rect_boundary_lines(bbox_pt: list[float]) -> list[dict[str, Any]]:
@@ -767,28 +1123,337 @@ def _line_endpoints(line: dict[str, Any]) -> tuple[tuple[float, float], tuple[fl
     )
 
 
-def _curve_is_matching_arrowhead(
+def _curve_matching_arrowhead_endpoint(
     raw_curve: dict[str, Any],
-    raw_line: dict[str, Any],
-    line: dict[str, Any],
-) -> bool:
+    stroke_color: object,
+    endpoints: tuple[tuple[float, float], tuple[float, float]],
+) -> str | None:
     if not raw_curve.get("fill"):
-        return False
-    if not _colors_close(raw_curve.get("stroking_color"), raw_line.get("stroking_color")):
-        return False
+        return None
+    path = raw_curve.get("path")
+    if not isinstance(path, list):
+        return None
+    path_commands = [item[0] for item in path if isinstance(item, tuple) and item]
+    if (
+        len(path_commands) < 4
+        or path_commands[0] != "m"
+        or path_commands[-1] != "h"
+        or any(command != "l" for command in path_commands[1:-1])
+    ):
+        return None
+    if not _colors_close(raw_curve.get("stroking_color"), stroke_color):
+        return None
     x0 = float(raw_curve["x0"])
     x1 = float(raw_curve["x1"])
     top = float(raw_curve["top"])
     bottom = float(raw_curve["bottom"])
     if abs(x1 - x0) > RENDERED_ARROW_HEAD_MAX_SIZE_PT:
-        return False
+        return None
     if abs(bottom - top) > RENDERED_ARROW_HEAD_MAX_SIZE_PT:
-        return False
+        return None
     head_bbox = (min(x0, x1), min(top, bottom), max(x0, x1), max(top, bottom))
-    return any(
-        _point_rect_distance(x, y, head_bbox) <= RENDERED_ARROW_HEAD_ENDPOINT_TOLERANCE_PT
-        for x, y in _line_endpoints(line)
+    distances = [_point_rect_distance(x, y, head_bbox) for x, y in endpoints]
+    nearest_index = min(range(len(distances)), key=distances.__getitem__)
+    if distances[nearest_index] > RENDERED_ARROW_HEAD_ENDPOINT_TOLERANCE_PT:
+        return None
+    return ("start", "end")[nearest_index]
+
+
+def _matching_arrowheads(
+    rendered_curves: list[dict[str, Any]],
+    stroke_color: object,
+    endpoints: tuple[tuple[float, float], tuple[float, float]],
+) -> list[tuple[dict[str, Any], str]]:
+    matches: list[tuple[dict[str, Any], str]] = []
+    for candidate in rendered_curves:
+        endpoint = _curve_matching_arrowhead_endpoint(candidate, stroke_color, endpoints)
+        if endpoint is not None:
+            matches.append((candidate, endpoint))
+    return matches
+
+
+def _arrowhead_endpoint_labels(matches: list[tuple[dict[str, Any], str]]) -> list[str]:
+    labels = {endpoint for _, endpoint in matches}
+    return [endpoint for endpoint in ("start", "end") if endpoint in labels]
+
+
+def _rendered_bezier_path(
+    raw_curve: dict[str, Any],
+    *,
+    allow_neutral: bool = False,
+) -> dict[str, Any] | None:
+    if raw_curve.get("fill") or (
+        not allow_neutral and not _is_chromatic_stroke(raw_curve.get("stroking_color"))
+    ):
+        return None
+    if max(
+        abs(float(raw_curve["x1"]) - float(raw_curve["x0"])),
+        abs(float(raw_curve["bottom"]) - float(raw_curve["top"])),
+    ) < RENDERED_ARROW_SHAFT_MIN_LENGTH_PT:
+        return None
+    path = raw_curve.get("path")
+    if not isinstance(path, list) or len(path) < 2:
+        return None
+    move = path[0]
+    if not isinstance(move, tuple) or len(move) != 2 or move[0] != "m":
+        return None
+    start = move[1]
+    if not isinstance(start, tuple) or len(start) != 2:
+        return None
+
+    segments: list[dict[str, Any]] = []
+    for item in path[1:]:
+        if not isinstance(item, tuple) or not item:
+            return None
+        if item[0] == "l" and len(item) == 2:
+            end = item[1]
+            if not isinstance(end, tuple) or len(end) != 2:
+                return None
+            segments.append(
+                {
+                    "command": "line_to",
+                    "end_pt": [float(end[0]), float(end[1])],
+                }
+            )
+            continue
+        if item[0] != "c" or len(item) != 4:
+            return None
+        control1, control2, end = item[1:]
+        if not all(isinstance(point, tuple) and len(point) == 2 for point in item[1:]):
+            return None
+        segments.append(
+            {
+                "command": "cubic_to",
+                "control1_pt": [float(control1[0]), float(control1[1])],
+                "control2_pt": [float(control2[0]), float(control2[1])],
+                "end_pt": [float(end[0]), float(end[1])],
+            }
+        )
+    return {
+        "kind": "bezier_path",
+        "start_pt": [float(start[0]), float(start[1])],
+        "segments": segments,
+    }
+
+
+def _bezier_path_endpoints(
+    path: dict[str, Any],
+) -> tuple[tuple[float, float], tuple[float, float]]:
+    start = path["start_pt"]
+    end = path["segments"][-1]["end_pt"]
+    return (float(start[0]), float(start[1])), (float(end[0]), float(end[1]))
+
+
+def resolve_rendered_semantic_arrows(
+    rendered_lines: list[dict[str, Any]],
+    rendered_curves: list[dict[str, Any]],
+    *,
+    allow_neutral_curved: bool = False,
+) -> list[dict[str, Any]]:
+    """Reconstruct axis-aligned and curved semantic arrows from rendered PDF geometry."""
+    resolved: list[dict[str, Any]] = []
+    for raw_line in rendered_lines:
+        if not _is_chromatic_stroke(raw_line.get("stroking_color")):
+            continue
+        shaft = _rendered_axis_aligned_line(raw_line)
+        if shaft is None:
+            continue
+        arrowhead_matches = _matching_arrowheads(
+            rendered_curves,
+            raw_line.get("stroking_color"),
+            _line_endpoints(shaft),
+        )
+        if not arrowhead_matches:
+            continue
+        arrowheads = [arrowhead for arrowhead, _ in arrowhead_matches]
+
+        shaft_bbox = _line_bbox(shaft)
+        x_values = [shaft_bbox[0], shaft_bbox[2]]
+        y_values = [shaft_bbox[1], shaft_bbox[3]]
+        for arrowhead in arrowheads:
+            x_values.extend([float(arrowhead["x0"]), float(arrowhead["x1"])])
+            y_values.extend([float(arrowhead["top"]), float(arrowhead["bottom"])])
+
+        color = _color_channels(raw_line.get("stroking_color"))
+        resolved.append(
+            {
+                "kind": "axis_aligned_arrow",
+                "orientation": ("vertical" if shaft["kind"] == "vertical_line" else "horizontal"),
+                "shaft": shaft,
+                "arrowhead_count": len(arrowheads),
+                "arrowhead_endpoints": _arrowhead_endpoint_labels(arrowhead_matches),
+                "bbox_pt": [
+                    min(x_values),
+                    min(y_values),
+                    max(x_values),
+                    max(y_values),
+                ],
+                "stroke_color": list(color or ()),
+                "line_width_pt": float(raw_line.get("linewidth") or 0.0),
+            }
+        )
+
+    for raw_curve in rendered_curves:
+        shaft = _rendered_bezier_path(raw_curve, allow_neutral=allow_neutral_curved)
+        if shaft is None:
+            continue
+        arrowhead_matches = _matching_arrowheads(
+            rendered_curves,
+            raw_curve.get("stroking_color"),
+            _bezier_path_endpoints(shaft),
+        )
+        if not arrowhead_matches:
+            continue
+        arrowheads = [arrowhead for arrowhead, _ in arrowhead_matches]
+
+        x_values = [float(raw_curve["x0"]), float(raw_curve["x1"])]
+        y_values = [float(raw_curve["top"]), float(raw_curve["bottom"])]
+        for arrowhead in arrowheads:
+            x_values.extend([float(arrowhead["x0"]), float(arrowhead["x1"])])
+            y_values.extend([float(arrowhead["top"]), float(arrowhead["bottom"])])
+        color = _color_channels(raw_curve.get("stroking_color"))
+        resolved.append(
+            {
+                "kind": "curved_arrow",
+                "orientation": "freeform",
+                "shaft": shaft,
+                "arrowhead_count": len(arrowheads),
+                "arrowhead_endpoints": _arrowhead_endpoint_labels(arrowhead_matches),
+                "bbox_pt": [
+                    min(x_values),
+                    min(y_values),
+                    max(x_values),
+                    max(y_values),
+                ],
+                "stroke_color": list(color or ()),
+                "line_width_pt": float(raw_curve.get("linewidth") or 0.0),
+            }
+        )
+
+    resolved.sort(
+        key=lambda arrow: (
+            0 if arrow["kind"] == "axis_aligned_arrow" else 1,
+            tuple(arrow["bbox_pt"]),
+            arrow["orientation"],
+            json.dumps(arrow["shaft"], sort_keys=True),
+            tuple(arrow["stroke_color"]),
+            arrow["line_width_pt"],
+            arrow["arrowhead_count"],
+        )
     )
+    for index, arrow in enumerate(resolved, start=1):
+        arrow["id"] = f"RA{index:03d}"
+    return resolved
+
+
+def _semantic_path_polyline(shaft: dict[str, Any]) -> list[tuple[float, float]]:
+    if shaft["kind"] == "vertical_line":
+        return [
+            (float(shaft["x"]), float(shaft["y_range"][0])),
+            (float(shaft["x"]), float(shaft["y_range"][1])),
+        ]
+    if shaft["kind"] == "horizontal_line":
+        return [
+            (float(shaft["x_range"][0]), float(shaft["y"])),
+            (float(shaft["x_range"][1]), float(shaft["y"])),
+        ]
+
+    current = tuple(float(value) for value in shaft["start_pt"])
+    points = [current]
+    for segment in shaft["segments"]:
+        end = tuple(float(value) for value in segment["end_pt"])
+        if segment["command"] == "line_to":
+            points.append(end)
+        else:
+            control1 = tuple(float(value) for value in segment["control1_pt"])
+            control2 = tuple(float(value) for value in segment["control2_pt"])
+            points.extend(_flatten_cubic(current, control1, control2, end)[1:])
+        current = end
+    return points
+
+
+def _axis_turn_count(points: list[tuple[float, float]], axis_index: int) -> int:
+    directions: list[int] = []
+    for left, right in zip(points, points[1:]):
+        delta = right[axis_index] - left[axis_index]
+        if abs(delta) <= RENDERED_CURVE_FLATNESS_PT:
+            continue
+        direction = 1 if delta > 0.0 else -1
+        if not directions or directions[-1] != direction:
+            directions.append(direction)
+    return max(len(directions) - 1, 0)
+
+
+def measure_rendered_semantic_paths(
+    arrows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Return threshold-free geometry metrics for resolved semantic paths."""
+    measurements: list[dict[str, Any]] = []
+    for arrow in arrows:
+        points = _semantic_path_polyline(arrow["shaft"])
+        arrowhead_endpoints = list(arrow.get("arrowhead_endpoints", []))
+        endpoint_set = set(arrowhead_endpoints)
+        if endpoint_set == {"start"}:
+            points.reverse()
+        is_bidirectional = endpoint_set == {"start", "end"}
+        start = points[0]
+        end = points[-1]
+        displacement = (end[0] - start[0], end[1] - start[1])
+        net_length = math.hypot(*displacement)
+        arc_length = sum(
+            math.hypot(right[0] - left[0], right[1] - left[1])
+            for left, right in zip(points, points[1:])
+        )
+        has_net_progress = net_length > RENDERED_CURVE_FLATNESS_PT
+        dominant_index = 0 if abs(displacement[0]) >= abs(displacement[1]) else 1
+        dominant_displacement = displacement[dominant_index]
+        dominant_sign = 1.0 if dominant_displacement >= 0.0 else -1.0
+        dominant_steps = [
+            right[dominant_index] - left[dominant_index]
+            for left, right in zip(points, points[1:])
+        ]
+        dominant_travel = sum(abs(step) for step in dominant_steps)
+        backtracking = sum(max(-dominant_sign * step, 0.0) for step in dominant_steps)
+        measurements.append(
+            {
+                "path_id": str(arrow["id"]),
+                "path_kind": str(arrow["kind"]),
+                "arrowhead_endpoints": arrowhead_endpoints,
+                "net_displacement_pt": [
+                    round(displacement[0], 6),
+                    round(displacement[1], 6),
+                ],
+                "arc_length_pt": round(arc_length, 6),
+                "has_net_progress": has_net_progress,
+                "tortuosity_ratio": (
+                    round(arc_length / net_length, 6) if has_net_progress else None
+                ),
+                "dominant_axis": ("x", "y")[dominant_index]
+                if has_net_progress
+                else None,
+                "dominant_direction": (
+                    "bidirectional"
+                    if is_bidirectional
+                    else ("positive" if dominant_sign > 0.0 else "negative")
+                )
+                if has_net_progress
+                else None,
+                "backtracking_ratio": (
+                    round(
+                        backtracking / dominant_travel if dominant_travel else 0.0,
+                        6,
+                    )
+                    if has_net_progress and not is_bidirectional
+                    else None
+                ),
+                "orthogonal_turn_count": (
+                    _axis_turn_count(points, 1 - dominant_index)
+                    if has_net_progress
+                    else None
+                ),
+            }
+        )
+    return measurements
 
 
 def detect_rendered_semantic_path_crossings(
@@ -798,25 +1463,22 @@ def detect_rendered_semantic_path_crossings(
 ) -> list[dict[str, Any]]:
     """Return text crossings for rendered chromatic arrows in PDF coordinates."""
     candidates: list[dict[str, Any]] = []
-    for raw_line in rendered_lines:
-        if not _is_chromatic_stroke(raw_line.get("stroking_color")):
-            continue
-        line = _rendered_axis_aligned_line(raw_line)
-        if line is None:
-            continue
-        if not any(
-            _curve_is_matching_arrowhead(raw_curve, raw_line, line)
-            for raw_curve in rendered_curves
-        ):
-            continue
+    for arrow in resolve_rendered_semantic_arrows(rendered_lines, rendered_curves):
+        shaft = arrow["shaft"]
         for word in words:
-            if not _semantic_path_label_candidate(word) or not _line_crosses_word(line, word):
+            if not _semantic_path_label_candidate(word) or not _semantic_arrow_crosses_word(
+                shaft, word
+            ):
                 continue
             candidates.append(
                 _base_candidate(
                     kind="label_crosses_semantic_path",
                     evidence=f"rendered semantic arrow crosses text {word.get('text', '')!r}",
-                    bbox_pt=_line_bbox(line),
+                    bbox_pt=(
+                        arrow["bbox_pt"]
+                        if shaft["kind"] == "bezier_path"
+                        else _line_bbox(shaft)
+                    ),
                     source_line=0,
                     nearest_text=str(word.get("text", "")),
                     distance_pt=0.0,
@@ -846,6 +1508,23 @@ def _rendered_curves_from_pdf(pdf_path: Path) -> list[dict[str, Any]]:
         if not pdf.pages:
             return []
         return list(pdf.pages[0].curves)
+
+
+def _rendered_semantic_path_metrics_from_pdf(
+    pdf_path: Path,
+    *,
+    allow_neutral_curved: bool = False,
+) -> list[dict[str, Any]]:
+    with pdfplumber.open(pdf_path) as pdf:
+        if not pdf.pages:
+            return []
+        page = pdf.pages[0]
+        arrows = resolve_rendered_semantic_arrows(
+            page.lines,
+            page.curves,
+            allow_neutral_curved=allow_neutral_curved,
+        )
+        return measure_rendered_semantic_paths(arrows)
 
 
 def detect_undeclared_geometry(
@@ -1002,6 +1681,8 @@ def undeclared_geometry_payload(
     tex_path: Path | None = None,
     tex_text: str | None = None,
     rendered_curves: list[dict[str, Any]] | None = None,
+    rendered_semantic_path_metrics: list[dict[str, Any]] | None = None,
+    spec: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
@@ -1022,6 +1703,14 @@ def undeclared_geometry_payload(
         if rendered_curves is not None:
             coverage["rendered_curves"] = rendered_curve_coverage(rendered_curves)
         payload["geometry_parse_coverage"] = coverage
+    if rendered_semantic_path_metrics is not None:
+        payload["rendered_semantic_paths"] = rendered_semantic_path_metrics
+    if tex_text is not None:
+        payload["geometry_coverage_gate"] = geometry_coverage_gate(
+            payload["geometry_parse_coverage"],
+            rendered_semantic_path_metrics or [],
+            spec or {},
+        )
     return payload
 
 
@@ -1102,6 +1791,15 @@ def main(argv: list[str] | None = None) -> int:
         )
         candidates.extend(_rendered_boundary_crossings_from_pdf(pdf_path, words))
         rendered_curves = _rendered_curves_from_pdf(pdf_path)
+        source_geometry = _parse_tikz_geometry(tex_text)
+        rendered_semantic_path_metrics = _rendered_semantic_path_metrics_from_pdf(
+            pdf_path,
+            allow_neutral_curved=any(
+                geometry["kind"] == "to_curve"
+                and geometry.get("semantic_role") == "transfer_path"
+                for geometry in source_geometry
+            ),
+        )
         candidates.sort(
             key=lambda item: (
                 item["source_line"],
@@ -1124,6 +1822,8 @@ def main(argv: list[str] | None = None) -> int:
             tex_path=tex_path,
             tex_text=tex_text,
             rendered_curves=rendered_curves,
+            rendered_semantic_path_metrics=rendered_semantic_path_metrics,
+            spec=spec,
         )
         if profile == "schematic":
             payload["profile"] = "schematic"
@@ -1147,7 +1847,19 @@ def main(argv: list[str] | None = None) -> int:
         )
     if actionable:
         print(f"{len(actionable)} undeclared geometry candidate(s)", file=sys.stderr)
-    if args.strict and actionable:
+    coverage_gate = payload.get("geometry_coverage_gate", {})
+    coverage_gate_failed = (
+        not actionable
+        and coverage_gate.get("configured") is True
+        and coverage_gate.get("state") == "failed"
+    )
+    if coverage_gate_failed:
+        print(
+            "WARN geometry coverage gate: zero findings cannot be called clean "
+            f"({', '.join(coverage_gate.get('failures', []))})",
+            file=sys.stderr,
+        )
+    if args.strict and (actionable or coverage_gate_failed):
         return 1
     return 0
 

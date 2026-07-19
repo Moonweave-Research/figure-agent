@@ -201,6 +201,29 @@ def test_apply_blocks_source_hash_drift(tmp_path: Path) -> None:
     assert result["diagnostics"][0]["code"] == "source_hash_mismatch"
 
 
+def test_apply_preserves_candidate_hash_mismatch_diagnostic_code(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+    packet = _candidate_packet(workspace)
+    decision = _source_mutation_decision(packet)
+    decision["authorized_candidate_hash"] = "sha256:" + "0" * 64
+
+    result = bounded_tikz_candidate_apply.apply_bounded_tikz_candidate(
+        FIXTURE,
+        workspace_root=workspace,
+        candidate_packet=packet,
+        source_mutation_decision=decision,
+        apply=True,
+    )
+
+    assert result["status"] == "blocked"
+    assert result["diagnostics"][0]["code"] == (
+        "source_mutation_decision_candidate_hash_mismatch"
+    )
+
+
 def test_fig_agent_bounded_tikz_apply_dry_run_reads_workspace_source(
     tmp_path: Path,
 ) -> None:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# ruff: noqa: I001
+
 import hashlib
 import json
 import sys
@@ -11,6 +13,16 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "quality"))
 
 from failure_ablation import FailureAblationError, evaluate_ablation
+
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+CAPABILITY_DECISION = (
+    PLUGIN_ROOT / "benchmarks" / "failure_first_capability_decision.yaml"
+)
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _write_run(root: Path, variant: str, findings: list[dict[str, str]]) -> Path:
@@ -50,11 +62,17 @@ def write_comparable_runs(root: Path) -> dict[str, Path]:
     }
 
 
-def add_generation_receipt(path: Path, *, model_id: str = "test-model") -> None:
+def add_generation_receipt(
+    path: Path,
+    *,
+    model_id: str = "test-model",
+    starting_artifact_path: Path | None = None,
+) -> None:
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
-    starting_artifact_path = path.with_name("starting.tex")
+    if starting_artifact_path is None:
+        starting_artifact_path = path.with_name("starting.tex")
+        starting_artifact_path.write_text("starting artifact\n", encoding="utf-8")
     generated_artifact_path = path.with_name(f"{path.stem}.generated.tex")
-    starting_artifact_path.write_text("starting artifact\n", encoding="utf-8")
     generated_artifact_path.write_text(
         f"generated {path.stem} artifact\n", encoding="utf-8"
     )
@@ -124,6 +142,23 @@ def test_reports_failure_reduction_without_claiming_acceptance(tmp_path: Path) -
     assert report["publication_acceptance"] == "not_claimed"
 
 
+def test_reports_defect_occurrences_separately_from_finding_kinds(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    raw = yaml.safe_load(paths["raw"].read_text(encoding="utf-8"))
+    raw["findings"][0]["occurrences"] = 3
+    paths["raw"].write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    report = evaluate_ablation(paths)
+
+    assert report["variants"]["raw"]["confirmed_defect_count"] == 1
+    assert report["variants"]["raw"]["confirmed_defect_occurrence_count"] == 3
+    assert report["deltas"]["repaired_vs_raw"][
+        "confirmed_defect_occurrence_count"
+    ] == -3
+
+
 def test_ablation_rejects_missing_comparison_contract(tmp_path: Path) -> None:
     paths = write_comparable_runs(tmp_path)
     for path in paths.values():
@@ -146,6 +181,125 @@ def test_recorded_human_verdict_requires_named_reviewer(tmp_path: Path) -> None:
         for variant in report["variants"].values()
     )
     assert report["product_claim"] == "not_authorized"
+
+
+def test_named_human_rejection_blocks_product_claim(tmp_path: Path) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["human_verdict"] = {
+            "state": "recorded",
+            "reviewer": "moon",
+            "decision": "rejected",
+        }
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+        add_generation_receipt(path)
+
+    report = evaluate_ablation(paths)
+
+    assert all(
+        variant["human_verdict_state"] == "recorded"
+        for variant in report["variants"].values()
+    )
+    assert all(
+        variant["human_verdict_decision"] == "rejected"
+        for variant in report["variants"].values()
+    )
+    assert report["product_claim"] == "not_authorized"
+
+
+def test_missing_prospective_correction_time_blocks_product_claim(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["human_verdict"] = {
+            "state": "recorded",
+            "reviewer": "moon",
+            "decision": "accepted",
+        }
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+        add_generation_receipt(path)
+
+    report = evaluate_ablation(paths)
+
+    assert report["correction_time_gate"] == "failed"
+    assert report["product_claim"] == "not_authorized"
+
+
+def test_independent_third_generation_is_not_a_bounded_repair_child(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    correction_minutes = {"raw": 12.0, "verified": 8.0, "repaired": 3.0}
+    for variant, path in paths.items():
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["human_correction_minutes"] = correction_minutes[variant]
+        payload["human_verdict"] = {
+            "state": "recorded",
+            "reviewer": "moon",
+            "decision": "accepted",
+        }
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+        add_generation_receipt(path)
+
+    report = evaluate_ablation(paths)
+
+    assert report["correction_time_gate"] == "passed"
+    assert report["lineage_gate"] == "failed"
+    assert report["product_claim"] == "not_authorized"
+
+
+def test_bounded_repair_child_allows_review_eligibility(tmp_path: Path) -> None:
+    paths = write_comparable_runs(tmp_path)
+    correction_minutes = {"raw": 12.0, "verified": 8.0, "repaired": 3.0}
+    roles = {
+        "raw": "raw_authoring",
+        "verified": "contract_authoring",
+        "repaired": "bounded_repair_child",
+    }
+    for variant in ("raw", "verified"):
+        path = paths[variant]
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["comparison_role"] = roles[variant]
+        payload["human_correction_minutes"] = correction_minutes[variant]
+        payload["human_verdict"] = {
+            "state": "recorded",
+            "reviewer": "moon",
+            "decision": "accepted",
+        }
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+        add_generation_receipt(path)
+
+    verified = yaml.safe_load(paths["verified"].read_text(encoding="utf-8"))
+    verified_child_source = tmp_path / verified["generation_receipt"][
+        "generated_artifact_path"
+    ]
+    repaired = yaml.safe_load(paths["repaired"].read_text(encoding="utf-8"))
+    repaired["comparison_role"] = roles["repaired"]
+    repaired["parent_variant"] = "verified"
+    repaired["parent_generated_artifact_sha256"] = verified["generation_receipt"][
+        "generated_artifact_sha256"
+    ]
+    repaired["human_correction_minutes"] = correction_minutes["repaired"]
+    repaired["human_verdict"] = {
+        "state": "recorded",
+        "reviewer": "moon",
+        "decision": "accepted",
+    }
+    paths["repaired"].write_text(
+        yaml.safe_dump(repaired, sort_keys=False), encoding="utf-8"
+    )
+    add_generation_receipt(
+        paths["repaired"], starting_artifact_path=verified_child_source
+    )
+
+    report = evaluate_ablation(paths)
+
+    assert report["correction_time_gate"] == "passed"
+    assert report["lineage_gate"] == "passed"
+    assert report["product_claim"] == "review_eligible"
 
 
 def test_ablation_marks_manifests_without_bound_generation_receipts_as_staged(
@@ -174,6 +328,47 @@ def test_ablation_rejects_generation_receipts_from_different_models(tmp_path: Pa
     report = evaluate_ablation(paths)
 
     assert report["comparison_evidence"] == "staged_only"
+
+
+def test_ablation_rejects_explicitly_ineligible_run_even_with_bound_receipts(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
+        add_generation_receipt(path)
+
+    verified = yaml.safe_load(paths["verified"].read_text(encoding="utf-8"))
+    verified["comparison_eligibility"] = "feedback_guided_not_equal_input"
+    paths["verified"].write_text(
+        yaml.safe_dump(verified, sort_keys=False), encoding="utf-8"
+    )
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "staged_only"
+    assert report["product_claim"] == "not_authorized"
+
+
+def test_nonreproducible_run_blocks_product_claim_with_human_verdicts(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["human_verdict"] = {"state": "recorded", "reviewer": "moon"}
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+        add_generation_receipt(path)
+
+    repaired = yaml.safe_load(paths["repaired"].read_text(encoding="utf-8"))
+    repaired["clean_reproduction"] = False
+    paths["repaired"].write_text(
+        yaml.safe_dump(repaired, sort_keys=False), encoding="utf-8"
+    )
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "transcript_bound"
+    assert report["product_claim"] == "not_authorized"
 
 
 def test_ablation_rejects_generation_receipts_with_changed_artifacts(
@@ -207,3 +402,22 @@ def test_ablation_requires_a_hash_bound_generation_transcript(tmp_path: Path) ->
     report = evaluate_ablation(paths)
 
     assert report["comparison_evidence"] == "staged_only"
+
+
+def test_two_family_capability_decision_is_evidence_bound_and_non_promotional() -> None:
+    decision = yaml.safe_load(CAPABILITY_DECISION.read_text(encoding="utf-8"))
+
+    assert decision["schema"] == "figure-agent.failure-first-capability-decision.v1"
+    assert decision["decision"] == "insufficient_evidence"
+    assert decision["publication_acceptance"] == "not_claimed"
+    assert decision["product_rule_change"] == "not_authorized"
+    assert set(decision["families"]) == {"fig1", "fig3"}
+    for family in decision["families"].values():
+        for input_item in family["inputs"]:
+            path = PLUGIN_ROOT / input_item["path"]
+            assert input_item["sha256"] == _sha256(path)
+
+    classifications = {item["id"]: item["classification"] for item in decision["capabilities"]}
+    assert "promote" not in classifications.values()
+    assert classifications["human_scaffold_verdict"] == "human_only"
+    assert classifications["direct_svg_primary_authoring"] == "retire"

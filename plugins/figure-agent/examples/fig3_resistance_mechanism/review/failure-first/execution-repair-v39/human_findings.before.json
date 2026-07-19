@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_sha256": "sha256:38b0056e2a5d5cdf6b3c976bd9d8e756e8a9c2892a872c379031fd41dd50db82",
+  "reviewer": "Moon",
+  "decision": "corrections_required",
+  "findings": [{
+    "id": "HF021",
+    "subject": "panel_b_ge_axis_ownership",
+    "finding": "g(E) floats above the y-axis tip and does not read as the ordinate paired with trap energy E"
+  }],
+  "publication_acceptance": "not_claimed"
+}

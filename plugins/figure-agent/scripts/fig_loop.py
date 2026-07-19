@@ -11,15 +11,21 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Callable
+from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(1, str(Path(__file__).resolve().parent / "quality"))
 
+import closed_loop_attempt_state  # noqa: E402
+import closed_loop_current_state  # noqa: E402
 import fixture_identity  # noqa: E402
 import narrative_context  # noqa: E402
+import repair_transaction  # noqa: E402
 from fig_driver_editorial import (  # noqa: E402
     svg_polish_gate_from_checkpoint,
     svg_polish_readiness_from_checkpoint,
@@ -72,6 +78,7 @@ from status import infer_stage  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RUNS_ROOT = REPO_ROOT / ".scratch" / "fig-loop-runs"
 MODE = "verify-only"
+RUN_SCHEMA = "figure-agent.fig-loop-run.v1"
 _GIT_MUTATIONS = frozenset(
     {"add", "commit", "reset", "checkout", "clean", "push", "merge", "rebase"}
 )
@@ -79,6 +86,18 @@ _GIT_MUTATIONS = frozenset(
 
 class FigLoopError(ValueError):
     """Expected user-facing error for fig loop preflight failures."""
+
+
+class FigLoopAdmissionRejected(FigLoopError):
+    """Admission callback rejected the loop before any scratch output."""
+
+
+class FigLoopAdmissionBusy(FigLoopError):
+    """The fixture admission lease is currently held by another operation."""
+
+
+class FigLoopAdmissionInvalid(FigLoopError):
+    """Fixture admission or canonical preflight is invalid."""
 
 
 @dataclass(frozen=True)
@@ -475,6 +494,82 @@ def run_loop(
     *,
     repo_root: Path = REPO_ROOT,
     runs_root: Path | None = None,
+    admission_check: Callable[[], bool] | None = None,
+    post_run_callback: Callable[[Path], None] | None = None,
+) -> Path:
+    """Run one legacy checkpoint, then finalize internal evidence under the lease."""
+    try:
+        fixture_identity.validate_fixture_name(name)
+    except ValueError as exc:
+        raise FigLoopError(str(exc)) from exc
+    root = repo_root.resolve()
+    try:
+        normalized_runs_root = closed_loop_attempt_state.validate_legacy_runs_root(
+            root,
+            runs_root or root / ".scratch" / "fig-loop-runs",
+        )
+    except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+        raise FigLoopAdmissionInvalid(str(exc)) from exc
+    example_dir = root / "examples" / name
+    if not example_dir.is_dir():
+        raise FigLoopError(f"examples/{name}/ not found")
+    with ExitStack() as stack:
+        try:
+            stack.enter_context(
+                closed_loop_attempt_state.fixture_admission_lock(root, name)
+            )
+        except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+            raise FigLoopAdmissionInvalid(f"canonical_preflight:{exc}") from exc
+        except closed_loop_attempt_state.FixtureAdmissionLeaseBusy as exc:
+            raise FigLoopAdmissionBusy(
+                "canonical_admission_legacy_coordination_busy; retry canonical admission "
+                "or legacy coordination"
+            ) from exc
+        except repair_transaction.RepairTransactionError as exc:
+            raise FigLoopAdmissionInvalid(str(exc)) from exc
+        except OSError as exc:
+            raise FigLoopAdmissionInvalid("canonical_preflight_error") from exc
+        if admission_check is not None and not admission_check():
+            raise FigLoopAdmissionRejected("fig_loop_admission_rejected")
+        try:
+            current = closed_loop_current_state.resolve_current_attempt(root, name)
+        except OSError as exc:
+            raise FigLoopAdmissionInvalid("canonical_state_resolution_error") from exc
+        if current.get("resolution") != "absent":
+            raise FigLoopAdmissionInvalid(
+                "canonical_attempt_resolution:"
+                f"{current.get('resolution')}:{current.get('reason')}; "
+                "use canonical status/lifecycle"
+            )
+        source = example_dir / f"{name}.tex"
+        if source.exists() or source.is_symlink():
+            try:
+                closed_loop_attempt_state._workspace_artifact(  # noqa: SLF001
+                    root, name, source, label="source"
+                )
+            except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+                raise FigLoopAdmissionInvalid(f"canonical_preflight:{exc}") from exc
+        run_dir = _run_loop_after_admission(
+            name,
+            goal,
+            repo_root=root,
+            runs_root=normalized_runs_root,
+        )
+        if post_run_callback is not None:
+            try:
+                post_run_callback(run_dir)
+            except Exception:
+                # Evidence finalization is diagnostic-only and cannot alter loop success.
+                pass
+        return run_dir
+
+
+def _run_loop_after_admission(
+    name: str,
+    goal: str,
+    *,
+    repo_root: Path = REPO_ROOT,
+    runs_root: Path | None = None,
 ) -> Path:
     """Run one verify-only loop iteration and return the run directory."""
     try:
@@ -482,7 +577,13 @@ def run_loop(
     except ValueError as exc:
         raise FigLoopError(str(exc)) from exc
     repo_root = repo_root.resolve()
-    runs_root = (runs_root or repo_root / ".scratch" / "fig-loop-runs").resolve()
+    try:
+        runs_root = closed_loop_attempt_state.validate_legacy_runs_root(
+            repo_root,
+            runs_root or repo_root / ".scratch" / "fig-loop-runs",
+        )
+    except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
+        raise FigLoopError(str(exc)) from exc
     example_dir = repo_root / "examples" / name
     if not example_dir.is_dir():
         raise FigLoopError(f"examples/{name}/ not found")
@@ -615,7 +716,7 @@ def run_loop(
     if basin is not None:
         iteration["basin_summary"] = basin
     manifest = {
-        "schema": "figure-agent.fig-loop-run.v1",
+        "schema": RUN_SCHEMA,
         "fixture": name,
         "mode": MODE,
         "goal": goal,
@@ -637,22 +738,9 @@ def run_loop(
         repo_root=repo_root,
         plugin_root=REPO_ROOT,
     )
-    auto_remedy, stop_report = _apply_auto_remedy(
-        name,
-        run_dir,
-        repo_root=repo_root,
-        status_result=status_result,
-        stop_report=stop_report,
-    )
     iteration["stop_diagnosis"] = _stop_diagnosis_summary(stop_report)
     iteration["stop_routes"] = _stop_route_records(stop_report)
-    iteration["auto_remedy"] = auto_remedy
-    if auto_remedy is not None and auto_remedy.get("status") == "remedy_ineffective":
-        iteration["stop_reason"] = "remedy_ineffective"
-        iteration["recommended_next_action"] = (
-            f"auto-remedy ineffective for {auto_remedy.get('cause')}; inspect stop_report.json"
-        )
-        manifest["final_stop_reason"] = "remedy_ineffective"
+    iteration["auto_remedy"] = None
     manifest["stop_report"] = "stop_report.json"
     manifest["dominant_premature_cause"] = stop_report.get("dominant_premature_cause")
     manifest["dominant_premature_count"] = stop_report.get("dominant_premature_count")
@@ -677,13 +765,22 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("name", help="fixture name under examples/")
     parser.add_argument("--goal", required=True, help="natural-language loop goal")
+    parser.add_argument("--repo-root", type=Path, default=None, help=argparse.SUPPRESS)
     parser.add_argument("--runs-root", type=Path, default=None)
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args(argv)
 
     try:
-        run_dir = run_loop(args.name, args.goal, runs_root=args.runs_root)
+        if args.repo_root is None:
+            run_dir = run_loop(args.name, args.goal, runs_root=args.runs_root)
+        else:
+            run_dir = run_loop(
+                args.name,
+                args.goal,
+                repo_root=args.repo_root,
+                runs_root=args.runs_root,
+            )
     except FigLoopError as exc:
         print(f"fig_loop.py: {exc}", file=sys.stderr)
         return 1

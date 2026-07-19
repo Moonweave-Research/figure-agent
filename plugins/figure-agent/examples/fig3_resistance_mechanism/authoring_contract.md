@@ -2,30 +2,44 @@
 
 ## Role
 
-This fixture is the schematic half of the paper's Fig 3 composite. It explains why
-transient-current resistance data are direct evidence of charge trapping during
-conduction, bridging Fig 2 dielectric response to Fig 4 trap-energy quantification.
+Produce a three-column, Nature Communications-style explanatory schematic: **(a) trapping
+mechanism → (b) qualitative transient-current response → (c) composition-dependent
+trap-energy landscape**. It explains the interpretation of the experimental transient-current
+data; it must not impersonate that data.
 
 ## Must Preserve
 
-- Read left to right: applied bias cell -> dispersive trapping walk -> I(t) decay / R increase -> trap-energy distribution broadening.
-- Keep the carrier sign-agnostic. Do not imply electron-only or hole-only transport.
-- Encode Curie-von Schweidler behavior as qualitative decay, not a measured data plot.
-- Keep `n` as distribution breadth, not trap density or magnitude.
-- Keep `rho_60s` orthogonal to `n` as a magnitude cue.
-- Show low-sulfur traps as discrete and S80 as continuous broad.
-- Keep the schematic slim, compact, and dense, not bloated.
+- Panel A uses vertical `energy, E`, sign-agnostic carrier glyphs, and temporal capture → release
+  → representative slow-release occupancy. Every path endpoint attaches to a named carrier or trap anchor.
+- Panel B is the only `I(t)` graph. It has visible `current, I(t)` and `time, t` axes, no ticks or
+  values; its response curve and relation communicate that it is qualitative rather than a measured trace.
+- Panel B expresses only `I(t) ∝ t⁻ⁿ`, `trapping → I↓`, and `I=V/R → R↑`; it does not imply a
+  fitted exponent, a composition comparison, or an experimentally sampled trace.
+- Panel C uses the same vertical energy orientation as A. S60 is a representative set of discrete
+  horizontal energy states; S80 is a continuous broad energy support. They are separate units.
+- Keep the shared A/B/C header row optically above panel content. In panel C, the
+  composition-dependent heading must remain visibly clear of the sulfur-content annotation;
+  that clearance is a layout contract, not a discretionary last-pass adjustment.
+- A broader support cue is qualitative and must not equate geometric width directly with `n` or read
+  as a fitted density-of-states envelope.
+- Encode S80 as a dense, irregular field of horizontal state marks over a broader vertical span; do
+  not use a symmetric silhouette, closed contour, or hard-edged interior container to stand for it.
+- Place the Panel A terminal-state annotation as unboxed text in deliberate whitespace. A knockout
+  label is only a last resort after a verified background conflict, never a default detector workaround.
+- When a leader is necessary to disambiguate a semantic annotation, name the leader target coordinate
+  and the label node, place that node at the named coordinate, and declare the relation in
+  `named_endpoint_assertions.required_node_bindings`. Do not add a leader merely as decoration.
+- Keep the schematic slim, dense, and readable at a main-figure scale.
 
 ## Must Not Infer
 
-- Do not add unverified trap chemistry such as S-S radicals or sulfur clusters.
-- Do not add quantitative tick values or measured curve parameters.
-- Do not convert this schematic into the data-graph half of Fig 3.
-- Do not encode stronger trapping as well depth.
-- Do not use “trap network”; the intended phrase is trap-energy distribution or landscape.
+- No measured data, numeric ticks, fitted values, time window, carrier polarity, trap chemistry,
+  spatial trap network, fixed peak count, or stronger-trapping-as-well-depth claim.
+- Do not use spectrum/bar-chart/Fourier-style sticks with a horizontal `g(E)` axis; this fixture
+  needs an energy-landscape grammar, not a density-of-states plot.
+- Do not place an `I(t)` micrograph in Panel A or create an orphan plot in an inter-panel gutter.
 
 ## Acceptance Gate
 
-The fixture is acceptable for this sprint when compile succeeds, the current C001
-label/curve overlap is removed, and a reader can state within 10 seconds that Fig 3
-shows trapping during conduction causing current decay and resistance increase.
+Machine checks may screen source, geometry, and label relations. They do not establish scientific
+or publication acceptance: a human must explicitly review the causal reading and finish quality.

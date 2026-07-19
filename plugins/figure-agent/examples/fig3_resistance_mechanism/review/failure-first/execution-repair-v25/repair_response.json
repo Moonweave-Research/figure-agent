@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[compact label, anchor=south, fill=cAmberSphere!22,\n      inner xsep=1.5pt, inner ysep=2pt] at (2.05,1.16)\n  {sign-agnostic carrier};",
+  "change_summary": "Expanded the matching film-background padding to fully mask the residual disorder dot behind the label."
+}

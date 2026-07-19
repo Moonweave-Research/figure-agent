@@ -1,0 +1,57 @@
+{
+  "baseline_reports": {
+    "collisions": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v35/collisions.json",
+      "sha256": "sha256:abe30545df58d6d541eb5068e15465c831bfaf9f2dea0520855ed67975bdb5a0"
+    },
+    "undeclared_geometry": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v35/undeclared_geometry.json",
+      "sha256": "sha256:1b043760b96d6114e0f030da7eac0ab78ffb18853b0129e530c51da33a237a9f"
+    },
+    "visual_clash": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v35/visual_clash.json",
+      "sha256": "sha256:986b154d163caacb799a0abad7cfef9299ca9aa8a9a56c19b47dc02853b7c64a"
+    }
+  },
+  "blocking_counts": {
+    "semantic_path_crossing": 0,
+    "text_on_path_or_fill": 3,
+    "text_text": 0
+  },
+  "coverage_gaps": [
+    "label_path",
+    "panel_boundary"
+  ],
+  "declared_coverage": {
+    "label_path": false,
+    "panel_boundary": false
+  },
+  "publication_acceptance": "not_claimed",
+  "regression": {
+    "new_blockers": [],
+    "publication_acceptance": "not_claimed",
+    "resolved_blockers": [],
+    "schema": "figure-agent.structural-regression-gate.v1",
+    "state": "no_new_blockers"
+  },
+  "review_counts": {
+    "visual_near_miss": 11
+  },
+  "schema": "figure-agent.structural-collision-gate.v1",
+  "source_reports": {
+    "collisions": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/collisions.json",
+      "sha256": "sha256:b830c20131cdf35e04db080f1a49262dfeeef1db47c0c4980eacfee6f4910301"
+    },
+    "undeclared_geometry": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/undeclared_geometry.json",
+      "sha256": "sha256:7f1da1804b2b13fa19059a27983d0ede9ffa570f48345ae1734c5529f72d844a"
+    },
+    "visual_clash": {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v36/visual_clash.json",
+      "sha256": "sha256:0942753f19a337c1ecb2d8af88a581e8ba57a567027cbf5e5977b961f55687b7"
+    }
+  },
+  "state": "failed",
+  "structural_pass": false
+}

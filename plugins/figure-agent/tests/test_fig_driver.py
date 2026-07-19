@@ -318,6 +318,35 @@ def test_build_driver_summary_rejects_unsafe_fixture_name_before_status(
         )
 
 
+@pytest.mark.parametrize("symlink_kind", ("fixture", "examples", "broken"))
+def test_build_driver_summary_rejects_symlink_fixture_before_status_or_recommendation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, symlink_kind: str
+) -> None:
+    workspace = tmp_path / "workspace"
+    examples = workspace / "examples"
+    external = tmp_path / "external"
+    external.mkdir()
+    (external / "spec.yaml").write_text("name: driver_demo\n", encoding="utf-8")
+    if symlink_kind == "examples":
+        workspace.mkdir()
+        (workspace / "examples").symlink_to(external, target_is_directory=True)
+    else:
+        examples.mkdir(parents=True)
+        target = external if symlink_kind == "fixture" else Path("../../missing")
+        (examples / "driver_demo").symlink_to(target, target_is_directory=True)
+
+    monkeypatch.setattr(
+        fig_driver,
+        "_status_for",
+        lambda _path: pytest.fail("symlink fixture reached status inference"),
+    )
+
+    with pytest.raises(ValueError, match="fixture_symlink"):
+        fig_driver.build_driver_summary(
+            "driver_demo", mode="review", goal="triage", repo_root=workspace
+        )
+
+
 def test_main_rejects_unsafe_fixture_name_cleanly(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

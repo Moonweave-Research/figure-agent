@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\node[compact label, anchor=south, fill=cAmberSphere!22, inner sep=1pt]\n  at (2.05,1.16) {sign-agnostic carrier};",
+  "change_summary": "Protected the one-line carrier label with the film background so disorder cues cannot show through the text."
+}

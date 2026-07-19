@@ -1,0 +1,78 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "g(E) floats above the y-axis tip and does not read as the ordinate paired with trap energy E",
+      "id": "HF021",
+      "subject": "panel_b_ge_axis_ownership"
+    },
+    "finding_id": "HF021",
+    "protected_invariants": [
+      "$g(E)$",
+      "(0,2.77)",
+      "trap energy, $E$"
+    ],
+    "repair_family": "label_reflow",
+    "report_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v39/human_findings.before.json",
+    "selector": {
+      "anchor_end": "  % S60 is represented as one narrow, discrete state.",
+      "anchor_start": "    {trap energy, $E$};",
+      "kind": "semantic_anchor",
+      "selector_id": "panel-b-ge-y-axis-label",
+      "source_hash": "sha256:38b0056e2a5d5cdf6b3c976bd9d8e756e8a9c2892a872c379031fd41dd50db82"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v39/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:49bed28f73d737ed5a4fe1ffd17d9128d1c528a772b0bcb80b2df23bea746681"
+    }
+  ],
+  "fixture": "fig3_resistance_mechanism",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v39/repaired_generated.tex",
+  "packet_sha256": "sha256:f0525f43e539af6476b245b26c3958bc64a3b7a4c3d54b560a3c270134a57033",
+  "prompt": {
+    "sha256": "sha256:6ebf58e8a79642f68d59f9ff7c33bf6dee07575f8e3d1c2070e80ace2832469b",
+    "utf8": "# Bound repair execution: fig3_resistance_mechanism\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v39/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/repaired_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: label_reflow\n- Machine finding: {\"finding\": \"g(E) floats above the y-axis tip and does not read as the ordinate paired with trap energy E\", \"id\": \"HF021\", \"subject\": \"panel_b_ge_axis_ownership\"}\n- Change content only between the exact anchor lines [    {trap energy, $E$};] and [  % S60 is represented as one narrow, discrete state.].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [$g(E)$].\n- Preserve the exact token [(0,2.77)].\n- Preserve the exact token [trap energy, $E$].\n\n## Bound editable source bytes\n```tex\n  \\draw[axis] (0,0)--(0,2.77) node[compact label, above right=0pt]\n    {$g(E)$};\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v39/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v38/repaired_generated.tex",
+    "sha256": "sha256:38b0056e2a5d5cdf6b3c976bd9d8e756e8a9c2892a872c379031fd41dd50db82"
+  },
+  "target_contract": {
+    "path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v39/repair_targets.json",
+    "sha256": "sha256:c8bf73f5a2215dd8797e42a99427e17cfc8112428fdd4a2aa36125baf5aea5ba"
+  },
+  "verification": "external_sequential_compile_required"
+}

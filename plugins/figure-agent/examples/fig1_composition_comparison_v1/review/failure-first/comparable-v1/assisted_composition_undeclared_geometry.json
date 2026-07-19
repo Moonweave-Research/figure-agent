@@ -1,0 +1,760 @@
+{
+  "candidates": [
+    {
+      "bbox_pt": [
+        146.00222,
+        73.99805,
+        255.25414,
+        73.99805
+      ],
+      "distance_pt": 0.0,
+      "evidence": "rendered frame/rule crosses text 'content'",
+      "id": "UG001",
+      "kind": "label_crosses_horizontal_rule",
+      "nearest_text": "content",
+      "recommended_action": "add_micro_defect",
+      "source_line": 0
+    },
+    {
+      "bbox_pt": [
+        146.00222,
+        73.99805,
+        255.25414,
+        73.99805
+      ],
+      "distance_pt": 0.0,
+      "evidence": "rendered frame/rule crosses text 'increasing'",
+      "id": "UG002",
+      "kind": "label_crosses_horizontal_rule",
+      "nearest_text": "increasing",
+      "recommended_action": "add_micro_defect",
+      "source_line": 0
+    },
+    {
+      "bbox_pt": [
+        146.00222,
+        73.99805,
+        255.25414,
+        73.99805
+      ],
+      "distance_pt": 0.0,
+      "evidence": "rendered frame/rule crosses text 'sulfur'",
+      "id": "UG003",
+      "kind": "label_crosses_horizontal_rule",
+      "nearest_text": "sulfur",
+      "recommended_action": "add_micro_defect",
+      "source_line": 0
+    },
+    {
+      "bbox_pt": [
+        132.094488,
+        248.88189,
+        243.212598,
+        248.88189
+      ],
+      "distance_pt": 0.501729,
+      "evidence": "source line 82 is within 0.50 pt of text 'g(E)'",
+      "id": "UG004",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "g(E)",
+      "recommended_action": "add_micro_defect",
+      "source_line": 82
+    },
+    {
+      "bbox_pt": [
+        132.094488,
+        248.88189,
+        243.212598,
+        248.88189
+      ],
+      "distance_pt": null,
+      "evidence": "source line 82 line lacks text_boundary_check",
+      "id": "UG005",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 82
+    },
+    {
+      "bbox_pt": [
+        14.740157,
+        119.622047,
+        14.740157,
+        210.897638
+      ],
+      "distance_pt": 1.443883,
+      "evidence": "source line 90 is within 1.44 pt of text 'energy'",
+      "id": "UG006",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "energy",
+      "recommended_action": "add_micro_defect",
+      "source_line": 90
+    },
+    {
+      "bbox_pt": [
+        14.740157,
+        119.622047,
+        14.740157,
+        210.897638
+      ],
+      "distance_pt": null,
+      "evidence": "source line 90 line lacks text_boundary_check",
+      "id": "UG007",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 90
+    },
+    {
+      "bbox_pt": [
+        26.645669,
+        189.92126,
+        313.795276,
+        189.92126
+      ],
+      "distance_pt": null,
+      "evidence": "source line 93 line lacks text_boundary_check",
+      "id": "UG008",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 93
+    },
+    {
+      "bbox_pt": [
+        102.047244,
+        171.496063,
+        102.047244,
+        187.086614
+      ],
+      "distance_pt": null,
+      "evidence": "source line 120 line lacks text_boundary_check",
+      "id": "UG009",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 120
+    },
+    {
+      "bbox_pt": [
+        217.984252,
+        141.732283,
+        217.984252,
+        187.086614
+      ],
+      "distance_pt": null,
+      "evidence": "source line 122 line lacks text_boundary_check",
+      "id": "UG010",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 122
+    },
+    {
+      "bbox_pt": [
+        16.440945,
+        11.905512,
+        145.417323,
+        11.905512
+      ],
+      "distance_pt": 0.77456,
+      "evidence": "source line 138 is within 0.77 pt of text 'A'",
+      "id": "UG011",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "A",
+      "recommended_action": "add_micro_defect",
+      "source_line": 138
+    },
+    {
+      "bbox_pt": [
+        16.440945,
+        11.905512,
+        145.417323,
+        11.905512
+      ],
+      "distance_pt": 0.77456,
+      "evidence": "source line 138 is within 0.77 pt of text 'B'",
+      "id": "UG012",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "B",
+      "recommended_action": "add_micro_defect",
+      "source_line": 138
+    },
+    {
+      "bbox_pt": [
+        16.440945,
+        11.905512,
+        145.417323,
+        11.905512
+      ],
+      "distance_pt": 1.643525,
+      "evidence": "source line 138 is within 1.64 pt of text 'Sulfur-content'",
+      "id": "UG013",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "Sulfur-content",
+      "recommended_action": "add_micro_defect",
+      "source_line": 138
+    },
+    {
+      "bbox_pt": [
+        16.440945,
+        11.905512,
+        145.417323,
+        11.905512
+      ],
+      "distance_pt": 0.796211,
+      "evidence": "source line 138 is within 0.80 pt of text 'Sulfur-rich'",
+      "id": "UG014",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "Sulfur-rich",
+      "recommended_action": "add_micro_defect",
+      "source_line": 138
+    },
+    {
+      "bbox_pt": [
+        16.440945,
+        11.905512,
+        145.417323,
+        11.905512
+      ],
+      "distance_pt": 0.796211,
+      "evidence": "source line 138 is within 0.80 pt of text 'polymer'",
+      "id": "UG015",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "polymer",
+      "recommended_action": "add_micro_defect",
+      "source_line": 138
+    },
+    {
+      "bbox_pt": [
+        16.440945,
+        11.905512,
+        145.417323,
+        11.905512
+      ],
+      "distance_pt": null,
+      "evidence": "source line 138 line lacks text_boundary_check",
+      "id": "UG016",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 138
+    },
+    {
+      "bbox_pt": [
+        16.440945,
+        11.905512,
+        16.440945,
+        80.503937
+      ],
+      "distance_pt": 0.985055,
+      "evidence": "source line 139 is within 0.99 pt of text 'A'",
+      "id": "UG017",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "A",
+      "recommended_action": "add_micro_defect",
+      "source_line": 139
+    },
+    {
+      "bbox_pt": [
+        16.440945,
+        11.905512,
+        16.440945,
+        80.503937
+      ],
+      "distance_pt": null,
+      "evidence": "source line 139 line lacks text_boundary_check",
+      "id": "UG018",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 139
+    },
+    {
+      "bbox_pt": [
+        178.582677,
+        11.905512,
+        317.480315,
+        11.905512
+      ],
+      "distance_pt": 1.486211,
+      "evidence": "source line 156 is within 1.49 pt of text 'Sulfur-content'",
+      "id": "UG019",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "Sulfur-content",
+      "recommended_action": "add_micro_defect",
+      "source_line": 156
+    },
+    {
+      "bbox_pt": [
+        178.582677,
+        11.905512,
+        317.480315,
+        11.905512
+      ],
+      "distance_pt": 1.486211,
+      "evidence": "source line 156 is within 1.49 pt of text 'series'",
+      "id": "UG020",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "series",
+      "recommended_action": "add_micro_defect",
+      "source_line": 156
+    },
+    {
+      "bbox_pt": [
+        178.582677,
+        11.905512,
+        317.480315,
+        11.905512
+      ],
+      "distance_pt": null,
+      "evidence": "source line 156 line lacks text_boundary_check",
+      "id": "UG021",
+      "kind": "undeclared_horizontal_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 156
+    },
+    {
+      "bbox_pt": [
+        178.582677,
+        11.905512,
+        178.582677,
+        80.503937
+      ],
+      "distance_pt": null,
+      "evidence": "source line 157 line lacks text_boundary_check",
+      "id": "UG022",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 157
+    },
+    {
+      "bbox_pt": [
+        258.519685,
+        11.905512,
+        258.519685,
+        60.661417
+      ],
+      "distance_pt": 2.671439,
+      "evidence": "source line 171 is within 2.67 pt of text 'S'",
+      "id": "UG023",
+      "kind": "label_endpoint_near_miss",
+      "nearest_text": "S",
+      "recommended_action": "add_micro_defect",
+      "source_line": 171
+    },
+    {
+      "bbox_pt": [
+        258.519685,
+        11.905512,
+        258.519685,
+        60.661417
+      ],
+      "distance_pt": null,
+      "evidence": "source line 171 line lacks text_boundary_check",
+      "id": "UG024",
+      "kind": "undeclared_column_rule",
+      "nearest_text": "",
+      "recommended_action": "add_spec_check",
+      "source_line": 171
+    }
+  ],
+  "fixture": "comparable-v1",
+  "geometry_coverage_gate": {
+    "clean_claim_allowed": null,
+    "configured": false,
+    "failures": [],
+    "state": "not_configured"
+  },
+  "geometry_parse_coverage": {
+    "coverage_ratio": 0.689655,
+    "fully_parsed_operations": 17,
+    "non_auto_promotable_geometry": [
+      "circle_envelope",
+      "curve_conservative_hull",
+      "to_curve_rendered_path_required",
+      "analytic_plot_human_review_required"
+    ],
+    "parsed_geometry_counts": {
+      "circle": 2,
+      "curve": 7,
+      "horizontal_line": 4,
+      "to_curve": 5,
+      "vertical_line": 6
+    },
+    "parsed_operations": 20,
+    "partial_unknown_operations": 3,
+    "rendered_curves": {
+      "rendered_curve_count": 86,
+      "rendered_curve_envelopes": [
+        {
+          "bbox_pt": [
+            23.82755,
+            44.23383,
+            102.63165,
+            45.65125
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.61768
+        },
+        {
+          "bbox_pt": [
+            24.53604,
+            39.8401,
+            30.48861,
+            45.79268
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            24.53604,
+            39.8401,
+            30.48861,
+            45.79268
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.27895
+        },
+        {
+          "bbox_pt": [
+            39.27651,
+            43.80864,
+            45.22909,
+            49.76122
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            39.27651,
+            43.80864,
+            45.22909,
+            49.76122
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.27895
+        },
+        {
+          "bbox_pt": [
+            52.59954,
+            44.94275,
+            58.55212,
+            50.89534
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            52.59954,
+            44.94275,
+            58.55212,
+            50.89534
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.27895
+        },
+        {
+          "bbox_pt": [
+            65.92257,
+            40.69048,
+            71.87515,
+            46.64306
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            65.92257,
+            40.69048,
+            71.87515,
+            46.64306
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.27895
+        },
+        {
+          "bbox_pt": [
+            79.81223,
+            45.5098,
+            85.76481,
+            51.46239
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            79.81223,
+            45.5098,
+            85.76481,
+            51.46239
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.27895
+        },
+        {
+          "bbox_pt": [
+            94.26939,
+            42.67496,
+            100.22196,
+            48.62754
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            94.26939,
+            42.67496,
+            100.22196,
+            48.62754
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.27895
+        },
+        {
+          "bbox_pt": [
+            31.62274,
+            48.34423,
+            39.27606,
+            55.99755
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            31.62274,
+            48.34423,
+            39.27606,
+            55.99755
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.33873
+        },
+        {
+          "bbox_pt": [
+            46.0799,
+            35.0212,
+            53.73321,
+            42.67452
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            46.0799,
+            35.0212,
+            53.73321,
+            42.67452
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.33873
+        },
+        {
+          "bbox_pt": [
+            58.26882,
+            50.32872,
+            65.92213,
+            57.98204
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            58.26882,
+            50.32872,
+            65.92213,
+            57.98204
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.33873
+        },
+        {
+          "bbox_pt": [
+            72.44222,
+            34.73789,
+            80.09554,
+            42.3912
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            72.44222,
+            34.73789,
+            80.09554,
+            42.3912
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.33873
+        },
+        {
+          "bbox_pt": [
+            87.18269,
+            50.32872,
+            94.83601,
+            57.98204
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.3985
+        },
+        {
+          "bbox_pt": [
+            87.18269,
+            50.32872,
+            94.83601,
+            57.98204
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.33873
+        },
+        {
+          "bbox_pt": [
+            142.0337,
+            37.14713,
+            174.63235,
+            57.55686
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.37859
+        },
+        {
+          "bbox_pt": [
+            186.25463,
+            37.14713,
+            218.85328,
+            57.55686
+          ],
+          "clearance_mode": "rendered_curve_bbox",
+          "linewidth_pt": 0.37859
+        }
+      ]
+    },
+    "total_operations": 29,
+    "unknown_operations": 9,
+    "unknown_reasons": {
+      "nonliteral_circle": 7,
+      "unsupported_curve": 3,
+      "unsupported_geometry": 1,
+      "unsupported_plot": 1
+    },
+    "unknown_samples": [
+      {
+        "command": "draw",
+        "reason": "unsupported_curve",
+        "sample": "\\draw[cGray!65, line width=0.62pt]\n    (0.35,9.78) .. controls (0.85,10.22) and (1.18,9.35) .. (1.72,9.78)\n    .. controls (2.17,10.14) and (2.55,9.46) .. (3.13",
+        "source_line": 51
+      },
+      {
+        "command": "fill",
+        "reason": "nonliteral_circle",
+        "sample": "\\fill[cLGray!55] (\\x,\\y) circle (0.105);",
+        "source_line": 55
+      },
+      {
+        "command": "draw",
+        "reason": "nonliteral_circle",
+        "sample": "\\draw[cGray!72, line width=0.28pt] (\\x,\\y) circle (0.105);",
+        "source_line": 56
+      },
+      {
+        "command": "fill",
+        "reason": "nonliteral_circle",
+        "sample": "\\fill[cAmberSphere] (\\x,\\y) circle (0.135);",
+        "source_line": 59
+      },
+      {
+        "command": "draw",
+        "reason": "nonliteral_circle",
+        "sample": "\\draw[cAmber, line width=0.34pt] (\\x,\\y) circle (0.135);",
+        "source_line": 60
+      },
+      {
+        "command": "fill",
+        "reason": "nonliteral_circle",
+        "sample": "\\fill[cAmberSphere] (\\x,\\y) circle (0.075);",
+        "source_line": 74
+      },
+      {
+        "command": "fill",
+        "reason": "nonliteral_circle",
+        "sample": "\\fill[cAmberSphere] (\\x,\\y) circle (0.075);",
+        "source_line": 77
+      },
+      {
+        "command": "fill",
+        "reason": "nonliteral_circle",
+        "sample": "\\fill[cAmberSphere] (\\x,\\y) circle (0.075);",
+        "source_line": 80
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_curve",
+        "sample": "\\draw[cTeal, line width=0.92pt]\n      (0.42,2.48)\n      .. controls (1.20,2.36) and (1.58,2.18) .. (2.10,2.20)\n      .. controls (2.52,2.22) and (2.62,1.58) .. ",
+        "source_line": 108
+      },
+      {
+        "command": "draw",
+        "reason": "unsupported_plot",
+        "sample": "\\draw[cBlue, line width=0.92pt]\n      plot[smooth] coordinates {\n        (0.18,2.15) (0.48,1.82) (0.88,1.48) (1.38,1.14)\n        (2.05,0.82) (2.82,0.58) (3.65,0",
+        "source_line": 142
+      }
+    ]
+  },
+  "render_pdf": "build/assisted_composition_generated.pdf",
+  "rendered_semantic_paths": [
+    {
+      "arc_length_pt": 13.75423,
+      "arrowhead_endpoints": [
+        "start"
+      ],
+      "backtracking_ratio": 0.0,
+      "dominant_axis": "y",
+      "dominant_direction": "negative",
+      "has_net_progress": true,
+      "net_displacement_pt": [
+        0.0,
+        -13.75423
+      ],
+      "orthogonal_turn_count": 0,
+      "path_id": "RA001",
+      "path_kind": "axis_aligned_arrow",
+      "tortuosity_ratio": 1.0
+    },
+    {
+      "arc_length_pt": 43.51847,
+      "arrowhead_endpoints": [
+        "start"
+      ],
+      "backtracking_ratio": 0.0,
+      "dominant_axis": "y",
+      "dominant_direction": "negative",
+      "has_net_progress": true,
+      "net_displacement_pt": [
+        0.0,
+        -43.51847
+      ],
+      "orthogonal_turn_count": 0,
+      "path_id": "RA002",
+      "path_kind": "axis_aligned_arrow",
+      "tortuosity_ratio": 1.0
+    }
+  ],
+  "schema": "figure-agent.undeclared-geometry.v1",
+  "source": "tikz-source:auto-discovery",
+  "source_hashes": {
+    "examples/comparable-v1/assisted_composition_generated.tex": "sha256:9a73cf690fe78fb301b4c302afa497bd1af448b153b41d9c64f765adb4d72653"
+  },
+  "total": 24
+}

@@ -1,0 +1,15 @@
+{
+  "change_summary": "Remove the redundant bottom progression sentence while preserving the plot and magnitude key.",
+  "changed_lines": 3,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v64/repaired_generated.tex",
+  "output_sha256": "sha256:014e417ca80c55714491b73f62a2e0fbab06d54cd0ffdbf90df359e09a63613f",
+  "packet_sha256": "sha256:329e322d7ba1d66cb3961beb76b76768a7560dd684998d2b90b5a3aaf65799a1",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:bb1a087717aa53636b56b120951c4fe3e27c4c42e5963470cd226a763943651c"
+}

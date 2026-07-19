@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\draw[axis] (0,0)--(1.62,0);\n  \\draw[axis] (0,0)--(0,1.65);\n  \\node[compact label] at (0.81,-0.18) {$t$};\n  \\node[compact label, rotate=90] at (-0.22,0.825) {$I(t)$};",
+  "change_summary": "Detach t and I(t) from arrow tips and center them on their owned inset axes."
+}

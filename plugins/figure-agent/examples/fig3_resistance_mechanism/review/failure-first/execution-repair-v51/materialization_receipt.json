@@ -1,0 +1,15 @@
+{
+  "change_summary": "Center the ordinate label directly above the y-axis arrow with a detached vertical gap.",
+  "changed_lines": 2,
+  "changed_source_blocks": 1,
+  "decision": "materialized_verification_pending",
+  "external_compile": "pending",
+  "human_review": "pending",
+  "output_path": "examples/fig3_resistance_mechanism/review/failure-first/execution-repair-v51/repaired_generated.tex",
+  "output_sha256": "sha256:a2342e45e070b684f562cdf764786aa2115453e5ebe7983c476ba3d3de865a8d",
+  "packet_sha256": "sha256:1be534a0a5803445329e4b9a516100f6ef92cf1c9d7eafa9c8e5d7b42c02028e",
+  "preserved_boundary_blank_lines": 1,
+  "publication_acceptance": "not_claimed",
+  "schema": "figure-agent.repair-materialization-receipt.v1",
+  "source_sha256": "sha256:98ce58896bf93548797d85682ec8ab6725680cc094fd655c70bcc4032e3f213d"
+}

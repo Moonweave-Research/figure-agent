@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[label, text=cBlue, font=\\sffamily\\bfseries\\footnotesize]\n    at (0.965,1.76) {S60};\n  \\node[compact label, anchor=north west] at (0.36,1.58)\n    {single discrete state};\n",
+  "change_summary": "Restored the descriptor to one line in a right-shifted slot below S60, clear of both the vertical axis and title."
+}

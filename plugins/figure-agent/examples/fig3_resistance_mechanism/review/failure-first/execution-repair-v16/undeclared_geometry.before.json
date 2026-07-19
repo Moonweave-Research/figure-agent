@@ -1,0 +1,29 @@
+{
+  "schema": "figure-agent.undeclared-geometry.v1",
+  "fixture": "fig3_resistance_mechanism",
+  "render_pdf": "review/failure-first/execution-repair-v15/build/repaired_generated.pdf",
+  "source": "tikz-source:auto-discovery",
+  "candidates": [
+    {
+      "bbox_pt": [257.23925, 104.48868, 314.15075, 104.48868],
+      "distance_pt": 0.0,
+      "evidence": "rendered semantic arrow crosses text 'breadth'",
+      "id": "UG001",
+      "kind": "label_crosses_semantic_path",
+      "nearest_text": "breadth",
+      "recommended_action": "add_micro_defect",
+      "source_line": 0
+    },
+    {
+      "bbox_pt": [257.23925, 104.48868, 314.15075, 104.48868],
+      "distance_pt": 0.0,
+      "evidence": "rendered semantic arrow crosses text 'distribution'",
+      "id": "UG002",
+      "kind": "label_crosses_semantic_path",
+      "nearest_text": "distribution",
+      "recommended_action": "add_micro_defect",
+      "source_line": 0
+    }
+  ],
+  "total": 2
+}
