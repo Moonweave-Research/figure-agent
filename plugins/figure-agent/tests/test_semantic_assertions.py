@@ -278,9 +278,9 @@ def test_payload_structure():
 def test_fig3_declares_visible_temporal_and_composition_ordering_contracts():
     plugin_root = Path(__file__).resolve().parents[1]
     spec = yaml.safe_load(
-        (
-            plugin_root / "examples" / "fig3_resistance_mechanism" / "spec.yaml"
-        ).read_text(encoding="utf-8")
+        (plugin_root / "examples" / "fig3_resistance_mechanism" / "spec.yaml").read_text(
+            encoding="utf-8"
+        )
     )
 
     assertions = parse_assertions(spec)
@@ -320,7 +320,7 @@ def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar()
         "carrier_sign_agnostic_temporal_state_sequence_not_deep_only_retention"
     )
     assert objects["C"]["objects"]["s80_continuous_support"]["invariant"] == (
-        "high_sulfur_dense_irregular_support_not_envelope_or_container_or_width_to_n_mapping"
+        "high_sulfur_dense_irregular_support_not_envelope_or_quantitative_plot_frame_or_width_to_n_mapping"
     )
     assert objects["C"]["objects"]["s80_continuous_support"]["semantic_encoding"] == {
         "primitive": "dense_irregular_horizontal_state_field",
@@ -329,10 +329,11 @@ def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar()
             "irregular_positions",
             "broader_vertical_energy_span",
         ],
+        "allowed_visible_cues": ["restrained_sample_grouping_surface"],
         "forbidden_visible_cues": [
             "symmetric_density_silhouette",
             "closed_contour",
-            "hard_edged_interior_container",
+            "quantitative_plot_frame",
         ],
     }
     assert spec["state_field_geometry_assertions"] == [
@@ -361,10 +362,7 @@ def test_fig3_declares_three_column_qualitative_response_and_landscape_grammar()
 def test_fig3_qualitative_current_trace_is_a_shallowing_power_law_not_a_terminal_drop() -> None:
     plugin_root = Path(__file__).resolve().parents[1]
     source = (
-        plugin_root
-        / "examples"
-        / "fig3_resistance_mechanism"
-        / "fig3_resistance_mechanism.tex"
+        plugin_root / "examples" / "fig3_resistance_mechanism" / "fig3_resistance_mechanism.tex"
     ).read_text(encoding="utf-8")
 
     assert "(1+2.8*(\\x-5.98)/2.82)^(-0.85)" in source
@@ -463,7 +461,10 @@ def test_main_uses_explicit_fixture_spec_for_nested_repair_pdf(
         lambda _path: ([_word("capture", 10, 10), _word("release", 100, 10)], {}),
     )
 
-    assert semantic_assertions.main(
-        [str(pdf), "--spec", str(spec), "--json-output", str(output), "--strict"]
-    ) == 0
+    assert (
+        semantic_assertions.main(
+            [str(pdf), "--spec", str(spec), "--json-output", str(output), "--strict"]
+        )
+        == 0
+    )
     assert output.is_file()

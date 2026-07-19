@@ -83,10 +83,10 @@ def test_fig3_s80_state_field_passes_the_declared_non_envelope_contract() -> Non
             "source_object": "s80_continuous_support",
             "status": "passed",
             "metrics": {
-                "mark_count": 14,
-                "vertical_span_cm": 1.56,
-                "center_std_cm": 0.48787,
-                "width_abs_midpoint_correlation": -0.087962,
+                "mark_count": 16,
+                "vertical_span_cm": 1.68,
+                "center_std_cm": 0.485093,
+                "width_abs_midpoint_correlation": -0.009731,
             },
             "violations": [],
         }

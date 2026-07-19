@@ -327,16 +327,19 @@ fixtures:
 
   - fixture: fig3_resistance_mechanism
     reference_image: false
-    text_boundary_check_ids: []
+    text_boundary_check_ids:
+      - panel-c-s60-label-clears-sample-top
+      - panel-c-s80-label-clears-sample-top
     label_path_check_ids: []
     aesthetic_intent: true
     critique_reference_pack: false
     paper_aesthetic_context:
     journal_art_direction_playbook:
-    adoption_status: deferred_geometry_needed
+    adoption_status: adopted_high_risk
     rationale: >
-      Slice-3 dogfood fixture has mechanism-schematic panel geometry but no
-      adopted deterministic boundary/path checks yet.
+      Slice-3 mechanism schematic now adopts deterministic panel-C label
+      boundary-clearance checks (S60 and S80 labels clear of the sample-surface
+      top) while keeping publication acceptance human-only.
 
   - fixture: fig4_trap_energy_diagram
     reference_image: false
