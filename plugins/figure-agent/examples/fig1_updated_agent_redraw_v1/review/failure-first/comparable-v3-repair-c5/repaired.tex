@@ -283,29 +283,48 @@
   \node[panel title] at (0.82,3.97) {ISPD trap distribution};
 
   % Non-contact induced electrostatic-voltmeter measurement (not a Kelvin probe).
-  \fill[cLGray!18, rounded corners=0.5mm] (0.40,2.64) rectangle (4.35,3.53);
-  \draw[cGray, line width=0.38pt, rounded corners=0.5mm] (0.40,2.64) rectangle (4.35,3.53);
-  \draw[cGray!82!black, fill=cGray!20, line width=0.40pt] (1.18,2.77) rectangle (2.92,2.91);
-  \draw[cAmber!82!black, fill=cAmber!24, line width=0.38pt] (1.38,2.91) rectangle (2.76,3.05);
+  % Stage rail and carriage are drawn independently so the apparatus has no UI-card shell.
+  \draw[cGray!72!black, line width=0.34pt] (0.54,3.34)--(1.48,3.34);
+  \draw[cGray!55, line width=0.26pt] (0.62,3.29)--(1.40,3.29);
+  \draw[-{Stealth[length=2.5pt,width=1.9pt]}, cTeal!82!black, line width=0.42pt]
+    (0.66,3.19)--(1.42,3.19);
+  \node[small label, anchor=west] at (0.54,3.48) {motion stage};
+  \fill[cGray!20] (1.03,2.68)--(2.93,2.68)--(3.03,2.77)--(1.13,2.77)--cycle;
+  \draw[cGray!82!black, line width=0.42pt]
+    (1.03,2.68)--(2.93,2.68)--(3.03,2.77)--(1.13,2.77)--cycle;
+  \shade[top color=cGray!10, bottom color=cGray!30] (1.13,2.77) rectangle (3.03,2.92);
+  \draw[cGray!82!black, line width=0.42pt] (1.13,2.77) rectangle (3.03,2.92);
+  \shade[top color=cAmber!12, bottom color=cAmber!30] (1.34,2.92) rectangle (2.82,3.06);
+  \draw[cAmber!82!black, line width=0.42pt] (1.34,2.92) rectangle (2.82,3.06);
   \foreach \x in {1.58,1.98,2.38} {
     \node[font=\sffamily\bfseries\fontsize{4.8}{5.8}\selectfont, text=cRed!76!black] at (\x,3.16) {$+$};
   }
-  \draw[cGray!80!black, line width=0.42pt] (2.06,3.46)--(2.06,3.25);
-  \shade[ball color=cGray!72] (2.06,3.21) ellipse (0.16 and 0.06);
-  \draw[cGray!82!black, line width=0.30pt] (2.06,3.46)
-    .. controls (2.44,3.49) and (2.78,3.42) .. (3.22,3.35);
-  \node[draw=cGray!72!black, fill=white, line width=0.32pt, rounded corners=0.45mm,
-        minimum width=0.86cm, minimum height=0.48cm,
-        font=\sffamily\fontsize{4.8}{5.8}\selectfont, text=cGray!85!black] (esvm) at (3.78,3.22) {$V_s$};
-  \node[small label, anchor=south] at (2.06,3.47) {ESVM probe};
-  \node[small label, anchor=south] at (3.78,3.48) {$V_s$ meter};
-  \draw[-{Stealth[length=2.5pt,width=1.9pt]}, cTeal!82!black, line width=0.38pt]
-    (0.73,3.20)--(1.48,3.20);
-  \node[small label] at (1.05,3.39) {motion stage};
+  % Cylindrical non-contact ESVM sensor with a physical cable and input socket.
+  \fill[black, opacity=0.10] (1.94,3.22) ellipse (0.17 and 0.065);
+  \draw[cGray!82!black, line width=0.44pt] (2.03,3.53)--(2.03,3.27);
+  \shade[ball color=cGray!72] (2.03,3.23) ellipse (0.17 and 0.065);
+  \draw[cGray!88!black, line width=0.30pt] (2.03,3.53)
+    .. controls (2.48,3.57) and (2.82,3.47) .. (3.28,3.43);
+  \node[small label, anchor=south] at (2.03,3.54) {ESVM probe};
+
+  % Hand-built ESVM faceplate with inset screen, bezel, socket and status LED.
+  \fill[black, opacity=0.10] (3.30,2.82) rectangle (4.31,3.47);
+  \shade[top color=cGray!7, bottom color=cGray!22] (3.25,2.87) rectangle (4.26,3.52);
+  \draw[cGray!80!black, line width=0.46pt] (3.25,2.87) rectangle (4.26,3.52);
+  \draw[cGray!48!black, line width=0.26pt] (3.32,2.94) rectangle (4.19,3.45);
+  \fill[cGray!76!black] (3.40,3.16) rectangle (4.11,3.37);
+  \draw[cGray!92!black, line width=0.26pt] (3.40,3.16) rectangle (4.11,3.37);
+  \node[font=\sffamily\fontsize{4.7}{5.6}\selectfont, text=white] at (3.755,3.265) {$V_s$};
+  \shade[ball color=cGray!88] (3.25,3.43) circle (0.032);
+  \shade[ball color=cTeal!70] (3.43,3.02) circle (0.032);
+  \node[font=\sffamily\fontsize{3.8}{4.5}\selectfont, text=cGray!78!black] at (3.82,3.02) {ESVM};
+  \node[small label, anchor=south] at (3.76,3.54) {$V_s$ meter};
+
+  \draw[cGray!72, line width=0.28pt] (3.02,2.84)--(3.19,2.84)--(3.19,2.73);
   \node[font=\sffamily\fontsize{3.7}{4.4}\selectfont, text=cGray,
-        anchor=east] at (4.24,2.80) {grounded substrate};
-  \draw[cGray, line width=0.34pt] (2.82,2.77)--(2.82,2.69);
-  \draw[cGray, line width=0.34pt] (2.69,2.69)--(2.95,2.69) (2.73,2.65)--(2.91,2.65);
+        anchor=west] at (3.28,2.69) {grounded substrate};
+  \draw[cGray, line width=0.36pt] (2.92,2.68)--(2.92,2.57);
+  \draw[cGray, line width=0.34pt] (2.79,2.57)--(3.05,2.57) (2.83,2.51)--(3.01,2.51);
 
   % Raw surface-potential decay.
   \draw[axis line] (0.66,1.52)--(0.66,2.49);
