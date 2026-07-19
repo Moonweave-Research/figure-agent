@@ -173,8 +173,16 @@
 
   % Energy-space view: continuous shallow/deep trap DOS below the mobility edge.
   \draw[cLGray, line width=0.32pt] (6.72,0.52)--(6.72,4.88);
+  % Cross-representation correspondence: these are the same trap populations,
+  % not transport trajectories or separate phases.
+  \draw[cBlue!52, dash pattern=on 2pt off 2pt, line width=0.30pt]
+    (4.97,2.92)--(7.40,2.88);
+  \draw[cRed!52, dash pattern=on 2pt off 2pt, line width=0.30pt]
+    (5.37,1.62)--(7.40,1.68);
   \node[body label, font=\sffamily\bfseries\fontsize{5.8}{7.0}\selectfont] at (10.78,4.88) {energy diagram};
   \draw[axis line] (7.48,0.72)--(7.48,4.52);
+  \draw[cBlue!78!black, line width=0.42pt] (7.42,2.88)--(7.54,2.88);
+  \draw[cRed!78!black, line width=0.42pt] (7.42,1.68)--(7.54,1.68);
   \node[body label, rotate=90] at (7.10,2.58) {energy};
 
   \draw[cGray!72, dash pattern=on 3pt off 2pt, line width=0.36pt] (7.72,4.25)--(12.98,4.25);
