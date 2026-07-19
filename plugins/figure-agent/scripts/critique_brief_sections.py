@@ -81,6 +81,14 @@ preparation or excitation, acquisition, transformation, and result. Route an
 unexplained state such as deposited charge without a source, a missing stage, or
 a process label/arrow overlapping data, a caliper, or an axis-label lane to a
 normal finding.
+An instrument name or capability display such as V/A does not prove which
+variable was actually applied, held constant, stepped, or acquired. When the
+response claim depends on an operating condition, require that condition to be
+visible at the apparatus-to-result handoff rather than inferred from the device.
+Audit palette-role collisions within each panel and across the figure. A color
+used for sample identity must not simultaneously encode unrelated terminal
+polarity, wiring, apparatus state, or another category without an explicit
+legend; neutralize the non-claim role instead of forcing the reader to guess.
 For every apparatus schematic, identify the specimen and any active film, layer,
 electrode, or interface required to interpret the measurement. Named instruments,
 wires, and grounds do not establish what material is being measured; route an

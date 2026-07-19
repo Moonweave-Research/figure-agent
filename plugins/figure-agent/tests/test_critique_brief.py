@@ -624,6 +624,10 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "preparation or excitation, acquisition" in brief
     assert "deposited charge without a source" in brief
     assert "process label/arrow overlapping data" in brief
+    assert "capability display such as V/A" in brief
+    assert "actually applied, held constant" in brief
+    assert "Audit palette-role collisions" in brief
+    assert "unrelated terminal" in brief
     assert "For every apparatus schematic" in brief
     assert "active film, layer" in brief
     assert "do not establish what material is being measured" in brief

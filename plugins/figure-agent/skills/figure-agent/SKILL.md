@@ -286,6 +286,13 @@ transformation, and result in order. Flag an unexplained state such as deposited
 charge without a source, and keep process labels/arrows out of data peaks,
 calipers, and axis-label lanes.
 
+Do not treat an instrument name or capability display such as V/A as proof of
+the variable actually applied, held constant, stepped, or acquired. When the
+response depends on an operating condition, require that condition at the
+apparatus-to-result handoff. Audit palette-role collisions within and across
+panels: a sample-identity color must not also encode unrelated terminal polarity,
+wiring, apparatus state, or another category without an explicit legend.
+
 For each apparatus schematic, identify the specimen and every active film, layer,
 electrode, or interface needed to interpret the measurement. Instrument names,
 wires, and grounds do not establish what material is measured; an unbound or
