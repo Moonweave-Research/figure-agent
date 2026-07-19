@@ -179,36 +179,52 @@ def test_fragment_contract_generalizes_across_fig1_and_fig3(manifest: str) -> No
     assert result["semantic_ids"]
 
 
-def test_fig3_semantic_regions_preserve_unbound_historical_attribution_without_fig1_imports(
+def test_fig3_semantic_regions_refuse_drifted_source_attribution_without_fig1_imports(
+    tmp_path: Path,
 ) -> None:
     fixture = PLUGIN_ROOT / "examples" / "fig3_trap_schematic_slice3_semantic"
     regions = yaml.safe_load((fixture / "semantic_regions.yaml").read_text(encoding="utf-8"))
     fragment = validate_fragment_package(fixture / "fragments" / "fragment_manifest.json")
 
     contract = load_semantic_region_contract(fixture)
-    assert {item["id"] for item in regions["semantic_objects"]} == set(
-        fragment["semantic_ids"]
-    )
+    assert {item["id"] for item in regions["semantic_objects"]} == set(fragment["semantic_ids"])
     assert contract["regions"][0]["source"]["binding_state"] == "exact"
 
+    finding = {"id": "slice3-panel-e-probe", "bbox_px": [2100, 1900, 2300, 2100]}
+    detector_render = {
+        "page_geometry": contract["page_geometry"],
+        "pixel_origin": "top_left",
+        "image_size_px": [4457, 2894],
+        "fragment_transform": [1, 0, 0, 1, 0, 0],
+        "raster_box": "media_box",
+    }
+    tex_name = "fig3_trap_schematic_slice3_semantic.tex"
+
+    # Genuine historical-drift refusal: the contract hash-binds the region to the
+    # source bytes it was captured from. Drift the .tex so its sha256 no longer
+    # matches the bound source_sha256 and confirm the attributor refuses to bind
+    # (rather than mis-attributing to a now-stale region) while still surfacing
+    # the geometric region candidate. Hermetic: only the attribution inputs the
+    # producer reads (spec.yaml + the source .tex) are copied into tmp_path.
+    drifted = tmp_path / fixture.name
+    drifted.mkdir(parents=True)
+    shutil.copyfile(fixture / "spec.yaml", drifted / "spec.yaml")
+    (drifted / tex_name).write_bytes(
+        (fixture / tex_name).read_bytes() + b"\n% drifted after contract capture\n"
+    )
+
     attribution = attribute_visual_finding(
-        {"id": "slice3-panel-e-probe", "bbox_px": [2100, 1900, 2300, 2100]},
-        detector_render={
-            "page_geometry": contract["page_geometry"],
-            "pixel_origin": "top_left",
-            "image_size_px": [4457, 2894],
-            "fragment_transform": [1, 0, 0, 1, 0, 0],
-            "raster_box": "media_box",
-        },
+        finding,
+        detector_render=detector_render,
         semantic_contract=contract,
-        fixture_dir=fixture,
+        fixture_dir=drifted,
     )
     assert attribution["state"] == "unbound"
-    assert attribution["reason"] == "source_selected_content_hash_mismatch"
+    assert attribution["reason"] == "source_hash_mismatch"
     assert attribution["region_candidates"] == ["e.structural_origin_fragment"]
 
     patterns = regions["forbidden_import_patterns"]
-    derivative_sources = [fixture / "fig3_trap_schematic_slice3_semantic.tex"]
+    derivative_sources = [fixture / tex_name]
     derivative_sources.extend((fixture / "fragments").glob("*.py"))
     for source in derivative_sources:
         contents = source.read_text(encoding="utf-8").lower()
