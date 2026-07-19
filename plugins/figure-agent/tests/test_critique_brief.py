@@ -661,6 +661,8 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
     assert "arrowhead touches the named destination" in brief
     assert "same physical process to reuse one arrow" in brief
     assert "solid/dashed or arrowhead change" in brief
+    assert "repeated categorical markers for undeclared size or area variation" in brief
+    assert "unequal marker area must bind to a named quantitative variable" in brief
     assert "appears in multiple representations" in brief
     assert "explicit correspondence" in brief
     assert "invented transport" not in brief

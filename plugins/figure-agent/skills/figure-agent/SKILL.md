@@ -347,6 +347,11 @@ and line-style grammar unless a legend or brief-declared contrast explains the
 difference. Treat an unexplained solid/dashed or arrowhead change as a possible
 second mechanism, not harmless styling.
 
+Inspect repeated categorical markers for unintended size encoding. When marker
+area varies, require the difference to bind to a declared quantitative variable;
+otherwise normalize co-equal sites, states, and samples so category is not
+mistaken for magnitude, population, or physical extent.
+
 For each mechanism arrow, verify that the arrow tail touches its declared source
 state and the arrowhead touches the named destination boundary or state. Treat a
 path that stops short and relies on visual proximity as an unbound mechanism.

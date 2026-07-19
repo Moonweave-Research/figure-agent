@@ -306,7 +306,9 @@ whose addition would reduce explanation cost.
 
 ### 6. Cross-Panel Semantic Grammar
 Audit color, arrow, line, texture, icon, label, and material grammar across
-panels. Same visual grammar should mean the same scientific role.
+panels. Same visual grammar should mean the same scientific role. Inspect
+repeated categorical markers for undeclared size or area variation:
+unequal marker area must bind to a named quantitative variable, not merely category.
 
 ### 7. Reader Misinterpretation Risk
 Name the most likely wrong interpretation a careful reader could make from the
