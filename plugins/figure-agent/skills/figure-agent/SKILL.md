@@ -293,6 +293,15 @@ connectivity more visible; continuous bonds already define the skeletal carbon,
 while a dot can assert an unpaired electron. Require a filled dot only when the
 brief or chemical mechanism explicitly declares that radical/electron state.
 
+For sulfur-rich inverse-vulcanization schematics, treat S_x/S_y as variable
+polysulfide-rank continuation labels, not measured chain lengths or a unique
+constitutional repeat. Treat labels such as S60/S75/S85 as declared sulfur
+weight-fraction sample identities unless the source explicitly defines another
+meaning. Because poly(S-r-DIB) has a complex/random microstructure, label a
+drawn bis(thiocumyl) structure as a representative motif unless the source
+provides a fully assigned repeat unit; do not promote an artistic chain-length
+count into quantitative chemistry.
+
 When an atom is intentionally written on a bond (for example the S labels in an
 S$_8$ crown or a polysulfide chain), a visual-clash detector candidate is not by
 itself a defect. First verify that the glyph is the atom identity, the bond is

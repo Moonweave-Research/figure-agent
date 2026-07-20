@@ -75,7 +75,9 @@
   \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=0.84pt]
     (3.31,3.68) .. controls (3.70,3.65) and (3.98,3.32) .. (4.06,2.82);
   \node[small label, text=cBrown!92!black] at (3.76,4.00) {inverse vulcanization};
-  \node[small label] at (3.56,3.39) {$\Delta$};
+  % Reaction conditions belong on the transformation arrow: Δ denotes heat,
+  % not a reagent, species, or additional structural feature.
+  \node[small label, text=cBrown!92!black] at (3.64,3.78) {$\Delta$};
 
   % --- representative predominant motif; not a unique constitutional repeat ---
   % Current structural assignment: both meta substituents are thiocumyl units.
@@ -125,9 +127,9 @@
     (rsy.east)--(6.15,1.33);
 
   \node[body label, align=center] at (3.45,0.72)
-    {predominant bis-thiocumyl motif};
+    {representative bis(thiocumyl) motif};
   \node[small label, align=center, text=cGray!82!black] at (3.45,0.37)
-    {$x,y$: statistical sulfur rank};
+    {$x,y$: variable sulfur rank};
 \end{scope}
 
 % Panel B
@@ -204,7 +206,7 @@
     \end{scope}
   }
   \node[body label, align=center] at (3.9,0.40)
-    {DIB motifs linked by polysulfides of increasing sulfur rank};
+    {DIB-derived motifs linked by sulfur-rich segments};
 \end{scope}
 
 % Panel C
