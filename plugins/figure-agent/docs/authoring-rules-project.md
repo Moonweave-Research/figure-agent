@@ -19,6 +19,14 @@ rules:
       locator: "Fig1 Panel A post-connectivity visual audit (2026-07-20)"
       quote: "Chemically correct junctions still read as circuit crosses and bare floating chain ends."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.chemical-zoom-integrity
+    category: chemistry_semantics
+    rule: "Audit every chemical structure at enlarged vector scale, not only in the full-figure thumbnail. A covalent bond must keep one stroke colour from atom boundary to atom boundary; never introduce a decorative colour seam mid-bond. Parallel lines in an alkene must remain individually traceable at a substituted carbon, short atom-to-atom bonds must not collapse into arrowhead-like fragments, and methyl stubs must remain subordinate to the backbone bonds."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 Panel A enlarged reactant/product audit (2026-07-20)"
+      quote: "Thumbnail polish concealed colour seams, crowded alkene lines, and arrowhead-like S8 bonds."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.cantilever-vertical-clip-top
     category: instrument_standard
     rule: "Draw the polymer cantilever vertical: clip/clamp on top, polymer hangs down, deflection sideways toward a side electrode. Horizontal cantilever orientation is wrong for this lab and its experiments."

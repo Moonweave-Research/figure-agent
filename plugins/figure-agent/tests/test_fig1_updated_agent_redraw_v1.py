@@ -159,6 +159,19 @@ def test_repaired_panel_a_uses_skeletal_junctions_and_declared_continuations() -
     assert "variable sulfur rank and minor microstructures" not in panel_a
 
 
+def test_repaired_panel_a_survives_enlarged_chemical_inspection() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+
+    assert "enlarged-vector audit: alkene lines remain individually traceable" in panel_a
+    assert panel_a.count("no mid-bond colour seam") == 2
+    assert "shorten >=2.0pt, shorten <=2.0pt" in panel_a
+    assert "(105:0.28)" in panel_a
+    assert "(-45:0.28)" in panel_a
+    assert "(75:0.28)" in panel_a
+    assert "(-135:0.28)" in panel_a
+
+
 def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     label = source.index(r"{manual sample\\[-0.5pt]transfer}")

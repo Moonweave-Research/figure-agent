@@ -329,6 +329,12 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "orthogonal cross" in legibility["rule"]
     assert "continuation bond" in legibility["rule"]
 
+    zoom = rules["polymer_paper_project.chemical-zoom-integrity"]
+    assert zoom["category"] == "chemistry_semantics"
+    assert "enlarged vector scale" in zoom["rule"]
+    assert "decorative colour seam mid-bond" in zoom["rule"]
+    assert "alkene" in zoom["rule"]
+
 
 def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
     path = tmp_path / "badid.md"

@@ -31,12 +31,12 @@
   % --- reactant 1: elemental sulfur (compact 2D S8 crown convention) ---
   \coordinate (s8c) at (0.84,3.72);
   \foreach \a/\i in {22.5/1,67.5/2,112.5/3,157.5/4,202.5/5,247.5/6,292.5/7,337.5/8} {
-    \coordinate (v\i) at ($(s8c)+(\a:0.31)$);
+    \coordinate (v\i) at ($(s8c)+(\a:0.36)$);
   }
   % Individual shortened bonds meet the atom-label boxes without running behind glyphs.
   \foreach \i/\j in {1/2,2/3,3/4,4/5,5/6,6/7,7/8,8/1} {
     \draw[cAmber!82!black, line width=0.90pt, line cap=round,
-          shorten >=2.4pt, shorten <=2.4pt] (v\i)--(v\j);
+          shorten >=2.0pt, shorten <=2.0pt] (v\i)--(v\j);
   }
   \foreach \i in {1,...,8} {
     \node[fill=white, inner sep=0.35pt,
@@ -60,19 +60,20 @@
   \coordinate (ma) at ($(m180)+(-0.22,0)$);
   \coordinate (mt) at ($(ma)+(-0.31,0)$);
   \draw[cGray, line width=0.88pt] (m180)--(ma) (ma)--($(ma)+(0,0.24)$);
-  \draw[cGray, line width=0.84pt] ($(ma)+(0,0.035)$)--($(mt)+(0,0.035)$)
-                                   ($(ma)+(0,-0.035)$)--($(mt)+(0,-0.035)$);
+  % enlarged-vector audit: alkene lines remain individually traceable
+  \draw[cGray, line width=0.84pt] (ma)--(mt)
+    ($(ma)+(0,-0.065)$)--($(mt)+(0,-0.065)$);
   % lower-right meta isopropenyl group: Ar-C(CH3)=CH2
   \coordinate (mb) at ($(m300)+(0.12,-0.19)$);
   \coordinate (mu) at ($(mb)+(0.17,-0.27)$);
   \draw[cGray, line width=0.88pt] (m300)--(mb) (mb)--($(mb)+(0.22,0.08)$);
-  \draw[cGray, line width=0.84pt] ($(mb)+(0.030,-0.018)$)--($(mu)+(0.030,-0.018)$)
-                                   ($(mb)+(-0.030,0.018)$)--($(mu)+(-0.030,0.018)$);
+  \draw[cGray, line width=0.84pt] (mb)--(mu)
+    ($(mb)+(0.050,0.030)$)--($(mu)+(0.050,0.030)$);
   \node[small label, text=cGray!88!black] at (2.18,3.08) {1,3-DIB};
 
   % --- thermally initiated inverse vulcanization ---
-  \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=0.96pt]
-    (3.31,3.68) .. controls (3.74,3.66) and (4.08,3.30) .. (4.16,2.72);
+  \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=0.84pt]
+    (3.31,3.68) .. controls (3.70,3.65) and (3.98,3.32) .. (4.06,2.82);
   \node[small label, text=cBrown!92!black] at (3.76,4.00) {inverse vulcanization};
   \node[small label] at (3.56,3.39) {$\Delta$};
 
@@ -85,15 +86,16 @@
   \draw[cAmber!88!black, line width=1.0pt, decorate,
         decoration={snake, amplitude=0.22mm, segment length=1.8mm}]
     (0.58,1.90)--(lsx.west);
-  \draw[cAmber!88!black, line width=1.0pt] (lsx.east)--(2.26,1.90);
+  % no mid-bond colour seam: the covalent S--C bond stays structural gray
+  \draw[cGray, line width=0.96pt] (lsx.east)--(2.48,1.90);
 
   % bis-thiocumyl junction: Ar-C(CH3)2-S_x
   \coordinate (bcl) at (2.48,1.90);
   \fill[cGray!92!black] (bcl) circle (0.022cm);
   % tetrahedral projection; avoid orthogonal cross
-  \draw[cGray, line width=0.96pt] (2.26,1.90)--(bcl)
-    (bcl)--($(bcl)+(115:0.38)$)
-    (bcl)--($(bcl)+(-65:0.38)$)
+  \draw[cGray, line width=0.96pt]
+    (bcl)--($(bcl)+(105:0.28)$)
+    (bcl)--($(bcl)+(-45:0.28)$)
     (bcl)--(3.20,1.90);
 
   % meta-DIB aryl core, conventional Kekule representation
@@ -110,13 +112,13 @@
   \coordinate (bcr) at ($(r300)+(0.36,-0.12)$);
   \fill[cGray!92!black] (bcr) circle (0.022cm);
   \draw[cGray, line width=0.96pt] (r300)--(bcr)
-    (bcr)--($(bcr)+(70:0.38)$)
-    (bcr)--($(bcr)+(-110:0.38)$)
-    (bcr)--($(bcr)+(0.44,0)$);
+    (bcr)--($(bcr)+(75:0.28)$)
+    (bcr)--($(bcr)+(-135:0.28)$);
 
   % variable-rank right polysulfide and chemically continuous bond to right polysulfide
   \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (rsy) at ($(bcr)+(0.70,0)$) {$\mathrm{S}_{y}$};
-  \draw[cAmber!88!black, line width=1.0pt] ($(bcr)+(0.44,0)$)--(rsy.west);
+  % no mid-bond colour seam: the covalent C--S bond stays structural gray
+  \draw[cGray, line width=0.96pt] (bcr)--(rsy.west);
   % polymer continuation bond
   \draw[cAmber!88!black, line width=1.0pt, decorate,
         decoration={snake, amplitude=0.22mm, segment length=1.8mm}]
