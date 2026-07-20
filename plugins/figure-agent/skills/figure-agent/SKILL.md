@@ -374,6 +374,12 @@ vibrating fork, modulation arcs, a gap-capacitance symbol, or a grid electrode;
 also keep charging-state and measurement-state grounding distinct when the
 experimental sequence declares that only the latter uses a grounded substrate.
 
+For a floating charged cantilever driven by a nearby electrode, keep the
+cantilever mechanically clamped but electrically isolated. A ground symbol on
+the high-voltage source belongs to the driven-electrode return circuit; it must
+not silently connect to the cantilever, trapped-charge path, or air-gap force
+arrow unless the source explicitly declares that electrical boundary.
+
 Preserve the declared evidence granularity for instrument identity. Family-level
 authority supports the family name and topology, not unverified model-specific
 features, controls, or dimensions; keep those schematic unless a model is declared.
