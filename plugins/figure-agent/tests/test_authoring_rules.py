@@ -76,8 +76,18 @@ def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
     )
     assert "two terminals" in charging_rule["rule"]
     assert "Do not add a grid" in charging_rule["rule"]
-    assert "ground symbol" in charging_rule["rule"]
+    assert "charging station" in charging_rule["rule"]
+    assert "measurement station" in charging_rule["rule"]
     assert "exact polarity" in charging_rule["rule"]
+
+    measurement_rule = next(
+        rule
+        for rule in project_catalog["rules"]
+        if rule["id"] == "polymer_paper_project.ispd-measurement-grounded-backing"
+    )
+    assert "measurement station" in measurement_rule["rule"]
+    assert "grounded conductive backing" in measurement_rule["rule"]
+    assert "not the polymer film" in measurement_rule["rule"]
 
     floating_rule = next(
         rule
@@ -87,6 +97,7 @@ def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
     assert "trapped-charge label" in floating_rule["rule"]
     assert "representative charge marker" in floating_rule["rule"]
     active_ids = {rule["id"] for rule in project_catalog["rules"]}
+    assert "polymer_paper_project.ispd-measurement-grounded-backing" in active_ids
     assert "polymer_paper_project.ispd-grounded-backing-plate" not in active_ids
     project_superseded_ids = {
         rule["id"] for rule in project_catalog["superseded_rules"]

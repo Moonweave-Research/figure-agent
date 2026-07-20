@@ -27,6 +27,12 @@ panels:
         claim: under constant voltage, trap-mediated transient current decays with time.
   - id: E
     caption: ISPD-derived trap distribution evidence
+    semantic_claims:
+      - id: manual-ispd-sequence
+        claim: the same specimen is corona-charged and then manually transferred to non-contact surface-potential measurement.
+    locked_invariants:
+      - id: stage-specific-grounding
+        invariant: the corona-charging station uses the high-voltage supply's two terminals without a grid or earth-ground symbol, while the measurement station grounds the conductive backing beneath the specimen.
   - id: F
     caption: floating cantilever Coulomb response
     semantic_claims:

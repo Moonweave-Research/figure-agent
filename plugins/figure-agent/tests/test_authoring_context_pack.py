@@ -1266,3 +1266,22 @@ def test_context_pack_text_renders_project_conventions(tmp_path: Path) -> None:
     assert "Project Rule Catalog" in result.stdout
     assert "cantilever vertical" in result.stdout.lower()
     assert "## Shape Profile" not in result.stdout
+
+
+def test_context_pack_preserves_stage_specific_ispd_grounding(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    result = subprocess.run(
+        [str(PLUGIN_ROOT / "bin" / "fig-agent"), "context-pack", "context_demo"],
+        cwd=tmp_path,
+        env=_env(workspace),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "no protective/earth ground symbol at the charging station itself" in result.stdout
+    assert "ISPD measurement station" in result.stdout
+    assert "grounded conductive backing beneath the non-contact ESVM head" in result.stdout

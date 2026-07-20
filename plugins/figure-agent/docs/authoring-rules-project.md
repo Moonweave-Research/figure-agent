@@ -117,11 +117,19 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.ispd-two-terminal-corona-topology
     category: instrument_standard
-    rule: "For this sulfur-polymer experiment, corona charging applies a high-voltage potential difference across the needle electrode and the opposing counter electrode through the supply's two terminals. Do not add a grid or a protective/earth ground symbol. Preserve the two-terminal circuit and manual specimen transfer, but do not invent an exact polarity or voltage unless paper-local experimental evidence declares it."
+    rule: "For this sulfur-polymer experiment, corona charging applies a high-voltage potential difference across the needle electrode and the opposing counter electrode through the supply's two terminals. Do not add a grid, and show no protective/earth ground symbol at the charging station itself. This restriction does not remove the grounded conductive backing used later at the measurement station. Preserve the two-terminal charging circuit and manual specimen transfer, but do not invent an exact polarity or voltage unless paper-local experimental evidence declares it."
     source:
       kind: iteration_comment
       locator: "Fig1 Panel E human scientific correction (2026-07-20)"
       quote: "코로나 차지 할때, 접지를 안한거 같은데, 실 실험에서, 그냥 양단에 고전압을 거는 식으로 했지 / 그리드도 빼 그리도 우리 안썼어"
+    transfer_policy: use_as_constraint
+  - id: polymer_paper_project.ispd-measurement-grounded-backing
+    category: instrument_standard
+    rule: "At the ISPD measurement station, place the manually transferred specimen on a grounded conductive backing beneath the non-contact ESVM head. Attach ground to the conductive backing, not the polymer film, and retain a visible sensor-to-specimen standoff. Do not propagate this measurement-stage ground back into the preceding two-terminal corona-charging station."
+    source:
+      kind: iteration_comment
+      locator: "Fig1 Panel E stage-specific electrical-topology correction (2026-07-20)"
+      quote: "측정 단계에는 그라운드 있는거 맞아"
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.ispd-decay-and-inversion-evidence-boundary
     category: physics_semantics
@@ -141,7 +149,7 @@ rules:
     transfer_policy: use_as_constraint
     lifecycle: superseded
     superseded_by: polymer_paper_project.ispd-two-terminal-corona-topology
-    superseded_reason: Later human scientific review confirmed that the actual experiment used the high-voltage supply's two terminals without a grid or an earth-grounded backing topology.
+    superseded_reason: Later human scientific review split the topology by stage; two-terminal charging has no grid or earth ground, while the conductive backing is grounded only during measurement.
 ---
 
 # Project authoring rule catalog (polymer_paper_project)
