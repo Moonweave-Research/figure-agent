@@ -77,7 +77,7 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.floating-coulomb-isolation
     category: physics_semantics
-    rule: "For the floating Coulomb-response apparatus, the grounded voltage-source return and driven lead belong only to the electrode circuit; the polymer sample and cantilever remain electrically floating. Bind the repulsion arrow tail to a trapped-charge marker and ensure its arrowhead points away from the driven electrode."
+    rule: "For the floating Coulomb-response apparatus, the grounded voltage-source return and driven lead belong only to the electrode circuit; the polymer sample and cantilever remain electrically floating. Bind the trapped-charge label to a representative charge marker with a clear leader, bind the repulsion arrow tail to a trapped-charge marker, and ensure its arrowhead points away from the driven electrode."
     source:
       kind: hand_patch_commit
       locator: "Fig1 Panel F topology audit against semantic_contract.yaml and the maintained floating-clip fixture (2026-07-20)"
