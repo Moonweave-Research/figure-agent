@@ -440,6 +440,12 @@ full-figure print reduction. If a specimen or mechanism label works only in the
 crop, preserve the claim by shortening or restructuring it rather than repeatedly
 shrinking the font.
 
+Derive panel-audit crop boxes from declared canvas coordinates, panel bboxes, or
+separator rules rather than approximate image fractions. Check each crop for
+neighbor-panel content before using it as evidence; a crop that includes a sibling
+axis, label, or rule is a packaging defect and must be regenerated at the exact
+panel boundary.
+
 Also inspect for workflow-metadata leakage. Terms such as `HERO`, priority,
 draft, iteration, reviewer notes, or approval state belong in comments/specs and
 must not appear in publication-visible pixels unless explicitly declared as
