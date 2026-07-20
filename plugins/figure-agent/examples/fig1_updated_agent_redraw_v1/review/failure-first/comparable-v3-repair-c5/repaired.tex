@@ -134,31 +134,30 @@
   % inventing thickness, a specific sample shape, or a rounded UI container.
   \fill[cGray!3]
     (0.84,1.23)--(6.18,1.23)--(6.12,4.30)--(0.90,4.30)--cycle;
-  \draw[cGray!60!black, line width=0.84pt]
+  \draw[cGray!72!black, line width=0.90pt]
     (0.84,1.23)--(6.18,1.23)--(6.12,4.30)--(0.90,4.30)--cycle;
-  % Neutral microtexture establishes one disordered material field without
-  % turning every matrix fluctuation into a colored trap population.
-  \foreach \xx/\yy/\rr in {
-    1.20/3.78/0.022,1.74/3.40/0.018,2.22/3.94/0.025,3.18/3.38/0.020,
-    3.76/3.86/0.018,4.36/3.42/0.024,5.12/3.78/0.020,5.70/3.28/0.018,
-    1.22/2.82/0.020,1.72/2.46/0.024,2.30/2.94/0.018,2.88/2.52/0.022,
-    3.46/2.92/0.019,3.98/2.34/0.024,4.48/2.66/0.018,5.18/2.42/0.022,
-    5.72/2.78/0.019,1.24/1.86/0.023,1.92/2.02/0.018,2.46/1.54/0.020,
-    3.08/1.92/0.024,3.72/1.50/0.019,4.30/1.86/0.022,4.92/1.46/0.018,
-    5.78/1.92/0.023} {
-    \fill[cGray!20] (\xx,\yy) circle (\rr);
+  % Unconnected localized-site ensemble: neutral microtexture establishes one
+  % disordered material field without turning every matrix fluctuation into a
+  % colored trap population or an undeclared molecular network.
+  \foreach \xx/\yy in {
+    1.20/3.78,1.74/3.40,2.22/3.94,3.18/3.38,3.76/3.86,
+    4.36/3.42,5.12/3.78,5.70/3.28,1.22/2.82,1.72/2.46,
+    2.30/2.94,2.88/2.52,3.46/2.92,3.98/2.34,4.48/2.66,
+    5.18/2.42,5.72/2.78,1.24/1.86,1.92/2.02,2.46/1.54,
+    3.08/1.92,3.72/1.50,4.30/1.86,4.92/1.46,5.78/1.92} {
+    \fill[cGray!20] (\xx,\yy) circle (0.032);
   }
   % Nested low-opacity fields approximate a localized spatial envelope without
   % a hard badge-like ring; the colors encode energy class, not material phase.
   \foreach \x/\y in {1.55/1.62,4.62/2.84} {
     \fill[cBlue!7] (\x,\y) circle (0.175);
-    \fill[cBlue!14] (\x,\y) circle (0.115);
-    \fill[cBlue!82] (\x,\y) circle (0.055);
+    \fill[cBlue!30] (\x,\y) circle (0.115);
+    \fill[cBlue!82] (\x,\y) circle (0.075);
   }
   \foreach \x/\y in {2.72/3.62,5.42/1.62} {
     \fill[cRed!7] (\x,\y) circle (0.175);
-    \fill[cRed!14] (\x,\y) circle (0.115);
-    \fill[cRed!82] (\x,\y) circle (0.055);
+    \fill[cRed!28] (\x,\y) circle (0.115);
+    \fill[cRed!82] (\x,\y) circle (0.075);
   }
   \node[small label, text=cGray!88!black, anchor=west] at (1.02,0.78) {shallow sites};
   \draw[leader, cBlue!78!black] (2.02,0.86)--(1.57,1.54);
@@ -295,9 +294,9 @@
     \fill[cRed!82!black] (\x,\yr) circle (0.045);
   }
   \node[small label,
-        text=cBlue!84!black, rotate=-13.5] at (3.28,1.50) {low $n$};
+        text=cGray!92!black, rotate=-13.5] at (3.28,1.50) {low $n$};
   \node[small label,
-        text=cRed!84!black, rotate=-21.1] at (2.78,0.91) {high $n$};
+        text=cGray!92!black, rotate=-21.1] at (2.78,0.91) {high $n$};
 \end{scope}
 
 % Panel E
