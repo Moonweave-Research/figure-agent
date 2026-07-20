@@ -18,10 +18,10 @@
 % Open publication canvas: separators organize the reading order without
 % turning each scientific panel into a rounded UI card.
 \draw[cGray!10, line width=0.84pt] (0.12,10.58)--(14.63,10.58);
-\draw[cGray!10, line width=0.84pt] (0.12,5.13)--(14.63,5.13);
+\draw[cGray!10, line width=0.84pt] (0.12,5.35)--(14.63,5.35);
 \draw[cGray!10, line width=0.84pt] (7.375,10.95)--(7.375,15.85);
-\draw[cGray!10, line width=0.84pt] (4.875,0.50)--(4.875,4.78);
-\draw[cGray!10, line width=0.84pt] (9.875,0.50)--(9.875,4.78);
+\draw[cGray!10, line width=0.84pt] (4.875,0.72)--(4.875,5.00);
+\draw[cGray!10, line width=0.84pt] (9.875,0.72)--(9.875,5.00);
 
 % Panel A
 \begin{scope}[shift={(0,11.0)}]
@@ -214,10 +214,10 @@
 
   % Compress the explanatory body, but not its typography, so the full-width
   % bridge panel has the same visual row weight as the synthesis row above.
-  \begin{scope}[yshift=0.58cm, yscale=0.88]
+  \begin{scope}[yshift=0.80cm, yscale=0.88]
   % Real-space view: both trap classes are localized sites in one disordered film,
   % not separate material phases.
-  \node[body label] at (3.42,5.02) {real space};
+  \node[body label, anchor=west] at (0.90,5.02) {real space};
   % Neutral top-view film field. A slightly skewed cut-film silhouette avoids
   % inventing thickness, a specific sample shape, or a rounded UI container.
   \fill[cGray!3]
@@ -278,7 +278,7 @@
     (4.695,2.84)--(7.40,2.88);
   \draw[cRed!32, dash pattern=on 2pt off 2pt, line width=0.84pt]
     (5.495,1.62)--(7.40,1.68);
-  \node[body label] at (10.78,5.02) {energy diagram};
+  \node[body label, anchor=west] at (7.72,5.02) {energy diagram};
   \draw[axis line] (7.48,0.72)--(7.48,4.52);
   \draw[cBlue!78!black, line width=0.84pt] (7.42,2.88)--(7.54,2.88);
   \draw[cRed!78!black, line width=0.84pt] (7.42,1.68)--(7.54,1.68);
@@ -347,7 +347,7 @@
 \end{scope}
 
 % Panel D
-\begin{scope}[shift={(0,0.35)}]
+\begin{scope}[shift={(0,0.57)}]
   \node[panel letter, anchor=west] at (0.28,4.42) {d};
   \node[panel title] at (0.82,4.42) {Transient current};
 
@@ -405,7 +405,7 @@
 \end{scope}
 
 % Panel E
-\begin{scope}[shift={(5.00,0.35)}]
+\begin{scope}[shift={(5.00,0.57)}]
   \node[panel letter, anchor=west] at (0.28,4.42) {e};
   \node[panel title] at (0.82,4.42) {ISPD trap distribution};
 
@@ -544,7 +544,7 @@
 \end{scope}
 
 % Panel F
-\begin{scope}[shift={(10.00,0.35)}]
+\begin{scope}[shift={(10.00,0.57)}]
   \node[panel letter, anchor=west] at (0.28,4.42) {f};
   \node[panel title] at (0.82,4.42) {Floating Coulomb response};
 
