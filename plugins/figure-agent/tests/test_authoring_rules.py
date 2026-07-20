@@ -378,6 +378,8 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert binding["category"] == "physics_semantics"
     assert "same mixed population" in binding["rule"]
     assert "not trajectories" in binding["rule"]
+    assert "Bind every localized core to a visible host trace" in binding["rule"]
+    assert "free particle" in binding["rule"]
     assert "glowing particles" in binding["rule"]
 
     transient = rules[

@@ -224,31 +224,32 @@
   % Unconnected localized-site ensemble: same-size dot texture is intentionally omitted
   % because it would invent a second particle population inside the polymer host.
   % Three quiet polymer-chain traces give the host material identity without
-  % inventing a particulate population or a quantitative morphology.
+  % inventing a particulate population or a quantitative morphology. Each
+  % localized core lies on a host trace; detached cores read as free particles.
   \draw[cGray!23, line width=0.84pt] plot[smooth] coordinates
-    {(1.05,3.52) (1.72,3.25) (2.42,3.34) (3.18,3.02) (4.02,3.16) (4.78,2.92) (5.92,3.08)};
+    {(1.05,3.52) (1.72,3.32) (2.72,3.62) (3.48,3.14) (4.62,2.84) (5.30,3.00) (5.92,3.08)};
   \draw[cGray!20, line width=0.84pt] plot[smooth] coordinates
     {(1.02,2.52) (1.82,2.72) (2.60,2.45) (3.34,2.63) (4.18,2.32) (5.04,2.48) (5.96,2.26)};
   \draw[cGray!18, line width=0.84pt] plot[smooth] coordinates
-    {(1.08,1.66) (1.92,1.91) (2.78,1.70) (3.56,1.91) (4.34,1.63) (5.10,1.82) (5.92,1.62)};
+    {(1.08,1.72) (1.55,1.62) (2.34,1.84) (3.22,1.70) (4.18,1.86) (5.42,1.62) (5.92,1.72)};
   % Single restrained localization contours replace the repeated nested glow.
   % Each compact contour is co-equal and visibly embedded in the same film.
-  \filldraw[fill=cBlue!9, draw=cBlue!30, line width=0.84pt]
+  \filldraw[fill=cBlue!5, draw=cBlue!30, line width=0.84pt]
     (1.34,1.62) .. controls (1.37,1.78) and (1.47,1.84) .. (1.60,1.82)
                 .. controls (1.75,1.80) and (1.80,1.68) .. (1.76,1.55)
                 .. controls (1.72,1.42) and (1.56,1.38) .. (1.43,1.45)
                 .. controls (1.36,1.49) and (1.33,1.55) .. cycle;
-  \filldraw[fill=cBlue!9, draw=cBlue!30, line width=0.84pt]
+  \filldraw[fill=cBlue!5, draw=cBlue!30, line width=0.84pt]
     (4.42,2.83) .. controls (4.43,3.00) and (4.54,3.08) .. (4.68,3.05)
                 .. controls (4.82,3.02) and (4.87,2.89) .. (4.81,2.76)
                 .. controls (4.76,2.64) and (4.61,2.60) .. (4.49,2.67)
                 .. controls (4.44,2.71) and (4.41,2.77) .. cycle;
-  \filldraw[fill=cRed!8, draw=cRed!28, line width=0.84pt]
+  \filldraw[fill=cRed!4, draw=cRed!28, line width=0.84pt]
     (2.52,3.61) .. controls (2.54,3.78) and (2.65,3.85) .. (2.79,3.82)
                 .. controls (2.93,3.79) and (2.97,3.66) .. (2.91,3.53)
                 .. controls (2.85,3.41) and (2.70,3.38) .. (2.59,3.45)
                 .. controls (2.54,3.49) and (2.51,3.55) .. cycle;
-  \filldraw[fill=cRed!8, draw=cRed!28, line width=0.84pt]
+  \filldraw[fill=cRed!4, draw=cRed!28, line width=0.84pt]
     (5.22,1.61) .. controls (5.23,1.78) and (5.34,1.85) .. (5.48,1.82)
                 .. controls (5.62,1.79) and (5.67,1.66) .. (5.61,1.53)
                 .. controls (5.56,1.41) and (5.41,1.38) .. (5.29,1.45)

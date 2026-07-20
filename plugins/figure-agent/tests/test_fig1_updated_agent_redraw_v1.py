@@ -435,6 +435,13 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert r"\fill[cRed!28" not in real_space
     assert "polymer-chain traces" in real_space
     assert real_space.count("plot[smooth] coordinates") == 3
+    assert "(2.72,3.62)" in real_space
+    assert "(4.62,2.84)" in real_space
+    assert "(1.55,1.62)" in real_space
+    assert "(5.42,1.62)" in real_space
+    assert "detached cores read as free particles" in real_space
+    assert "fill=cBlue!9" not in real_space
+    assert "fill=cRed!8" not in real_space
     assert "cGray!46" not in real_space
     assert "cGray!48!black" not in real_space
     assert "cGray!64!black" not in real_space

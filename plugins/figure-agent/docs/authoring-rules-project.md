@@ -53,7 +53,7 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.real-space-energy-binding
     category: physics_semantics
-    rule: "Show shallow and deep localized sites as the same mixed population inside one material field, not as segregated phases. Correspondence lines between real-space sites and energy-space distributions are semantic bindings, not trajectories. Give the host only restrained material-identity texture and depict localization as a compact contour around a neutral core; repeated nested halos make sites read as glowing particles."
+    rule: "Show shallow and deep localized sites as the same mixed population inside one material field, not as segregated phases. Correspondence lines between real-space sites and energy-space distributions are semantic bindings, not trajectories. Give the host only restrained material-identity texture and depict localization as a compact contour around a neutral core. Bind every localized core to a visible host trace or structural feature; a core floating in blank material reads as a free particle. Repeated nested halos make sites read as glowing particles."
     source:
       kind: hand_patch_commit
       locator: "Fig1 Panel C enlarged real-space/energy audit (2026-07-20)"
