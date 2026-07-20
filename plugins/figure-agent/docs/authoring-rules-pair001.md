@@ -35,6 +35,14 @@ rules:
       locator: "Fig1 Panel E deep review, measurement-to-derivation repair (2026-07-20)"
       quote: "Bind the derive arrow to both the measured V_s(t) plot and the derived g(E_t) region."
     transfer_policy: use_as_constraint
+  - id: pair001.host-texture-needs-physical-identity
+    category: physics_semantics
+    rule: "In a real-space material field, do not scatter same-size dots merely to fill empty space: repeated particles can imply fillers, pores, or a second population. Use continuous non-periodic disorder cues only when they bind to a declared spatial-energy or morphology claim; otherwise omit decorative texture and let the localized states carry the meaning."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 Panel C real-space deep review (2026-07-20)"
+      quote: "Neutral equal-size dots read as an undeclared particle population rather than amorphous energetic disorder."
+    transfer_policy: use_as_constraint
   - id: pair001.panel-d-do-not-transfer-triboelectric
     category: physics_semantics
     rule: Reusing Panel D apparatus grammar must not transfer triboelectric mechanism or breakdown narrative into charge-trap figures.

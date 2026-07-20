@@ -136,27 +136,79 @@
     (0.84,1.23)--(6.18,1.23)--(6.12,4.30)--(0.90,4.30)--cycle;
   \draw[cGray!72!black, line width=0.90pt]
     (0.84,1.23)--(6.18,1.23)--(6.12,4.30)--(0.90,4.30)--cycle;
-  % Unconnected localized-site ensemble: neutral microtexture establishes one
-  % disordered material field without turning every matrix fluctuation into a
-  % colored trap population or an undeclared molecular network.
-  \foreach \xx/\yy in {
-    1.20/3.78,1.74/3.40,2.22/3.94,3.18/3.38,3.76/3.86,
-    4.36/3.42,5.12/3.78,5.70/3.28,1.22/2.82,1.72/2.46,
-    2.30/2.94,2.88/2.52,3.46/2.92,3.98/2.34,4.48/2.66,
-    5.18/2.42,5.72/2.78,1.24/1.86,1.92/2.02,2.46/1.54,
-    3.08/1.92,3.72/1.50,4.30/1.86,4.92/1.46,5.78/1.92} {
-    \fill[cGray!20] (\xx,\yy) circle (0.032);
-  }
-  % Nested low-opacity fields approximate a localized spatial envelope without
-  % a hard badge-like ring; the colors encode energy class, not material phase.
+  % Unconnected localized-site ensemble: same-size dot texture is intentionally omitted
+  % because it would invent a second particle population inside the polymer host.
+  % Hand-shaped localization envelopes replace the repeated circular-halo primitive;
+  % each remains compact, co-equal, and visibly embedded in the same disordered film.
+  % Shallow site at lower left.
+  \fill[cBlue!8]
+    (1.34,1.62) .. controls (1.37,1.78) and (1.47,1.84) .. (1.60,1.82)
+                .. controls (1.75,1.80) and (1.80,1.68) .. (1.76,1.55)
+                .. controls (1.72,1.42) and (1.56,1.38) .. (1.43,1.45)
+                .. controls (1.36,1.49) and (1.33,1.55) .. cycle;
+  \fill[cBlue!18]
+    (1.40,1.62) .. controls (1.42,1.73) and (1.50,1.78) .. (1.59,1.76)
+                .. controls (1.69,1.75) and (1.73,1.67) .. (1.70,1.57)
+                .. controls (1.67,1.48) and (1.56,1.45) .. (1.47,1.50)
+                .. controls (1.42,1.53) and (1.40,1.57) .. cycle;
+  \fill[cBlue!30]
+    (1.46,1.62) .. controls (1.47,1.69) and (1.52,1.72) .. (1.58,1.71)
+                .. controls (1.64,1.70) and (1.67,1.66) .. (1.65,1.60)
+                .. controls (1.63,1.53) and (1.56,1.51) .. (1.50,1.54)
+                .. controls (1.47,1.56) and (1.46,1.59) .. cycle;
+  % Shallow site at upper right.
+  \fill[cBlue!8]
+    (4.42,2.83) .. controls (4.43,3.00) and (4.54,3.08) .. (4.68,3.05)
+                .. controls (4.82,3.02) and (4.87,2.89) .. (4.81,2.76)
+                .. controls (4.76,2.64) and (4.61,2.60) .. (4.49,2.67)
+                .. controls (4.44,2.71) and (4.41,2.77) .. cycle;
+  \fill[cBlue!18]
+    (4.48,2.83) .. controls (4.49,2.94) and (4.56,3.00) .. (4.66,2.98)
+                .. controls (4.76,2.96) and (4.80,2.88) .. (4.76,2.79)
+                .. controls (4.72,2.70) and (4.62,2.67) .. (4.53,2.72)
+                .. controls (4.50,2.75) and (4.48,2.79) .. cycle;
+  \fill[cBlue!30]
+    (4.54,2.83) .. controls (4.55,2.90) and (4.59,2.93) .. (4.65,2.92)
+                .. controls (4.71,2.91) and (4.73,2.86) .. (4.71,2.81)
+                .. controls (4.69,2.75) and (4.62,2.73) .. (4.57,2.76)
+                .. controls (4.55,2.78) and (4.54,2.80) .. cycle;
+  % Deep site at upper left.
+  \fill[cRed!7]
+    (2.52,3.61) .. controls (2.54,3.78) and (2.65,3.85) .. (2.79,3.82)
+                .. controls (2.93,3.79) and (2.97,3.66) .. (2.91,3.53)
+                .. controls (2.85,3.41) and (2.70,3.38) .. (2.59,3.45)
+                .. controls (2.54,3.49) and (2.51,3.55) .. cycle;
+  \fill[cRed!17]
+    (2.58,3.61) .. controls (2.60,3.72) and (2.67,3.77) .. (2.77,3.75)
+                .. controls (2.87,3.73) and (2.90,3.65) .. (2.86,3.56)
+                .. controls (2.82,3.47) and (2.72,3.44) .. (2.63,3.49)
+                .. controls (2.60,3.52) and (2.58,3.57) .. cycle;
+  \fill[cRed!28]
+    (2.64,3.61) .. controls (2.65,3.68) and (2.70,3.71) .. (2.76,3.70)
+                .. controls (2.82,3.69) and (2.84,3.64) .. (2.82,3.58)
+                .. controls (2.79,3.52) and (2.72,3.50) .. (2.67,3.53)
+                .. controls (2.65,3.55) and (2.64,3.58) .. cycle;
+  % Deep site at lower right.
+  \fill[cRed!7]
+    (5.22,1.61) .. controls (5.23,1.78) and (5.34,1.85) .. (5.48,1.82)
+                .. controls (5.62,1.79) and (5.67,1.66) .. (5.61,1.53)
+                .. controls (5.56,1.41) and (5.41,1.38) .. (5.29,1.45)
+                .. controls (5.24,1.49) and (5.21,1.55) .. cycle;
+  \fill[cRed!17]
+    (5.28,1.61) .. controls (5.29,1.72) and (5.36,1.77) .. (5.46,1.75)
+                .. controls (5.56,1.73) and (5.60,1.65) .. (5.56,1.56)
+                .. controls (5.52,1.47) and (5.42,1.44) .. (5.33,1.49)
+                .. controls (5.30,1.52) and (5.28,1.57) .. cycle;
+  \fill[cRed!28]
+    (5.34,1.61) .. controls (5.35,1.68) and (5.40,1.71) .. (5.46,1.70)
+                .. controls (5.52,1.69) and (5.54,1.64) .. (5.52,1.58)
+                .. controls (5.49,1.52) and (5.42,1.50) .. (5.37,1.53)
+                .. controls (5.35,1.55) and (5.34,1.58) .. cycle;
+  % Equal core size carries categorical identity without a false magnitude cue.
   \foreach \x/\y in {1.55/1.62,4.62/2.84} {
-    \fill[cBlue!7] (\x,\y) circle (0.175);
-    \fill[cBlue!30] (\x,\y) circle (0.115);
     \fill[cBlue!82] (\x,\y) circle (0.075);
   }
   \foreach \x/\y in {2.72/3.62,5.42/1.62} {
-    \fill[cRed!7] (\x,\y) circle (0.175);
-    \fill[cRed!28] (\x,\y) circle (0.115);
     \fill[cRed!82] (\x,\y) circle (0.075);
   }
   \node[small label, text=cGray!88!black, anchor=west] at (1.02,0.78) {shallow sites};

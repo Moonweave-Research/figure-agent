@@ -364,7 +364,10 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert "(5.495,1.62)--(7.40,1.68)" in panel_c
     real_space = panel_c.split("% Energy-space view", 1)[0]
     assert "Unconnected localized-site ensemble" in real_space
-    assert "circle (0.032)" in real_space
+    assert "same-size dot texture is intentionally omitted" in real_space
+    assert r"\foreach \xx/\yy" not in real_space
+    assert "Hand-shaped localization envelopes" in real_space
+    assert real_space.count("cycle;") >= 12
     assert "cBlue!30" in real_space
     assert "cRed!28" in real_space
     assert "cGray!46" not in real_space

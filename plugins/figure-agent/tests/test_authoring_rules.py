@@ -113,6 +113,22 @@ def test_pair001_binds_raw_to_derived_transformations() -> None:
     assert "dedicated transformation lane" in rule["rule"]
 
 
+def test_pair001_rejects_unbound_particle_like_host_texture() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "pair001.host-texture-needs-physical-identity"
+    )
+    assert "same-size dots" in rule["rule"]
+    assert "fillers, pores, or a second population" in rule["rule"]
+    assert "continuous non-periodic disorder cues" in rule["rule"]
+    assert "omit decorative texture" in rule["rule"]
+
+
 def test_rule_catalog_rejects_unanchored_generic_guidance(tmp_path: Path) -> None:
     path = tmp_path / "bad.md"
     path.write_text(
