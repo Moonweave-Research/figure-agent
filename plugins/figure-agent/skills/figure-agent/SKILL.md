@@ -431,6 +431,12 @@ reduction factor rather than inventing a hero exception. Recheck the official
 Nature Communications author page before final compliance work because journal
 requirements can change.
 
+Treat panel letters as navigation markers, not focal scientific content. At the
+declared final width, compare their visible cap height with adjacent panel titles
+and labels; bold weight may distinguish them, but materially oversized letters
+that dominate the first visual fixation are a hierarchy defect unless the journal
+or paper-wide style explicitly requires that scale.
+
 Compare equivalent axis titles, variables, units, and endpoint labels across
 panels at the final reduction. Keep scientifically co-equal axes on a common
 typographic floor; do not demote a crowded panel's claim-bearing axes to an
