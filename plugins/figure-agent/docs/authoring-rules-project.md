@@ -27,6 +27,14 @@ rules:
       locator: "Fig1 Panel A enlarged reactant/product audit (2026-07-20)"
       quote: "Thumbnail polish concealed colour seams, crowded alkene lines, and arrowhead-like S8 bonds."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.cross-panel-chemical-topology
+    category: chemistry_semantics
+    rule: "A named chemical species must retain the same mandatory atom connectivity across panels. A compact composition or trend panel may reduce atom count and sulfur rank detail, but it must not delete a chemically required junction, attach polysulfide directly to an aryl carbon when the declared structure uses a thiocumyl carbon, or turn an aromatic ring into an unlabeled saturated hexagon."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 A-to-B print-scale consistency audit (2026-07-20)"
+      quote: "Correcting Panel A exposed direct aryl-sulfur bonds and non-aromatic DIB hexagons in Panel B."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.cantilever-vertical-clip-top
     category: instrument_standard
     rule: "Draw the polymer cantilever vertical: clip/clamp on top, polymer hangs down, deflection sideways toward a side electrode. Horizontal cantilever orientation is wrong for this lab and its experiments."

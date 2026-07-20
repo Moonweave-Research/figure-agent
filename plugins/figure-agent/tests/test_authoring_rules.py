@@ -335,6 +335,11 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "decorative colour seam mid-bond" in zoom["rule"]
     assert "alkene" in zoom["rule"]
 
+    consistency = rules["polymer_paper_project.cross-panel-chemical-topology"]
+    assert consistency["category"] == "chemistry_semantics"
+    assert "same mandatory atom connectivity across panels" in consistency["rule"]
+    assert "polysulfide directly to an aryl carbon" in consistency["rule"]
+
 
 def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
     path = tmp_path / "badid.md"

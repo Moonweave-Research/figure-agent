@@ -172,6 +172,17 @@ def test_repaired_panel_a_survives_enlarged_chemical_inspection() -> None:
     assert "(-135:0.28)" in panel_a
 
 
+def test_repaired_panel_b_preserves_panel_a_chemical_topology() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_b = source.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
+
+    assert "B aromatic DIB rings retain Kekule bonds" in panel_b
+    assert "B bis-thiocumyl junctions retained at both chain ends" in panel_b
+    assert "direct aryl--sulfur attachment is forbidden" in panel_b
+    assert "circle, draw=cAmber" not in panel_b
+    assert "DIB motifs linked by polysulfides of increasing sulfur rank" in panel_b
+
+
 def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     label = source.index(r"{manual sample\\[-0.5pt]transfer}")
@@ -328,7 +339,7 @@ def test_repaired_top_row_summary_captions_share_one_text_level() -> None:
 
     assert r"\node[body label, align=center]" in panel_a
     assert r"\node[body label, align=center]" in panel_b
-    assert "DIB units linked by polysulfides of increasing sulfur rank" in panel_b
+    assert "DIB motifs linked by polysulfides of increasing sulfur rank" in panel_b
 
 
 def test_repaired_s8_atom_labels_survive_reduction() -> None:
