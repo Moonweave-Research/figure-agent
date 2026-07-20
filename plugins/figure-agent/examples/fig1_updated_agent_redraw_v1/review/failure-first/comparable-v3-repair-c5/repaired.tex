@@ -325,7 +325,11 @@
   \draw[cGray!84!black, line width=0.84pt] (1.91,2.61) rectangle (3.96,2.77);
   \node[small label, text=cGray!88!black] at (2.94,2.97) {polymer film};
   \draw[cGray!80!black, line width=0.84pt] (3.96,2.68)--(4.22,2.68)--(4.22,2.57);
-  \draw[cGray, line width=0.84pt] (4.09,2.57)--(4.35,2.57) (4.13,2.51)--(4.31,2.51);
+  % Use the shared three-bar tapered ground grammar used by the measurement panels.
+  \draw[cGray, line width=0.84pt]
+    (4.09,2.57)--(4.35,2.57)
+    (4.13,2.51)--(4.31,2.51)
+    (4.17,2.46)--(4.27,2.46);
   \node[small label, anchor=east] at (4.20,3.56) {MIM stack};
 
   % Symbolic log--log response: specimen-owned slopes carry the power-law contrast.

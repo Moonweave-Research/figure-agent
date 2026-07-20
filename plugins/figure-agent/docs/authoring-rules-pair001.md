@@ -43,6 +43,22 @@ rules:
       locator: "Fig1 Panel C real-space deep review (2026-07-20)"
       quote: "Neutral equal-size dots read as an undeclared particle population rather than amorphous energetic disorder."
     transfer_policy: use_as_constraint
+  - id: pair001.ground-symbol-grammar-consistent
+    category: instrument_standard
+    rule: Use the same three-bar tapered ground grammar for equivalent electrical references across one figure. A visibly different ground glyph requires a declared different electrical reference; do not vary bar count, taper, or orientation as incidental drawing shorthand.
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 Panel D apparatus deep review against Panel E (2026-07-20)"
+      quote: "Panel D used a two-bar ground while Panel E used the shared three-bar tapered symbol."
+    transfer_policy: use_as_constraint
+  - id: pair001.power-law-slope-matches-exponent
+    category: physics_semantics
+    rule: "For a log-log response declared as I(t) proportional to t^-n, the trace with larger n must have the more negative slope. Verify the rendered endpoints or source geometry and keep each rotated label aligned with its owning trace; label text alone is not evidence that the exponent ordering is correct."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 Panel D power-law geometry audit (2026-07-20)"
+      quote: "The high-n trace must visibly fall faster than the low-n trace on log I versus log t axes."
+    transfer_policy: use_as_constraint
   - id: pair001.panel-d-do-not-transfer-triboelectric
     category: physics_semantics
     rule: Reusing Panel D apparatus grammar must not transfer triboelectric mechanism or breakdown narrative into charge-trap figures.

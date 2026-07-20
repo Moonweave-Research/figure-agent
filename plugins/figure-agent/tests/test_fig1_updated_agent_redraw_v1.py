@@ -447,6 +447,29 @@ def test_repaired_panel_d_strokes_survive_nature_double_column_scale() -> None:
     assert "opacity=" not in panel_d
 
 
+def test_repaired_panel_d_uses_the_shared_three_bar_ground_symbol() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_d = source.split("% Panel D", 1)[1].split("% Panel E", 1)[0]
+
+    assert "shared three-bar tapered ground grammar" in panel_d
+    assert "(4.09,2.57)--(4.35,2.57)" in panel_d
+    assert "(4.13,2.51)--(4.31,2.51)" in panel_d
+    assert "(4.17,2.46)--(4.27,2.46)" in panel_d
+
+
+def test_repaired_panel_d_high_n_line_is_geometrically_steeper() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_d = source.split("% Panel D", 1)[1].split("% Panel E", 1)[0]
+
+    assert "(0.86,1.88)--(4.02,1.12)" in panel_d
+    assert "(0.86,1.88)--(4.02,0.66)" in panel_d
+    low_drop = 1.88 - 1.12
+    high_drop = 1.88 - 0.66
+    assert high_drop > low_drop
+    assert "rotate=-13.5" in panel_d
+    assert "rotate=-21.1" in panel_d
+
+
 def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]

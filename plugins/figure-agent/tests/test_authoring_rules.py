@@ -129,6 +129,35 @@ def test_pair001_rejects_unbound_particle_like_host_texture() -> None:
     assert "omit decorative texture" in rule["rule"]
 
 
+def test_pair001_requires_one_ground_symbol_grammar() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "pair001.ground-symbol-grammar-consistent"
+    )
+    assert "same three-bar tapered ground grammar" in rule["rule"]
+    assert "different electrical reference" in rule["rule"]
+
+
+def test_pair001_binds_power_law_exponent_to_rendered_slope() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "pair001.power-law-slope-matches-exponent"
+    )
+    assert "larger n must have the more negative slope" in rule["rule"]
+    assert "rendered endpoints" in rule["rule"]
+    assert "label text alone" in rule["rule"]
+
+
 def test_rule_catalog_rejects_unanchored_generic_guidance(tmp_path: Path) -> None:
     path = tmp_path / "bad.md"
     path.write_text(
