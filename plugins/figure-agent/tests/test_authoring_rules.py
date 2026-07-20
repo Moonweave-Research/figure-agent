@@ -355,7 +355,8 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     rule = rules["polymer_paper_project.poly-s-dib-bis-thiocumyl-motif"]
     assert rule["category"] == "chemistry_semantics"
     assert "Ar-C(CH3)2-Sx" in rule["rule"]
-    assert "representative predominant motif" in rule["rule"]
+    assert "representative bis-thiocumyl" in rule["rule"]
+    assert "current predominant bis-thiocumyl" not in rule["rule"]
     assert "single exact constitutional repeat" in rule["rule"]
 
     legibility = rules[

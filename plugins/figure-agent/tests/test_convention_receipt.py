@@ -36,6 +36,10 @@ def test_receipt_lists_project_conventions_with_source_quotes() -> None:
     assert colour["scope"] == "project"
     assert colour["source"]["quote"]
 
+    chemistry = by_id["polymer_paper_project.poly-s-dib-bis-thiocumyl-motif"]
+    assert "representative bis-thiocumyl" in chemistry["rule"]
+    assert "current predominant bis-thiocumyl" not in chemistry["rule"]
+
 
 def test_receipt_payload_schema_and_structure() -> None:
     payload = convention_receipt.build_convention_receipt(REAL_FIXTURE, **_env_paths())
