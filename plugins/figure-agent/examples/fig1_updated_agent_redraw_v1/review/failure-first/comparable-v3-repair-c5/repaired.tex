@@ -28,70 +28,97 @@
   \node[panel letter, anchor=west] at (0.28,4.62) {a};
   \node[panel title] at (0.82,4.62) {Sulfur-rich poly(S-\emph{r}-DIB)};
 
-  % --- elemental sulfur S8 crown (sulfur feedstock) ---
-  \coordinate (s8c) at (1.16,3.92);
+  % --- reactant 1: elemental sulfur (compact 2D S8 crown convention) ---
+  \coordinate (s8c) at (0.84,3.72);
   \foreach \a/\i in {22.5/1,67.5/2,112.5/3,157.5/4,202.5/5,247.5/6,292.5/7,337.5/8} {
-    \coordinate (v\i) at ($(s8c)+(\a:0.39)$);
+    \coordinate (v\i) at ($(s8c)+(\a:0.31)$);
   }
-  \draw[cAmber!82!black, line width=1.0pt, line join=round]
-    (v1)--(v2)--(v3)--(v4)--(v5)--(v6)--(v7)--(v8)--cycle;
+  % Individual shortened bonds meet the atom-label boxes without running behind glyphs.
+  \foreach \i/\j in {1/2,2/3,3/4,4/5,5/6,6/7,7/8,8/1} {
+    \draw[cAmber!82!black, line width=0.90pt, line cap=round,
+          shorten >=2.4pt, shorten <=2.4pt] (v\i)--(v\j);
+  }
   \foreach \i in {1,...,8} {
-    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.84pt,
-          minimum size=1.60mm, inner sep=0pt,
-          font=\sffamily\bfseries\fontsize{3.8}{4.6}\selectfont, text=cBrown] at (v\i) {S};
+    \node[fill=white, inner sep=0.35pt,
+          font=\sffamily\bfseries\fontsize{4.3}{5.0}\selectfont,
+          text=cBrown] at (v\i) {S};
   }
-  \node[small label] at (1.86,3.92) {S$_8$};
+  \node[small label, text=cGray!88!black] at (0.84,3.20) {elemental S$_8$};
 
-  % --- inverse-vulcanization transformation ---
-  \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=1.0pt]
-    (2.10,3.66) .. controls (2.82,3.46) and (3.12,3.20) .. (3.40,2.92);
-  \node[small label, text=cBrown!92!black] at (3.02,4.02) {inverse vulcanization};
-  \node[small label] at (2.72,3.16) {$\Delta$};
+  \node[body label] at (1.43,3.73) {$+$};
 
-  % --- repeat unit: [ -S_x- meta-DIB (bis-thiocumyl) ]_n ---
-  \node[body label] at (1.95,1.44) {sulfur segment};
-  % left polysulfide -S-S-S-
-  \foreach \x in {1.52,1.94,2.36} {
-    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.84pt,
-          minimum size=2.6mm, inner sep=0pt,
-          font=\sffamily\bfseries\fontsize{4.9}{5.9}\selectfont, text=cBrown] at (\x,2.30) {S};
-  }
-  \draw[cAmber!85!black, line width=1.0pt] (1.69,2.30)--(1.77,2.30) (2.11,2.30)--(2.19,2.30);
-  \draw[cGray, line width=1.0pt] (2.53,2.30)--(2.86,2.30);
-  % left DIB-derived benzylic carbon (bare methyl stub = line-angle CH3)
-  \coordinate (bcl) at (3.02,2.30);
-  \draw[cGray, line width=1.0pt] (bcl)--($(bcl)+(0,-0.34)$);
-  \draw[cGray, line width=1.0pt] (bcl)--(3.49,2.45);
+  % --- reactant 2: 1,3-diisopropenylbenzene, with both C=C bonds visible ---
+  \coordinate (mc) at (2.55,3.72);
+  \foreach \a in {0,60,120,180,240,300} { \coordinate (m\a) at ($(mc)+(\a:0.33)$); }
+  \draw[cGray, line width=0.92pt, line join=round]
+    (m0)--(m60)--(m120)--(m180)--(m240)--(m300)--cycle;
+  \draw[cGray, line width=0.84pt]
+    ($(m0)!0.22!(m60)!0.14!(mc)$)--($(m0)!0.78!(m60)!0.14!(mc)$)
+    ($(m120)!0.22!(m180)!0.14!(mc)$)--($(m120)!0.78!(m180)!0.14!(mc)$)
+    ($(m240)!0.22!(m300)!0.14!(mc)$)--($(m240)!0.78!(m300)!0.14!(mc)$);
+  % left isopropenyl group: Ar-C(CH3)=CH2
+  \coordinate (ma) at ($(m180)+(-0.22,0)$);
+  \coordinate (mt) at ($(ma)+(-0.31,0)$);
+  \draw[cGray, line width=0.88pt] (m180)--(ma) (ma)--($(ma)+(0,0.24)$);
+  \draw[cGray, line width=0.84pt] ($(ma)+(0,0.035)$)--($(mt)+(0,0.035)$)
+                                   ($(ma)+(0,-0.035)$)--($(mt)+(0,-0.035)$);
+  % lower-right meta isopropenyl group: Ar-C(CH3)=CH2
+  \coordinate (mb) at ($(m300)+(0.12,-0.19)$);
+  \coordinate (mu) at ($(mb)+(0.17,-0.27)$);
+  \draw[cGray, line width=0.88pt] (m300)--(mb) (mb)--($(mb)+(0.22,0.08)$);
+  \draw[cGray, line width=0.84pt] ($(mb)+(0.030,-0.018)$)--($(mu)+(0.030,-0.018)$)
+                                   ($(mb)+(-0.030,0.018)$)--($(mu)+(-0.030,0.018)$);
+  \node[small label, text=cGray!88!black] at (2.18,3.08) {1,3-DIB};
 
-  % DIB benzene ring (meta 1,3), Kekule aromatic (inner double bonds offset inward)
-  \coordinate (p1) at (4.05,2.45);
-  \foreach \a in {0,60,120,180,240,300} { \coordinate (r\a) at ($(p1)+(\a:0.56)$); }
-  \draw[cGray, line width=1.10pt, line join=round] (r0)--(r60)--(r120)--(r180)--(r240)--(r300)--cycle;
-  \draw[cGray, line width=0.84pt] ($(r0)!0.2!(r60)!0.14!(p1)$)--($(r0)!0.8!(r60)!0.14!(p1)$);
-  \draw[cGray, line width=0.84pt] ($(r120)!0.2!(r180)!0.14!(p1)$)--($(r120)!0.8!(r180)!0.14!(p1)$);
-  \draw[cGray, line width=0.84pt] ($(r240)!0.2!(r300)!0.14!(p1)$)--($(r240)!0.8!(r300)!0.14!(p1)$);
-  \node[body label] at (4.05,3.42) {DIB-derived segment};
+  % --- thermally initiated inverse vulcanization ---
+  \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=0.96pt]
+    (3.31,3.72)--(4.20,3.72);
+  \node[small label, text=cBrown!92!black] at (3.76,4.00) {inverse vulcanization};
+  \node[small label] at (3.76,3.48) {$\Delta$};
 
-  % right DIB-derived benzylic carbon (from r300) + continuing polysulfide (horizontal)
-  \coordinate (bcr) at ($(r300)+(0.34,0)$);
-  \draw[cGray, line width=1.0pt] (r300)--(bcr);
-  \draw[cGray, line width=1.0pt] (bcr)--($(bcr)+(0,-0.34)$);
-  \draw[cGray, line width=1.0pt] (bcr)--($(bcr)+(0.24,0)$);
-  \coordinate (sc2) at ($(bcr)+(0.48,0)$);
-  \foreach \x in {0,1} {
-    \node[circle, draw=cAmber!85!black, fill=cAmberSphere!72, line width=0.84pt,
-          minimum size=2.3mm, inner sep=0pt,
-          font=\sffamily\bfseries\fontsize{4.4}{5.3}\selectfont, text=cBrown] at ($(sc2)+(0.38*\x,0)$) {S};
-  }
-  \draw[cAmber!85!black, line width=1.0pt] ($(sc2)+(0.165,0)$)--($(sc2)+(0.215,0)$);
-  \draw[cGray, line width=1.0pt] ($(sc2)+(0.50,0)$)--(5.92,1.965);
+  % --- representative predominant motif; not a unique constitutional repeat ---
+  % Current structural assignment: both meta substituents are thiocumyl units.
+  \node[body label, text=cGray!88!black] at (3.58,2.66) {bis-thiocumyl connectivity};
 
-  % repeat-unit brackets [ ... ]_n
-  \draw[cGray, line width=0.90pt] (1.10,1.20)--(0.84,1.20)--(0.84,3.02)--(1.10,3.02);
-  \draw[cGray, line width=0.90pt] (0.84,2.30)--(1.26,2.30);
-  \draw[cGray, line width=0.90pt] (5.60,1.20)--(5.86,1.20)--(5.86,3.02)--(5.60,3.02);
-  \node[font=\sffamily\fontsize{6.2}{7.4}\selectfont, text=cGray] at (6.02,1.32) {$n$};
-  \node[body label, align=center] at (3.45,0.30) {poly(S-\emph{r}-DIB) linear repeat unit};
+  % variable-rank left polysulfide and chemically continuous bond to left polysulfide
+  \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (lsx) at (1.28,1.90) {$\mathrm{S}_{x}$};
+  \draw[cAmber!88!black, line width=1.0pt] (0.72,1.90)--(lsx.west) (lsx.east)--(2.26,1.90);
+
+  % bis-thiocumyl junction: Ar-C(CH3)2-S_x
+  \coordinate (bcl) at (2.48,1.90);
+  \fill[cGray!92!black] (bcl) circle (0.022cm);
+  \draw[cGray, line width=0.96pt] (2.26,1.90)--(bcl)
+    (bcl)--($(bcl)+(0,0.38)$)
+    (bcl)--($(bcl)+(0,-0.38)$)
+    (bcl)--(3.20,1.90);
+
+  % meta-DIB aryl core, conventional Kekule representation
+  \coordinate (pc) at (3.73,1.90);
+  \foreach \a in {0,60,120,180,240,300} { \coordinate (r\a) at ($(pc)+(\a:0.53)$); }
+  \draw[cGray, line width=1.02pt, line join=round]
+    (r0)--(r60)--(r120)--(r180)--(r240)--(r300)--cycle;
+  \draw[cGray, line width=0.84pt]
+    ($(r0)!0.20!(r60)!0.14!(pc)$)--($(r0)!0.80!(r60)!0.14!(pc)$)
+    ($(r120)!0.20!(r180)!0.14!(pc)$)--($(r120)!0.80!(r180)!0.14!(pc)$)
+    ($(r240)!0.20!(r300)!0.14!(pc)$)--($(r240)!0.80!(r300)!0.14!(pc)$);
+
+  % bis-thiocumyl junction: Ar-C(CH3)2-S_x
+  \coordinate (bcr) at ($(r300)+(0.36,-0.12)$);
+  \fill[cGray!92!black] (bcr) circle (0.022cm);
+  \draw[cGray, line width=0.96pt] (r300)--(bcr)
+    (bcr)--($(bcr)+(0,0.38)$)
+    (bcr)--($(bcr)+(0,-0.38)$)
+    (bcr)--($(bcr)+(0.44,0)$);
+
+  % variable-rank right polysulfide and chemically continuous bond to right polysulfide
+  \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (rsy) at ($(bcr)+(0.70,0)$) {$\mathrm{S}_{y}$};
+  \draw[cAmber!88!black, line width=1.0pt] ($(bcr)+(0.44,0)$)--(rsy.west)
+    (rsy.east)--(6.15,1.33);
+
+  \node[body label, align=center] at (3.45,0.72)
+    {representative bis-thiocumyl motif};
+  \node[small label, align=center, text=cGray!82!black] at (3.45,0.37)
+    {variable sulfur rank and minor microstructures};
 \end{scope}
 
 % Panel B

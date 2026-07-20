@@ -11,6 +11,7 @@ import yaml
 
 SCHEMA = "figure-agent.authoring-rules.v1"
 VALID_CATEGORIES = {
+    "chemistry_semantics",
     "physics_semantics",
     "label_binding",
     "instrument_standard",

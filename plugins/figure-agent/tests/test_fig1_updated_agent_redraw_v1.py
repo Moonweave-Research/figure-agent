@@ -129,8 +129,22 @@ def test_bound_authoring_prompt_carries_project_cantilever_orientation_rule() ->
     assert "polymer_paper_project.panel-header-and-label-clearance" in prompt
     assert "Reserve a clear header band inside every panel" in prompt
     assert "Do not solve clearance by forcing an equal-cell grid" in prompt
+    assert "polymer_paper_project.poly-s-dib-bis-thiocumyl-motif" in prompt
+    assert "Ar-C(CH3)2-Sx" in prompt
     for panel_id in "ABCDEF":
         assert f"Add exactly one canonical marker [% Panel {panel_id}]" in prompt
+
+
+def test_repaired_panel_a_uses_connected_bis_thiocumyl_chemistry() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+
+    assert panel_a.count("bis-thiocumyl junction: Ar-C(CH3)2-S_x") == 2
+    assert "representative bis-thiocumyl motif" in panel_a
+    assert "linear repeat unit" not in panel_a
+    assert "circle, draw=cAmber" not in panel_a
+    assert "chemically continuous bond to left polysulfide" in panel_a
+    assert "chemically continuous bond to right polysulfide" in panel_a
 
 
 def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
@@ -296,8 +310,10 @@ def test_repaired_s8_atom_labels_survive_reduction() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
 
-    assert r"minimum size=1.60mm" in panel_a
-    assert r"\fontsize{3.8}{4.6}\selectfont" in panel_a
+    assert r"\foreach \i in {1,...,8}" in panel_a
+    assert r"\fontsize{4.3}{5.0}\selectfont" in panel_a
+    assert "fill=white, inner sep=0.35pt" in panel_a
+    assert "circle, draw=cAmber" not in panel_a
     assert r"\fontsize{3.1}{3.8}\selectfont" not in panel_a
 
 

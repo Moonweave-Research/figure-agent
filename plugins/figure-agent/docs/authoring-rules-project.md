@@ -3,6 +3,14 @@ schema: figure-agent.authoring-rules.v1
 fixture: polymer_paper_project
 promotion_state: n1_hypotheses
 rules:
+  - id: polymer_paper_project.poly-s-dib-bis-thiocumyl-motif
+    category: chemistry_semantics
+    rule: "For poly(S-r-DIB), depict the current predominant bis-thiocumyl connectivity Ar-C(CH3)2-Sx at both meta-DIB substituents: each junction carbon has one aryl bond, one polysulfide bond, and two methyl bonds, with no implicit hydrogen. Because the material contains composition-dependent minor microstructures, call this a representative predominant motif rather than a single exact constitutional repeat. Show both S8 and 1,3-DIB as reactants when the panel claims inverse vulcanization."
+    source:
+      kind: critique_adjudication
+      locator: "Bao et al., JACS 2023, DOI 10.1021/jacs.3c03604; Fig1 Panel A chemical-connectivity audit (2026-07-20)"
+      quote: "The previously proposed repeating units were incorrect; bis-thiocumyl units predominate."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.cantilever-vertical-clip-top
     category: instrument_standard
     rule: "Draw the polymer cantilever vertical: clip/clamp on top, polymer hangs down, deflection sideways toward a side electrode. Horizontal cantilever orientation is wrong for this lab and its experiments."

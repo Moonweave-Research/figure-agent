@@ -21,6 +21,7 @@ def test_pair001_rule_catalog_requires_source_anchored_rules() -> None:
     for rule in catalog["rules"]:
         assert rule["id"].startswith("pair001.")
         assert rule["category"] in {
+            "chemistry_semantics",
             "physics_semantics",
             "label_binding",
             "instrument_standard",
@@ -307,6 +308,19 @@ def test_rule_catalog_accepts_project_namespace(tmp_path: Path) -> None:
     catalog = authoring_rules.load_rule_catalog(path)
     assert catalog["rules"][0]["id"] == "polymer_paper_project.cantilever-vertical-clip"
     assert catalog["rules"][0]["category"] == "instrument_standard"
+
+
+def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        Path(__file__).resolve().parents[1] / "docs" / "authoring-rules-project.md"
+    )
+    rules = {rule["id"]: rule for rule in catalog["rules"]}
+
+    rule = rules["polymer_paper_project.poly-s-dib-bis-thiocumyl-motif"]
+    assert rule["category"] == "chemistry_semantics"
+    assert "Ar-C(CH3)2-Sx" in rule["rule"]
+    assert "representative predominant motif" in rule["rule"]
+    assert "single exact constitutional repeat" in rule["rule"]
 
 
 def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
