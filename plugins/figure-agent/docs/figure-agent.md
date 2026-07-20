@@ -1,10 +1,7 @@
 <!-- FIGURE_AGENT:AUTHORITY -->
 # Figure Agent Product Contract and Execution Roadmap
-
 **Status:** Active and authoritative
-
 **Effective date:** 2026-07-18
-
 **Committed baseline:** `c6a28e40` (`codex/figure-agent-closed-loop-reset`)
 
 This is the sole product specification and forward execution authority for Figure Agent. Other specifications, plans, roadmaps, milestone notes, fixture reviews,
@@ -16,7 +13,6 @@ publication verdict. A clean worktree at this commit passed 235 targeted baselin
 tests. Future claims require fresh evidence from the slice that makes the claim.
 
 ## 1. Outcome
-
 Figure Agent does not compete with an LLM as a second general drawing model. The
 LLM remains free to interpret the scientific narrative, propose a composition,
 choose an analogy, and author editable TikZ or another declared representation.
@@ -41,9 +37,7 @@ becomes a product capability only when the same declared mechanism transfers
 across different figure families without fixture coordinates or hidden human edits.
 
 ## 2. Product boundaries
-
 ### 2.1 Representation roles
-
 - **TikZ/TeX** is the current default editable publication-authoring path.
 - **SVG** is a derived export, inspection, interchange, or bounded fragment surface.
   Direct-SVG generation is not an active backend-development target.
@@ -59,7 +53,6 @@ plane cannot address. During closed-loop slices, do not add a renderer, Illustra
 clone, whole-page grammar, or fixture-specific coordinates to reusable code.
 
 ### 2.2 Knowledge and model boundaries
-
 Read-only authoring context packs compile durable paper-specific knowledge. They
 may bind explicit paper-local files, Style Lock tokens, reviewed assets, semantic
 objects, relations, protected invariants, and human-declared non-coordinate aesthetic levers.
