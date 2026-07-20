@@ -367,6 +367,13 @@ sensing-head silhouette, orientation, target standoff, and cable/control topolog
 with its source authority. Renaming a generic icon does not repair geometry that
 still depicts a different or confusable measurement method.
 
+When the declared method is an induction-type electrostatic surface voltmeter
+(ESVM, including an SK-family head), preserve a fixed non-contact standoff and
+the head-to-meter cable path. Do not import Kelvin-probe or KPFM cues such as a
+vibrating fork, modulation arcs, a gap-capacitance symbol, or a grid electrode;
+also keep charging-state and measurement-state grounding distinct when the
+experimental sequence declares that only the latter uses a grounded substrate.
+
 Preserve the declared evidence granularity for instrument identity. Family-level
 authority supports the family name and topology, not unverified model-specific
 features, controls, or dimensions; keep those schematic unless a model is declared.
