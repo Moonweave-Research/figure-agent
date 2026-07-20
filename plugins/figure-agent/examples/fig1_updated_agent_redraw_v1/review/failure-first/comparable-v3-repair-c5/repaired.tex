@@ -609,10 +609,25 @@
   \draw[cAmber!52!black, line width=0.84pt, opacity=0.30]
     (1.97,3.08) .. controls (1.98,2.48) and (1.61,1.55) .. (0.91,0.78);
 
-  % Trapped-charge family follows the active face of the polymer.
-  \foreach \cx/\cy in {1.91/2.64,1.72/2.03,1.38/1.43,0.98/0.88} {
-    \fill[cRed!80] (\cx,\cy) circle (0.055);
-  }
+  % Trapped-charge family follows the active face of the polymer. Use compact
+  % surface-aligned lobes rather than four identical dots so the charge reads
+  % as localized on the bent film, not as a decorative marker row.
+  \fill[cRed!80]
+    (1.86,2.64) .. controls (1.87,2.58) and (1.93,2.57) .. (1.98,2.61)
+                .. controls (2.00,2.66) and (1.96,2.71) .. (1.91,2.70)
+                .. controls (1.87,2.69) and (1.85,2.67) .. cycle;
+  \fill[cRed!80]
+    (1.67,2.03) .. controls (1.69,1.97) and (1.75,1.96) .. (1.80,2.00)
+                .. controls (1.82,2.05) and (1.78,2.10) .. (1.73,2.10)
+                .. controls (1.69,2.09) and (1.67,2.07) .. cycle;
+  \fill[cRed!80]
+    (1.33,1.43) .. controls (1.34,1.37) and (1.40,1.36) .. (1.45,1.40)
+                .. controls (1.47,1.45) and (1.43,1.50) .. (1.38,1.50)
+                .. controls (1.34,1.49) and (1.32,1.46) .. cycle;
+  \fill[cRed!80]
+    (0.93,0.88) .. controls (0.94,0.82) and (0.99,0.81) .. (1.04,0.85)
+                .. controls (1.05,0.90) and (1.01,0.95) .. (0.97,0.95)
+                .. controls (0.94,0.94) and (0.92,0.91) .. cycle;
 
   % Driven metal electrode and compact bias circuit. The grounded voltage-source return closes only the driven-electrode circuit;
   % the sample and cantilever remain electrically floating.
