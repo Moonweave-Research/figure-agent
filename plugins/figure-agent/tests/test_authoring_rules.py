@@ -62,6 +62,13 @@ def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
     assert "manually transfer" in ispd_rule["rule"]
     assert "Kelvin probe" in ispd_rule["rule"]
     assert "exact model" in ispd_rule["rule"]
+    grounding_rule = next(
+        rule
+        for rule in project_catalog["rules"]
+        if rule["id"] == "polymer_paper_project.ispd-grounded-backing-plate"
+    )
+    assert "grounded backing plate" in grounding_rule["rule"]
+    assert "not the polymer film" in grounding_rule["rule"]
 
 
 def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:

@@ -848,6 +848,15 @@ def test_validate_critique_schema_rejects_v1_8_unknown_crop_verdict() -> None:
         validate_critique_schema(frontmatter)
 
 
+def test_validate_critique_schema_accepts_canonical_closed_loop_crop_path() -> None:
+    frontmatter = _valid_frontmatter(CRITIQUE_SCHEMA_V1_17)
+    frontmatter["crop_audit_log"][0]["path"] = (
+        "review/closed-loop/attempt-0123abcd/initial-review/crops/full_q1.png"
+    )
+
+    validate_critique_schema(frontmatter)
+
+
 def test_validate_critique_schema_rejects_v1_8_defect_without_micro_defect_link() -> None:
     frontmatter = _valid_frontmatter("figure-agent.critique.v1.10")
     frontmatter["crop_audit_log"][1]["linked_micro_defect_id"] = ""

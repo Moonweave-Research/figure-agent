@@ -1,0 +1,51 @@
+{
+  "actor": {
+    "identity": "codex-gpt-5",
+    "kind": "model",
+    "model_or_tool": "host vision review"
+  },
+  "inspected_artifacts": [
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/build/repaired.png",
+      "role": "full_render",
+      "sha256": "sha256:e46e9c6873652b6fa1bc58f99f1fb283541e94e818e9fc083bae21abf6ebb875"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review/crops/full_q1.png",
+      "role": "full_q1",
+      "sha256": "sha256:ec8d89c5b2a13a1185d54626801c35d75830f95e69087b9bc24f88ad332d0f6a"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review/crops/full_q2.png",
+      "role": "full_q2",
+      "sha256": "sha256:fc2660f462ad6368c662207dc79a1b6b0264648016495e52a45a52b69ac5f9a7"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review/crops/full_q3.png",
+      "role": "full_q3",
+      "sha256": "sha256:2cd94dfb95c6b36a786940506b7b9797ec6fb2859fa2385e613bd0cc9b7ac84c"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review/crops/full_q4.png",
+      "role": "full_q4",
+      "sha256": "sha256:416dfdb0733343bdb5b10ede0c2c81ffe414b0af38794bbad6f84d815ff2dedb"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review/crops/print_178mm.png",
+      "role": "print_178mm",
+      "sha256": "sha256:1942160a7e591ffd842d6f4f60a386a1221518b9dc61cfd5dd7369fd6f323426"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review/crops/print_thumbnail.png",
+      "role": "print_thumbnail",
+      "sha256": "sha256:530870b5c8d83e10b6985baa00b59306007182f890858dced4ee480320fab850"
+    }
+  ],
+  "receipt_sha256": "sha256:13f1c7ad9b5ed3e5683638bc543c3915fbb883bb07eda17c8c85b1e1fb78c45f",
+  "request_sha256": "sha256:876e1fb5157628c87f7efa441caa9f4d3040b4ba0787e89070310a6fc6d4c775",
+  "schema": "figure-agent.host-review-execution-receipt.v1",
+  "transcript": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/host-review-transcript.md",
+    "sha256": "sha256:9817590aeaa8e58796ab690a756d4b49551941818887f74512f612a2be8b6f7e"
+  }
+}

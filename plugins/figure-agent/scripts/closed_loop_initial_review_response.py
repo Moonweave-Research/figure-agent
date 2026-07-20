@@ -208,7 +208,9 @@ def _response_pack(attempt_root: Path, response_path: Path, *, root: Path) -> di
     return expected
 
 
-def _validate_critique(path: Path, *, fixture: str, root: Path) -> None:
+def _validate_critique(
+    path: Path, *, fixture: str, root: Path, required_crop_ids: tuple[str, ...]
+) -> None:
     _regular(path, root=root, label="initial_review_critique")
     try:
         frontmatter = critique_contract.load_critique_frontmatter(path)
@@ -222,6 +224,18 @@ def _validate_critique(path: Path, *, fixture: str, root: Path) -> None:
         raise ClosedLoopInitialReviewResponseError("initial_review_critique_invalid") from exc
     if frontmatter.get("fixture") != fixture or len(identifiers) != len(set(identifiers)):
         raise ClosedLoopInitialReviewResponseError("initial_review_critique_invalid")
+    crop_audit = frontmatter.get("crop_audit_log")
+    audited_ids = [
+        item.get("crop_id")
+        for item in crop_audit or []
+        if isinstance(item, dict) and isinstance(item.get("crop_id"), str)
+    ]
+    if len(audited_ids) != len(required_crop_ids) or set(audited_ids) != set(
+        required_crop_ids
+    ):
+        raise ClosedLoopInitialReviewResponseError(
+            "initial_review_critique_crop_audit_mismatch"
+        )
 
 
 def _validate_response(
@@ -270,7 +284,12 @@ def _validate_response(
             or ref.get("sha256") != _sha256(path)
         ):
             raise ClosedLoopInitialReviewResponseError(f"initial_review_response_{label}_mismatch")
-    _validate_critique(paths["critique"], fixture=fixture, root=root)
+    _validate_critique(
+        paths["critique"],
+        fixture=fixture,
+        root=root,
+        required_crop_ids=tuple(artifact["role"] for artifact in artifacts[1:]),
+    )
     host, _, _ = _load_json(
         paths["host"], root=root, label="initial_review_host_review_execution_receipt"
     )

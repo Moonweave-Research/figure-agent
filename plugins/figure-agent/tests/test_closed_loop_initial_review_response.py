@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -72,7 +73,9 @@ def _setup(tmp_path: Path) -> tuple[Path, Path, Path]:
     return workspace, fixture, initial["next_state_path"]
 
 
-def _response_pack(workspace: Path, fixture: Path, state_path: Path) -> Path:
+def _response_pack(
+    workspace: Path, fixture: Path, state_path: Path, *, include_seam_audit: bool = True
+) -> Path:
     request = json.loads((state_path.parent / "initial-review" / "request.json").read_text())
     manifest = json.loads(
         (state_path.parent / "initial-review" / "crops" / "manifest.json").read_text()
@@ -82,6 +85,40 @@ def _response_pack(workspace: Path, fixture: Path, state_path: Path) -> Path:
     critique = pack / inbound.CRITIQUE_FILE
     source = Path(__file__).resolve().parents[1] / "examples" / FIXTURE / "critique.md"
     shutil.copyfile(source, critique)
+    if include_seam_audit:
+        critique_text = critique.read_text(encoding="utf-8")
+        _, frontmatter_text, markdown = critique_text.split("---", 2)
+        frontmatter = yaml.safe_load(frontmatter_text)
+        for crop_id, orientation in (
+            ("full_center_vertical", "vertical"),
+            ("full_center_horizontal", "horizontal"),
+        ):
+            frontmatter["crop_audit_log"].append(
+                {
+                    "crop_id": crop_id,
+                    "path": f"build/audit_crops/{crop_id}.png",
+                    "source": "full_render",
+                    "inspected": True,
+                    "verdict": "no_defect",
+                    "linked_micro_defect_id": "",
+                    "rationale": f"Current {orientation} seam view was inspected.",
+                    "observed_objects": [f"central {orientation} semantic units"],
+                    "local_relationship": (
+                        f"The {orientation} seam view preserves the central units as a whole."
+                    ),
+                    "candidate_refs": [],
+                    "unintended_visible_anomaly": "none",
+                    "anomaly_rationale": "No unintended anomaly is visible in this seam view.",
+                    "anomaly_link": "",
+                }
+            )
+        critique.write_text(
+            "---\n"
+            + yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True)
+            + "---"
+            + markdown,
+            encoding="utf-8",
+        )
     render = request["render"]
     artifacts = [{"role": "full_render", **render}]
     by_id = {crop["id"]: crop for crop in manifest["crops"]}
@@ -147,6 +184,28 @@ def test_plan_only_validates_supplied_pack_without_writing_state(tmp_path: Path)
     assert result["next_state"] == "critique_unadjudicated"
     assert result["created"] is False
     assert not result["next_state_path"].exists()
+
+
+def test_response_rejects_critique_that_skips_required_seam_crops(tmp_path: Path) -> None:
+    workspace, _, state_path = _setup(tmp_path)
+    response_path = _response_pack(
+        workspace,
+        workspace / "examples" / FIXTURE,
+        state_path,
+        include_seam_audit=False,
+    )
+
+    with pytest.raises(
+        inbound.ClosedLoopInitialReviewResponseError,
+        match="initial_review_critique_crop_audit_mismatch",
+    ):
+        inbound.run_inbound_response(
+            FIXTURE,
+            state_path=state_path,
+            response_path=response_path,
+            execute=False,
+            workspace_root=workspace,
+        )
 
 
 def test_execute_binds_exact_request_critique_and_host_receipt_idempotently(tmp_path: Path) -> None:

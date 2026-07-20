@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -93,6 +94,37 @@ def _response_pack(workspace: Path, fixture: Path, state_path: Path) -> Path:
     critique = pack / response_adapter.CRITIQUE_FILE
     source = Path(__file__).resolve().parents[1] / "examples" / FIXTURE / "critique.md"
     shutil.copyfile(source, critique)
+    critique_text = critique.read_text(encoding="utf-8")
+    _, frontmatter_text, markdown = critique_text.split("---", 2)
+    frontmatter = yaml.safe_load(frontmatter_text)
+    audited = {item["crop_id"] for item in frontmatter["crop_audit_log"]}
+    for crop_id in crop_manifest["required_crop_ids"]:
+        if crop_id in audited:
+            continue
+        frontmatter["crop_audit_log"].append(
+            {
+                "crop_id": crop_id,
+                "path": f"build/audit_crops/{crop_id}.png",
+                "source": "full_render",
+                "inspected": True,
+                "verdict": "no_defect",
+                "linked_micro_defect_id": "",
+                "rationale": f"Current {crop_id} view was inspected.",
+                "observed_objects": [f"semantic units visible in {crop_id}"],
+                "local_relationship": f"The {crop_id} view preserves its semantic units.",
+                "candidate_refs": [],
+                "unintended_visible_anomaly": "none",
+                "anomaly_rationale": f"No unintended anomaly is visible in {crop_id}.",
+                "anomaly_link": "",
+            }
+        )
+    critique.write_text(
+        "---\n"
+        + yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True)
+        + "---"
+        + markdown,
+        encoding="utf-8",
+    )
     transcript = pack / response_adapter.TRANSCRIPT_FILE
     transcript.write_text("review transcript\n", encoding="utf-8")
     crop_by_id = {item["id"]: item for item in crop_manifest["crops"]}

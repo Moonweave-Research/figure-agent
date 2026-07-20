@@ -35,6 +35,14 @@ rules:
       locator: "Fig1 Panel E human review (2026-07-19)"
       quote: "코로나 차지를 한 후에, 직접 옆에 있는, 저 측정 장비 쪽으로 옮기는거야 우리가 자동 모션 기계는 아니야 / 아까 너가 말한 시리즈는 맞아"
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.ispd-grounded-backing-plate
+    category: instrument_standard
+    rule: "For corona-charged ISPD, place the specimen on a grounded backing plate in both the charging and non-contact measurement states. Attach the ground to the conductive backing plate, not the polymer film. When showing manual transfer, preserve this electrical role at both stations without implying that the instrument probe contacts the specimen."
+    source:
+      kind: iteration_comment
+      locator: "examples/fig1_overview_v5f_art_direction_001_vault/briefing.md §13.6; Panel E physical-layout review (2026-07-20)"
+      quote: "Substrate represents the conductive base required for ISPD charge-decay path. Ground attaches to substrate (not polymer)"
+    transfer_policy: use_as_constraint
 ---
 
 # Project authoring rule catalog (polymer_paper_project)

@@ -1,0 +1,42 @@
+{
+  "actor": "host_review_response",
+  "actor_role": "host_llm",
+  "attempt_id": "attempt-0b682e546acaa658d39299ff",
+  "disposition": "human_review_required",
+  "evidence": [
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/critique.md",
+      "role": "critique",
+      "sha256": "sha256:70bc657870dcfd59c6f37349adb599679ed6514a80d530afc5c728cc4f347acb"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/host-review-execution-receipt.json",
+      "role": "host_review_execution_receipt",
+      "sha256": "sha256:86e73585cac556976dddacd71d7e26ac4cac4d6e7284151f99247458df1415a7"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/host-review-transcript.md",
+      "role": "host_review_transcript",
+      "sha256": "sha256:9817590aeaa8e58796ab690a756d4b49551941818887f74512f612a2be8b6f7e"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/response.json",
+      "role": "initial_visual_review_response",
+      "sha256": "sha256:5da65dd0d2c74201e74375aaf910c8652805345df7a138d3d2bfaf4db355db51"
+    }
+  ],
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "parent_state_file_sha256": null,
+  "parent_state_path": null,
+  "parent_state_sha256": null,
+  "previous_state_file_sha256": "sha256:f89d3960ef810336aba3fa165f12fdb61c3cf26d222f87a962b6a7ac07752257",
+  "previous_state_path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/state-001-initial_review_requested.json",
+  "previous_state_sha256": "sha256:d17477f8efbf2aa58f7699a12f050f6f68ef41cd5ae5e30b190b944cf1dd33da",
+  "publication_acceptance": "not_claimed",
+  "required_actor": "human_adjudicator",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 2,
+  "state": "critique_unadjudicated",
+  "state_sha256": "sha256:2ee129ee146eb95e1636fc3357c8d1a3d16cbd8f01690f8159abd4378cf2544e",
+  "terminal": false
+}

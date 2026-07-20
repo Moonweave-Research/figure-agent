@@ -1,0 +1,15 @@
+{
+  "critique": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/critique.md",
+    "sha256": "sha256:70bc657870dcfd59c6f37349adb599679ed6514a80d530afc5c728cc4f347acb"
+  },
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "host_review_execution_receipt": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/host-review-execution-receipt.json",
+    "sha256": "sha256:86e73585cac556976dddacd71d7e26ac4cac4d6e7284151f99247458df1415a7"
+  },
+  "publication_acceptance": "not_claimed",
+  "request_sha256": "sha256:876e1fb5157628c87f7efa441caa9f4d3040b4ba0787e89070310a6fc6d4c775",
+  "response_sha256": "sha256:7142ffb1c574b2c8950451daa6f78d3622569b631539e2432d1e6a91caec2b07",
+  "schema": "figure-agent.initial-visual-review-response.v1"
+}

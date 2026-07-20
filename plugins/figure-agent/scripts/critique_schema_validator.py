@@ -882,8 +882,17 @@ def _validate_v1_8_crop_audit_log(frontmatter: dict[str, Any]) -> None:
         item = require_mapping(raw_item, label)
         _require_non_empty_string(item, "crop_id", label=label)
         path = _require_non_empty_string(item, "path", label=label)
-        if not path.startswith("build/audit_crops/"):
-            raise CritiqueContractError(f"{label}.path must point to build/audit_crops/*.png")
+        legacy_crop = path.startswith("build/audit_crops/") and path.endswith(".png")
+        canonical_crop = re.fullmatch(
+            r"review/closed-loop/attempt-[a-z0-9]+/initial-review/crops/"
+            r"[A-Za-z0-9_.-]+\.png",
+            path,
+        )
+        if not legacy_crop and canonical_crop is None:
+            raise CritiqueContractError(
+                f"{label}.path must point to a legacy audit crop or canonical "
+                "closed-loop initial-review crop"
+            )
         _require_non_empty_string(item, "source", label=label)
         if item.get("inspected") is not True:
             raise CritiqueContractError(f"{label}.inspected must be true")
