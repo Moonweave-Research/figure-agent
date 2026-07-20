@@ -83,7 +83,7 @@
   % --- representative predominant motif; not a unique constitutional repeat ---
   % Current structural assignment: both meta substituents are thiocumyl units.
 
-  % variable-length left polysulfide and chemically continuous bond to left polysulfide
+  % variable-rank left polysulfide and chemically continuous bond to left polysulfide
   \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (lsx) at (1.28,1.90) {$\mathrm{S}_{x}$};
   % polymer continuation bond
   \draw[cAmber!88!black, line width=1.0pt, decorate,
@@ -118,7 +118,7 @@
     (bcr)--($(bcr)+(75:0.28)$)
     (bcr)--($(bcr)+(-135:0.28)$);
 
-  % variable-length right polysulfide and chemically continuous bond to right polysulfide
+  % variable-rank right polysulfide and chemically continuous bond to right polysulfide
   \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (rsy) at ($(bcr)+(0.70,0)$) {$\mathrm{S}_{y}$};
   % no mid-bond colour seam: the covalent C--S bond stays structural gray
   \draw[cGray, line width=0.96pt] (bcr)--(rsy.west);
@@ -130,7 +130,7 @@
   \node[body label, align=center] at (3.45,0.72)
     {representative bis(thiocumyl) motif};
   \node[small label, align=center, text=cGray!82!black] at (3.45,0.37)
-    {$x,y$: variable polysulfide chain length};
+    {$x,y$: statistical sulfur rank};
 \end{scope}
 
 % Panel B
@@ -141,7 +141,7 @@
   % increasing sulfur content encoded as polysulfide chain length (S60 -> S85)
   % Evidence boundary: S60/S75/S85 are sulfur wt-percent sample names;
   % drawn S-glyph count is a qualitative artistic correlate only,
-  % not a measured molecular chain length or exact chain length.
+  % not a measured molecular sulfur rank or literal chain length.
   \draw[-{Stealth[length=3.4pt,width=2.6pt]}, cAmber!90!black, line width=1.0pt]
     (0.66,1.45)--(0.66,3.85);
   \node[small label, rotate=90, anchor=south, text=cBrown] at (0.44,2.65)
@@ -174,7 +174,7 @@
         (blj)--($(blj)+(105:0.14)$)
         (blj)--($(blj)+(-45:0.14)$);
 
-      % polysulfide chain-length series without bead primitives
+      % sulfur-rank series without bead primitives
       \foreach \k in {1,...,\sc} {
         \node[fill=white, inner sep=0.45pt,
               font=\sffamily\bfseries\fontsize{4.6}{5.4}\selectfont,
