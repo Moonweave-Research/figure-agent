@@ -166,7 +166,7 @@
 
       % compact left thiocumyl carbon: aryl + S chain + two methyl stubs
       \coordinate (blj) at (1.96,0);
-      \fill[cGray!92!black] (blj) circle (0.018cm);
+      % Implicit skeletal carbon; a filled junction dot would suggest a radical.
       \draw[cGray, line width=0.90pt] (bl0)--(blj)
         (blj)--($(blj)+(105:0.14)$)
         (blj)--($(blj)+(-45:0.14)$);
@@ -185,7 +185,7 @@
 
       % compact right thiocumyl carbon and aromatic fragment
       \coordinate (brj) at (\rightJ,0);
-      \fill[cGray!92!black] (brj) circle (0.018cm);
+      % Implicit skeletal carbon, matching the corrected Panel A convention.
       \draw[cGray, line width=0.90pt] (bs\sc.east)--(brj)
         (brj)--($(brj)+(75:0.14)$)
         (brj)--($(brj)+(-135:0.14)$);
