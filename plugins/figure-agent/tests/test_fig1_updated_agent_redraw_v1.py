@@ -335,21 +335,25 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert "circle (0.10)" not in panel_c
     assert panel_c.count("circle (0.075)") == 2
     assert panel_c.count("circle (0.070)") == 2
-    assert "{1.48/1.57,4.68/2.74}" in panel_c
-    assert "{2.74/3.61,5.45/1.58}" in panel_c
+    assert "{1.55/1.62,4.62/2.84}" in panel_c
+    assert "{2.72/3.62,5.42/1.62}" in panel_c
     # Population correspondence begins at the perimeter of a representative
     # localized site rather than cutting through or floating beside the dot.
-    assert "(4.755,2.74)--(7.40,2.88)" in panel_c
-    assert "(5.525,1.58)--(7.40,1.68)" in panel_c
-    assert panel_c.count("cGray!48!black, line width=0.84pt") == 3
-    assert panel_c.count("cGray!64!black, line width=0.90pt") == 3
+    assert "(4.695,2.84)--(7.40,2.88)" in panel_c
+    assert "(5.495,1.62)--(7.40,1.68)" in panel_c
+    real_space = panel_c.split("% Energy-space view", 1)[0]
+    assert "Unconnected localized-site ensemble" in real_space
+    assert "circle (0.032)" in real_space
+    assert "cGray!48!black" not in real_space
+    assert "cGray!64!black" not in real_space
     # Escape paths leave the upper edge of an occupied trap marker and end at
     # the mobility edge; detached arrows imply an unrelated transport path.
     assert "(9.62,3.11) .. controls" in panel_c
     assert "(9.88,1.95) .. controls" in panel_c
     # A material field is not a colored cartoon object: keep its broad area
-    # nearly white and its boundary neutral, reserving amber for chemistry.
-    assert "\\fill[cAmber!6]" in panel_c
+    # neutral and nearly white rather than reusing the sulfur palette.
+    assert "\\fill[cGray!3]" in panel_c
+    assert "\\fill[cAmber!6]" not in panel_c
     assert "\\draw[cGray!72!black, line width=0.90pt]" in panel_c
     # Colour encodes the trap populations in marks and curves, not in text;
     # neutral labels remain readable in grayscale and colour-blind viewing.
