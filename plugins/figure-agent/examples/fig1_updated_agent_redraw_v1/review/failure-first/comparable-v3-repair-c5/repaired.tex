@@ -91,8 +91,9 @@
 
   % bis-thiocumyl junction: Ar-C(CH3)2-S_x
   \coordinate (bcl) at (2.48,1.90);
-  \fill[cGray!92!black] (bcl) circle (0.022cm);
-  % tetrahedral projection; avoid orthogonal cross
+  % The tertiary carbon is an implicit skeletal vertex. Do not mark it with a
+  % filled dot, which can be misread as a radical centre in a reaction scheme.
+  % Tetrahedral projection; avoid orthogonal cross.
   \draw[cGray, line width=0.96pt]
     (bcl)--($(bcl)+(105:0.28)$)
     (bcl)--($(bcl)+(-45:0.28)$)
@@ -110,7 +111,6 @@
 
   % bis-thiocumyl junction: Ar-C(CH3)2-S_x
   \coordinate (bcr) at ($(r300)+(0.36,-0.12)$);
-  \fill[cGray!92!black] (bcr) circle (0.022cm);
   \draw[cGray, line width=0.96pt] (r300)--(bcr)
     (bcr)--($(bcr)+(75:0.28)$)
     (bcr)--($(bcr)+(-135:0.28)$);
@@ -127,7 +127,7 @@
   \node[body label, align=center] at (3.45,0.72)
     {predominant bis-thiocumyl motif};
   \node[small label, align=center, text=cGray!82!black] at (3.45,0.37)
-    {$x,y$: composition-dependent sulfur rank};
+    {$x,y$: statistical sulfur rank};
 \end{scope}
 
 % Panel B
