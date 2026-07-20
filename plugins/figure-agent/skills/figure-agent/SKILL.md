@@ -427,6 +427,10 @@ repeated paths and particles for unintended periodicity, equal phase, alignment,
 or spacing that would imply lamellae, energy levels, or an ordered phase. When
 categories are declared co-located in one specimen, inspect their coordinates;
 systematic top/bottom or left/right color clustering invents phase segregation.
+Three or more long, nearly parallel paths with regular vertical spacing are a
+defect even when their phases differ: at figure scale they read as lamellae or
+surface wrinkles, not a random-coil matrix. Redraw with varied orientation,
+span, and amplitude while keeping any declared trap-to-host anchors intact.
 
 For localized traps, sites, defects, or charge states drawn inside a host
 material, verify that each colored core or halo is visibly embedded in the
