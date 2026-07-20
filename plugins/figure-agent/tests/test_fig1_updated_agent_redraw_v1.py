@@ -344,6 +344,9 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     real_space = panel_c.split("% Energy-space view", 1)[0]
     assert "Unconnected localized-site ensemble" in real_space
     assert "circle (0.032)" in real_space
+    assert "cBlue!30" in real_space
+    assert "cRed!28" in real_space
+    assert "cGray!46" not in real_space
     assert "cGray!48!black" not in real_space
     assert "cGray!64!black" not in real_space
     # Escape paths leave the upper edge of an occupied trap marker and end at
