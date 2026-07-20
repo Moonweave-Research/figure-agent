@@ -23,13 +23,25 @@ class CandidateTexIndexError(ValueError):
     """Raised when TeX selector indexing would cross fixture boundaries."""
 
 
-def _fixture_source(paths: runtime_paths.RuntimePaths, name: str) -> Path:
+def _fixture_source(
+    paths: runtime_paths.RuntimePaths,
+    name: str,
+    source_path: str | None = None,
+) -> Path:
     fixture = paths.examples_dir / name
     if fixture.is_symlink():
         raise CandidateTexIndexError("fixture_symlink_forbidden")
-    source = fixture / f"{name}.tex"
-    if source.is_symlink():
-        raise CandidateTexIndexError("source_symlink_forbidden")
+    relative_source = source_path or f"{name}.tex"
+    try:
+        source = candidate_contracts.fixture_relative_path(fixture, relative_source)
+    except candidate_contracts.CandidateContractError as exc:
+        raise CandidateTexIndexError("source_path_escape") from exc
+    unresolved = fixture / relative_source
+    for candidate in (unresolved, *unresolved.parents):
+        if candidate == fixture.parent:
+            break
+        if candidate.is_symlink():
+            raise CandidateTexIndexError("source_symlink_forbidden")
     try:
         source.resolve().relative_to(fixture.resolve())
     except ValueError as exc:
@@ -121,6 +133,7 @@ def _selectors(source_rel: Path, text: str) -> list[dict[str, Any]]:
 def build_tex_index(
     name: str,
     *,
+    source_path: str | None = None,
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
 ) -> dict[str, Any]:
@@ -129,8 +142,8 @@ def build_tex_index(
         plugin_root=plugin_root,
         workspace_root=workspace_root,
     )
-    source = _fixture_source(paths, name)
-    source_rel = Path("examples") / name / source.name
+    source = _fixture_source(paths, name, source_path)
+    source_rel = source.relative_to(paths.workspace_root.resolve())
     if not source.is_file():
         return {
             "schema": SCHEMA,

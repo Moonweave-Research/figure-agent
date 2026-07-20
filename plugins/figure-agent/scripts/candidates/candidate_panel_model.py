@@ -78,6 +78,7 @@ def build_panel_model(
     name: str,
     panel_id: str,
     *,
+    source_path: str | None = None,
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
 ) -> dict[str, Any]:
@@ -90,6 +91,7 @@ def build_panel_model(
     )
     tex_index = candidate_tex_index.build_tex_index(
         name,
+        source_path=source_path,
         plugin_root=plugin_root,
         workspace_root=workspace_root,
     )
@@ -129,6 +131,7 @@ def build_panel_model(
             "reason": "panel crop/render helper has not run",
         },
         "inputs": {
+            "source": tex_index.get("source"),
             "intent_model_schema": intent.get("schema"),
             "tex_index_schema": tex_index.get("schema"),
             "fixture_dirty": bool(tex_index.get("fixture_dirty")),
@@ -142,10 +145,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("name")
     parser.add_argument("panel_id")
+    parser.add_argument("--source")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     try:
-        payload = build_panel_model(args.name, args.panel_id)
+        payload = build_panel_model(
+            args.name,
+            args.panel_id,
+            source_path=args.source,
+        )
     except (CandidatePanelModelError, ValueError) as exc:
         print(f"candidate_panel_model: {exc}", file=sys.stderr)
         return 1

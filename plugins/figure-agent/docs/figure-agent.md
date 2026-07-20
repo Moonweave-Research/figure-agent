@@ -142,6 +142,13 @@ Evidence remains layered:
 4. **Publication accepted:** an external editorial outcome outside Figure
    Agent's authority.
 
+Panel analysis normally indexes the canonical fixture source. When review has
+produced a repaired child that has not been promoted to that root, select it
+explicitly with `fig-agent analyze-panel <name> <panel-id> --source
+<fixture-relative.tex> --json`. The override is read-only, stays inside the
+fixture boundary, and reports the selected source in `inputs.source`; it does
+not promote the child or imply any acceptance state.
+
 No lower state implies a higher one. Machine gates and model critiques use
 `publication_acceptance: not_claimed`; any external record is evidence, not plugin
 authority.

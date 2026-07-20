@@ -122,6 +122,41 @@ def test_fig_agent_analyze_panel_is_read_only_json(tmp_path: Path) -> None:
     assert _tree(workspace) == before
 
 
+def test_fig_agent_analyze_panel_can_select_a_fixture_local_repair_source(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    repair_source = fixture / "review" / "repair-candidate" / "repaired.tex"
+    repair_source.parent.mkdir(parents=True)
+    repair_source.write_text(
+        "% Panel E\n\\node (derived-distribution) at (0,0) {$g(E_t)$};\n",
+        encoding="utf-8",
+    )
+    before = _tree(workspace)
+
+    result = _run(
+        workspace,
+        "analyze-panel",
+        "candidate_demo",
+        "E",
+        "--source",
+        "review/repair-candidate/repaired.tex",
+        "--json",
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["selector_count"] == 1
+    assert payload["selectors"][0]["path"] == (
+        "examples/candidate_demo/review/repair-candidate/repaired.tex"
+    )
+    assert payload["inputs"]["source"] == (
+        "examples/candidate_demo/review/repair-candidate/repaired.tex"
+    )
+    assert _tree(workspace) == before
+
+
 def test_fig_agent_analyze_panel_rejects_unsafe_panel_id(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _fixture(workspace)
@@ -131,6 +166,29 @@ def test_fig_agent_analyze_panel_rejects_unsafe_panel_id(tmp_path: Path) -> None
     assert result.returncode == 1
     assert "Traceback" not in result.stderr
     assert "invalid_panel_id" in result.stderr
+
+
+def test_fig_agent_analyze_panel_rejects_a_source_outside_the_fixture(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+    outside = workspace / "examples" / "outside.tex"
+    outside.write_text("% Panel E\n\\node at (0,0) {outside};\n", encoding="utf-8")
+
+    result = _run(
+        workspace,
+        "analyze-panel",
+        "candidate_demo",
+        "E",
+        "--source",
+        "../outside.tex",
+        "--json",
+    )
+
+    assert result.returncode == 1
+    assert "Traceback" not in result.stderr
+    assert "source_path_escape" in result.stderr
 
 
 def test_fig_agent_candidates_output_is_fixture_local(tmp_path: Path) -> None:

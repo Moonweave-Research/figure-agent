@@ -1354,6 +1354,7 @@ def _analyze_panel(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="fig-agent analyze-panel")
     parser.add_argument("name")
     parser.add_argument("panel_id")
+    parser.add_argument("--source")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
@@ -1361,6 +1362,7 @@ def _analyze_panel(argv: list[str]) -> int:
         payload = candidate_panel_model.build_panel_model(
             name,
             args.panel_id,
+            source_path=args.source,
             plugin_root=_paths().plugin_root,
             workspace_root=_paths().workspace_root,
         )
