@@ -115,6 +115,14 @@ rules:
       locator: "Fig1 Panel E human scientific correction (2026-07-20)"
       quote: "코로나 차지 할때, 접지를 안한거 같은데, 실 실험에서, 그냥 양단에 고전압을 거는 식으로 했지 / 그리드도 빼 그리도 우리 안썼어"
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.ispd-decay-and-inversion-evidence-boundary
+    category: physics_semantics
+    rule: "Show ISPD as one measurement-to-inference chain: the non-contact ESVM records a monotonic surface-potential decay V_s(t), then a clearly directed derivation step yields g(E_t). Keep the decay tail visibly above and separate from the time axis; merging it into the axis falsely implies an exact finite-time zero. For this overview, shallow/deep peak dominance and separation are schematic unless bound to quantitative Fig. 3 data; do not state a precise peak-height ratio from drawing coordinates."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 Panel E enlarged waveform and evidence-boundary audit (2026-07-20)"
+      quote: "The decay tail merged into the x-axis and a schematic deep peak was described with false numerical precision."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.ispd-grounded-backing-plate
     category: instrument_standard
     rule: "For corona-charged ISPD, place the specimen on a grounded backing plate in both the charging and non-contact measurement states. Attach the ground to the conductive backing plate, not the polymer film. When showing manual transfer, preserve this electrical role at both stations without implying that the instrument probe contacts the specimen."

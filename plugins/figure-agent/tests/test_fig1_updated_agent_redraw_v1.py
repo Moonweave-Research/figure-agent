@@ -560,6 +560,10 @@ def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
     assert "Kelvin" not in panel_e
     assert r"\shade" not in panel_e
     assert "opacity=" not in panel_e
+    assert "(4.02,1.58)" in panel_e
+    assert "(4.02,1.52)" not in panel_e
+    assert "ratio ~1.86" not in panel_e
+    assert "qualitatively deep-dominant" in panel_e
 
 
 def test_repaired_panel_f_and_full_figure_have_no_source_hairlines() -> None:

@@ -371,6 +371,15 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "Debye references" in transient["rule"]
     assert "measurement-like scatter markers" in transient["rule"]
 
+    ispd = rules[
+        "polymer_paper_project.ispd-decay-and-inversion-evidence-boundary"
+    ]
+    assert ispd["category"] == "physics_semantics"
+    assert "measurement-to-inference chain" in ispd["rule"]
+    assert "tail visibly above and separate from the time axis" in ispd["rule"]
+    assert "exact finite-time zero" in ispd["rule"]
+    assert "do not state a precise peak-height ratio" in ispd["rule"]
+
 
 def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
     path = tmp_path / "badid.md"

@@ -494,8 +494,8 @@
   \node[body label, rotate=90] at (0.28,2.02) {$V_s(t)$};
   \node[body label, anchor=west] at (4.29,1.52) {$t$};
   \draw[cRed!76!black, line width=1.0pt]
-    (0.88,2.37) .. controls (1.36,2.04) and (1.86,1.70) .. (2.72,1.58)
-                .. controls (3.20,1.52) and (3.66,1.52) .. (4.02,1.52);
+    (0.88,2.37) .. controls (1.36,2.04) and (1.86,1.70) .. (2.72,1.62)
+                .. controls (3.20,1.59) and (3.66,1.58) .. (4.02,1.58);
   \foreach \x/\y in {1.10/2.20,1.66/1.84,2.35/1.63} {
     \fill[cRed!82!black] (\x,\y) circle (0.055);
   }
@@ -510,7 +510,8 @@
   \draw[axis line] (0.66,0.36)--(4.24,0.36);
   \node[body label, rotate=90] at (0.28,0.82) {$g(E_t)$};
   \node[body label, anchor=north east] at (4.21,0.29) {$E_t$};
-  % Derived DOS: true Gaussians with deep/shallow peak-height ratio ~1.86.
+  % Derived DOS: true Gaussian silhouettes, qualitatively deep-dominant.
+  % Drawing coordinates do not declare a fitted peak-height ratio.
   \fill[cBlue!14]
     plot[domain=0.96:2.16, samples=36, smooth]
       (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)})
