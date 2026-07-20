@@ -370,6 +370,13 @@ or spacing that would imply lamellae, energy levels, or an ordered phase. When
 categories are declared co-located in one specimen, inspect their coordinates;
 systematic top/bottom or left/right color clustering invents phase segregation.
 
+For localized traps, sites, defects, or charge states drawn inside a host
+material, verify that each colored core or halo is visibly embedded in the
+declared host network, layer, or matrix. A large standalone circle in an empty
+field reads as a particle, inclusion, or droplet unless the source declares that
+morphology. Prefer bounded host geometry, local contact segments, or restrained
+contours that show localization without inventing a second phase.
+
 Within and across panels, require the same physical process to reuse one arrow
 and line-style grammar unless a legend or brief-declared contrast explains the
 difference. Treat an unexplained solid/dashed or arrowhead change as a possible
