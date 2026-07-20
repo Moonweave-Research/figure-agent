@@ -328,6 +328,12 @@ normal to the curve until it owns a clear annotation lane; shifting only vertica
 can trade a curve collision for an axis or tick collision. Do not mask a measured
 data stroke merely to make an inline label fit.
 
+For a schematic log--log power-law comparison, verify that the axes are explicitly
+logarithmic, the visible slope ordering matches the stated low/high exponent, and
+any common start point is either declared or left unmarked. A neutral shared anchor
+may clarify a declared common initial state, but do not add scatter points, fitted
+values, or a reference curve when the source only supports symbolic slopes.
+
 For a multi-stage measurement schematic, trace preparation or excitation, acquisition,
 transformation, and result in order. Flag an unexplained state such as deposited
 charge without a source, and keep process labels/arrows out of data peaks,
