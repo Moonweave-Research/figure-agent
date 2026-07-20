@@ -300,7 +300,9 @@ weight-fraction sample identities unless the source explicitly defines another
 meaning. Because poly(S-r-DIB) has a complex/random microstructure, label a
 drawn bis(thiocumyl) structure as a representative motif unless the source
 provides a fully assigned repeat unit; do not promote an artistic chain-length
-count into quantitative chemistry.
+count into quantitative chemistry. When the source uses “sulfur rank” or a
+statistical sulfur-rank distribution, preserve that terminology; do not silently
+normalize it to literal chain length.
 
 Typeset chemical element symbols and sample IDs in upright roman glyphs
 (`\mathrm{S}`), reserving italic math for variable indices such as $x$, $y$, or
@@ -313,6 +315,15 @@ itself a defect. First verify that the glyph is the atom identity, the bond is
 shortened or interrupted at the glyph, and no stroke visibly runs through the
 letter; preserve the label and record the candidate as an intentional chemical
 overlay rather than deleting the chemistry.
+
+For skeletal-line adjudication, read short inner parallel strokes on an aromatic
+perimeter as Kekulé C=C bonds when the ring is otherwise continuous; read paired
+strokes outside the ring as an alkene, and unlabeled branch stubs at an implicit
+carbon junction as terminal carbon substituents (for example the two methyl
+branches in C(CH$_3$)$_2$). Do not call those stubs cut-through marks, broken
+bonds, or radicals without an explicit radical/electron declaration. A wavy
+bond at an S$_x$/S$_y$ endpoint is a polymer-continuation cue, not a measured
+bond count.
 
 Apply the same pixel-level adjudication to text inside an instrument display,
 axis math, or a curve-attached qualifier. A `text_on_path` or `near_miss`
@@ -430,6 +441,13 @@ flattened ovals. At print reduction the host must still read as a material
 matrix; if low-contrast traces disappear, add a few non-periodic host paths or
 slightly raise their neutral contrast rather than enlarging the colored traps.
 
+Treat a few low-contrast, non-periodic paths bounded inside an amorphous film as
+matrix-chain texture, not surface wrinkles or measured topography by default.
+Flag them only when they are periodic/aligned, extend beyond the declared film,
+or are presented with an unearned height axis/legend that changes their meaning.
+Do not enlarge localized trap envelopes merely to make the host texture look
+busier.
+
 For a floating charged dielectric/cantilever near a driven electrode, distinguish
 the neutral Maxwell-attraction baseline from the charge-mediated Coulomb result
 with a thin, low-contrast baseline arrow versus a stronger, named Coulomb arrow.
@@ -515,6 +533,12 @@ containers. Before resizing, verify that the proposed boundary change enlarges
 claim-bearing marks at final reduction rather than merely moving whitespace between
 rows. Treat a dense panel as undersized only when its labels, axes, or semantic
 separation fail at reduction scale.
+
+Treat a clean content-to-divider gutter as intentional whitespace when sibling
+panels retain comparable breathing room and no claim-bearing mark is clipped or
+illegible. Never add filler text, decorative shapes, or invented mechanism content
+solely to occupy that gutter; resize only when the empty area is caused by a
+misallocated panel boundary or a real reduction-scale legibility failure.
 
 When the declared target is Nature Communications, audit against its current
 figure guidance: lower-case bold panel letters, clear sans-serif lettering at an

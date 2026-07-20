@@ -40,7 +40,7 @@ def test_doctor_reports_the_canonical_command_surface() -> None:
         "authoring-repair-rollback",
     ]
     assert surface["bounded_repair_transaction_state"] == "complete"
-    assert surface["counts"]["total"] == 85
+    assert surface["counts"]["total"] == 86
     assert set(surface["commands_by_disposition"]) == {
         "core",
         "internal_compatibility",
@@ -141,6 +141,25 @@ def test_closed_loop_core_commands_are_routed_as_internal_surfaces() -> None:
         )
 
         assert result.returncode == 0, result.stderr
+
+
+def test_ground_command_exposes_compile_time_physics_verification() -> None:
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(PLUGIN_ROOT)
+
+    result = subprocess.run(
+        [str(FIG_AGENT), "ground", "--help"],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "physics-grounding" in result.stdout
+    assert "fig-agent ground" in result.stdout
 
 
 def test_rollback_cli_exposes_explicit_legacy_compatibility_opt_in() -> None:

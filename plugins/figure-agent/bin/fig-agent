@@ -58,6 +58,7 @@ CORE_COMMANDS = frozenset(
         "export",
         "failure-ablation",
         "failure-corpus",
+        "ground",
         "quality-map",
         "run",
         "status",
@@ -322,6 +323,24 @@ def _compile(argv: list[str]) -> int:
         env=env,
         check=False,
     ).returncode
+
+
+def _ground(argv: list[str]) -> int:
+    """Run compile-time physics grounding and TeX assertion checks."""
+    parser = argparse.ArgumentParser(
+        prog="fig-agent ground",
+        description=(
+            "Compile a fixture and verify its physics-grounding and TeX "
+            "assertion artifacts."
+        ),
+    )
+    parser.add_argument("name")
+    parser.add_argument("--strict", action="store_true")
+    args = parser.parse_args(argv)
+    compile_args = [args.name]
+    if args.strict:
+        compile_args.append("--strict")
+    return _compile(compile_args)
 
 
 def _export(argv: list[str]) -> int:
@@ -2199,7 +2218,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args:
         print(
             "usage: fig-agent "
-            "<doctor|status|context-pack|compile|run|export|adjudicate|closeout> ...",
+            "<doctor|status|context-pack|compile|ground|run|export|adjudicate|closeout> ...",
             file=sys.stderr,
         )
         return 2
@@ -2213,6 +2232,8 @@ def main(argv: list[str] | None = None) -> int:
         return _status(rest)
     if command == "compile":
         return _compile(rest)
+    if command == "ground":
+        return _ground(rest)
     if command == "export":
         return _export(rest)
     if command == "adjudicate":
