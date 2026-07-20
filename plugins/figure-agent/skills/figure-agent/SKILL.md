@@ -287,6 +287,12 @@ wrong relative width/height, or other claim-changing silhouettes to a normal
 finding. Do not require one reusable drawing primitive as the remedy; let the LLM
 choose a new construction and re-review the pixels.
 
+For chemical skeletal structures, distinguish an implicit atom vertex from a
+radical or electron marker. Do not add a filled junction dot merely to make bond
+connectivity more visible; continuous bonds already define the skeletal carbon,
+while a dot can assert an unpaired electron. Require a filled dot only when the
+brief or chemical mechanism explicitly declares that radical/electron state.
+
 For every dimension, caliper, interval, or delta annotation, identify both named
 referents and verify that each endpoint touches or is visibly projected from its
 referent; a floating measurement is a defect. When the brief declares relative
