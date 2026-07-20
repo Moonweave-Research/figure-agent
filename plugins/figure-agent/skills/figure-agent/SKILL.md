@@ -293,6 +293,13 @@ connectivity more visible; continuous bonds already define the skeletal carbon,
 while a dot can assert an unpaired electron. Require a filled dot only when the
 brief or chemical mechanism explicitly declares that radical/electron state.
 
+When an atom is intentionally written on a bond (for example the S labels in an
+S$_8$ crown or a polysulfide chain), a visual-clash detector candidate is not by
+itself a defect. First verify that the glyph is the atom identity, the bond is
+shortened or interrupted at the glyph, and no stroke visibly runs through the
+letter; preserve the label and record the candidate as an intentional chemical
+overlay rather than deleting the chemistry.
+
 For every dimension, caliper, interval, or delta annotation, identify both named
 referents and verify that each endpoint touches or is visibly projected from its
 referent; a floating measurement is a defect. When the brief declares relative
