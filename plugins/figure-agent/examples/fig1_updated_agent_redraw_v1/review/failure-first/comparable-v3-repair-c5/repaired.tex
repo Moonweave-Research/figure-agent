@@ -43,7 +43,8 @@
           font=\sffamily\bfseries\fontsize{4.3}{5.0}\selectfont,
           text=cBrown] at (v\i) {S};
   }
-  \node[small label, text=cGray!88!black] at (0.84,3.20) {elemental S$_8$};
+  \node[small label, text=cGray!88!black] at (0.84,3.20)
+    {elemental $\mathrm{S}_8$};
 
   \node[body label] at (1.43,3.73) {$+$};
 
@@ -148,7 +149,7 @@
   % B aromatic DIB rings retain Kekule bonds.
   % B bis-thiocumyl junctions retained at both chain ends;
   % direct aryl--sulfur attachment is forbidden.
-  \foreach \y/\lbl/\sc in {1.55/S$_{60}$/2, 2.62/S$_{75}$/4, 3.70/S$_{85}$/6}{
+  \foreach \y/\lbl/\sc in {1.55/$\mathrm{S}_{60}$/2, 2.62/$\mathrm{S}_{75}$/4, 3.70/$\mathrm{S}_{85}$/6}{
     \begin{scope}[shift={(0,\y)}]
       \pgfmathsetmacro{\lastS}{2.30+0.34*(\sc-1)}
       \pgfmathsetmacro{\rightJ}{\lastS+0.32}

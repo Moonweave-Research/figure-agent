@@ -302,6 +302,11 @@ drawn bis(thiocumyl) structure as a representative motif unless the source
 provides a fully assigned repeat unit; do not promote an artistic chain-length
 count into quantitative chemistry.
 
+Typeset chemical element symbols and sample IDs in upright roman glyphs
+(`\mathrm{S}`), reserving italic math for variable indices such as $x$, $y$, or
+$E_t$. Do not let a generic math-italic element symbol pass as chemically
+correct typography merely because the glyph is collision-free.
+
 When an atom is intentionally written on a bond (for example the S labels in an
 S$_8$ crown or a polysulfide chain), a visual-clash detector candidate is not by
 itself a defect. First verify that the glyph is the atom identity, the bond is
