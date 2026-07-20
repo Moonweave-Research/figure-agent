@@ -433,8 +433,10 @@
 
   \draw[cBlue!82!black, line width=1.10pt] (0.86,1.88)--(4.02,1.12);
   \draw[cRed!82!black, line width=1.10pt] (0.86,1.88)--(4.02,0.66);
-  % No measurement-like markers are added: the two lines encode the symbolic
-  % slope contrast only, because exact sample coordinates are not bound here.
+  % The shared neutral anchor marks the common initial state without inventing
+  % measurement-like data points; only the symbolic slope contrast is claimed.
+  \fill[cGray!72!black] (0.86,1.88) circle (0.045);
+  \draw[cGray!88!black, line width=0.25pt] (0.86,1.88) circle (0.045);
   \node[small label,
         text=cGray!92!black, rotate=-13.5] at (3.28,1.50) {low $n$};
   \node[small label,
