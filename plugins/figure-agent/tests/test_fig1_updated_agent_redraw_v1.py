@@ -428,10 +428,13 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert "Unconnected localized-site ensemble" in real_space
     assert "same-size dot texture is intentionally omitted" in real_space
     assert r"\foreach \xx/\yy" not in real_space
-    assert "Hand-shaped localization envelopes" in real_space
-    assert real_space.count("cycle;") >= 12
-    assert "cBlue!30" in real_space
-    assert "cRed!28" in real_space
+    assert "Single restrained localization contours" in real_space
+    assert real_space.count("cycle;") >= 4
+    assert real_space.count("cycle;") < 8
+    assert r"\fill[cBlue!30" not in real_space
+    assert r"\fill[cRed!28" not in real_space
+    assert "polymer-chain traces" in real_space
+    assert real_space.count("plot[smooth] coordinates") == 3
     assert "cGray!46" not in real_space
     assert "cGray!48!black" not in real_space
     assert "cGray!64!black" not in real_space
@@ -461,6 +464,7 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
         assert f"c{color}!84!black, line width=1.0pt" in panel_c
     assert "{Localized trap model};" in panel_c
     assert "{Localized shallow and deep traps};" not in panel_c
+    assert "curve widths and amplitudes are schematic" in panel_c
 
 
 def test_repaired_shared_semantic_lines_survive_nature_scale() -> None:

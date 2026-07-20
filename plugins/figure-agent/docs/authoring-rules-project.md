@@ -43,6 +43,22 @@ rules:
       locator: "v5f briefing sections 8.8 and Panel B B-1/B-2; Fig1 evidence-boundary audit (2026-07-20)"
       quote: "Sample names are sulfur wt%; drawn atom count is an artistic correlate only."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.trap-landscape-evidence-boundary
+    category: physics_semantics
+    rule: "In a trap-energy landscape, energy increases upward; place shallow states closer to the mobility edge and deep states farther below it, terminate thermal-escape arrows at the mobility edge, and span Delta E_t from a selected trap state to that edge. For this paper, the bimodal shallow/deep DOS is paper-local authority, while curve widths and amplitudes remain qualitative unless bound to measured data. Use polarity-neutral site markers and do not assign a carrier sign without paper-local evidence."
+    source:
+      kind: critique_adjudication
+      locator: "Fig1 v5f Panel C authority and evidence-boundary audit (2026-07-20)"
+      quote: "Bimodal Gaussian DOS is paper-local; numerical distribution parameters and carrier sign are not declared here."
+    transfer_policy: use_as_constraint
+  - id: polymer_paper_project.real-space-energy-binding
+    category: physics_semantics
+    rule: "Show shallow and deep localized sites as the same mixed population inside one material field, not as segregated phases. Correspondence lines between real-space sites and energy-space distributions are semantic bindings, not trajectories. Give the host only restrained material-identity texture and depict localization as a compact contour around a neutral core; repeated nested halos make sites read as glowing particles."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 Panel C enlarged real-space/energy audit (2026-07-20)"
+      quote: "The blank film and repeated three-layer glows read as decorative particles rather than localized states."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.cantilever-vertical-clip-top
     category: instrument_standard
     rule: "Draw the polymer cantilever vertical: clip/clamp on top, polymer hangs down, deflection sideways toward a side electrode. Horizontal cantilever orientation is wrong for this lab and its experiments."

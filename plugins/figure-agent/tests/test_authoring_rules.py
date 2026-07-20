@@ -348,6 +348,19 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "qualitative artistic correlate" in evidence["rule"]
     assert "never report those glyph counts as measured sulfur rank" in evidence["rule"]
 
+    traps = rules["polymer_paper_project.trap-landscape-evidence-boundary"]
+    assert traps["category"] == "physics_semantics"
+    assert "shallow states closer to the mobility edge" in traps["rule"]
+    assert "bimodal shallow/deep DOS" in traps["rule"]
+    assert "curve widths and amplitudes remain qualitative" in traps["rule"]
+    assert "carrier sign" in traps["rule"]
+
+    binding = rules["polymer_paper_project.real-space-energy-binding"]
+    assert binding["category"] == "physics_semantics"
+    assert "same mixed population" in binding["rule"]
+    assert "not trajectories" in binding["rule"]
+    assert "glowing particles" in binding["rule"]
+
 
 def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
     path = tmp_path / "badid.md"
