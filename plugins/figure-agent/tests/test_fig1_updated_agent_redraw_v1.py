@@ -131,6 +131,9 @@ def test_bound_authoring_prompt_carries_project_cantilever_orientation_rule() ->
     assert "Do not solve clearance by forcing an equal-cell grid" in prompt
     assert "polymer_paper_project.poly-s-dib-bis-thiocumyl-motif" in prompt
     assert "Ar-C(CH3)2-Sx" in prompt
+    assert "Locked invariant [E:tau-d-energy-domain]" in prompt
+    assert "pair001.tau-d-energy-domain-exception" in prompt
+    assert "Do not move it onto the V_s(t) time axis" in prompt
     for panel_id in "ABCDEF":
         assert f"Add exactly one canonical marker [% Panel {panel_id}]" in prompt
 

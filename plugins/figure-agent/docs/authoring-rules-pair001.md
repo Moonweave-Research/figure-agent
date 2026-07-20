@@ -35,6 +35,14 @@ rules:
       locator: "Fig1 Panel E deep review, measurement-to-derivation repair (2026-07-20)"
       quote: "Bind the derive arrow to both the measured V_s(t) plot and the derived g(E_t) region."
     transfer_policy: use_as_constraint
+  - id: pair001.tau-d-energy-domain-exception
+    category: physics_semantics
+    rule: "For this paper-local overview, preserve tau_d as the qualitative energy-domain interval between the shallow and deep g(E_t) peak positions. Do not move it onto the V_s(t) time axis merely because tau conventionally denotes time, and do not attach a numeric value or unit. Treat this as a source-bound exception, not a transferable default for unrelated ISPD figures."
+    source:
+      kind: critique_adjudication
+      locator: "fig1_overview_v5f_art_direction_001_vault/briefing.md sections 8 and 13.6 E-9"
+      quote: "tau_d annotation - energy-domain interval between Gaussian peaks"
+    transfer_policy: use_as_constraint
   - id: pair001.host-texture-needs-physical-identity
     category: physics_semantics
     rule: "In a real-space material field, do not scatter same-size dots merely to fill empty space: repeated particles can imply fillers, pores, or a second population. Use continuous non-periodic disorder cues only when they bind to a declared spatial-energy or morphology claim; otherwise omit decorative texture and let the localized states carry the meaning."

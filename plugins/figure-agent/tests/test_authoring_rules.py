@@ -133,6 +133,21 @@ def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:
     assert "does not require apparatus photorealism" in rule["rule"]
 
 
+def test_pair001_preserves_paper_local_tau_d_semantics() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "pair001.tau-d-energy-domain-exception"
+    )
+    assert "energy-domain interval" in rule["rule"]
+    assert "Do not move it onto the V_s(t) time axis" in rule["rule"]
+    assert "source-bound exception" in rule["rule"]
+
+
 def test_pair001_binds_raw_to_derived_transformations() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"

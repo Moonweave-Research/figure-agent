@@ -33,6 +33,8 @@ panels:
     locked_invariants:
       - id: stage-specific-grounding
         invariant: the corona-charging station uses the high-voltage supply's two terminals without a grid or earth-ground symbol, while the measurement station grounds the conductive backing beneath the specimen.
+      - id: tau-d-energy-domain
+        invariant: in this paper-local overview, tau_d denotes the qualitative energy-domain interval between the shallow and deep g(E_t) peak positions; do not relocate it to the V_s(t) time axis or attach a numeric value or unit.
   - id: F
     caption: floating cantilever Coulomb response
     semantic_claims:
