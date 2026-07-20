@@ -456,19 +456,16 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     real_space = panel_c.split("% Energy-space view", 1)[0]
     assert "both trap classes are localized sites in one disordered film" in real_space
     assert r"\foreach \xx/\yy" not in real_space
-    assert "Localized electronic states are compact filled envelopes" in real_space
+    assert "Minimal localization contours stay compact and asymmetric around equal" in real_space
     assert real_space.count("cycle;") >= 4
     assert real_space.count("cycle;") < 8
     assert r"\fill[cBlue!30" not in real_space
     assert r"\fill[cRed!28" not in real_space
-    assert "tortuous, non-periodic strands" in real_space
-    assert "vary their orientation and span" in real_space
-    assert real_space.count("plot[smooth] coordinates") == 5
-    assert "(2.48,3.64)" in real_space
-    assert "(4.64,2.82)" in real_space
-    assert "(1.55,1.60)" in real_space
-    assert "(5.42,1.62)" in real_space
-    assert "not closed rings" in real_space
+    assert "Short, non-periodic strands" in real_space
+    assert real_space.count("plot[smooth] coordinates") == 4
+    assert "(1.03,1.86)" in real_space
+    assert "(4.08,2.36)" in real_space
+    assert "category is color, not halo size" in real_space
     assert "fill=cBlue!9" not in real_space
     assert "fill=cRed!8" not in real_space
     assert "cGray!46" not in real_space

@@ -443,7 +443,14 @@ When localized-state contours are repeated, keep category size comparable but
 vary orientation and contour asymmetry enough to avoid a row of identical
 flattened ovals. At print reduction the host must still read as a material
 matrix; if low-contrast traces disappear, add a few non-periodic host paths or
-slightly raise their neutral contrast rather than enlarging the colored traps.
+ slightly raise their neutral contrast rather than enlarging the colored traps.
+
+Panel C-style amorphous-host regression rule: for a real-space polymer host next
+to an energy diagram, draw the host as three or four short, non-periodic traces
+with varied orientation, length, and amplitude, all bounded inside the film.
+Use minimal localization contours with equal shallow/deep core sizes: compact
+asymmetric envelopes around each core. Do not use repeated flattened pastel halos
+or enlarge localization envelopes as a substitute for host identity.
 
 Treat a few low-contrast, non-periodic paths bounded inside an amorphous film as
 matrix-chain texture, not surface wrinkles or measured topography by default.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -179,6 +180,58 @@ def test_pair001_rejects_unbound_particle_like_host_texture() -> None:
     assert "fillers, pores, or a second population" in rule["rule"]
     assert "continuous non-periodic disorder cues" in rule["rule"]
     assert "omit decorative texture" in rule["rule"]
+
+
+def test_panel_c_amorphous_host_minimal_localization_regression() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert "Panel C-style amorphous-host regression rule" in skill
+    assert "three or four short, non-periodic traces" in skill
+    assert "varied orientation, length, and amplitude" in skill
+    assert "minimal localization contours" in skill
+    assert "equal shallow/deep core sizes" in skill
+    assert "repeated flattened pastel halos" in skill
+
+    repaired = (
+        PLUGIN_ROOT
+        / "examples"
+        / "fig1_updated_agent_redraw_v1"
+        / "review"
+        / "failure-first"
+        / "comparable-v3-repair-c5"
+        / "repaired.tex"
+    ).read_text(encoding="utf-8")
+    panel_c = repaired.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
+    real_space = panel_c.split("% Energy-space view:", 1)[0]
+    host_texture = real_space.split("% Short amber segments", 1)[0]
+
+    assert host_texture.count("plot[smooth] coordinates") == 4
+    assert "Short, non-periodic strands" in real_space
+    assert "Minimal localization contours" in real_space
+    assert "Repeated flattened pastel halos" not in real_space
+    assert "flattened ovals" not in real_space
+    assert "circle (0.075)" in real_space
+
+    core_fills = re.findall(
+        r"\\fill\[(cBlue|cRed)!80\] \(([0-9.]+),([0-9.]+)\) circle \(0\.075\);",
+        real_space,
+    )
+    assert core_fills == [
+        ("cBlue", "1.55", "1.63"),
+        ("cBlue", "4.64", "2.84"),
+        ("cRed", "2.72", "3.64"),
+        ("cRed", "5.42", "1.64"),
+    ]
+    for protected in [
+        "mobility edge",
+        "thermal escape",
+        "{$\\Delta E_t$}",
+        "shallow",
+        "deep",
+        "DOS",
+    ]:
+        assert protected in panel_c
 
 
 def test_pair001_requires_one_ground_symbol_grammar() -> None:
