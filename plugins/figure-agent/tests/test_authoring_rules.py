@@ -361,6 +361,16 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "not trajectories" in binding["rule"]
     assert "glowing particles" in binding["rule"]
 
+    transient = rules[
+        "polymer_paper_project.transient-power-law-evidence-boundary"
+    ]
+    assert transient["category"] == "physics_semantics"
+    assert "plot log I against log t" in transient["rule"]
+    assert "slope is -n" in transient["rule"]
+    assert "high-n line must be visibly steeper" in transient["rule"]
+    assert "Debye references" in transient["rule"]
+    assert "measurement-like scatter markers" in transient["rule"]
+
 
 def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
     path = tmp_path / "badid.md"

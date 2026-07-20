@@ -59,6 +59,14 @@ rules:
       locator: "Fig1 Panel C enlarged real-space/energy audit (2026-07-20)"
       quote: "The blank film and repeated three-layer glows read as decorative particles rather than localized states."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.transient-power-law-evidence-boundary
+    category: physics_semantics
+    rule: "For a symbolic transient-current comparison, plot log I against log t and encode I(t) proportional to t^-n as straight descending lines whose slope is -n; the high-n line must be visibly steeper than the low-n line. Do not add exact n values, sample identities, Debye references, or measurement-like scatter markers unless paper-local data binds them. A schematic fit line without bound coordinates must not masquerade as sampled data."
+    source:
+      kind: critique_adjudication
+      locator: "Fig1 Panel D v5f authority plus human Debye-removal and evidence audit (2026-07-20)"
+      quote: "Keep the low-n/high-n power-law contrast, remove Debye, and do not infer unbound quantitative data."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.cantilever-vertical-clip-top
     category: instrument_standard
     rule: "Draw the polymer cantilever vertical: clip/clamp on top, polymer hangs down, deflection sideways toward a side electrode. Horizontal cantilever orientation is wrong for this lab and its experiments."

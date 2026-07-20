@@ -497,7 +497,7 @@ def test_repaired_panel_d_strokes_survive_nature_double_column_scale() -> None:
     assert "{high $n$}" in panel_d
     assert "PI control" not in panel_d
     assert "S-rich" not in panel_d
-    assert panel_d.count("circle (0.045)") == 2
+    assert "circle (0.045)" not in panel_d
     assert "circle (0.060)" not in panel_d
     for colored_text in ("text=cBrown", "text=cBlue", "text=cRed"):
         assert colored_text not in panel_d
@@ -511,6 +511,7 @@ def test_repaired_panel_d_strokes_survive_nature_double_column_scale() -> None:
     assert "Debye" not in panel_d
     assert r"\shade" not in panel_d
     assert "opacity=" not in panel_d
+    assert "No measurement-like markers" in panel_d
 
 
 def test_repaired_panel_d_uses_the_shared_three_bar_ground_symbol() -> None:
