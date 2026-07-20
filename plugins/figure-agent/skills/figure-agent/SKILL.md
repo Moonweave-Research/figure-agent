@@ -448,9 +448,11 @@ slightly raise their neutral contrast rather than enlarging the colored traps.
 Panel C-style amorphous-host regression rule: for a real-space polymer host next
 to an energy diagram, draw the host as three or four short, non-periodic traces
 with varied orientation, length, and amplitude, all bounded inside the film.
-Place each equal-size shallow/deep core directly on a continuous host trace and
-show localization by changing color or weight over only a short asymmetric
-section of that same path. A repeated dot centered between two short host arms,
+Place each equal-size shallow/deep core directly on a continuous host trace.
+The core alone may carry the category; if extra localization emphasis is truly
+needed, change color or weight over only a short asymmetric section of that same
+path. Do not add a colored path section by default when the neutral host already
+remains legible at reduction scale. A repeated dot centered between two short host arms,
 a separate bridge stroke behind the dot, or a flattened pastel halo is a
 winged-dot defect: it reads as an icon rather than a localized state. If a
 contour is physically necessary, keep it compact, asymmetric, and subordinate.
@@ -461,6 +463,13 @@ Flag them only when they are periodic/aligned, extend beyond the declared film,
 or are presented with an unearned height axis/legend that changes their meaning.
 Do not enlarge localized trap envelopes merely to make the host texture look
 busier.
+
+Audit the whole host field, not only the immediate trap neighborhoods. Several
+otherwise valid short traces can still read as isolated trap icons when most of
+the specimen is empty and every trace exists only to flank a colored core. Give
+the neutral matrix enough irregular span and spatial coverage to read first as
+one disordered material, while keeping it sparse enough that it cannot be
+mistaken for a molecular structure, lamellar texture, or measured topography.
 
 For a floating charged dielectric/cantilever near a driven electrode, distinguish
 the neutral Maxwell-attraction baseline from the charge-mediated Coulomb result

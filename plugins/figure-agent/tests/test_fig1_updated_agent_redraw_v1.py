@@ -457,17 +457,17 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     host_texture = real_space.split("% Local contrast follows", 1)[0]
     assert "both trap classes are localized sites in one disordered film" in real_space
     assert r"\foreach \xx/\yy" not in real_space
-    assert "Local contrast follows the host path itself" in real_space
+    assert "field-spanning traces provide a sparse amorphous-host cue" in real_space
     assert r"\fill[cBlue!30" not in real_space
     assert r"\fill[cRed!28" not in real_space
     assert r"\fill[cBlue!13]" not in real_space
     assert r"\fill[cRed!12]" not in real_space
-    assert "Short, non-periodic strands" in real_space
+    assert "Four irregular, field-spanning traces" in real_space
     assert host_texture.count("plot[smooth] coordinates") == 4
-    assert real_space.count("line width=1.20pt") == 4
-    assert "(1.03,1.86)" in real_space
-    assert "(4.08,2.36)" in real_space
-    assert "winged-dot icons" in real_space
+    assert real_space.count("line width=1.20pt") == 0
+    assert "(1.02,1.48)" in real_space
+    assert "(3.42,1.52)" in real_space
+    assert "no colored wings" in real_space
     assert "cAmber!36!black" not in real_space
     assert "fill=cBlue!9" not in real_space
     assert "fill=cRed!8" not in real_space

@@ -228,31 +228,22 @@
     (0.90,1.23) rectangle (6.12,4.30);
   \draw[cAmber!58!black, line width=0.90pt, rounded corners=0.7mm]
     (0.90,1.23) rectangle (6.12,4.30);
-  % Short, non-periodic strands evoke an amorphous/random-coil film without
-  % making a repeated wrinkle field. Each trap coordinate lies on its host
-  % strand; a short colored section marks localization without adding a halo.
-  \draw[cGray!30, line width=0.76pt] plot[smooth] coordinates
-    {(1.03,1.86) (1.28,1.42) (1.55,1.63) (1.82,1.90)
-     (2.26,1.84) (2.48,1.58)};
-  \draw[cGray!27, line width=0.76pt] plot[smooth] coordinates
-    {(2.20,3.88) (2.48,3.48) (2.72,3.64) (3.00,3.92)
-     (3.56,3.76)};
-  \draw[cGray!26, line width=0.76pt] plot[smooth] coordinates
-    {(4.08,2.36) (4.34,2.62) (4.64,2.84) (4.92,3.02)
-     (5.38,2.42) (5.86,2.52)};
-  \draw[cGray!22, line width=0.72pt] plot[smooth] coordinates
-    {(4.80,1.34) (5.12,1.40) (5.42,1.64) (5.72,1.93)
-     (6.00,2.14)};
-  % Local contrast follows the host path itself. Avoid separate bridge strokes
-  % and flattened halos: together they make repeated winged-dot icons.
-  \draw[cBlue!62, line width=1.20pt, line cap=round] plot[smooth] coordinates
-    {(1.39,1.50) (1.55,1.63) (1.72,1.80)};
-  \draw[cRed!62, line width=1.20pt, line cap=round] plot[smooth] coordinates
-    {(2.54,3.52) (2.72,3.64) (2.88,3.80)};
-  \draw[cBlue!62, line width=1.20pt, line cap=round] plot[smooth] coordinates
-    {(4.48,2.72) (4.64,2.84) (4.80,2.94)};
-  \draw[cRed!62, line width=1.20pt, line cap=round] plot[smooth] coordinates
-    {(5.25,1.50) (5.42,1.64) (5.58,1.79)};
+  % Four irregular, field-spanning traces provide a sparse amorphous-host cue.
+  % They vary in span and curvature and do not encode literal chain topology or
+  % measured surface roughness. Trap sites sit directly at ordinary bends in
+  % this neutral matrix; no colored wings, bridge strokes, or halos are added.
+  \draw[cGray!31, line width=0.76pt] plot[smooth] coordinates
+    {(1.02,1.48) (1.28,1.91) (1.55,1.63) (1.92,1.39)
+     (2.30,1.55) (2.58,2.01) (3.06,2.18)};
+  \draw[cGray!28, line width=0.76pt] plot[smooth] coordinates
+    {(1.16,3.70) (1.58,3.30) (2.10,3.43) (2.72,3.64)
+     (3.08,3.93) (3.48,3.62) (3.90,3.26)};
+  \draw[cGray!29, line width=0.76pt] plot[smooth] coordinates
+    {(3.42,1.52) (3.86,1.88) (4.22,2.39) (4.64,2.84)
+     (5.02,3.18) (5.46,2.96) (5.92,3.48)};
+  \draw[cGray!25, line width=0.72pt] plot[smooth] coordinates
+    {(4.10,1.27) (4.54,1.45) (4.98,1.40) (5.42,1.64)
+     (5.72,1.98) (6.00,2.20)};
   % Equal core area carries categorical identity without a false magnitude cue.
   \fill[cBlue!80] (1.55,1.63) circle (0.075);
   \draw[cBlue!95!black, line width=0.28pt] (1.55,1.63) circle (0.075);

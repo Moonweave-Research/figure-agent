@@ -191,6 +191,8 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     assert "varied orientation, length, and amplitude" in skill
     assert "directly on a continuous host trace" in skill
     assert "short asymmetric" in skill
+    assert "The core alone may carry the category" in skill
+    assert "Audit the whole host field" in skill
     assert "winged-dot defect" in skill
 
     repaired = (
@@ -207,9 +209,9 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     host_texture = real_space.split("% Local contrast follows", 1)[0]
 
     assert host_texture.count("plot[smooth] coordinates") == 4
-    assert "Short, non-periodic strands" in real_space
-    assert "Local contrast follows the host path itself" in real_space
-    assert real_space.count("line width=1.20pt") == 4
+    assert "Four irregular, field-spanning traces" in real_space
+    assert "field-spanning traces provide a sparse amorphous-host cue" in real_space
+    assert real_space.count("line width=1.20pt") == 0
     assert "cAmber!36!black" not in real_space
     assert r"\fill[cBlue!13]" not in real_space
     assert r"\fill[cRed!12]" not in real_space
