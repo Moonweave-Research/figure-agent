@@ -340,6 +340,14 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "same mandatory atom connectivity across panels" in consistency["rule"]
     assert "polysulfide directly to an aryl carbon" in consistency["rule"]
 
+    evidence = rules[
+        "polymer_paper_project.composition-schematic-evidence-boundary"
+    ]
+    assert evidence["category"] == "chemistry_semantics"
+    assert "sulfur weight-percent sample names" in evidence["rule"]
+    assert "qualitative artistic correlate" in evidence["rule"]
+    assert "never report those glyph counts as measured sulfur rank" in evidence["rule"]
+
 
 def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
     path = tmp_path / "badid.md"

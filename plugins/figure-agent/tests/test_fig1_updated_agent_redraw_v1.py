@@ -183,6 +183,16 @@ def test_repaired_panel_b_preserves_panel_a_chemical_topology() -> None:
     assert "DIB motifs linked by polysulfides of increasing sulfur rank" in panel_b
 
 
+def test_repaired_panel_b_declares_qualitative_composition_encoding() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_b = source.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
+
+    assert "S60/S75/S85 are sulfur wt-percent sample names" in panel_b
+    assert "drawn S-glyph count is a qualitative artistic correlate only" in panel_b
+    assert "not a measured molecular sulfur rank" in panel_b
+    assert r"{sulfur content (wt\%)}" in panel_b
+
+
 def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     label = source.index(r"{manual sample\\[-0.5pt]transfer}")

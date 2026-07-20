@@ -35,6 +35,14 @@ rules:
       locator: "Fig1 A-to-B print-scale consistency audit (2026-07-20)"
       quote: "Correcting Panel A exposed direct aryl-sulfur bonds and non-aromatic DIB hexagons in Panel B."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.composition-schematic-evidence-boundary
+    category: chemistry_semantics
+    rule: "In Panel B, S60, S75, and S85 are sulfur weight-percent sample names, not molecular sulfur atom counts. A monotonic number of drawn sulfur glyphs may serve only as a qualitative artistic correlate of increasing sulfur content; never report those glyph counts as measured sulfur rank, molecular weight, or an exact composition-derived chain length. Bind the visible ordering to a wt% axis and record the nonliteral encoding in source semantics."
+    source:
+      kind: critique_adjudication
+      locator: "v5f briefing sections 8.8 and Panel B B-1/B-2; Fig1 evidence-boundary audit (2026-07-20)"
+      quote: "Sample names are sulfur wt%; drawn atom count is an artistic correlate only."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.cantilever-vertical-clip-top
     category: instrument_standard
     rule: "Draw the polymer cantilever vertical: clip/clamp on top, polymer hangs down, deflection sideways toward a side electrode. Horizontal cantilever orientation is wrong for this lab and its experiments."

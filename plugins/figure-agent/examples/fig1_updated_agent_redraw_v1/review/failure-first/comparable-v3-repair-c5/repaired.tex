@@ -136,9 +136,13 @@
   \node[panel title] at (0.82,4.62) {Composition series};
 
   % increasing sulfur content encoded as polysulfide chain length (S60 -> S85)
+  % Evidence boundary: S60/S75/S85 are sulfur wt-percent sample names;
+  % drawn S-glyph count is a qualitative artistic correlate only,
+  % not a measured molecular sulfur rank or exact chain length.
   \draw[-{Stealth[length=3.4pt,width=2.6pt]}, cAmber!90!black, line width=1.0pt]
     (0.66,1.45)--(0.66,3.85);
-  \node[small label, rotate=90, anchor=south, text=cBrown] at (0.44,2.65) {increasing sulfur content};
+  \node[small label, rotate=90, anchor=south, text=cBrown] at (0.44,2.65)
+    {sulfur content (wt\%)};
   % B aromatic DIB rings retain Kekule bonds.
   % B bis-thiocumyl junctions retained at both chain ends;
   % direct aryl--sulfur attachment is forbidden.
