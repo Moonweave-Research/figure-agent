@@ -47,10 +47,12 @@ def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
 
     pair_text = "\n".join(rule["rule"] for rule in pair_catalog["rules"])
     assert "motion stage" not in pair_text.lower()
+    assert "grounded-substrate" not in pair_text.lower()
     pair_ids = {rule["id"] for rule in pair_catalog["rules"]}
     assert "pair001.instrument-faceplate-bezel" not in pair_ids
     superseded_ids = {rule["id"] for rule in pair_catalog["superseded_rules"]}
     assert "pair001.panel-e-probe-above-sample" in superseded_ids
+    assert "pair001.panel-e-side-view-apparatus" in superseded_ids
     assert "pair001.instrument-faceplate-bezel" in superseded_ids
 
     ispd_rule = next(
@@ -62,13 +64,21 @@ def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
     assert "manually transfer" in ispd_rule["rule"]
     assert "Kelvin probe" in ispd_rule["rule"]
     assert "exact model" in ispd_rule["rule"]
-    grounding_rule = next(
+    charging_rule = next(
         rule
         for rule in project_catalog["rules"]
-        if rule["id"] == "polymer_paper_project.ispd-grounded-backing-plate"
+        if rule["id"] == "polymer_paper_project.ispd-two-terminal-corona-topology"
     )
-    assert "grounded backing plate" in grounding_rule["rule"]
-    assert "not the polymer film" in grounding_rule["rule"]
+    assert "two terminals" in charging_rule["rule"]
+    assert "Do not add a grid" in charging_rule["rule"]
+    assert "ground symbol" in charging_rule["rule"]
+    assert "exact polarity" in charging_rule["rule"]
+    active_ids = {rule["id"] for rule in project_catalog["rules"]}
+    assert "polymer_paper_project.ispd-grounded-backing-plate" not in active_ids
+    project_superseded_ids = {
+        rule["id"] for rule in project_catalog["superseded_rules"]
+    }
+    assert "polymer_paper_project.ispd-grounded-backing-plate" in project_superseded_ids
 
 
 def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:

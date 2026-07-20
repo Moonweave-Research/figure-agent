@@ -1,0 +1,47 @@
+{
+  "actor": "Choe Mun-yeong",
+  "actor_role": "human_adjudicator",
+  "attempt_id": "attempt-0b682e546acaa658d39299ff",
+  "disposition": "rejected",
+  "evidence": [
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/critique.md",
+      "role": "critique",
+      "sha256": "sha256:70bc657870dcfd59c6f37349adb599679ed6514a80d530afc5c728cc4f347acb"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/host-review-execution-receipt.json",
+      "role": "host_review_execution_receipt",
+      "sha256": "sha256:86e73585cac556976dddacd71d7e26ac4cac4d6e7284151f99247458df1415a7"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/host-review-transcript.md",
+      "role": "host_review_transcript",
+      "sha256": "sha256:9817590aeaa8e58796ab690a756d4b49551941818887f74512f612a2be8b6f7e"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-adjudication/decision.snapshot.json",
+      "role": "human_decision_record",
+      "sha256": "sha256:8c4e1af649ea7a0b54b6cb4e12c30dad682266beb3b4cb64e698e6ee8ec94f4b"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/response.json",
+      "role": "initial_visual_review_response",
+      "sha256": "sha256:5da65dd0d2c74201e74375aaf910c8652805345df7a138d3d2bfaf4db355db51"
+    }
+  ],
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "parent_state_file_sha256": null,
+  "parent_state_path": null,
+  "parent_state_sha256": null,
+  "previous_state_file_sha256": "sha256:7a5ed4e4a3011038d607cbdd57bbfc24b2696b662bf1b11c445c0ccb81a93d0e",
+  "previous_state_path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/state-002-critique_unadjudicated.json",
+  "previous_state_sha256": "sha256:2ee129ee146eb95e1636fc3357c8d1a3d16cbd8f01690f8159abd4378cf2544e",
+  "publication_acceptance": "not_claimed",
+  "required_actor": "none",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 3,
+  "state": "rejected",
+  "state_sha256": "sha256:75ed714afcaac0bfb2d5aa0039d15dca3a8ea666bc13ed9b9bd655ed0b9a6ba8",
+  "terminal": true
+}

@@ -1,0 +1,34 @@
+{
+  "attempt_id": "attempt-0b682e546acaa658d39299ff",
+  "attribution": null,
+  "critique": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/critique.md",
+    "sha256": "sha256:70bc657870dcfd59c6f37349adb599679ed6514a80d530afc5c728cc4f347acb"
+  },
+  "current_state": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/state-002-critique_unadjudicated.json",
+    "sha256": "sha256:2ee129ee146eb95e1636fc3357c8d1a3d16cbd8f01690f8159abd4378cf2544e"
+  },
+  "decision": "reject_initial_review",
+  "decision_sha256": "sha256:3d5ecb1a527528b2c94e080b392b638bea27d6f6fbed673620b98020e43c5c1b",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "host_review_execution_receipt": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/host-review-execution-receipt.json",
+    "sha256": "sha256:86e73585cac556976dddacd71d7e26ac4cac4d6e7284151f99247458df1415a7"
+  },
+  "host_review_transcript": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/host-review-transcript.md",
+    "sha256": "sha256:9817590aeaa8e58796ab690a756d4b49551941818887f74512f612a2be8b6f7e"
+  },
+  "publication_acceptance": "not_claimed",
+  "rationale": "Reject E001 and the initial review built around it. Human scientific review confirmed that the actual corona-charging experiment used the high-voltage supply across two terminals and did not use either the inferred grounded-backing topology or a grid. Generic literature convention and the stale SI schematic must not override the paper-specific apparatus.",
+  "response": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review-response/response.json",
+    "sha256": "sha256:5da65dd0d2c74201e74375aaf910c8652805345df7a138d3d2bfaf4db355db51"
+  },
+  "reviewer": {
+    "identity": "Choe Mun-yeong",
+    "kind": "human"
+  },
+  "schema": "figure-agent.initial-human-adjudication.v1"
+}
