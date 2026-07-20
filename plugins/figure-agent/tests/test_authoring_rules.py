@@ -372,6 +372,8 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "shallow states closer to the mobility edge" in traps["rule"]
     assert "bimodal shallow/deep DOS" in traps["rule"]
     assert "curve widths and amplitudes remain qualitative" in traps["rule"]
+    assert "rectangular colour windows" in traps["rule"]
+    assert "bounded energy bands" in traps["rule"]
     assert "carrier sign" in traps["rule"]
 
     binding = rules["polymer_paper_project.real-space-energy-binding"]

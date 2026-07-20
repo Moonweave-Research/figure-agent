@@ -289,16 +289,11 @@
   \draw[cGray!88!black, line width=1.0pt] (7.72,0.86)--(12.98,0.86);
   \node[body label, anchor=west] at (13.10,0.86) {$E_V$};
 
-  % Semantic energy windows bind each DOS to its levels and label without
-  % enclosing the diagram in another decorative container.
-  % Stop the population windows before the right-side trap-depth lane so the
-  % caliper cannot be mistaken for a property of the shallow color field.
-  \fill[cBlue!4] (7.72,2.42) rectangle (11.80,3.34);
-  \fill[cRed!4] (7.72,0.98) rectangle (11.80,2.38);
-
   % Sample true sideways Gaussians; hand-shaped lens/cusp silhouettes are not DOS.
   % The paper-local bimodal populations are authoritative, but the visible
   % curve widths and amplitudes are schematic rather than fitted parameters.
+  % No rectangular population wash is used: it would imply a bounded energy
+  % band in addition to the continuous DOS actually being communicated.
   \fill[cBlue!20, opacity=0.58]
     plot[domain=2.48:3.28, samples=36, smooth]
       ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x)

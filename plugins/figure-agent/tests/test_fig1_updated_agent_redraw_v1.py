@@ -469,6 +469,9 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
         assert int(fill.group(1)) <= 20
         assert float(fill.group(2)) <= 0.60
         assert f"c{color}!84!black, line width=1.0pt" in panel_c
+    assert "rectangular population wash" in panel_c
+    assert "(7.72,2.42) rectangle (11.80,3.34)" not in panel_c
+    assert "(7.72,0.98) rectangle (11.80,2.38)" not in panel_c
     assert "{Localized trap landscape};" in panel_c
     assert "{Localized trap model};" not in panel_c
     assert "{Localized shallow and deep traps};" not in panel_c

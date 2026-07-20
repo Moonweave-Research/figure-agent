@@ -45,7 +45,7 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.trap-landscape-evidence-boundary
     category: physics_semantics
-    rule: "In a trap-energy landscape, energy increases upward; place shallow states closer to the mobility edge and deep states farther below it, terminate thermal-escape arrows at the mobility edge, and span Delta E_t from a selected trap state to that edge. For this paper, the bimodal shallow/deep DOS is paper-local authority, while curve widths and amplitudes remain qualitative unless bound to measured data. Use polarity-neutral site markers and do not assign a carrier sign without paper-local evidence."
+    rule: "In a trap-energy landscape, energy increases upward; place shallow states closer to the mobility edge and deep states farther below it, terminate thermal-escape arrows at the mobility edge, and span Delta E_t from a selected trap state to that edge. For this paper, the bimodal shallow/deep DOS is paper-local authority, while curve widths and amplitudes remain qualitative unless bound to measured data. Do not place decorative rectangular colour windows behind continuous DOS populations; they can be mistaken for additional bounded energy bands. Use polarity-neutral site markers and do not assign a carrier sign without paper-local evidence."
     source:
       kind: critique_adjudication
       locator: "Fig1 v5f Panel C authority and evidence-boundary audit (2026-07-20)"
