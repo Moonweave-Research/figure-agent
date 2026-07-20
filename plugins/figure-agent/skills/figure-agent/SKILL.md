@@ -38,6 +38,22 @@ product specification and forward execution roadmap. Treat other specs, plans,
 roadmaps, and milestones as scoped evidence unless that authority explicitly
 delegates to them.
 
+## Dogfood routing boundary
+
+For **Figure Agent dogfood** or product-development work, this skill and the
+repo-local Figure Agent commands take priority over generic TikZ refinement.
+Do not automatically invoke `tikz`, `tikz-refine`, or another external drawing
+skill merely because the editable representation is TeX/TikZ. A specialist is
+an explicit user-selected tool, not an implicit dependency of Figure Agent.
+
+Keep the authoring model free to redraw or replace constructions. Review the
+rendered meaning, attribute a real defect, and constrain the repair boundary;
+do not force a reusable primitive or specialist coordinate recipe. If whole,
+panel, and print-reduction review finds **no defensible defect**, preserve the
+source unchanged and record the review basin. Compile-generated and ignored
+build artifacts are verification evidence, not product edits; do not delete,
+stage, or count them as the source change required to make a review succeed.
+
 ## Runtime Entrypoint
 
 Use `fig-agent ...` for shell commands. If `fig-agent` is not on `PATH`, use

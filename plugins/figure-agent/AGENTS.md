@@ -5,6 +5,22 @@ Before product work, read the sole product and execution authority
 `docs/figure-agent.md`. Other specifications, plans, roadmaps, and milestones
 are evidence, not product authority.
 
+## Routing priority
+
+For **Figure Agent dogfood** and Figure Agent product-development work, use this
+repository's Figure Agent workflow and rendered-evidence contracts before any
+generic TikZ refinement workflow. A `.tex` extension is a representation detail,
+not permission to invoke `tikz`, `tikz-refine`, or another external drawing
+skill. Use such a specialist only when the user explicitly requests it.
+
+Preserve free LLM authoring: diagnose the rendered defect and constrain meaning,
+evidence, and regression risk rather than requiring a reusable primitive or a
+specialist's coordinate recipe. If full, panel, and reduction-scale review finds
+**no defensible defect**, a source no-op is a valid review outcome; report the
+basin instead of manufacturing a diff. Compile-generated and ignored build
+artifacts are evidence, not source mutations, and must not be cleaned merely to
+make the worktree look changed or unchanged.
+
 ## Identity
 
 `figure-agent` is a **paper-figure quality kernel**. A human, Codex, GPT, Claude, image-generation tool, Illustrator, or any other workflow may author the TikZ source; the plugin's durable job is to enforce style and reproducibility invariants regardless of author.

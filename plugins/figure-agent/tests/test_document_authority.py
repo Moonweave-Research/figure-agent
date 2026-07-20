@@ -121,6 +121,18 @@ def test_agent_entrypoints_link_the_single_authority() -> None:
         assert AUTHORITY_DOC in text, path
 
 
+def test_agent_entrypoints_keep_figure_agent_dogfood_on_its_own_workflow() -> None:
+    agents = _read(PLUGIN_ROOT / "AGENTS.md")
+    skill = _read(PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md")
+
+    for text in (agents, skill):
+        normalized = " ".join(text.split())
+        assert "Figure Agent dogfood" in normalized
+        assert "generic TikZ refinement" in normalized
+        assert "no defensible defect" in normalized
+        assert "build artifacts" in normalized
+
+
 def test_prior_superseded_documents_remain_explicitly_historical() -> None:
     for relative_path in SUPERSEDED_DOCS:
         text = _read(PLUGIN_ROOT / relative_path)
