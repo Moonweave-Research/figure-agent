@@ -218,23 +218,30 @@
   % Real-space view: both trap classes are localized sites in one disordered film,
   % not separate material phases.
   \node[body label, anchor=west] at (0.90,5.02) {real space};
-  % Neutral top-view film field. A slightly skewed cut-film silhouette avoids
-  % inventing thickness, a specific sample shape, or a rounded UI container.
-  \fill[cGray!3]
-    (0.84,1.23)--(6.18,1.23)--(6.12,4.30)--(0.90,4.30)--cycle;
+  % Neutral top-view film field. Keep one flat projection: the former skewed
+  % quadrilateral read as undeclared perspective even though no thickness was
+  % encoded. The boundary is scientific (the specimen extent), not a UI card.
+  \fill[cGray!3] (0.90,1.23) rectangle (6.12,4.30);
   \draw[cGray!72!black, line width=0.90pt]
-    (0.84,1.23)--(6.18,1.23)--(6.12,4.30)--(0.90,4.30)--cycle;
+    (0.90,1.23) rectangle (6.12,4.30);
   % Unconnected localized-site ensemble: same-size dot texture is intentionally omitted
   % because it would invent a second particle population inside the polymer host.
-  % Three quiet polymer-chain traces give the host material identity without
-  % inventing a particulate population or a quantitative morphology. Each
-  % localized core lies on a host trace; detached cores read as free particles.
+  % Non-periodic chain traces identify one disordered host. Vary direction,
+  % curvature and span so the field cannot be read as aligned lamellae. Every
+  % localized core still lies on a trace rather than floating as a particle.
   \draw[cGray!23, line width=0.84pt] plot[smooth] coordinates
-    {(1.05,3.52) (1.72,3.32) (2.72,3.62) (3.48,3.14) (4.62,2.84) (5.30,3.00) (5.92,3.08)};
+    {(1.03,3.52) (1.48,3.34) (2.05,3.48) (2.72,3.62)
+     (3.24,3.34) (3.78,3.45) (4.26,3.18) (4.88,3.30) (5.88,3.05)};
   \draw[cGray!20, line width=0.84pt] plot[smooth] coordinates
-    {(1.02,2.52) (1.82,2.72) (2.60,2.45) (3.34,2.63) (4.18,2.32) (5.04,2.48) (5.96,2.26)};
-  \draw[cGray!18, line width=0.84pt] plot[smooth] coordinates
-    {(1.08,1.72) (1.55,1.62) (2.34,1.84) (3.22,1.70) (4.18,1.86) (5.42,1.62) (5.92,1.72)};
+    {(1.08,2.28) (1.54,2.58) (2.02,2.44) (2.42,2.76)
+     (3.02,2.48) (3.58,2.64) (4.12,2.46) (4.62,2.84) (5.16,2.62) (5.94,2.72)};
+  \draw[cGray!19, line width=0.84pt] plot[smooth] coordinates
+    {(1.02,1.72) (1.55,1.62) (2.02,1.88) (2.48,1.70)
+     (3.02,1.96) (3.58,1.74) (4.08,2.02) (4.62,1.78) (5.42,1.62) (5.96,1.86)};
+  \draw[cGray!17, line width=0.84pt] plot[smooth] coordinates
+    {(1.26,1.34) (1.44,1.92) (1.28,2.54) (1.66,3.06) (1.48,4.08)};
+  \draw[cGray!17, line width=0.84pt] plot[smooth] coordinates
+    {(3.62,1.34) (3.38,1.88) (3.72,2.30) (3.46,2.94) (3.86,4.10)};
   % Single restrained localization contours replace the repeated nested glow.
   % Each compact contour is co-equal and visibly embedded in the same film.
   \filldraw[fill=cBlue!5, draw=cBlue!30, line width=0.84pt]
