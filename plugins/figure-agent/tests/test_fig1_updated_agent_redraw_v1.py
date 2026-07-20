@@ -146,8 +146,8 @@ def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
     assert r"\fontsize{5.0}{5.8}" in transfer_node
     assert "text=cGray!88!black" in transfer_node
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
-    assert r"(1.87,2.84)--(2.21,2.84)" in panel_e
-    assert r"(1.97,2.84)--(2.16,2.84)" not in panel_e
+    assert r"(1.78,2.77)--(2.24,2.77)" in panel_e
+    assert r"(1.87,2.84)--(2.21,2.84)" not in panel_e
 
 
 def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
@@ -190,12 +190,12 @@ def test_repaired_panel_e_surface_charge_has_no_undeclared_gradient() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
 
-    assert r"\foreach \x in {1.28,1.46,1.64,2.46,2.64,2.82}" in panel_e
+    assert r"\foreach \x in {1.08,1.27,1.46,2.56,2.75,2.94}" in panel_e
     assert r"\tone" not in panel_e
     assert r"\rad" not in panel_e
     assert r"\foreach \dx in {-0.08,0,0.08}" not in panel_e
     assert "dash pattern=on 1.2pt off 1.1pt" in panel_e
-    assert "(1.45,3.30)--(1.45,3.15)" in panel_e
+    assert "(1.27,3.15)--(1.27,3.08)" in panel_e
 
 
 def test_repaired_panel_e_does_not_invent_corona_polarity() -> None:
@@ -223,11 +223,23 @@ def test_repaired_panel_e_preserves_a_visible_noncontact_esvm_gap() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
 
-    assert "(2.52,3.28) rectangle (2.66,3.72)" in panel_e
-    assert "(2.53,3.28) rectangle (2.65,3.32)" in panel_e
-    assert "(2.52,3.18) rectangle (2.66,3.62)" not in panel_e
+    assert "(2.68,3.22) rectangle (2.86,3.96)" in panel_e
+    assert "(2.69,3.22) rectangle (2.85,3.27)" in panel_e
+    assert "(2.68,3.12) rectangle (2.86,3.86)" not in panel_e
     assert "{ESVM head}" in panel_e
     assert "Kelvin" not in panel_e
+
+
+def test_repaired_panel_e_uses_keyence_family_level_head_topology() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
+
+    assert "SK-family elongated bar head" in panel_e
+    assert "(2.68,3.22) rectangle (2.86,3.96)" in panel_e
+    assert "(2.69,3.22) rectangle (2.85,3.27)" in panel_e
+    assert "(2.77,3.96)" in panel_e
+    assert "(3.38,3.68)" in panel_e
+    assert "oscillation" not in panel_e.lower()
 
 
 def test_repaired_panel_letters_follow_nature_communications_case() -> None:
@@ -449,8 +461,8 @@ def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
     assert "anchor=north, align=center" in panel_e
     assert "{manual transfer}" not in panel_e
     assert "{derive};" in panel_e
-    assert "(3.80,1.46)--(3.80,1.20)" in panel_e
-    assert "anchor=west, text=cGray!78!black] at (3.92,1.33)" in panel_e
+    assert "(4.08,1.52)--(4.08,1.08)" in panel_e
+    assert "anchor=west, text=cGray!78!black] at (4.13,1.30)" in panel_e
     assert "anchor=north, text=cGray!78!black] at (3.80,1.18)" not in panel_e
     assert "Kelvin" not in panel_e
     assert r"\shade" not in panel_e

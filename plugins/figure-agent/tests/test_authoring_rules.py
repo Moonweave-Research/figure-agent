@@ -64,6 +64,10 @@ def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
     assert "manually transfer" in ispd_rule["rule"]
     assert "Kelvin probe" in ispd_rule["rule"]
     assert "exact model" in ispd_rule["rule"]
+    assert "elongated bar-shaped sensor head" in ispd_rule["rule"]
+    assert "short end face" in ispd_rule["rule"]
+    assert "visible non-contact standoff" in ispd_rule["rule"]
+    assert "cable to a separate amplifier or meter" in ispd_rule["rule"]
     charging_rule = next(
         rule
         for rule in project_catalog["rules"]
@@ -92,6 +96,21 @@ def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:
     assert "glossy or ball-shaded" in rule["rule"]
     assert "declared 3D geometry or material relation" in rule["rule"]
     assert "does not require apparatus photorealism" in rule["rule"]
+
+
+def test_pair001_binds_raw_to_derived_transformations() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "pair001.raw-to-derived-arrow-bound"
+    )
+    assert "tail must touch the source plot boundary" in rule["rule"]
+    assert "arrowhead must enter the derived-result region" in rule["rule"]
+    assert "dedicated transformation lane" in rule["rule"]
 
 
 def test_rule_catalog_rejects_unanchored_generic_guidance(tmp_path: Path) -> None:

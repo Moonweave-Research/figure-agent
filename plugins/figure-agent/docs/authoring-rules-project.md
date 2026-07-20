@@ -29,11 +29,11 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.ispd-keyence-manual-transfer
     category: instrument_standard
-    rule: "For ISPD panels, depict a Keyence SK series induction-type, non-contact electrostatic voltmeter. Corona-charge the specimen first, then manually transfer the same specimen to the adjacent measurement station. Do not invent an automated motion stage, continuous scan, conveyor, or Kelvin probe. Preserve the confirmed series-level topology without inventing an exact model."
+    rule: "For ISPD panels, depict a Keyence SK series induction-type, non-contact electrostatic voltmeter. Corona-charge the specimen first, then manually transfer the same specimen to the adjacent measurement station. Show the family-level sensing topology as an elongated bar-shaped sensor head with its short end face directed toward the specimen, a visible non-contact standoff, and a cable to a separate amplifier or meter. Do not invent an automated motion stage, continuous scan, conveyor, oscillating Kelvin probe, or model-specific controls and dimensions. Preserve the confirmed series-level topology without inventing an exact model."
     source:
       kind: iteration_comment
       locator: "Fig1 Panel E human review (2026-07-19)"
-      quote: "코로나 차지를 한 후에, 직접 옆에 있는, 저 측정 장비 쪽으로 옮기는거야 우리가 자동 모션 기계는 아니야 / 아까 너가 말한 시리즈는 맞아"
+      quote: "코로나 차지를 한 후에, 직접 옆에 있는, 저 측정 장비 쪽으로 옮기는거야 우리가 자동 모션 기계는 아니야 / 아까 너가 말한 시리즈는 맞아 / 프로브 형태가 저렇게 하는게 맞아?"
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.ispd-two-terminal-corona-topology
     category: instrument_standard

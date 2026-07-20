@@ -27,6 +27,14 @@ rules:
       locator: examples/fig1_overview_v2_pair_001_vault/spec.yaml:127-128
       quote: "each split apparatus zone top + result zone bottom"
     transfer_policy: use_as_constraint
+  - id: pair001.raw-to-derived-arrow-bound
+    category: label_binding
+    rule: For a measurement-to-derived-result sequence, the transformation arrow tail must touch the source plot boundary and its arrowhead must enter the derived-result region. Put the arrow and its verb in a dedicated transformation lane instead of floating them ambiguously between plots.
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 Panel E deep review, measurement-to-derivation repair (2026-07-20)"
+      quote: "Bind the derive arrow to both the measured V_s(t) plot and the derived g(E_t) region."
+    transfer_policy: use_as_constraint
   - id: pair001.panel-d-do-not-transfer-triboelectric
     category: physics_semantics
     rule: Reusing Panel D apparatus grammar must not transfer triboelectric mechanism or breakdown narrative into charge-trap figures.

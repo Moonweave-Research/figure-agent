@@ -307,80 +307,81 @@
   % Keyence SK series induction-type, non-contact electrostatic measurement.
   % Two explicit states of the same specimen: corona charging at left, then
   % manual relocation to the adjacent non-contact ESVM station at right.
-  % Charging state.
-  \fill[cGray!22] (1.05,2.78) rectangle (1.85,2.90);
-  \draw[cGray!82!black, line width=0.84pt] (1.05,2.78) rectangle (1.85,2.90);
-  \fill[cAmber!10] (1.12,2.90) rectangle (1.78,3.03);
-  \draw[cAmber!82!black, line width=0.84pt] (1.12,2.90) rectangle (1.78,3.03);
-  \node[small label, anchor=west, text=cGray!88!black] at (1.72,3.17) {film};
-  % Measurement state after the same specimen is moved by hand.
-  \fill[cGray!22] (2.23,2.78) rectangle (3.03,2.90);
-  \draw[cGray!82!black, line width=0.84pt] (2.23,2.78) rectangle (3.03,2.90);
-  \fill[cAmber!10] (2.30,2.90) rectangle (2.96,3.03);
-  \draw[cAmber!82!black, line width=0.84pt] (2.30,2.90) rectangle (2.96,3.03);
+  % Charging state: flat side-view specimen on the counter electrode.
+  \fill[cGray!22] (0.82,2.70) rectangle (1.72,2.84);
+  \draw[cGray!82!black, line width=0.84pt] (0.82,2.70) rectangle (1.72,2.84);
+  \fill[cAmber!10] (0.90,2.84) rectangle (1.64,2.99);
+  \draw[cAmber!82!black, line width=0.84pt] (0.90,2.84) rectangle (1.64,2.99);
+  \node[small label, anchor=west, text=cGray!88!black] at (1.66,3.06) {film};
+  % Measurement state: an explicit second state of the same hand-moved sample.
+  \fill[cGray!22] (2.30,2.70) rectangle (3.20,2.84);
+  \draw[cGray!82!black, line width=0.84pt] (2.30,2.70) rectangle (3.20,2.84);
+  \fill[cAmber!10] (2.38,2.84) rectangle (3.12,2.99);
+  \draw[cAmber!82!black, line width=0.84pt] (2.38,2.84) rectangle (3.12,2.99);
   \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cTeal!78!black, line width=0.84pt]
-    (1.87,2.84)--(2.21,2.84);
+    (1.78,2.77)--(2.24,2.77);
   \node[small label, font=\sffamily\fontsize{5.0}{5.8}\selectfont,
         text=cGray!88!black, anchor=north, align=center]
-    at (2.065,2.73) {manual sample\\[-0.5pt]transfer};
+    at (2.01,2.66) {manual sample\\[-0.5pt]transfer};
 
   % The charged surface is repeated in both states to preserve specimen identity.
   % Use polarity-neutral surface-charge markers because the exact corona
   % polarity is not declared by the paper-local experimental evidence.
-  \foreach \x in {1.28,1.46,1.64,2.46,2.64,2.82} {
-    \fill[cRed!82!black] (\x,3.06) circle (0.040);
+  \foreach \x in {1.08,1.27,1.46,2.56,2.75,2.94} {
+    \fill[cRed!82!black] (\x,3.03) circle (0.040);
   }
 
   % Gridless two-terminal corona charging used in the experiment. The compact
   % HV source closes between the needle and counter electrode; neither terminal
   % is presented as protective/earth ground, and polarity is left unspecified.
-  \fill[cGray!13] (0.70,3.43) rectangle (1.04,3.69);
-  \draw[cGray!82!black, line width=0.84pt] (0.70,3.43) rectangle (1.04,3.69);
+  \fill[cGray!13] (0.40,3.57) rectangle (0.78,3.88);
+  \draw[cGray!82!black, line width=0.84pt] (0.40,3.57) rectangle (0.78,3.88);
   \node[font=\sffamily\fontsize{4.5}{5.3}\selectfont, text=cGray!88!black]
-    at (0.87,3.56) {HV};
-  \fill[cRed!72!black] (1.04,3.61) circle (0.027);
-  \fill[cGray!82!black] (0.70,3.49) circle (0.027);
+    at (0.59,3.725) {HV};
+  \fill[cRed!72!black] (0.78,3.80) circle (0.027);
+  \fill[cGray!82!black] (0.40,3.64) circle (0.027);
   \draw[cRed!72!black, line width=0.84pt]
-    (1.04,3.61)--(1.22,3.61)--(1.22,3.70)--(1.34,3.70);
+    (0.78,3.80)--(1.10,3.80)--(1.10,3.93)--(1.27,3.93);
   \draw[cGray!82!black, line width=0.84pt]
-    (0.70,3.49)--(0.58,3.49)--(0.58,2.84)--(1.05,2.84);
+    (0.40,3.64)--(0.28,3.64)--(0.28,2.77)--(0.82,2.77);
 
   % Needle electrode and corona discharge; no grid electrode is present.
-  \draw[cGray!82!black, line width=0.84pt] (1.34,3.70)--(1.56,3.70);
-  \draw[cGray!82!black, line width=0.84pt] (1.45,3.70)--(1.45,3.43);
-  \fill[cGray!82!black] (1.41,3.43)--(1.49,3.43)--(1.45,3.34)--cycle;
+  \draw[cGray!82!black, line width=0.84pt] (1.27,3.93)--(1.49,3.93);
+  \draw[cGray!82!black, line width=0.84pt] (1.27,3.93)--(1.27,3.40);
+  \fill[cGray!82!black] (1.23,3.40)--(1.31,3.40)--(1.27,3.19)--cycle;
   \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cRed!68!black,
         dash pattern=on 1.2pt off 1.1pt, line width=0.84pt]
-    (1.45,3.30)--(1.45,3.15);
-  % Family-level sensor-head abstraction: slim body, flat sensing face toward
-  % the specimen, and a wired readout. The exact model is not declared.
-  \fill[cGray!18] (2.52,3.28) rectangle (2.66,3.72);
-  \draw[cGray!82!black, line width=0.84pt] (2.52,3.28) rectangle (2.66,3.72);
-  \fill[cGray!82!black] (2.53,3.28) rectangle (2.65,3.32);
-  \draw[cGray!92!black, line width=0.84pt] (2.53,3.28) rectangle (2.65,3.32);
-  \draw[cGray!88!black, line width=0.84pt] (2.59,3.72)
-    .. controls (2.78,3.69) and (3.00,3.56) .. (3.28,3.43);
-  \node[small label, anchor=south] at (2.59,3.74) {ESVM head};
+    (1.27,3.15)--(1.27,3.08);
+  % SK-family elongated bar head: only the confirmed family-level silhouette
+  % is retained. Its short end face points toward the specimen across a clear
+  % non-contact standoff; no mechanical modulation is implied.
+  \fill[cGray!18] (2.68,3.22) rectangle (2.86,3.96);
+  \draw[cGray!82!black, line width=0.84pt] (2.68,3.22) rectangle (2.86,3.96);
+  \fill[cGray!82!black] (2.69,3.22) rectangle (2.85,3.27);
+  \draw[cGray!92!black, line width=0.84pt] (2.69,3.22) rectangle (2.85,3.27);
+  \draw[cGray!88!black, line width=0.84pt] (2.77,3.96)
+    .. controls (2.98,3.94) and (3.16,3.79) .. (3.38,3.68);
+  \node[small label, anchor=south] at (2.77,3.99) {ESVM head};
 
   % Schematic ESVM readout; controls remain model-agnostic.
-  \fill[cGray!13] (3.25,2.87) rectangle (4.26,3.52);
-  \draw[cGray!80!black, line width=0.90pt] (3.25,2.87) rectangle (4.26,3.52);
-  \draw[cGray!42!black, line width=0.84pt] (3.32,2.94) rectangle (4.19,3.45);
-  \fill[cGray!76!black] (3.40,3.16) rectangle (4.11,3.37);
-  \draw[cGray!92!black, line width=0.84pt] (3.40,3.16) rectangle (4.11,3.37);
-  \node[font=\sffamily\fontsize{4.7}{5.6}\selectfont, text=white] at (3.755,3.265) {$V_s$};
-  \fill[cGray!82!black] (3.25,3.43) circle (0.032);
-  \fill[cTeal!72!black] (3.43,3.02) circle (0.032);
-  \node[font=\sffamily\fontsize{3.8}{4.5}\selectfont, text=cGray!78!black] at (3.82,3.02) {ESVM};
-  \node[small label, anchor=south] at (3.76,3.54) {$V_s$ meter};
+  \fill[cGray!13] (3.38,3.13) rectangle (4.34,3.83);
+  \draw[cGray!80!black, line width=0.90pt] (3.38,3.13) rectangle (4.34,3.83);
+  \draw[cGray!42!black, line width=0.84pt] (3.45,3.20) rectangle (4.27,3.76);
+  \fill[cGray!76!black] (3.53,3.45) rectangle (4.19,3.68);
+  \draw[cGray!92!black, line width=0.84pt] (3.53,3.45) rectangle (4.19,3.68);
+  \node[font=\sffamily\fontsize{4.7}{5.6}\selectfont, text=white] at (3.86,3.565) {$V_s$};
+  \fill[cGray!82!black] (3.38,3.68) circle (0.032);
+  \fill[cTeal!72!black] (3.56,3.28) circle (0.032);
+  \node[font=\sffamily\fontsize{3.8}{4.5}\selectfont, text=cGray!78!black] at (3.95,3.28) {ESVM};
+  \node[small label, anchor=south] at (3.86,3.86) {$V_s$ meter};
 
-  \draw[cGray!72, line width=0.84pt] (3.03,2.84)--(3.18,2.84);
-  \node[small label, anchor=north west, align=left] at (3.28,2.78) {grounded\\substrate};
-  \draw[cGray, line width=0.84pt] (3.18,2.84)--(3.18,2.57);
+  \draw[cGray!72, line width=0.84pt] (3.20,2.77)--(3.30,2.77);
+  \node[small label, anchor=north west, align=left] at (3.40,2.76) {grounded\\substrate};
+  \draw[cGray, line width=0.84pt] (3.30,2.77)--(3.30,2.50);
   \draw[cGray, line width=0.84pt]
-    (3.05,2.57)--(3.31,2.57)
-    (3.09,2.51)--(3.27,2.51)
-    (3.13,2.46)--(3.23,2.46);
+    (3.17,2.50)--(3.43,2.50)
+    (3.21,2.44)--(3.39,2.44)
+    (3.25,2.39)--(3.35,2.39);
 
   % Raw surface-potential decay.
   \draw[axis line] (0.66,1.52)--(0.66,2.49);
@@ -396,8 +397,8 @@
 
   % Explicit raw-to-derived transformation.
   \draw[-{Stealth[length=3.0pt,width=2.2pt]}, cGray!72!black, line width=0.84pt]
-    (3.80,1.46)--(3.80,1.20);
-  \node[small label, anchor=west, text=cGray!78!black] at (3.92,1.33) {derive};
+    (4.08,1.52)--(4.08,1.08);
+  \node[small label, anchor=west, text=cGray!78!black] at (4.13,1.30) {derive};
 
   % Derived trap-density distribution in energy space.
   \draw[axis line] (0.66,0.36)--(0.66,1.42);
