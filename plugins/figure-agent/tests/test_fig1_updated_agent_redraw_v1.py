@@ -335,12 +335,14 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert "circle (0.10)" not in panel_c
     assert panel_c.count("circle (0.075)") == 2
     assert panel_c.count("circle (0.070)") == 2
-    assert "{1.50/1.60,4.56/2.84}" in panel_c
-    assert "{2.72/3.64,5.45/1.59}" in panel_c
+    assert "{1.48/1.57,4.68/2.74}" in panel_c
+    assert "{2.74/3.61,5.45/1.58}" in panel_c
     # Population correspondence begins at the perimeter of a representative
     # localized site rather than cutting through or floating beside the dot.
-    assert "(4.635,2.84)--(7.40,2.88)" in panel_c
-    assert "(5.525,1.59)--(7.40,1.68)" in panel_c
+    assert "(4.755,2.74)--(7.40,2.88)" in panel_c
+    assert "(5.525,1.58)--(7.40,1.68)" in panel_c
+    assert panel_c.count("cGray!48!black, line width=0.84pt") == 3
+    assert panel_c.count("cGray!64!black, line width=0.90pt") == 3
     # Escape paths leave the upper edge of an occupied trap marker and end at
     # the mobility edge; detached arrows imply an unrelated transport path.
     assert "(9.62,3.11) .. controls" in panel_c

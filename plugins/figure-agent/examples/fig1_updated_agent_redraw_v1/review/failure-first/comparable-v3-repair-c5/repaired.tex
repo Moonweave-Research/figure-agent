@@ -142,44 +142,50 @@
     .. controls (6.27,1.86) and (6.23,3.52) .. (6.18,4.29)
     .. controls (4.65,4.37) and (2.29,4.24) .. (0.84,4.34)
     .. controls (0.74,3.48) and (0.78,1.90) .. (0.82,1.23) -- cycle;
-  % Irregular polysulfide-rich strands: unequal length, curvature, direction,
-  % and spacing avoid the ordered-lamella or transport-level reading.
-  \draw[cBrown!72!black, line width=0.90pt]
-    (1.05,3.70) .. controls (1.40,4.00) and (1.78,3.45) .. (2.18,3.66)
-    .. controls (2.55,3.85) and (2.95,3.42) .. (3.32,3.60)
-    .. controls (3.72,3.82) and (4.10,3.70) .. (4.46,3.52)
-    .. controls (4.88,3.30) and (5.40,3.72) .. (5.92,3.45);
-  \draw[cBrown!72!black, line width=0.90pt]
-    (1.12,2.70) .. controls (1.42,2.43) and (1.75,2.92) .. (2.18,2.78)
-    .. controls (2.56,2.66) and (2.86,2.28) .. (3.28,2.40)
-    .. controls (3.62,2.50) and (3.98,3.05) .. (4.42,2.88)
-    .. controls (4.80,2.72) and (5.24,2.46) .. (5.96,2.65);
-  \draw[cBrown!72!black, line width=0.90pt]
-    (1.10,1.62) .. controls (1.42,1.48) and (1.78,1.70) .. (2.16,1.60)
-    .. controls (2.58,1.50) and (2.96,1.76) .. (3.38,1.68)
-    .. controls (3.82,1.57) and (4.15,1.38) .. (4.58,1.49)
-    .. controls (4.94,1.62) and (5.34,1.46) .. (5.92,1.78);
-  \draw[cBrown!58!black, line width=0.84pt]
-    (1.55,3.18) .. controls (2.00,2.92) and (2.34,2.42) .. (2.84,2.18)
-    .. controls (3.30,1.96) and (3.78,2.05) .. (4.22,1.82);
-  \foreach \xx/\yy in {1.45/3.88,3.32/3.60,4.46/3.52,5.38/3.59,
-                         1.65/2.54,2.55/2.61,3.68/2.55,5.45/2.49,
-                         2.15/1.62,3.25/1.71,4.55/1.47,
-                         2.10/2.70,3.18/2.02,3.92/1.98} {
+  % Crosslinked, disordered polymer network: primary strands span the field,
+  % while oblique connectors break the parallel-wave/lamellar reading.
+  \draw[cGray!64!black, line width=0.90pt]
+    (1.05,3.66) .. controls (1.45,3.98) and (1.85,3.42) .. (2.25,3.62)
+    .. controls (2.65,3.82) and (3.05,3.42) .. (3.46,3.58)
+    .. controls (4.00,3.82) and (4.35,3.35) .. (4.75,3.55)
+    .. controls (5.20,3.78) and (5.55,3.40) .. (5.95,3.56);
+  \draw[cGray!64!black, line width=0.90pt]
+    (1.10,2.86) .. controls (1.55,2.50) and (1.85,3.00) .. (2.28,2.74)
+    .. controls (2.75,2.45) and (3.10,2.25) .. (3.55,2.48)
+    .. controls (3.95,2.72) and (4.30,2.95) .. (4.68,2.74)
+    .. controls (5.10,2.52) and (5.50,2.75) .. (5.96,2.58);
+  \draw[cGray!64!black, line width=0.90pt]
+    (1.08,1.62) .. controls (1.50,1.48) and (1.86,1.73) .. (2.28,1.60)
+    .. controls (2.70,1.45) and (3.10,1.75) .. (3.52,1.62)
+    .. controls (3.90,1.48) and (4.30,1.38) .. (4.70,1.52)
+    .. controls (5.10,1.70) and (5.50,1.48) .. (5.90,1.72);
+  \draw[cGray!48!black, line width=0.84pt]
+    (1.42,3.25) .. controls (1.85,2.95) and (2.15,2.45) .. (2.62,2.20)
+    .. controls (2.95,2.00) and (3.24,1.78) .. (3.52,1.62);
+  \draw[cGray!48!black, line width=0.84pt]
+    (1.85,1.60) .. controls (2.05,2.05) and (2.15,2.50) .. (2.28,2.74)
+    .. controls (2.40,3.05) and (2.55,3.35) .. (2.74,3.61);
+  \draw[cGray!48!black, line width=0.84pt]
+    (3.95,3.55) .. controls (4.05,3.25) and (4.35,2.95) .. (4.68,2.74)
+    .. controls (4.42,2.35) and (4.45,1.85) .. (4.70,1.52);
+  \foreach \xx/\yy in {1.45/3.80,2.25/3.62,3.46/3.58,4.75/3.55,5.48/3.54,
+                         1.48/2.67,2.28/2.74,3.55/2.48,4.68/2.74,5.45/2.62,
+                         1.48/1.57,2.28/1.60,3.52/1.62,4.70/1.52,5.45/1.58,
+                         2.62/2.20,3.45/2.08,2.47/2.76,4.24/2.55} {
     \fill[cAmber!78!black] (\xx,\yy) circle (0.040);
   }
   % Trap markers sit on the polymer traces; they are localized states in the
   % network rather than free particles floating in the material field.
-  \foreach \x/\y in {1.50/1.60,4.56/2.84} {
+  \foreach \x/\y in {1.48/1.57,4.68/2.74} {
     \fill[cBlue!78] (\x,\y) circle (0.075);
   }
-  \foreach \x/\y in {2.72/3.64,5.45/1.59} {
+  \foreach \x/\y in {2.74/3.61,5.45/1.58} {
     \fill[cRed!78] (\x,\y) circle (0.075);
   }
   \node[small label, text=cGray!88!black, anchor=west] at (1.02,0.78) {shallow sites};
-  \draw[leader, cBlue!78!black] (2.02,0.86)--(1.52,1.52);
+  \draw[leader, cBlue!78!black] (2.02,0.86)--(1.50,1.49);
   \node[small label, text=cGray!88!black, anchor=east] at (6.02,0.78) {deep sites};
-  \draw[leader, cRed!82!black] (5.12,0.86)--(5.43,1.51);
+  \draw[leader, cRed!82!black] (5.12,0.86)--(5.43,1.50);
   \node[small label, text=cGray!82!black, anchor=north east] at (6.03,4.12) {poly(S-\emph{r}-DIB) film};
 
   % Energy-space view: continuous shallow/deep trap DOS below the mobility edge.
@@ -187,9 +193,9 @@
   % Cross-representation correspondence: these are the same trap populations,
   % not transport trajectories or separate phases.
   \draw[cBlue!32, dash pattern=on 2pt off 2pt, line width=0.84pt]
-    (4.635,2.84)--(7.40,2.88);
+    (4.755,2.74)--(7.40,2.88);
   \draw[cRed!32, dash pattern=on 2pt off 2pt, line width=0.84pt]
-    (5.525,1.59)--(7.40,1.68);
+    (5.525,1.58)--(7.40,1.68);
   \node[body label] at (10.78,5.02) {energy diagram};
   \draw[axis line] (7.48,0.72)--(7.48,4.52);
   \draw[cBlue!78!black, line width=0.84pt] (7.42,2.88)--(7.54,2.88);
