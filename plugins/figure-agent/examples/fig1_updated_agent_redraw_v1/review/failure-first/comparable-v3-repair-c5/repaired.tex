@@ -460,13 +460,15 @@
   % Gridless two-terminal corona charging used in the experiment. The compact
   % HV source closes between the needle and counter electrode; neither terminal
   % is presented as protective/earth ground, and polarity is left unspecified.
+  % Keep the electrical path neutral gray; red surface markers remain the
+  % declared charge cue, not an invented terminal polarity.
   \fill[cGray!13] (0.40,3.57) rectangle (0.78,3.88);
   \draw[cGray!82!black, line width=0.84pt] (0.40,3.57) rectangle (0.78,3.88);
   \node[font=\sffamily\fontsize{4.5}{5.3}\selectfont, text=cGray!88!black]
     at (0.59,3.725) {HV};
-  \fill[cRed!72!black] (0.78,3.80) circle (0.027);
+  \fill[cGray!82!black] (0.78,3.80) circle (0.027);
   \fill[cGray!82!black] (0.40,3.64) circle (0.027);
-  \draw[cRed!72!black, line width=0.84pt]
+  \draw[cGray!82!black, line width=0.84pt]
     (0.78,3.80)--(1.10,3.80)--(1.10,3.93)--(1.27,3.93);
   \draw[cGray!82!black, line width=0.84pt]
     (0.40,3.64)--(0.28,3.64)--(0.28,2.77)--(0.82,2.77);
@@ -475,7 +477,7 @@
   \draw[cGray!82!black, line width=0.84pt] (1.27,3.93)--(1.49,3.93);
   \draw[cGray!82!black, line width=0.84pt] (1.27,3.93)--(1.27,3.40);
   \fill[cGray!82!black] (1.23,3.40)--(1.31,3.40)--(1.27,3.19)--cycle;
-  \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cRed!68!black,
+  \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cGray!68!black,
         dash pattern=on 1.2pt off 1.1pt, line width=0.84pt]
     (1.27,3.15)--(1.27,3.08);
   % SK-family elongated bar head: only the confirmed family-level silhouette
@@ -619,20 +621,22 @@
   \foreach \hy in {0.90,1.38,1.86,2.34,2.82} {
     \draw[cGray!42!black, line width=0.84pt] (3.76,\hy)--(3.54,{\hy-0.06});
   }
-  \fill[cBlue!5, rounded corners=0.7mm] (3.00,3.34) rectangle (3.50,3.72);
-  \draw[cBlue!66!black, line width=0.84pt, rounded corners=0.7mm]
+  % Keep the bias circuit neutral gray: cBlue/cRed remain reserved for the
+  % shallow/deep scientific categories and the claimed Coulomb result.
+  \fill[cGray!5, rounded corners=0.7mm] (3.00,3.34) rectangle (3.50,3.72);
+  \draw[cGray!66!black, line width=0.84pt, rounded corners=0.7mm]
     (3.00,3.34) rectangle (3.50,3.72);
   \node[font=\sffamily\bfseries\fontsize{4.5}{5.3}\selectfont,
         text=cGray!92!black] at (3.25,3.53) {HV};
   \node[small label, anchor=south, text=cGray!88!black]
     at (3.25,3.76) {$V_{\mathrm{app}}$};
-  \draw[cBlue!66!black, line width=0.84pt, rounded corners=0.35mm]
+  \draw[cGray!66!black, line width=0.84pt, rounded corners=0.35mm]
     (3.50,3.58)--(3.65,3.58)--(3.65,3.02);
-  \draw[cBlue!58!black, line width=0.84pt]
+  \draw[cGray!58!black, line width=0.84pt]
     (3.00,3.45)--(2.76,3.45)--(2.76,3.30);
-  \draw[cBlue!58!black, line width=0.84pt] (2.64,3.30)--(2.88,3.30);
-  \draw[cBlue!58!black, line width=0.84pt] (2.68,3.24)--(2.84,3.24);
-  \draw[cBlue!58!black, line width=0.84pt] (2.72,3.18)--(2.80,3.18);
+  \draw[cGray!58!black, line width=0.84pt] (2.64,3.30)--(2.88,3.30);
+  \draw[cGray!58!black, line width=0.84pt] (2.68,3.24)--(2.84,3.24);
+  \draw[cGray!58!black, line width=0.84pt] (2.72,3.18)--(2.80,3.18);
 
   % Mechanism-first annotations. The named Maxwell baseline and Coulomb result
   % already carry the force contrast; redundant pale field curves read as

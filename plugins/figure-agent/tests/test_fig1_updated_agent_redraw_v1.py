@@ -228,6 +228,9 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     assert r"{$V_{\mathrm{app}}$}" in panel_f
     assert "Trapped-charge family follows the active face of the polymer" in panel_f
     assert panel_f.count("fill[cRed!80]") == 4
+    assert "bias circuit neutral gray" in panel_f
+    assert "cBlue!66!black" not in panel_f
+    assert "cBlue!58!black" not in panel_f
     assert "cGray!54!black, line width=0.84pt" in panel_f
     assert "cAmber!7, rounded corners=0.45mm" in panel_f
     assert r"(1.325,1.43)--(0.43,1.43)" in panel_f
@@ -280,6 +283,9 @@ def test_repaired_panel_e_does_not_invent_corona_polarity() -> None:
     assert r"{$+$}" not in panel_e
     assert r"{$-$}" not in panel_e
     assert "polarity-neutral surface-charge markers" in panel_e
+    assert "electrical path neutral gray" in panel_e
+    assert "cRed!72!black" not in panel_e
+    assert "cRed!68!black" not in panel_e
 
 
 def test_repaired_panel_e_uses_colour_for_measurement_marks_not_text() -> None:

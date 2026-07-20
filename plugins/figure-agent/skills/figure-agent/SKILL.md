@@ -460,6 +460,12 @@ declared polarity. If polarity is absent, field traces may be shown only as
 thin, labeled, direction-neutral guides; never invent arrow direction or a
 ground connection to the floating specimen.
 
+Keep apparatus wiring and bias-source housings in a neutral structural tone when
+blue/red already carry shallow/deep or force-result meaning elsewhere in the
+figure. A conventional colored wire is still a palette-role collision if it can
+be read as a scientific category; use color only when the electrical polarity or
+terminal identity is explicitly declared and visually owned.
+
 Apply a visual-budget check to mechanism overlays: field guides are supporting
 context, not a second result curve. Keep them to the minimum number of thin
 traces needed to establish the field, keep their label outside the force-arrow
