@@ -140,11 +140,23 @@ def test_repaired_panel_a_uses_connected_bis_thiocumyl_chemistry() -> None:
     panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
 
     assert panel_a.count("bis-thiocumyl junction: Ar-C(CH3)2-S_x") == 2
-    assert "representative bis-thiocumyl motif" in panel_a
+    assert "predominant bis-thiocumyl motif" in panel_a
     assert "linear repeat unit" not in panel_a
     assert "circle, draw=cAmber" not in panel_a
     assert "chemically continuous bond to left polysulfide" in panel_a
     assert "chemically continuous bond to right polysulfide" in panel_a
+
+
+def test_repaired_panel_a_uses_skeletal_junctions_and_declared_continuations() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+
+    assert "tetrahedral projection; avoid orthogonal cross" in panel_a
+    assert panel_a.count("polymer continuation bond") == 2
+    assert "predominant bis-thiocumyl motif" in panel_a
+    assert "$x,y$: composition-dependent sulfur rank" in panel_a
+    assert "bis-thiocumyl connectivity" not in panel_a
+    assert "variable sulfur rank and minor microstructures" not in panel_a
 
 
 def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:

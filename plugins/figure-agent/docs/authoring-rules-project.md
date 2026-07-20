@@ -11,6 +11,14 @@ rules:
       locator: "Bao et al., JACS 2023, DOI 10.1021/jacs.3c03604; Fig1 Panel A chemical-connectivity audit (2026-07-20)"
       quote: "The previously proposed repeating units were incorrect; bis-thiocumyl units predominate."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.chemical-skeletal-junction-legibility
+    category: chemistry_semantics
+    rule: "When a tetrahedral carbon junction is drawn in skeletal notation, distribute substituent bonds over distinct oblique projected angles; do not leave an unlabeled orthogonal cross that can read as a circuit junction. Mark a polymer continuation bond with a conventional wavy terminus or ellipsis instead of a detached straight segment. Keep one structural identity label and at most one short scientific qualifier near the motif."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 Panel A post-connectivity visual audit (2026-07-20)"
+      quote: "Chemically correct junctions still read as circuit crosses and bare floating chain ends."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.cantilever-vertical-clip-top
     category: instrument_standard
     rule: "Draw the polymer cantilever vertical: clip/clamp on top, polymer hangs down, deflection sideways toward a side electrode. Horizontal cantilever orientation is wrong for this lab and its experiments."

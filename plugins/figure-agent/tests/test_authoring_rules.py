@@ -322,6 +322,13 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "representative predominant motif" in rule["rule"]
     assert "single exact constitutional repeat" in rule["rule"]
 
+    legibility = rules[
+        "polymer_paper_project.chemical-skeletal-junction-legibility"
+    ]
+    assert legibility["category"] == "chemistry_semantics"
+    assert "orthogonal cross" in legibility["rule"]
+    assert "continuation bond" in legibility["rule"]
+
 
 def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
     path = tmp_path / "badid.md"

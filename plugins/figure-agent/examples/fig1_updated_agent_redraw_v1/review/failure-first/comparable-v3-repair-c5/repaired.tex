@@ -72,24 +72,28 @@
 
   % --- thermally initiated inverse vulcanization ---
   \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=0.96pt]
-    (3.31,3.72)--(4.20,3.72);
+    (3.31,3.68) .. controls (3.74,3.66) and (4.08,3.30) .. (4.16,2.72);
   \node[small label, text=cBrown!92!black] at (3.76,4.00) {inverse vulcanization};
-  \node[small label] at (3.76,3.48) {$\Delta$};
+  \node[small label] at (3.56,3.39) {$\Delta$};
 
   % --- representative predominant motif; not a unique constitutional repeat ---
   % Current structural assignment: both meta substituents are thiocumyl units.
-  \node[body label, text=cGray!88!black] at (3.58,2.66) {bis-thiocumyl connectivity};
 
   % variable-rank left polysulfide and chemically continuous bond to left polysulfide
   \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (lsx) at (1.28,1.90) {$\mathrm{S}_{x}$};
-  \draw[cAmber!88!black, line width=1.0pt] (0.72,1.90)--(lsx.west) (lsx.east)--(2.26,1.90);
+  % polymer continuation bond
+  \draw[cAmber!88!black, line width=1.0pt, decorate,
+        decoration={snake, amplitude=0.22mm, segment length=1.8mm}]
+    (0.58,1.90)--(lsx.west);
+  \draw[cAmber!88!black, line width=1.0pt] (lsx.east)--(2.26,1.90);
 
   % bis-thiocumyl junction: Ar-C(CH3)2-S_x
   \coordinate (bcl) at (2.48,1.90);
   \fill[cGray!92!black] (bcl) circle (0.022cm);
+  % tetrahedral projection; avoid orthogonal cross
   \draw[cGray, line width=0.96pt] (2.26,1.90)--(bcl)
-    (bcl)--($(bcl)+(0,0.38)$)
-    (bcl)--($(bcl)+(0,-0.38)$)
+    (bcl)--($(bcl)+(115:0.38)$)
+    (bcl)--($(bcl)+(-65:0.38)$)
     (bcl)--(3.20,1.90);
 
   % meta-DIB aryl core, conventional Kekule representation
@@ -106,19 +110,22 @@
   \coordinate (bcr) at ($(r300)+(0.36,-0.12)$);
   \fill[cGray!92!black] (bcr) circle (0.022cm);
   \draw[cGray, line width=0.96pt] (r300)--(bcr)
-    (bcr)--($(bcr)+(0,0.38)$)
-    (bcr)--($(bcr)+(0,-0.38)$)
+    (bcr)--($(bcr)+(70:0.38)$)
+    (bcr)--($(bcr)+(-110:0.38)$)
     (bcr)--($(bcr)+(0.44,0)$);
 
   % variable-rank right polysulfide and chemically continuous bond to right polysulfide
   \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (rsy) at ($(bcr)+(0.70,0)$) {$\mathrm{S}_{y}$};
-  \draw[cAmber!88!black, line width=1.0pt] ($(bcr)+(0.44,0)$)--(rsy.west)
+  \draw[cAmber!88!black, line width=1.0pt] ($(bcr)+(0.44,0)$)--(rsy.west);
+  % polymer continuation bond
+  \draw[cAmber!88!black, line width=1.0pt, decorate,
+        decoration={snake, amplitude=0.22mm, segment length=1.8mm}]
     (rsy.east)--(6.15,1.33);
 
   \node[body label, align=center] at (3.45,0.72)
-    {representative bis-thiocumyl motif};
+    {predominant bis-thiocumyl motif};
   \node[small label, align=center, text=cGray!82!black] at (3.45,0.37)
-    {variable sulfur rank and minor microstructures};
+    {$x,y$: composition-dependent sulfur rank};
 \end{scope}
 
 % Panel B
