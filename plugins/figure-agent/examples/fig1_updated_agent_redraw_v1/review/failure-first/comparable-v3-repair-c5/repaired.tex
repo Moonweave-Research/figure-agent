@@ -309,8 +309,7 @@
   \draw[cGray!82!black, line width=0.84pt] (1.05,2.78) rectangle (1.85,2.90);
   \fill[cAmber!10] (1.12,2.90) rectangle (1.78,3.03);
   \draw[cAmber!82!black, line width=0.84pt] (1.12,2.90) rectangle (1.78,3.03);
-  \node[small label, anchor=east, text=cGray!88!black] at (1.02,2.96) {polymer film};
-  \draw[leader, cBrown!82!black] (1.04,2.96)--(1.10,2.97);
+  \node[small label, anchor=west, text=cGray!88!black] at (1.72,3.17) {film};
   % Measurement state after the same specimen is moved by hand.
   \fill[cGray!22] (2.23,2.78) rectangle (3.03,2.90);
   \draw[cGray!82!black, line width=0.84pt] (2.23,2.78) rectangle (3.03,2.90);
@@ -329,14 +328,27 @@
           text=white, inner sep=0pt] at (\x,3.06) {$+$};
   }
 
-  % Corona charging station.
+  % Gridless two-terminal corona charging used in the experiment. The compact
+  % HV source closes between the needle and counter electrode; neither terminal
+  % is presented as protective/earth ground, and polarity is left unspecified.
+  \fill[cGray!13] (0.70,3.43) rectangle (1.04,3.69);
+  \draw[cGray!82!black, line width=0.84pt] (0.70,3.43) rectangle (1.04,3.69);
+  \node[font=\sffamily\fontsize{4.5}{5.3}\selectfont, text=cGray!88!black]
+    at (0.87,3.56) {HV};
+  \fill[cRed!72!black] (1.04,3.61) circle (0.027);
+  \fill[cGray!82!black] (0.70,3.49) circle (0.027);
+  \draw[cRed!72!black, line width=0.84pt]
+    (1.04,3.61)--(1.22,3.61)--(1.22,3.70)--(1.34,3.70);
+  \draw[cGray!82!black, line width=0.84pt]
+    (0.70,3.49)--(0.58,3.49)--(0.58,2.84)--(1.05,2.84);
+
+  % Needle electrode and corona discharge; no grid electrode is present.
   \draw[cGray!82!black, line width=0.84pt] (1.34,3.70)--(1.56,3.70);
   \draw[cGray!82!black, line width=0.84pt] (1.45,3.70)--(1.45,3.43);
   \fill[cGray!82!black] (1.41,3.43)--(1.49,3.43)--(1.45,3.34)--cycle;
   \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cRed!68!black,
         dash pattern=on 1.2pt off 1.1pt, line width=0.84pt]
     (1.45,3.30)--(1.45,3.15);
-  \node[small label, anchor=east, text=cGray!82!black] at (1.31,3.68) {$\mathrm{HV}^{+}$};
   % Family-level sensor-head abstraction: slim body, flat sensing face toward
   % the specimen, and a wired readout. The exact model is not declared.
   \fill[cGray!18] (2.52,3.28) rectangle (2.66,3.72);
