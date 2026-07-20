@@ -433,6 +433,14 @@ declared polarity. If polarity is absent, field traces may be shown only as
 thin, labeled, direction-neutral guides; never invent arrow direction or a
 ground connection to the floating specimen.
 
+Apply a visual-budget check to mechanism overlays: field guides are supporting
+context, not a second result curve. Keep them to the minimum number of thin
+traces needed to establish the field, keep their label outside the force-arrow
+lane, and reserve the strongest stroke and clearest label for the claimed
+force/result. Likewise, a disordered host should use a few legible paths with
+controlled contrast; adding more faint scribbles is not a substitute for
+material identity.
+
 Within and across panels, require the same physical process to reuse one arrow
 and line-style grammar unless a legend or brief-declared contrast explains the
 difference. Treat an unexplained solid/dashed or arrowhead change as a possible

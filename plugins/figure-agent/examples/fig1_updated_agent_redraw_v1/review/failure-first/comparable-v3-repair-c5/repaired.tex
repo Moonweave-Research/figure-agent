@@ -223,54 +223,33 @@
   % Neutral top-view film field. Keep one flat projection: the former skewed
   % quadrilateral read as undeclared perspective even though no thickness was
   % encoded. The boundary is scientific (the specimen extent), not a UI card.
-  \fill[cGray!4] (0.90,1.23) rectangle (6.12,4.30);
+  \fill[cAmber!3] (0.90,1.23) rectangle (6.12,4.30);
   \draw[cGray!72!black, line width=0.90pt]
     (0.90,1.23) rectangle (6.12,4.30);
-  % Non-periodic chain traces identify one disordered host. Vary direction,
-  % curvature, crossing angle and span so the field reads as an amorphous
-  % top-view film rather than a set of aligned lamellae or decoration lines.
-  % Every localized core lies on a local chain segment rather than floating as
-  % a particle in the matrix.
-  \draw[cGray!23, line width=0.84pt] plot[smooth] coordinates
-    {(1.00,3.62) (1.34,3.42) (1.78,3.50) (2.20,3.66)
-     (2.72,3.62) (3.18,3.36) (3.76,3.46) (4.28,3.20)
-     (4.86,3.32) (5.96,3.06)};
-  \draw[cGray!20, line width=0.84pt] plot[smooth] coordinates
-    {(1.02,2.22) (1.42,2.58) (1.94,2.44) (2.36,2.78)
-     (2.94,2.48) (3.48,2.66) (4.05,2.45) (4.62,2.84)
-     (5.16,2.63) (5.98,2.74)};
-  \draw[cGray!19, line width=0.84pt] plot[smooth] coordinates
-    {(1.02,1.72) (1.55,1.62) (2.02,1.88) (2.48,1.70)
-     (3.02,1.96) (3.58,1.74) (4.08,2.02) (4.62,1.78) (5.42,1.62) (5.96,1.86)};
-  \draw[cGray!17, line width=0.84pt] plot[smooth] coordinates
-    {(1.22,1.36) (1.44,1.94) (1.26,2.55) (1.66,3.06) (1.48,4.10)};
-  \draw[cGray!17, line width=0.84pt] plot[smooth] coordinates
+  % A small number of deliberate polymer traces reads as a film matrix;
+  % excessive low-contrast scribbles make the material look like noise.
+  % Each trap remains attached to one local segment.
+  \draw[cGray!28, line width=0.78pt] plot[smooth] coordinates
+    {(1.00,3.62) (1.42,3.44) (1.86,3.54) (2.32,3.70)
+     (2.82,3.62) (3.34,3.40) (3.86,3.48) (4.38,3.28) (5.02,3.36) (5.96,3.12)};
+  \draw[cGray!25, line width=0.78pt] plot[smooth] coordinates
+    {(1.02,2.30) (1.48,2.56) (1.96,2.44) (2.46,2.70)
+     (3.02,2.48) (3.56,2.66) (4.08,2.48) (4.62,2.82) (5.18,2.64) (5.98,2.74)};
+  \draw[cGray!27, line width=0.78pt] plot[smooth] coordinates
+    {(1.02,1.70) (1.54,1.60) (2.06,1.84) (2.58,1.70)
+     (3.12,1.92) (3.68,1.76) (4.22,1.98) (4.70,1.78) (5.42,1.62) (5.96,1.82)};
+  \draw[cGray!20, line width=0.68pt] plot[smooth] coordinates
+    {(1.22,1.36) (1.46,1.92) (1.28,2.54) (1.66,3.06) (1.48,4.10)};
+  \draw[cGray!20, line width=0.68pt] plot[smooth] coordinates
     {(3.62,1.34) (3.38,1.88) (3.72,2.30) (3.46,2.94) (3.86,4.10)};
-  \draw[cGray!16, line width=0.84pt] plot[smooth] coordinates
-    {(1.10,3.98) (1.70,3.76) (2.16,3.92) (2.62,3.76)
-     (3.18,4.02) (3.86,3.86) (4.28,4.18)};
-  \draw[cGray!16, line width=0.84pt] plot[smooth] coordinates
-    {(2.12,1.32) (2.62,1.54) (3.08,1.34) (3.54,1.56)
-     (4.08,1.40) (4.70,1.54) (5.12,1.38)};
-  \draw[cGray!15, line width=0.84pt] plot[smooth] coordinates
+  \draw[cGray!18, line width=0.68pt] plot[smooth] coordinates
     {(5.38,4.08) (5.18,3.64) (5.56,3.22) (5.28,2.68) (5.62,2.16)};
-  % Additional low-contrast host traces give the film a continuous material
-  % presence at print size without making the disordered matrix periodic.
-  \draw[cGray!18, line width=0.84pt] plot[smooth] coordinates
-    {(0.98,3.08) (1.34,2.96) (1.82,3.10) (2.28,2.92)
-     (2.78,3.06) (3.26,2.90) (3.82,3.06) (4.34,2.88) (5.06,3.00) (6.02,2.84)};
-  \draw[cGray!17, line width=0.84pt] plot[smooth] coordinates
-    {(1.86,4.14) (2.18,3.86) (2.60,4.02) (3.02,3.82)
-     (3.46,4.02) (3.90,3.78) (4.44,3.94) (4.94,3.76)};
-  \draw[cGray!16, line width=0.84pt] plot[smooth] coordinates
-    {(1.12,1.42) (1.58,1.28) (2.06,1.46) (2.56,1.30)
-     (3.10,1.48) (3.62,1.30) (4.18,1.50) (4.72,1.34) (5.28,1.48) (5.96,1.34)};
-  % Slightly darker local segments keep colored trap sites visibly embedded in
-  % the host without introducing a second particle population.
-  \draw[cGray!32, line width=0.90pt] (1.36,1.56)--(1.73,1.70);
-  \draw[cGray!32, line width=0.90pt] (4.44,2.74)--(4.82,2.92);
-  \draw[cGray!32, line width=0.90pt] (2.54,3.58)--(2.92,3.66);
-  \draw[cGray!32, line width=0.90pt] (5.24,1.58)--(5.60,1.67);
+  % Short amber segments bind the colored states to the sulfur-rich host
+  % without turning every chain trace into a colored decorative stroke.
+  \draw[cAmber!36!black, line width=0.70pt] (1.36,1.56)--(1.73,1.70);
+  \draw[cAmber!36!black, line width=0.70pt] (4.44,2.74)--(4.82,2.92);
+  \draw[cAmber!36!black, line width=0.70pt] (2.54,3.58)--(2.92,3.66);
+  \draw[cAmber!36!black, line width=0.70pt] (5.24,1.58)--(5.60,1.67);
   % Single restrained localization contours replace the repeated nested glow.
   % Each compact contour is co-equal and visibly embedded in the same film.
   % The contours are deliberately asymmetric lobes, not four repeated circular
@@ -669,17 +648,16 @@
   % source does not declare which electrode is positive, so no field-arrow
   % direction is invented. The named Maxwell baseline and Coulomb result keep
   % the force contrast explicit.
-  \draw[cBlue!30, dash pattern=on 1.2pt off 1.4pt, line width=0.42pt]
-    (1.76,2.70) .. controls (2.28,2.78) and (2.88,2.72) .. (3.52,2.56);
-  \draw[cBlue!26, dash pattern=on 1.2pt off 1.4pt, line width=0.42pt]
-    (1.63,2.36) .. controls (2.26,2.44) and (2.92,2.36) .. (3.52,2.20);
-  \draw[cBlue!22, dash pattern=on 1.2pt off 1.4pt, line width=0.42pt]
-    (1.42,1.98) .. controls (2.18,2.06) and (2.86,2.00) .. (3.52,1.86);
-  \node[small label, text=cBlue!72!black, anchor=south] at (2.56,2.70) {$\mathbf{E}$};
-  \draw[-{Stealth[length=3.0pt,width=2.2pt]}, cGray!58!black,
-        dash pattern=on 1.4pt off 1.6pt, line width=0.46pt]
-    (1.82,1.92)--(3.18,1.92);
-  \node[small label, text=cGray!76!black, anchor=south] at (2.52,1.97)
+  \draw[cBlue!24, line width=0.36pt]
+    (1.82,2.62) .. controls (2.34,2.68) and (2.92,2.62) .. (3.52,2.50);
+  \draw[cBlue!18, line width=0.36pt]
+    (1.74,2.30) .. controls (2.30,2.36) and (2.94,2.30) .. (3.52,2.18);
+  \node[small label, text=cBlue!70!black, anchor=south] at (2.52,2.64) {$\mathbf{E}$};
+  \draw[-{Stealth[length=2.8pt,width=2.0pt]}, cGray!58!black,
+        dash pattern=on 1.3pt off 1.6pt, line width=0.42pt]
+    (1.84,1.82)--(3.18,1.82);
+  \node[font=\sffamily\fontsize{4.8}{5.6}\selectfont,
+        text=cGray!74!black, anchor=south] at (2.52,1.88)
     {Maxwell attraction};
 
   \node[small label, anchor=west, align=left] at (0.14,3.64)
