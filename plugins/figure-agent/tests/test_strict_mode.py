@@ -506,6 +506,20 @@ def test_ring_stats_excludes_neighboring_word_bbox_pixels() -> None:
     assert masked == {"dark_ratio": 0.0, "luma_std": 0.0, "edge_density": 0.0}
 
 
+def test_visual_clash_ignores_one_pixel_glyph_bbox_overhang() -> None:
+    """PDF word boxes can clip an antialiased glyph edge by one render pixel.
+
+    Ink touching the reported box is therefore text ownership uncertainty, not
+    evidence of an external path. Geometry beyond that uncertainty halo remains
+    visible to the detector (covered by the following preservation test).
+    """
+    image = Image.new("RGB", (100, 100), "white")
+    ImageDraw.Draw(image).rectangle((9, 10, 9, 19), fill="black")
+    words = [{"text": "label", "xmin": 10, "ymin": 10, "xmax": 20, "ymax": 20}]
+
+    assert check_visual_clash.detect_visual_clashes(image, words, (100, 100)) == []
+
+
 def test_visual_clash_uses_masked_stats_only_for_luma_fallback(monkeypatch) -> None:
     image = Image.new("RGB", (100, 100), "white")
     words = [
@@ -699,6 +713,49 @@ def test_promotion_tier_blocks_confirmed_text_on_path() -> None:
     )
 
     assert check_visual_clash.classify_promotion_tier(image, issue) == ("blocking", None)
+
+
+def test_promotion_tier_demotes_one_sided_path_proximity() -> None:
+    """Ink confined to one side of a word is proximity, not a through-path."""
+    image = Image.new("RGB", (200, 200), "white")
+    bbox = (80, 80, 120, 120)
+    ImageDraw.Draw(image).line((123, 75, 123, 125), fill="black", width=2)
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path", "V", "dark=0.050, edge=0.010", bbox
+    )
+
+    assert check_visual_clash.classify_promotion_tier(image, issue) == (
+        "report_only",
+        "one_sided_proximity",
+    )
+
+
+def test_promotion_tier_keeps_opposing_side_through_path_blocking() -> None:
+    image = Image.new("RGB", (200, 200), "white")
+    bbox = (80, 80, 120, 120)
+    ImageDraw.Draw(image).line((75, 100, 125, 100), fill="black", width=2)
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path", "V", "dark=0.050, edge=0.010", bbox
+    )
+
+    assert check_visual_clash.is_one_sided_proximity(image, issue) is False
+    assert check_visual_clash.classify_promotion_tier(image, issue) == ("blocking", None)
+
+
+def test_promotion_tier_demotes_legible_reversed_display_label() -> None:
+    image = Image.new("RGB", (200, 200), "white")
+    bbox = (80, 80, 120, 120)
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((40, 40, 160, 160), fill=(50, 50, 50))
+    draw.rectangle((96, 84, 103, 116), fill="white")
+    issue = check_visual_clash.VisualIssue(
+        "text_on_path", "V", "dark=0.800, edge=0.014", bbox
+    )
+
+    assert check_visual_clash.classify_promotion_tier(image, issue) == (
+        "report_only",
+        "legible_reversed_label",
+    )
 
 
 def test_own_glyph_enclosure_demotes_disk_wrapped_glyph() -> None:

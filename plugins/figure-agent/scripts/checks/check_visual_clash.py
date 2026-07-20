@@ -260,11 +260,15 @@ def detect_visual_clashes(
             continue
 
         padded = expand_bbox(bbox, padding_px, image_size)
+        # Poppler's word bbox can be one raster pixel tighter than the visible
+        # antialiased glyph. Exclude that ownership-uncertain halo so a glyph's
+        # own overhang is not promoted as an external path collision.
+        text_ink_bbox = expand_bbox(bbox, 1, image_size)
         other_word_bboxes = word_bboxes[:index] + word_bboxes[index + 1 :]
-        stats = _ring_stats(image, bbox, padded)
+        stats = _ring_stats(image, text_ink_bbox, padded)
         non_text_stats = _ring_stats(
             image,
-            bbox,
+            text_ink_bbox,
             padded,
             other_word_bboxes,
         )
@@ -390,10 +394,85 @@ def is_own_glyph_enclosure(image: Image.Image, issue: VisualIssue) -> bool:
     return near_dark >= ENCLOSURE_NEAR_MIN and far_dark < near_dark * ENCLOSURE_FAR_DECAY
 
 
+def _side_dark_ratios(image: Image.Image, issue: VisualIssue) -> dict[str, float]:
+    """Dark-pixel ratios in four narrow strips outside a text bbox."""
+    x1, y1, x2, y2 = issue.bbox
+    width, height = image.size
+    glyph_height = y2 - y1
+    if glyph_height <= 0:
+        return {side: 0.0 for side in ("left", "right", "top", "bottom")}
+    inner = max(1, round(0.025 * glyph_height))
+    outer = max(inner + 1, round(0.12 * glyph_height))
+    boxes = {
+        "left": (max(0, x1 - outer), max(0, y1), max(0, x1 - inner), min(height, y2)),
+        "right": (
+            min(width, x2 + inner),
+            max(0, y1),
+            min(width, x2 + outer),
+            min(height, y2),
+        ),
+        "top": (max(0, x1), max(0, y1 - outer), min(width, x2), max(0, y1 - inner)),
+        "bottom": (
+            max(0, x1),
+            min(height, y2 + inner),
+            min(width, x2),
+            min(height, y2 + outer),
+        ),
+    }
+    ratios: dict[str, float] = {}
+    for side, box in boxes.items():
+        region = np.asarray(image.crop(box).convert("L"), dtype=np.float32)
+        ratios[side] = float(np.mean(region < 180)) if region.size else 0.0
+    return ratios
+
+
+def is_one_sided_proximity(image: Image.Image, issue: VisualIssue) -> bool:
+    """True when nearby ink approaches a word without crossing through it.
+
+    A through-path exits on an opposing pair of sides. Ink on only one side,
+    or two adjacent sides, is evidence of proximity only and stays visible in
+    the report-only ledger rather than failing the strict gate.
+    """
+    if issue.kind != "text_on_path":
+        return False
+    ratios = _side_dark_ratios(image, issue)
+    strongest = max(ratios.values())
+    if strongest < 0.03:
+        return False
+    active_threshold = max(0.03, 0.5 * strongest)
+    active = {side for side, ratio in ratios.items() if ratio >= active_threshold}
+    crosses_horizontally = {"left", "right"}.issubset(active)
+    crosses_vertically = {"top", "bottom"}.issubset(active)
+    return not crosses_horizontally and not crosses_vertically
+
+
+def is_legible_reversed_label(image: Image.Image, issue: VisualIssue) -> bool:
+    """True for bright text that remains visibly contrasted on a dark field."""
+    if issue.kind not in ("text_on_path", "text_on_fill"):
+        return False
+    x1, y1, x2, y2 = issue.bbox
+    if x2 <= x1 or y2 <= y1:
+        return False
+    arr = np.asarray(image.crop(issue.bbox).convert("L"), dtype=np.float32)
+    dark_fraction = float(np.mean(arr < 120))
+    light_fraction = float(np.mean(arr > 200))
+    median = float(np.percentile(arr, 50))
+    bright = float(np.percentile(arr, 95))
+    return (
+        dark_fraction >= 0.65
+        and light_fraction >= 0.05
+        and bright - median >= 100.0
+    )
+
+
 def classify_promotion_tier(image: Image.Image, issue: VisualIssue) -> tuple[str, str | None]:
     """Assign a candidate to the blocking or report-only tier with grounds."""
     if is_own_glyph_enclosure(image, issue):
         return REPORT_ONLY_TIER, "own_glyph_enclosure"
+    if is_one_sided_proximity(image, issue):
+        return REPORT_ONLY_TIER, "one_sided_proximity"
+    if is_legible_reversed_label(image, issue):
+        return REPORT_ONLY_TIER, "legible_reversed_label"
     if issue.kind == "near_miss":
         return REPORT_ONLY_TIER, "near_miss_band"
     return BLOCKING_TIER, None
