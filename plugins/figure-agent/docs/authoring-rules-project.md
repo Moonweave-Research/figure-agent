@@ -11,6 +11,14 @@ rules:
       locator: "examples/fig3_floating_clip_protocol vertical re-draw (2026-06-20)"
       quote: "clip on TOP, polymer hangs down"
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.floating-coulomb-isolation
+    category: physics_semantics
+    rule: "For the floating Coulomb-response apparatus, the grounded voltage-source return and driven lead belong only to the electrode circuit; the polymer sample and cantilever remain electrically floating. Bind the repulsion arrow tail to a trapped-charge marker and ensure its arrowhead points away from the driven electrode."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 Panel F topology audit against semantic_contract.yaml and the maintained floating-clip fixture (2026-07-20)"
+      quote: "grounded voltage-source return; sample and cantilever remain floating"
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.trap-colour-shallow-blue-deep-red
     category: label_binding
     rule: "Shallow traps and shallow states are blue or teal; deep traps and deep states are red. Keep this colour mapping consistent across every figure."

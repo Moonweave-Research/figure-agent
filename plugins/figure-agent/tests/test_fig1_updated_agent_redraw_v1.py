@@ -513,6 +513,18 @@ def test_repaired_panel_f_and_full_figure_have_no_source_hairlines() -> None:
     assert r"\shade" not in panel_f
 
 
+def test_repaired_panel_f_keeps_source_ground_off_the_floating_sample() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_f = source.split("% Panel F", 1)[1]
+
+    assert "grounded voltage-source return closes only the driven-electrode circuit" in panel_f
+    assert "sample and cantilever remain electrically floating" in panel_f
+    assert "force arrow begins on the trapped-charge perimeter" in panel_f
+    assert "(1.325,1.43)--(0.43,1.43)" in panel_f
+    assert "(3.50,3.58)--(3.65,3.58)--(3.65,3.02)" in panel_f
+    assert "(3.00,3.45)--(2.76,3.45)--(2.76,3.30)" in panel_f
+
+
 def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
     registry = _yaml("../../_known_false_positives.yaml")
     fig1_patterns = [

@@ -85,6 +85,21 @@ def test_current_ispd_rules_preserve_manual_keyence_measurement() -> None:
     assert "polymer_paper_project.ispd-grounded-backing-plate" in project_superseded_ids
 
 
+def test_project_rule_preserves_floating_coulomb_topology() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-project.md"
+    )
+
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "polymer_paper_project.floating-coulomb-isolation"
+    )
+    assert "grounded voltage-source return" in rule["rule"]
+    assert "sample and cantilever remain electrically floating" in rule["rule"]
+    assert "points away from the driven electrode" in rule["rule"]
+
+
 def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"

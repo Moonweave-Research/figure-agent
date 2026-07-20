@@ -531,7 +531,8 @@
     \fill[cRed!80] (\cx,\cy) circle (0.055);
   }
 
-  % Driven metal electrode and compact bias circuit.
+  % Driven metal electrode and compact bias circuit. The grounded voltage-source return closes only the driven-electrode circuit;
+  % the sample and cantilever remain electrically floating.
   \fill[cGray!20]
     (3.54,0.66) rectangle (3.76,3.02);
   \draw[cGray!84!black, line width=1.0pt] (3.54,0.66) rectangle (3.76,3.02);
@@ -565,6 +566,7 @@
   \node[small label, anchor=west, align=left] at (3.86,1.86)
     {driven\\electrode};
 
+  % The force arrow begins on the trapped-charge perimeter and points away from the driven electrode.
   \draw[-{Stealth[length=4.2pt,width=3.1pt]}, cRed!88!black, line width=0.84pt]
     (1.325,1.43)--(0.43,1.43);
   \node[small label,
