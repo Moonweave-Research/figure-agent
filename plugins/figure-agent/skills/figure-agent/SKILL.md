@@ -300,6 +300,13 @@ shortened or interrupted at the glyph, and no stroke visibly runs through the
 letter; preserve the label and record the candidate as an intentional chemical
 overlay rather than deleting the chemistry.
 
+Apply the same pixel-level adjudication to text inside an instrument display,
+axis math, or a curve-attached qualifier. A `text_on_path` or `near_miss`
+candidate is actionable only when a visible stroke crosses the glyph, the label
+loses ownership of its referent, or the full glyph bounds enter a neighboring
+semantic lane; a detector hit caused by the intended display bezel, axis shaft,
+or curve-following placement is an accounted intentional overlay.
+
 For every dimension, caliper, interval, or delta annotation, identify both named
 referents and verify that each endpoint touches or is visibly projected from its
 referent; a floating measurement is a defect. When the brief declares relative
