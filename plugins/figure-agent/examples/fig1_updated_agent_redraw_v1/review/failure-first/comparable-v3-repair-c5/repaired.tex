@@ -656,9 +656,12 @@
   \draw[-{Stealth[length=2.8pt,width=2.0pt]}, cGray!58!black,
         dash pattern=on 1.3pt off 1.6pt, line width=0.42pt]
     (1.84,1.82)--(3.18,1.82);
+  % Keep the baseline label at the arrow's right end, outside the cantilever
+  % and red-result lane; the compact two-line form fits before the electrode.
   \node[font=\sffamily\fontsize{4.8}{5.6}\selectfont,
-        text=cGray!74!black, anchor=south] at (2.52,1.88)
-    {Maxwell attraction};
+        text=cGray!74!black, anchor=north east, align=right,
+        inner sep=0.3pt] at (3.42,1.62)
+    {Maxwell\\[-0.45pt]attraction};
 
   \node[small label, anchor=west, align=left] at (0.14,3.64)
     {mechanical\\clamp};

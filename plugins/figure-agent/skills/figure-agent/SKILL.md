@@ -441,6 +441,12 @@ force/result. Likewise, a disordered host should use a few legible paths with
 controlled contrast; adding more faint scribbles is not a substitute for
 material identity.
 
+Force labels need endpoint anchoring, not just geometric non-overlap: place the
+label beside the arrowhead or along a clearly dedicated annotation lane, never
+centered over the source body, trapped charge, or competing result arrow. If a
+force name is too long for that lane, line-break or shorten it before reducing
+the font; preserve the visual binding to the arrow.
+
 Within and across panels, require the same physical process to reuse one arrow
 and line-style grammar unless a legend or brief-declared contrast explains the
 difference. Treat an unexplained solid/dashed or arrowhead change as a possible
