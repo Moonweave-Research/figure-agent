@@ -454,18 +454,21 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     assert "(4.695,2.84)--(7.40,2.88)" in panel_c
     assert "(5.495,1.62)--(7.40,1.68)" in panel_c
     real_space = panel_c.split("% Energy-space view", 1)[0]
+    host_texture = real_space.split("% Local contrast follows", 1)[0]
     assert "both trap classes are localized sites in one disordered film" in real_space
     assert r"\foreach \xx/\yy" not in real_space
-    assert "Minimal localization contours stay compact and asymmetric around equal" in real_space
-    assert real_space.count("cycle;") >= 4
-    assert real_space.count("cycle;") < 8
+    assert "Local contrast follows the host path itself" in real_space
     assert r"\fill[cBlue!30" not in real_space
     assert r"\fill[cRed!28" not in real_space
+    assert r"\fill[cBlue!13]" not in real_space
+    assert r"\fill[cRed!12]" not in real_space
     assert "Short, non-periodic strands" in real_space
-    assert real_space.count("plot[smooth] coordinates") == 4
+    assert host_texture.count("plot[smooth] coordinates") == 4
+    assert real_space.count("line width=1.20pt") == 4
     assert "(1.03,1.86)" in real_space
     assert "(4.08,2.36)" in real_space
-    assert "category is color, not halo size" in real_space
+    assert "winged-dot icons" in real_space
+    assert "cAmber!36!black" not in real_space
     assert "fill=cBlue!9" not in real_space
     assert "fill=cRed!8" not in real_space
     assert "cGray!46" not in real_space

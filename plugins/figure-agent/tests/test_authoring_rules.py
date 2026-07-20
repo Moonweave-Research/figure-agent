@@ -182,16 +182,16 @@ def test_pair001_rejects_unbound_particle_like_host_texture() -> None:
     assert "omit decorative texture" in rule["rule"]
 
 
-def test_panel_c_amorphous_host_minimal_localization_regression() -> None:
+def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
         encoding="utf-8"
     )
     assert "Panel C-style amorphous-host regression rule" in skill
     assert "three or four short, non-periodic traces" in skill
     assert "varied orientation, length, and amplitude" in skill
-    assert "minimal localization contours" in skill
-    assert "equal shallow/deep core sizes" in skill
-    assert "repeated flattened pastel halos" in skill
+    assert "directly on a continuous host trace" in skill
+    assert "short asymmetric" in skill
+    assert "winged-dot defect" in skill
 
     repaired = (
         PLUGIN_ROOT
@@ -204,13 +204,15 @@ def test_panel_c_amorphous_host_minimal_localization_regression() -> None:
     ).read_text(encoding="utf-8")
     panel_c = repaired.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
     real_space = panel_c.split("% Energy-space view:", 1)[0]
-    host_texture = real_space.split("% Short amber segments", 1)[0]
+    host_texture = real_space.split("% Local contrast follows", 1)[0]
 
     assert host_texture.count("plot[smooth] coordinates") == 4
     assert "Short, non-periodic strands" in real_space
-    assert "Minimal localization contours" in real_space
-    assert "Repeated flattened pastel halos" not in real_space
-    assert "flattened ovals" not in real_space
+    assert "Local contrast follows the host path itself" in real_space
+    assert real_space.count("line width=1.20pt") == 4
+    assert "cAmber!36!black" not in real_space
+    assert r"\fill[cBlue!13]" not in real_space
+    assert r"\fill[cRed!12]" not in real_space
     assert "circle (0.075)" in real_space
 
     core_fills = re.findall(
