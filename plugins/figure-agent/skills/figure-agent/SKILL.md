@@ -419,6 +419,20 @@ field reads as a particle, inclusion, or droplet unless the source declares that
 morphology. Prefer bounded host geometry, local contact segments, or restrained
 contours that show localization without inventing a second phase.
 
+When localized-state contours are repeated, keep category size comparable but
+vary orientation and contour asymmetry enough to avoid a row of identical
+flattened ovals. At print reduction the host must still read as a material
+matrix; if low-contrast traces disappear, add a few non-periodic host paths or
+slightly raise their neutral contrast rather than enlarging the colored traps.
+
+For a floating charged dielectric/cantilever near a driven electrode, distinguish
+the neutral Maxwell-attraction baseline from the charge-mediated Coulomb result
+with a thin, low-contrast baseline arrow versus a stronger, named Coulomb arrow.
+An electric field is not intrinsically "inward": its direction depends on the
+declared polarity. If polarity is absent, field traces may be shown only as
+thin, labeled, direction-neutral guides; never invent arrow direction or a
+ground connection to the floating specimen.
+
 Within and across panels, require the same physical process to reuse one arrow
 and line-style grammar unless a legend or brief-declared contrast explains the
 difference. Treat an unexplained solid/dashed or arrowhead change as a possible

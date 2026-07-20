@@ -216,14 +216,14 @@
 
   % Compress the explanatory body, but not its typography, so the full-width
   % bridge panel has the same visual row weight as the synthesis row above.
-  \begin{scope}[yshift=0.80cm, yscale=0.88]
+  \begin{scope}[yshift=0.80cm, yscale=0.94]
   % Real-space view: both trap classes are localized sites in one disordered film,
   % not separate material phases.
-  \node[body label, anchor=west] at (0.90,5.02) {real space};
+  \node[body label, anchor=west] at (0.90,4.80) {real space};
   % Neutral top-view film field. Keep one flat projection: the former skewed
   % quadrilateral read as undeclared perspective even though no thickness was
   % encoded. The boundary is scientific (the specimen extent), not a UI card.
-  \fill[cGray!3] (0.90,1.23) rectangle (6.12,4.30);
+  \fill[cGray!4] (0.90,1.23) rectangle (6.12,4.30);
   \draw[cGray!72!black, line width=0.90pt]
     (0.90,1.23) rectangle (6.12,4.30);
   % Non-periodic chain traces identify one disordered host. Vary direction,
@@ -254,6 +254,17 @@
      (4.08,1.40) (4.70,1.54) (5.12,1.38)};
   \draw[cGray!15, line width=0.84pt] plot[smooth] coordinates
     {(5.38,4.08) (5.18,3.64) (5.56,3.22) (5.28,2.68) (5.62,2.16)};
+  % Additional low-contrast host traces give the film a continuous material
+  % presence at print size without making the disordered matrix periodic.
+  \draw[cGray!18, line width=0.84pt] plot[smooth] coordinates
+    {(0.98,3.08) (1.34,2.96) (1.82,3.10) (2.28,2.92)
+     (2.78,3.06) (3.26,2.90) (3.82,3.06) (4.34,2.88) (5.06,3.00) (6.02,2.84)};
+  \draw[cGray!17, line width=0.84pt] plot[smooth] coordinates
+    {(1.86,4.14) (2.18,3.86) (2.60,4.02) (3.02,3.82)
+     (3.46,4.02) (3.90,3.78) (4.44,3.94) (4.94,3.76)};
+  \draw[cGray!16, line width=0.84pt] plot[smooth] coordinates
+    {(1.12,1.42) (1.58,1.28) (2.06,1.46) (2.56,1.30)
+     (3.10,1.48) (3.62,1.30) (4.18,1.50) (4.72,1.34) (5.28,1.48) (5.96,1.34)};
   % Slightly darker local segments keep colored trap sites visibly embedded in
   % the host without introducing a second particle population.
   \draw[cGray!32, line width=0.90pt] (1.36,1.56)--(1.73,1.70);
@@ -265,21 +276,21 @@
   % The contours are deliberately asymmetric lobes, not four repeated circular
   % markers: their long axis follows the local host segment and reads as a
   % localized state in the film rather than a particle icon.
-  \filldraw[fill=cBlue!5, draw=cBlue!30, line width=0.84pt]
+  \filldraw[fill=cBlue!7, draw=cBlue!38, line width=0.90pt]
     (1.34,1.61) .. controls (1.42,1.49) and (1.55,1.45) .. (1.68,1.50)
                 .. controls (1.82,1.56) and (1.79,1.72) .. (1.66,1.79)
                 .. controls (1.53,1.85) and (1.40,1.76) .. cycle;
-  \filldraw[fill=cBlue!5, draw=cBlue!30, line width=0.84pt]
+  \filldraw[fill=cBlue!7, draw=cBlue!38, line width=0.90pt]
     (4.43,2.84) .. controls (4.52,2.70) and (4.64,2.66) .. (4.77,2.71)
                 .. controls (4.88,2.76) and (4.87,2.91) .. (4.78,3.00)
                 .. controls (4.67,3.08) and (4.52,3.03) .. (4.44,2.94)
                 .. controls (4.40,2.90) and (4.40,2.87) .. cycle;
-  \filldraw[fill=cRed!4, draw=cRed!28, line width=0.84pt]
+  \filldraw[fill=cRed!6, draw=cRed!36, line width=0.90pt]
     (2.53,3.62) .. controls (2.60,3.48) and (2.72,3.44) .. (2.84,3.48)
                 .. controls (2.95,3.52) and (2.96,3.66) .. (2.89,3.76)
                 .. controls (2.82,3.84) and (2.68,3.84) .. (2.58,3.76)
                 .. controls (2.54,3.72) and (2.52,3.67) .. cycle;
-  \filldraw[fill=cRed!4, draw=cRed!28, line width=0.84pt]
+  \filldraw[fill=cRed!6, draw=cRed!36, line width=0.90pt]
     (5.23,1.62) .. controls (5.30,1.48) and (5.43,1.44) .. (5.55,1.49)
                 .. controls (5.66,1.54) and (5.66,1.68) .. (5.57,1.77)
                 .. controls (5.46,1.84) and (5.32,1.80) .. (5.25,1.71)
@@ -654,7 +665,23 @@
   \draw[cBlue!58!black, line width=0.84pt] (2.68,3.24)--(2.84,3.24);
   \draw[cBlue!58!black, line width=0.84pt] (2.72,3.18)--(2.80,3.18);
 
-  % Mechanism-first annotations; no decorative field or construction guides.
+  % Mechanism-first annotations. Thin field traces are polarity-neutral: the
+  % source does not declare which electrode is positive, so no field-arrow
+  % direction is invented. The named Maxwell baseline and Coulomb result keep
+  % the force contrast explicit.
+  \draw[cBlue!30, dash pattern=on 1.2pt off 1.4pt, line width=0.42pt]
+    (1.76,2.70) .. controls (2.28,2.78) and (2.88,2.72) .. (3.52,2.56);
+  \draw[cBlue!26, dash pattern=on 1.2pt off 1.4pt, line width=0.42pt]
+    (1.63,2.36) .. controls (2.26,2.44) and (2.92,2.36) .. (3.52,2.20);
+  \draw[cBlue!22, dash pattern=on 1.2pt off 1.4pt, line width=0.42pt]
+    (1.42,1.98) .. controls (2.18,2.06) and (2.86,2.00) .. (3.52,1.86);
+  \node[small label, text=cBlue!72!black, anchor=south] at (2.56,2.70) {$\mathbf{E}$};
+  \draw[-{Stealth[length=3.0pt,width=2.2pt]}, cGray!58!black,
+        dash pattern=on 1.4pt off 1.6pt, line width=0.46pt]
+    (1.82,1.92)--(3.18,1.92);
+  \node[small label, text=cGray!76!black, anchor=south] at (2.52,1.97)
+    {Maxwell attraction};
+
   \node[small label, anchor=west, align=left] at (0.14,3.64)
     {mechanical\\clamp};
   \draw[leader] (1.02,3.58)--(1.76,3.29);
