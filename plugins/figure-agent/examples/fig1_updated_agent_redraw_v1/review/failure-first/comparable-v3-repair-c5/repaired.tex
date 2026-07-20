@@ -644,15 +644,9 @@
   \draw[cBlue!58!black, line width=0.84pt] (2.68,3.24)--(2.84,3.24);
   \draw[cBlue!58!black, line width=0.84pt] (2.72,3.18)--(2.80,3.18);
 
-  % Mechanism-first annotations. Thin field traces are polarity-neutral: the
-  % source does not declare which electrode is positive, so no field-arrow
-  % direction is invented. The named Maxwell baseline and Coulomb result keep
-  % the force contrast explicit.
-  \draw[cBlue!24, line width=0.36pt]
-    (1.82,2.62) .. controls (2.34,2.68) and (2.92,2.62) .. (3.52,2.50);
-  \draw[cBlue!18, line width=0.36pt]
-    (1.74,2.30) .. controls (2.30,2.36) and (2.94,2.30) .. (3.52,2.18);
-  \node[small label, text=cBlue!70!black, anchor=south] at (2.52,2.64) {$\mathbf{E}$};
+  % Mechanism-first annotations. The named Maxwell baseline and Coulomb result
+  % already carry the force contrast; redundant pale field curves read as
+  % undeclared wires and are intentionally omitted.
   \draw[-{Stealth[length=2.8pt,width=2.0pt]}, cGray!58!black,
         dash pattern=on 1.3pt off 1.6pt, line width=0.42pt]
     (1.84,1.82)--(3.18,1.82);
