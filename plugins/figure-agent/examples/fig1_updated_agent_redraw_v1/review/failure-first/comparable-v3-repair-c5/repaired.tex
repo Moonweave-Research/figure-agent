@@ -326,10 +326,10 @@
     at (2.065,2.73) {manual sample\\[-0.5pt]transfer};
 
   % The charged surface is repeated in both states to preserve specimen identity.
+  % Use polarity-neutral surface-charge markers because the exact corona
+  % polarity is not declared by the paper-local experimental evidence.
   \foreach \x in {1.28,1.46,1.64,2.46,2.64,2.82} {
     \fill[cRed!82!black] (\x,3.06) circle (0.040);
-    \node[font=\sffamily\bfseries\fontsize{4.0}{4.8}\selectfont,
-          text=white, inner sep=0pt] at (\x,3.06) {$+$};
   }
 
   % Gridless two-terminal corona charging used in the experiment. The compact

@@ -198,6 +198,15 @@ def test_repaired_panel_e_surface_charge_has_no_undeclared_gradient() -> None:
     assert "(1.45,3.30)--(1.45,3.15)" in panel_e
 
 
+def test_repaired_panel_e_does_not_invent_corona_polarity() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
+
+    assert r"{$+$}" not in panel_e
+    assert r"{$-$}" not in panel_e
+    assert "polarity-neutral surface-charge markers" in panel_e
+
+
 def test_repaired_panel_e_uses_colour_for_measurement_marks_not_text() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
