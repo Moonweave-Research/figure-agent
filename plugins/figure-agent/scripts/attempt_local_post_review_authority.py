@@ -7,6 +7,7 @@ from typing import Any
 
 import authoring_repair_packet
 import closed_loop_current_state
+import closed_loop_initial_review
 import closed_loop_post_review_authority as authority
 
 
@@ -96,14 +97,11 @@ def plan_attempt_local_post_review(
         if isinstance(crops, list)
         else set()
     )
-    if crop_ids != {
-        "full_q1",
-        "full_q2",
-        "full_q3",
-        "full_q4",
-        "print_178mm",
-        "print_thumbnail",
-    }:
+    allowed_crop_sets = (
+        set(closed_loop_initial_review.BASE_CROP_IDS),
+        set(closed_loop_initial_review.EXTENDED_CROP_IDS),
+    )
+    if crop_ids not in allowed_crop_sets:
         raise AttemptLocalPostReviewAuthorityError("initial_crop_authority_invalid")
     crop_paths = {
         str(item["id"]): _file(root, item, label=f"initial_crop_{item['id']}")

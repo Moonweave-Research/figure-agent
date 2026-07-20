@@ -561,16 +561,6 @@ def validate_attempt_local_repair_binding_v2(
     ):
         normalized[key] = _attempt_local_record(binding[key], workspace_root=root, label=key)
     crops = binding.get("crops")
-    expected_crop_ids = {
-        "full_q1",
-        "full_q2",
-        "full_q3",
-        "full_q4",
-        "print_178mm",
-        "print_thumbnail",
-    }
-    if not isinstance(crops, list) or len(crops) != len(expected_crop_ids):
-        raise RepairExecutionPacketError("attempt-local crops invalid")
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -581,6 +571,19 @@ def validate_attempt_local_repair_binding_v2(
         for item in manifest_crops or []
         if isinstance(item, dict)
     }
+    required_crop_ids = manifest.get("required_crop_ids") if isinstance(manifest, dict) else None
+    if not isinstance(required_crop_ids, list):
+        raise RepairExecutionPacketError("attempt-local crops invalid")
+    crop_ids = tuple(required_crop_ids)
+    expected_crop_id_sets = {
+        tuple(closed_loop_initial_review.BASE_CROP_IDS),
+        tuple(closed_loop_initial_review.EXTENDED_CROP_IDS),
+    }
+    if crop_ids not in expected_crop_id_sets:
+        raise RepairExecutionPacketError("attempt-local crops invalid")
+    expected_crop_ids = set(crop_ids)
+    if not isinstance(crops, list) or len(crops) != len(expected_crop_ids):
+        raise RepairExecutionPacketError("attempt-local crops invalid")
     if set(manifest_by_id) != expected_crop_ids:
         raise RepairExecutionPacketError("attempt-local crops invalid")
     normalized_crops: list[dict[str, str]] = []
@@ -599,14 +602,7 @@ def validate_attempt_local_repair_binding_v2(
     if {crop["id"] for crop in normalized_crops} != expected_crop_ids:
         raise RepairExecutionPacketError("attempt-local crops invalid")
     expected_crops = []
-    for crop_id in (
-        "full_q1",
-        "full_q2",
-        "full_q3",
-        "full_q4",
-        "print_178mm",
-        "print_thumbnail",
-    ):
+    for crop_id in crop_ids:
         crop = manifest_by_id[crop_id]
         expected_crops.append(
             {

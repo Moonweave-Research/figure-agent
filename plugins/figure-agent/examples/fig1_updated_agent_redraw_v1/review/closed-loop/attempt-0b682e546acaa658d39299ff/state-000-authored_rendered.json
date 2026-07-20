@@ -1,0 +1,37 @@
+{
+  "actor": "codex-gpt-5",
+  "actor_role": "authoring_agent",
+  "attempt_id": "attempt-0b682e546acaa658d39299ff",
+  "disposition": "continue",
+  "evidence": [
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/root-attempt-manifest.json",
+      "role": "attempt_manifest",
+      "sha256": "sha256:cf091f113155446ec6701074996897d8f9ec29483d40df9c455348748d176e2f"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/repaired.tex",
+      "role": "authored_source",
+      "sha256": "sha256:48fcd21c0594e162398f3ee00f8fe3177cabcdfdc0dc3084442b41a042028133"
+    },
+    {
+      "path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/build/repaired.png",
+      "role": "render",
+      "sha256": "sha256:e46e9c6873652b6fa1bc58f99f1fb283541e94e818e9fc083bae21abf6ebb875"
+    }
+  ],
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "parent_state_file_sha256": null,
+  "parent_state_path": null,
+  "parent_state_sha256": null,
+  "previous_state_file_sha256": null,
+  "previous_state_path": null,
+  "previous_state_sha256": null,
+  "publication_acceptance": "not_claimed",
+  "required_actor": "workflow_agent",
+  "schema": "figure-agent.closed-loop-attempt-state.v1",
+  "sequence": 0,
+  "state": "authored_rendered",
+  "state_sha256": "sha256:f957048aa9fa78f9cd5d176c72844d7227cf94265a51164f557bb4ab130e6e8b",
+  "terminal": false
+}

@@ -24,6 +24,16 @@ from PIL import Image, ImageChops, UnidentifiedImageError
 SCHEMA = "figure-agent.initial-visual-review-request.v1"
 ACTION = "initial_visual_review_request"
 STOP_BOUNDARY = "host_llm"
+BASE_CROP_IDS = (
+    "full_q1",
+    "full_q2",
+    "full_q3",
+    "full_q4",
+    "print_178mm",
+    "print_thumbnail",
+)
+SEAM_CROP_IDS = ("full_center_vertical", "full_center_horizontal")
+EXTENDED_CROP_IDS = tuple(sorted((*BASE_CROP_IDS, *SEAM_CROP_IDS)))
 
 
 class ClosedLoopInitialReviewError(ValueError):
@@ -173,15 +183,12 @@ def _validate_crop_manifest(
     crops = manifest.get("crops")
     if not isinstance(crops, list):
         raise ClosedLoopInitialReviewError("initial_review_crop_manifest_crops_invalid")
-    expected_ids = (
-        "full_q1",
-        "full_q2",
-        "full_q3",
-        "full_q4",
-        "print_178mm",
-        "print_thumbnail",
-    )
-    if manifest.get("required_crop_ids") != list(expected_ids):
+    required_ids = manifest.get("required_crop_ids")
+    if required_ids == list(BASE_CROP_IDS):
+        expected_ids = BASE_CROP_IDS
+    elif required_ids == list(EXTENDED_CROP_IDS):
+        expected_ids = EXTENDED_CROP_IDS
+    else:
         raise ClosedLoopInitialReviewError("initial_review_required_crops_invalid")
     if len(crops) != len(expected_ids):
         raise ClosedLoopInitialReviewError("initial_review_crop_count_invalid")
@@ -268,6 +275,15 @@ def _expected_crop_records(
             "source_path": render_path,
             "bbox_px": box,
         }
+    for crop_id, box in _seam_boxes(width, height).items():
+        expected[crop_id] = {
+            "id": crop_id,
+            "kind": "seam_crop",
+            "source": "full_render",
+            "path": f"{crops_prefix}/{crop_id}.png",
+            "source_path": render_path,
+            "bbox_px": box,
+        }
     for crop_id, scale_label, target_width in critique_zoom_crops.PRINT_SCALE_TARGETS:
         size = critique_zoom_crops._scaled_size(width, height, target_width)  # noqa: SLF001
         expected[crop_id] = {
@@ -284,6 +300,13 @@ def _expected_crop_records(
     return expected
 
 
+def _seam_boxes(width: int, height: int) -> dict[str, list[int]]:
+    return {
+        "full_center_vertical": [round(width / 4), 0, round(3 * width / 4), height],
+        "full_center_horizontal": [0, round(height / 4), width, round(3 * height / 4)],
+    }
+
+
 def _assert_crop_pixels_match(render: Path, crop_path: Path, *, crop_id: str) -> None:
     try:
         with Image.open(render) as source, Image.open(crop_path) as actual:
@@ -293,6 +316,8 @@ def _assert_crop_pixels_match(render: Path, crop_path: Path, *, crop_id: str) ->
                 expected = source.crop(
                     tuple(critique_zoom_crops._quadrant_boxes(width, height)[index])  # noqa: SLF001
                 )
+            elif crop_id in SEAM_CROP_IDS:
+                expected = source.crop(tuple(_seam_boxes(width, height)[crop_id]))
             else:
                 target_width = next(
                     width_px
@@ -338,6 +363,8 @@ def _crop_roles(manifest: dict[str, Any]) -> dict[str, list[str]]:
         "panel_scale": ["full_q1", "full_q2", "full_q3", "full_q4"],
         "print_scale": ["print_178mm", "print_thumbnail"],
     }
+    if set(SEAM_CROP_IDS).issubset(crop_ids):
+        roles["seam_scale"] = list(SEAM_CROP_IDS)
     if not set(roles["panel_scale"] + roles["print_scale"]).issubset(crop_ids):
         raise ClosedLoopInitialReviewError("initial_review_required_crops_missing")
     return roles
@@ -561,6 +588,24 @@ def _publish_review_pack(
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if not isinstance(manifest, dict):
             raise ClosedLoopInitialReviewError("initial_review_crop_manifest_invalid")
+        with Image.open(snapshot) as image:
+            width, height = image.size
+            for crop_id, box in _seam_boxes(width, height).items():
+                crop_path = crops_root / f"{crop_id}.png"
+                image.crop(tuple(box)).save(crop_path)
+                manifest["crops"].append(
+                    {
+                        "id": crop_id,
+                        "kind": "seam_crop",
+                        "source": "full_render",
+                        "path": crop_path.relative_to(fixture_root).as_posix(),
+                        "source_path": snapshot.relative_to(fixture_root).as_posix(),
+                        "bbox_px": box,
+                        "sha256": _sha256(crop_path),
+                    }
+                )
+        manifest["crops"] = sorted(manifest["crops"], key=lambda crop: crop["id"])
+        manifest["required_crop_ids"] = [crop["id"] for crop in manifest["crops"]]
         staging_prefix = crops_root.relative_to(fixture_root).as_posix() + "/"
         final_prefix = (review_root / "crops").relative_to(fixture_root).as_posix() + "/"
         for crop in manifest.get("crops", []):

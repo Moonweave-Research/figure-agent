@@ -91,7 +91,7 @@ def _response_pack(workspace: Path, fixture: Path, state_path: Path) -> Path:
             "path": f"examples/{FIXTURE}/{by_id[crop_id]['path']}",
             "sha256": by_id[crop_id]["sha256"],
         }
-        for crop_id in inbound.EXPECTED_CROP_IDS
+        for crop_id in manifest["required_crop_ids"]
     )
     transcript = pack / inbound.TRANSCRIPT_FILE
     transcript.write_text("external host review transcript\n", encoding="utf-8")

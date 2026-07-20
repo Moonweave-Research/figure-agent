@@ -1,0 +1,27 @@
+{
+  "author": {
+    "identity": "codex-gpt-5",
+    "role": "authoring_agent"
+  },
+  "budget": {
+    "kind": "interactive-session"
+  },
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "manifest_sha256": "sha256:10b1df58f427e8754cff5b6601057af714ca27794a6bf94effac024d26a7e91b",
+  "model": {
+    "identity": "codex-gpt-5"
+  },
+  "publication_acceptance": "not_claimed",
+  "render": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/build/repaired.png",
+    "sha256": "sha256:e46e9c6873652b6fa1bc58f99f1fb283541e94e818e9fc083bae21abf6ebb875"
+  },
+  "schema": "figure-agent.root-attempt-manifest.v1",
+  "source": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/repaired.tex",
+    "sha256": "sha256:48fcd21c0594e162398f3ee00f8fe3177cabcdfdc0dc3084442b41a042028133"
+  },
+  "task": {
+    "id": "fig1-redraw-to-final-panel-e-loop"
+  }
+}

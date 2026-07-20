@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from PIL import Image
+from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -112,7 +112,9 @@ def test_fig_run_root_admission_publishes_only_initial_outbound_request(
     second_source.write_text("source", encoding="utf-8")
     second_render = second / "build" / "second.png"
     second_render.parent.mkdir()
-    Image.new("RGB", (640, 480), color=(80, 120, 180)).save(second_render)
+    second_image = Image.new("RGB", (640, 480), color=(255, 255, 255))
+    ImageDraw.Draw(second_image).rectangle((270, 80, 370, 400), fill=(80, 120, 180))
+    second_image.save(second_render)
     manifest = _manifest(
         second / "attempt-manifest.json",
         {
@@ -156,7 +158,21 @@ def test_fig_run_root_admission_publishes_only_initial_outbound_request(
     assert request["crop_roles"]["panel_scale"] == [
         "full_q1", "full_q2", "full_q3", "full_q4"
     ]
+    assert request["crop_roles"]["seam_scale"] == [
+        "full_center_vertical",
+        "full_center_horizontal",
+    ]
     assert request["crop_roles"]["print_scale"] == ["print_178mm", "print_thumbnail"]
+    crop_manifest = json.loads(
+        (request_path.parent / "crops" / "manifest.json").read_text(encoding="utf-8")
+    )
+    crops = {crop["id"]: crop for crop in crop_manifest["crops"]}
+    assert crops["full_center_vertical"]["bbox_px"] == [160, 0, 480, 480]
+    assert crops["full_center_horizontal"]["bbox_px"] == [0, 120, 640, 360]
+    with Image.open(request_path.parent / "crops" / "full_center_vertical.png") as seam:
+        assert seam.getbbox() == (0, 0, 320, 480)
+        assert seam.getpixel((110, 80)) == (80, 120, 180)
+        assert seam.getpixel((210, 400)) == (80, 120, 180)
     assert not (second / "critique.md").exists()
     assert not (second / "critique_adjudication.yaml").exists()
     assert source.is_file() and render.is_file()

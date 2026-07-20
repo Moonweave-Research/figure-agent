@@ -419,6 +419,8 @@ def test_v2_machine_repair_reconstructs_write_free_post_review_authority(
         "full_q2",
         "full_q3",
         "full_q4",
+        "full_center_vertical",
+        "full_center_horizontal",
         "print_178mm",
         "print_thumbnail",
     }
@@ -448,6 +450,8 @@ def test_v2_post_review_plan_is_write_free_and_execute_publishes_separate_reques
         "full_q2",
         "full_q3",
         "full_q4",
+        "full_center_vertical",
+        "full_center_horizontal",
         "print_178mm",
         "print_thumbnail",
     }

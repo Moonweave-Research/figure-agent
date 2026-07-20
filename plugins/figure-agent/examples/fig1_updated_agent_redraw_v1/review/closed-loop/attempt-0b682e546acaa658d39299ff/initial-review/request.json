@@ -1,0 +1,36 @@
+{
+  "attempt": {
+    "state_file_sha256": "sha256:b3b7a03b04f64957d570f2159fac4c92d6fab679901f5bef1eaf7ce3f388923d",
+    "state_path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/state-000-authored_rendered.json",
+    "state_sha256": "sha256:f957048aa9fa78f9cd5d176c72844d7227cf94265a51164f557bb4ab130e6e8b"
+  },
+  "authored_source": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/repaired.tex",
+    "sha256": "sha256:48fcd21c0594e162398f3ee00f8fe3177cabcdfdc0dc3084442b41a042028133"
+  },
+  "crop_manifest": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/closed-loop/attempt-0b682e546acaa658d39299ff/initial-review/crops/manifest.json",
+    "sha256": "sha256:9acb7b43abc6d95e2f9a0b8000380c8f0349a582f2f4d81aa5796709c538a2d5"
+  },
+  "crop_roles": {
+    "full_render": "render",
+    "panel_scale": [
+      "full_q1",
+      "full_q2",
+      "full_q3",
+      "full_q4"
+    ],
+    "print_scale": [
+      "print_178mm",
+      "print_thumbnail"
+    ]
+  },
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "publication_acceptance": "not_claimed",
+  "render": {
+    "path": "examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/build/repaired.png",
+    "sha256": "sha256:e46e9c6873652b6fa1bc58f99f1fb283541e94e818e9fc083bae21abf6ebb875"
+  },
+  "request_sha256": "sha256:876e1fb5157628c87f7efa441caa9f4d3040b4ba0787e89070310a6fc6d4c775",
+  "schema": "figure-agent.initial-visual-review-request.v1"
+}

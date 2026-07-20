@@ -11,6 +11,7 @@ from typing import Any
 import attempt_local_post_review_authority
 import closed_loop_attempt_state
 import closed_loop_current_state
+import closed_loop_initial_review
 import closed_loop_post_review_authority as authority
 import closed_loop_post_review_crops
 import repair_transaction
@@ -142,10 +143,16 @@ def validate_request(payload: dict[str, Any], *, root: Path, fixture: str) -> No
             raise AttemptLocalPostReviewError("post_review_request_record_invalid")
         records.append(record)
     initial_crops = payload.get("initial_crops")
+    initial_crop_ids = {
+        item.get("id") for item in initial_crops if isinstance(item, dict)
+    } if isinstance(initial_crops, list) else set()
     if (
         not isinstance(initial_crops, list)
-        or {item.get("id") for item in initial_crops if isinstance(item, dict)}
-        != {"full_q1", "full_q2", "full_q3", "full_q4", "print_178mm", "print_thumbnail"}
+        or initial_crop_ids
+        not in (
+            set(closed_loop_initial_review.BASE_CROP_IDS),
+            set(closed_loop_initial_review.EXTENDED_CROP_IDS),
+        )
         or any(not isinstance(item, dict) or "bbox_px" in item for item in initial_crops)
     ):
         raise AttemptLocalPostReviewError("post_review_initial_crops_invalid")

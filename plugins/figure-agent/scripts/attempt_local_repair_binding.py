@@ -29,13 +29,10 @@ BINDING_FILE = "attempt-local-repair-binding.json"
 PACKET_FILE = "attempt-local-repair-packet.json"
 PROMPT_FILE = "repair-prompt.md"
 SANDBOX_FILE = "repaired.tex"
-_EXPECTED_CROP_IDS = (
-    "full_q1",
-    "full_q2",
-    "full_q3",
-    "full_q4",
-    "print_178mm",
-    "print_thumbnail",
+_EXPECTED_CROP_IDS = closed_loop_initial_review.BASE_CROP_IDS
+_EXPECTED_CROP_ID_SETS = (
+    _EXPECTED_CROP_IDS,
+    closed_loop_initial_review.EXTENDED_CROP_IDS,
 )
 
 
@@ -260,10 +257,14 @@ def _binding_payload(
     if not isinstance(crops, list):
         raise AttemptLocalRepairBindingError("crops_invalid")
     by_id = {crop.get("id"): crop for crop in crops if isinstance(crop, dict)}
-    if set(by_id) != set(_EXPECTED_CROP_IDS):
+    required_crop_ids = manifest.get("required_crop_ids")
+    if not isinstance(required_crop_ids, list):
+        raise AttemptLocalRepairBindingError("crops_invalid")
+    crop_ids = tuple(required_crop_ids)
+    if crop_ids not in _EXPECTED_CROP_ID_SETS or set(by_id) != set(crop_ids):
         raise AttemptLocalRepairBindingError("crops_invalid")
     crop_records: list[dict[str, str]] = []
-    for crop_id in _EXPECTED_CROP_IDS:
+    for crop_id in crop_ids:
         crop = by_id[crop_id]
         path, sha = crop.get("path"), crop.get("sha256")
         if not isinstance(path, str) or not isinstance(sha, str):

@@ -103,7 +103,7 @@ def _response_pack(workspace: Path, fixture: Path, state_path: Path) -> Path:
             "path": f"examples/{FIXTURE}/{crop_by_id[crop_id]['path']}",
             "sha256": crop_by_id[crop_id]["sha256"],
         }
-        for crop_id in response_adapter.EXPECTED_CROP_IDS
+        for crop_id in crop_manifest["required_crop_ids"]
     )
     receipt = {
         "schema": post_repair_visual_review.EXECUTION_RECEIPT_SCHEMA,

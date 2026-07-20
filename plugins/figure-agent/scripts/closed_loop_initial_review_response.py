@@ -30,13 +30,10 @@ RESPONSE_FILE = "response.json"
 CRITIQUE_FILE = "critique.md"
 HOST_RECEIPT_FILE = "host-review-execution-receipt.json"
 TRANSCRIPT_FILE = "host-review-transcript.md"
-EXPECTED_CROP_IDS = (
-    "full_q1",
-    "full_q2",
-    "full_q3",
-    "full_q4",
-    "print_178mm",
-    "print_thumbnail",
+EXPECTED_CROP_IDS = closed_loop_initial_review.BASE_CROP_IDS
+EXPECTED_CROP_ID_SETS = (
+    EXPECTED_CROP_IDS,
+    closed_loop_initial_review.EXTENDED_CROP_IDS,
 )
 
 
@@ -155,7 +152,11 @@ def _validate_outbound(
     if not isinstance(crops, list):
         raise ClosedLoopInitialReviewResponseError("initial_review_crop_manifest_invalid")
     by_id = {item.get("id"): item for item in crops if isinstance(item, dict)}
-    if set(by_id) != set(EXPECTED_CROP_IDS):
+    required_crop_ids = manifest.get("required_crop_ids")
+    if not isinstance(required_crop_ids, list):
+        raise ClosedLoopInitialReviewResponseError("initial_review_required_crops_missing")
+    crop_ids = tuple(required_crop_ids)
+    if crop_ids not in EXPECTED_CROP_ID_SETS or set(by_id) != set(crop_ids):
         raise ClosedLoopInitialReviewResponseError("initial_review_required_crops_missing")
     render = request.get("render")
     if (
@@ -168,7 +169,7 @@ def _validate_outbound(
     if _sha256(render_path) != render["sha256"]:
         raise ClosedLoopInitialReviewResponseError("initial_review_render_hash_stale")
     artifacts = [_artifact(render_path, render["sha256"], root=root, role="full_render")]
-    for crop_id in EXPECTED_CROP_IDS:
+    for crop_id in crop_ids:
         crop = by_id[crop_id]
         path_value, sha = crop.get("path"), crop.get("sha256")
         if not isinstance(path_value, str) or not isinstance(sha, str):

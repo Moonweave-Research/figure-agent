@@ -465,6 +465,11 @@ one of `false_positive`, `intentional_schematic`, `outside_target_region`,
 The critique must also fill `crop_audit_log` with exactly one entry for every
 `build/audit_crops/manifest.json.required_crop_ids` item; uncertain crop
 verdicts must remain explicit rather than being treated as pass.
+When the initial-review manifest includes `full_center_vertical` or
+`full_center_horizontal`, inspect those seam-spanning views as first-class
+evidence. Quadrant coverage alone is not evidence that a semantic unit crossing
+a crop boundary was reviewed as a whole; keep its verdict uncertain until a
+view containing the complete unit has been inspected.
 When `critique_reference_pack.yaml` exists, `/fig_critique` uses it as the
 project-specific top-tier calibration source and includes its target journal,
 reference class, must-match traits, must-avoid traits, and calibration
