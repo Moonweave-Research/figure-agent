@@ -221,11 +221,12 @@
   % Real-space view: both trap classes are localized sites in one disordered film,
   % not separate material phases.
   \node[body label, anchor=west] at (0.90,4.80) {real space};
-  % Neutral top-view film field. Keep one flat projection: the former skewed
-  % quadrilateral read as undeclared perspective even though no thickness was
-  % encoded. The boundary is scientific (the specimen extent), not a UI card.
-  \fill[cAmber!3] (0.90,1.23) rectangle (6.12,4.30);
-  \draw[cGray!72!black, line width=0.90pt]
+  % Flat specimen field: a restrained sulfur-polymer tint and softened boundary
+  % make this read as the film itself rather than a generic graph box. Keep one
+  % top-view projection; no bevel, thickness, or perspective is implied.
+  \fill[cAmber!8, rounded corners=0.7mm]
+    (0.90,1.23) rectangle (6.12,4.30);
+  \draw[cAmber!58!black, line width=0.90pt, rounded corners=0.7mm]
     (0.90,1.23) rectangle (6.12,4.30);
   % A small number of deliberate polymer traces reads as a film matrix;
   % excessive low-contrast scribbles make the material look like noise.
