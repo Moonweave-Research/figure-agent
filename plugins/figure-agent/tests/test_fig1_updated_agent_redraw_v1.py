@@ -243,10 +243,21 @@ def test_repaired_panel_e_caliper_label_interrupts_its_path() -> None:
     assert "inner xsep" in caliper_label
 
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
-    assert panel_e.count("circle (0.040)") == 3
+    assert panel_e.count("circle (0.040)") == 1
     assert "circle (0.050)" not in panel_e
     assert "(1.56,0.78)--(1.56,1.24)" in panel_e
     assert "(3.02,1.15)--(3.02,1.24)" in panel_e
+
+
+def test_repaired_panel_e_schematic_curves_do_not_imply_sampled_data() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
+
+    assert "No point markers are shown" in panel_e
+    assert "sampled surface-potential coordinates" in panel_e
+    assert "source-bound data" in panel_e
+    assert "Representative derived points" not in panel_e
+    assert "circle (0.055)" not in panel_e
 
 
 def test_repaired_panel_e_surface_charge_has_no_undeclared_gradient() -> None:

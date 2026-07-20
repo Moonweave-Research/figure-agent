@@ -144,6 +144,8 @@ def test_pair001_preserves_paper_local_tau_d_semantics() -> None:
         if rule["id"] == "pair001.tau-d-energy-domain-exception"
     )
     assert "energy-domain interval" in rule["rule"]
+    assert "endpoints bound to those two peak positions" in rule["rule"]
+    assert "do not add numeric ticks, point markers" in rule["rule"]
     assert "Do not move it onto the V_s(t) time axis" in rule["rule"]
     assert "source-bound exception" in rule["rule"]
 
@@ -416,6 +418,8 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "measurement-to-inference chain" in ispd["rule"]
     assert "tail visibly above and separate from the time axis" in ispd["rule"]
     assert "exact finite-time zero" in ispd["rule"]
+    assert "do not overlay measurement-like point markers" in ispd["rule"]
+    assert "source-bound sampled coordinates" in ispd["rule"]
     assert "do not state a precise peak-height ratio" in ispd["rule"]
 
     titles = rules["polymer_paper_project.panel-title-object-language"]

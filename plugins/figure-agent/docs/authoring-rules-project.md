@@ -133,11 +133,11 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.ispd-decay-and-inversion-evidence-boundary
     category: physics_semantics
-    rule: "Show ISPD as one measurement-to-inference chain: the non-contact ESVM records a monotonic surface-potential decay V_s(t), then a clearly directed derivation step yields g(E_t). Keep the decay tail visibly above and separate from the time axis; merging it into the axis falsely implies an exact finite-time zero. For this overview, shallow/deep peak dominance and separation are schematic unless bound to quantitative Fig. 3 data; do not state a precise peak-height ratio from drawing coordinates."
+    rule: "Show ISPD as one measurement-to-inference chain: the non-contact ESVM records a monotonic surface-potential decay V_s(t), then a clearly directed derivation step yields g(E_t). Keep the decay tail visibly above and separate from the time axis; merging it into the axis falsely implies an exact finite-time zero. For a schematic overview, do not overlay measurement-like point markers on V_s(t) or g(E_t) unless source-bound sampled coordinates are declared; a smooth qualitative curve must not masquerade as measured points or a fitted dataset. Shallow/deep peak dominance and separation remain schematic unless bound to quantitative Fig. 3 data; do not state a precise peak-height ratio from drawing coordinates."
     source:
       kind: hand_patch_commit
       locator: "Fig1 Panel E enlarged waveform and evidence-boundary audit (2026-07-20)"
-      quote: "The decay tail merged into the x-axis and a schematic deep peak was described with false numerical precision."
+      quote: "The decay tail merged into the x-axis, point glyphs implied undeclared samples, and a schematic deep peak was described with false numerical precision."
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.ispd-grounded-backing-plate
     category: instrument_standard

@@ -37,7 +37,7 @@ rules:
     transfer_policy: use_as_constraint
   - id: pair001.tau-d-energy-domain-exception
     category: physics_semantics
-    rule: "For this paper-local overview, preserve tau_d as the qualitative energy-domain interval between the shallow and deep g(E_t) peak positions. Do not move it onto the V_s(t) time axis merely because tau conventionally denotes time, and do not attach a numeric value or unit. Treat this as a source-bound exception, not a transferable default for unrelated ISPD figures."
+    rule: "For this paper-local overview, preserve tau_d as the qualitative energy-domain interval between the shallow and deep g(E_t) peak positions. Keep its endpoints bound to those two peak positions, but do not add numeric ticks, point markers, a value, or a unit that would turn the schematic interval into unsupported quantitative data. Do not move it onto the V_s(t) time axis merely because tau conventionally denotes time. Treat this as a source-bound exception, not a transferable default for unrelated ISPD figures."
     source:
       kind: critique_adjudication
       locator: "fig1_overview_v5f_art_direction_001_vault/briefing.md sections 8 and 13.6 E-9"
