@@ -99,6 +99,14 @@ rules:
       locator: "Fig1 R5 prospective v2 adversarial review (2026-07-18)"
       quote: "아직 내가 굳이 안집어줘도 많을 정도로 완성도는 부족"
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.panel-title-object-language
+    category: panel_layout
+    rule: "Use compact object- or phenomenon-level panel titles that name what the reader sees. Avoid generic process labels such as model or schematic when the panel actually combines observed material context with an energy-space interpretation; reserve explanatory detail for subtitles and the caption."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 178 mm title-hierarchy audit (2026-07-20)"
+      quote: "Localized trap model was broader and more theoretical than the real-space plus energy-landscape content shown."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.ispd-keyence-manual-transfer
     category: instrument_standard
     rule: "For ISPD panels, depict a Keyence SK series induction-type, non-contact electrostatic voltmeter. Corona-charge the specimen first, then manually transfer the same specimen to the adjacent measurement station. Show the family-level sensing topology as an elongated bar-shaped sensor head with its short end face directed toward the specimen, a visible non-contact standoff, and a cable to a separate amplifier or meter. Do not invent an automated motion stage, continuous scan, conveyor, oscillating Kelvin probe, or model-specific controls and dimensions. Preserve the confirmed series-level topology without inventing an exact model."
