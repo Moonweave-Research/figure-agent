@@ -266,6 +266,17 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     assert "winged-dot defect" in skill
     assert "repairing sparse matrix occupancy is preferred to shrinking the panel" in normalized
 
+
+def test_bridge_panel_row_height_requires_two_claim_bearing_halves() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(skill.split())
+    assert "full-width bridge panel" in normalized
+    assert "both halves" in normalized
+    assert "claim-bearing content at final reduction" in normalized
+    assert "never justify extra height by the panel title alone" in normalized
+
     repaired = (
         PLUGIN_ROOT
         / "examples"

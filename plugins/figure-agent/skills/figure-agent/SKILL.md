@@ -606,6 +606,12 @@ claim-bearing marks at final reduction rather than merely moving whitespace betw
 rows. Treat a dense panel as undersized only when its labels, axes, or semantic
 separation fail at reduction scale.
 
+For a full-width bridge panel that combines two views, require both halves to
+carry visible claim-bearing content at final reduction before accepting its row
+height. If one half is sparse, first repair content occupancy or hierarchy and
+only then consider changing the panel boundary; never justify extra height by the
+panel title alone.
+
 Treat a clean content-to-divider gutter as intentional whitespace when sibling
 panels retain comparable breathing room and no claim-bearing mark is clipped or
 illegible. Never add filler text, decorative shapes, or invented mechanism content
