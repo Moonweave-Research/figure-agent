@@ -334,7 +334,10 @@ or curve-following placement is an accounted intentional overlay.
 
 For every dimension, caliper, interval, or delta annotation, identify both named
 referents and verify that each endpoint touches or is visibly projected from its
-referent; a floating measurement is a defect. When the brief declares relative
+referent; a floating measurement is a defect. Inspect both endpoint projections
+at final reduction: a leader that collapses into a bracket cap, peak, marker, or
+boundary does not visibly establish the referent even when the source coordinates
+technically meet. When the brief declares relative
 peak height, width, slope, count, ordering, or an approximate ratio, verify the
 rendered encoding and calculate it from source geometry when practical. Do not
 accept a verbally correct claim whose visible ratio says something weaker or

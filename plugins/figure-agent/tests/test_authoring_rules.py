@@ -166,6 +166,17 @@ def test_pair001_binds_raw_to_derived_transformations() -> None:
     assert "dedicated transformation lane" in rule["rule"]
 
 
+def test_general_caliper_rule_requires_visible_endpoint_projections_at_reduction() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(skill.split())
+
+    assert "Inspect both endpoint projections at final reduction" in normalized
+    assert "collapses into a bracket cap, peak, marker, or boundary" in normalized
+    assert "does not visibly establish the referent" in normalized
+
+
 def test_pair001_rejects_unbound_particle_like_host_texture() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"

@@ -249,8 +249,10 @@ def test_repaired_panel_e_caliper_label_interrupts_its_path() -> None:
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
     assert panel_e.count("circle (0.040)") == 1
     assert "circle (0.050)" not in panel_e
-    assert "(1.56,0.78)--(1.56,1.24)" in panel_e
-    assert "(3.02,1.15)--(3.02,1.24)" in panel_e
+    assert "both peak projections" in panel_e
+    assert "(1.56,0.78)--(1.56,1.31)" in panel_e
+    assert "(3.02,1.15)--(3.02,1.31)" in panel_e
+    assert "(1.56,1.35)--(3.02,1.35)" in panel_e
 
 
 def test_repaired_panel_e_schematic_curves_do_not_imply_sampled_data() -> None:

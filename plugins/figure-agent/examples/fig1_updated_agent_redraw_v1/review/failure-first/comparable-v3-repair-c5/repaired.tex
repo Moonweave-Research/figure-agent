@@ -521,17 +521,18 @@
   % No point markers are shown on the derived DOS: without source-bound data,
   % such glyphs would falsely imply sampled or fitted peak coordinates.
   % Paper-local authority defines tau_d as the energy-domain interval between
-  % the shallow and deep Gaussian peak positions.
+  % the shallow and deep Gaussian peak positions. Keep both peak projections
+  % long enough to remain distinct from the bracket caps at print reduction.
   \draw[cGray!38, dash pattern=on 1.3pt off 1.3pt, line width=0.84pt]
-    (1.56,0.78)--(1.56,1.24)
-    (3.02,1.15)--(3.02,1.24);
+    (1.56,0.78)--(1.56,1.31)
+    (3.02,1.15)--(3.02,1.31);
   \draw[cGray!68!black, line width=0.84pt]
-    (1.56,1.28)--(3.02,1.28);
+    (1.56,1.35)--(3.02,1.35);
   \draw[cGray!68!black, line width=0.84pt]
-    (1.56,1.24)--(1.56,1.32) (3.02,1.24)--(3.02,1.32);
+    (1.56,1.31)--(1.56,1.39) (3.02,1.31)--(3.02,1.39);
   \node[small label, text=cGray!72!black, fill=white,
         inner xsep=1.2pt, inner ysep=0.45pt]
-    at (2.29,1.28) {$\tau_d$};
+    at (2.29,1.35) {$\tau_d$};
   \node[small label, text=cGray!88!black, anchor=north] at (1.45,0.31) {shallow};
   \node[small label, text=cGray!88!black, anchor=north] at (3.12,0.31) {deep};
 \end{scope}
