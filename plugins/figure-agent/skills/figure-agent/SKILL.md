@@ -418,6 +418,13 @@ vibrating fork, modulation arcs, a gap-capacitance symbol, or a grid electrode;
 also keep charging-state and measurement-state grounding distinct when the
 experimental sequence declares that only the latter uses a grounded substrate.
 
+For sulfur/DIB inverse-vulcanization schematics, preserve the declared polymer
+topology. When the authority describes poly(S-r-DIB) as a linear/statistical
+copolymer, a bulk morphology may show overlapping or entangled linear chains, but
+must not introduce crosslink nodes, a network label, or branch junctions without
+explicit evidence. Distinguish molecular connectivity from specimen-scale
+packing; do not turn a macroscopic entanglement cue into a covalent mechanism.
+
 For a floating charged cantilever driven by a nearby electrode, keep the
 cantilever mechanically clamped but electrically isolated. A ground symbol on
 the high-voltage source belongs to the driven-electrode return circuit; it must

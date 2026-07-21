@@ -287,6 +287,17 @@ def test_chemical_panel_whitespace_follows_reaction_flow() -> None:
     assert "reaction-flow axis" in normalized
     assert "invented structures" in normalized
 
+
+def test_inverse_vulcanization_topology_does_not_invent_crosslinks() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(skill.split())
+    assert "preserve the declared polymer topology" in normalized
+    assert "linear/statistical" in normalized
+    assert "must not introduce crosslink nodes" in normalized
+    assert "specimen-scale packing" in normalized
+
     repaired = (
         PLUGIN_ROOT
         / "examples"
