@@ -105,7 +105,10 @@ def test_redraw_semantic_contract_binds_c_d_e_relations() -> None:
     protected = set(result["protected_relations"])
     assert "real_space_trap_populations_correspond_to_energy_diagram_states" in protected
     assert "high_n_power_law_decays_faster_than_low_n_power_law" in protected
-    assert "corona_charged_sample_is_manually_transferred_to_noncontact_ispd_measurement" in protected
+    assert (
+        "corona_charged_sample_is_manually_transferred_to_noncontact_ispd_measurement"
+        in protected
+    )
     assert "surface_potential_decay_is_transformed_into_derived_trap_distribution" in protected
     assert "tau_d_remains_energy_domain_interval_between_shallow_and_deep_peaks" in protected
 
@@ -113,10 +116,22 @@ def test_redraw_semantic_contract_binds_c_d_e_relations() -> None:
         item["connector_id"]: item
         for item in result["semantic_legibility"]["visible_connectors"]
     }
-    assert connectors["panel_c.shallow_population_corresponds_to_energy_state"]["render_style"] == "population_correspondence"
-    assert connectors["panel_d.constant_voltage_owns_transient"]["declared_role"] == "operating_condition"
-    assert connectors["panel_e.decay_feeds_raw_to_derived_transform"]["render_style"] == "transformation_arrow"
-    assert connectors["panel_e.transform_outputs_trap_distribution"]["to_object"] == "panel_e.derived_trap_distribution"
+    assert (
+        connectors["panel_c.shallow_population_corresponds_to_energy_state"]["render_style"]
+        == "population_correspondence"
+    )
+    assert (
+        connectors["panel_d.constant_voltage_owns_transient"]["declared_role"]
+        == "operating_condition"
+    )
+    assert (
+        connectors["panel_e.decay_feeds_raw_to_derived_transform"]["render_style"]
+        == "transformation_arrow"
+    )
+    assert (
+        connectors["panel_e.transform_outputs_trap_distribution"]["to_object"]
+        == "panel_e.derived_trap_distribution"
+    )
     assert result["summary"]["visual_review_required"] is True
     assert result["publication_acceptance"] == "not_claimed"
 
@@ -419,8 +434,14 @@ def test_repaired_panel_descriptors_do_not_form_a_second_title_band() -> None:
     assert size
     assert float(size.group(1)) <= 6.5
     assert "text=cGray!90!black" in declaration
-    assert r"\node[small label, text=cGray!78!black, anchor=west] at (0.90,4.62) {real space};" in panel_c
-    assert r"\node[small label, text=cGray!78!black, anchor=west] at (7.72,4.84) {energy diagram};" in panel_c
+    assert (
+        r"\node[small label, text=cGray!78!black, anchor=west] at (0.90,4.62) {real space};"
+        in panel_c
+    )
+    assert (
+        r"\node[small label, text=cGray!78!black, anchor=west] at (7.72,4.84) {energy diagram};"
+        in panel_c
+    )
     assert r"\node[body label, anchor=west] at (0.90,4.80) {real space};" not in panel_c
     assert r"\node[body label, anchor=west] at (7.72,5.02) {energy diagram};" not in panel_c
 
