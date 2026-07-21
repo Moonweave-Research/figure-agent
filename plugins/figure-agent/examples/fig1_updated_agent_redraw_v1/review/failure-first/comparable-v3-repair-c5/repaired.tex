@@ -645,12 +645,15 @@
   \node[small label, anchor=west, align=left] at (3.86,1.86)
     {driven\\electrode};
 
-  % The force arrow begins on the trapped-charge perimeter and points away from the driven electrode.
-  \draw[-{Stealth[length=4.2pt,width=3.1pt]}, cRed!88!black, line width=0.84pt]
-    (1.325,1.43)--(0.43,1.43);
-  \node[small label,
-        text=cRed!82!black, anchor=south west, align=left]
-    at (0.36,1.50) {Coulomb\\[-0.6pt]\mdseries repulsion};
+  % The result arrow begins on the trapped-charge perimeter and points away
+  % from the driven electrode. It is intentionally stronger than the Maxwell
+  % baseline so the panel reads as a Coulomb-response claim first.
+  \draw[-{Stealth[length=4.8pt,width=3.5pt]}, cRed!88!black, line width=0.96pt]
+    (1.325,1.43)--(0.34,1.43);
+  \node[font=\sffamily\fontsize{5.1}{5.9}\selectfont,
+        text=cRed!82!black, anchor=south west, align=left,
+        inner sep=0.4pt]
+    at (0.30,1.50) {\bfseries Coulomb\\[-0.6pt]\mdseries repulsion};
 
   \draw[cGray!30, line width=0.84pt]
     (0.96,0.67)--(0.96,0.61)

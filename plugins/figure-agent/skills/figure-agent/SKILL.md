@@ -506,6 +506,10 @@ diagram and correspondence marks still need the available row height.
 For a floating charged dielectric/cantilever near a driven electrode, distinguish
 the neutral Maxwell-attraction baseline from the charge-mediated Coulomb result
 with a thin, low-contrast baseline arrow versus a stronger, named Coulomb arrow.
+At final reduction, the Coulomb arrow must remain the strongest and longest
+force vector in the panel, and its label should carry the same result emphasis
+near the arrowhead; otherwise the neutral apparatus and Maxwell baseline can
+steal ownership of the mechanism.
 An electric field is not intrinsically "inward": its direction depends on the
 declared polarity. If polarity is absent, field traces may be shown only as
 thin, labeled, direction-neutral guides; never invent arrow direction or a

@@ -262,7 +262,9 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     assert "cBlue!58!black" not in panel_f
     assert "cGray!54!black, line width=0.84pt" in panel_f
     assert "cAmber!7, rounded corners=0.45mm" in panel_f
-    assert r"(1.325,1.43)--(0.43,1.43)" in panel_f
+    assert r"(1.325,1.43)--(0.34,1.43)" in panel_f
+    assert r"{\bfseries Coulomb\\[-0.6pt]\mdseries repulsion}" in panel_f
+    assert "Stealth[length=4.8pt,width=3.5pt]" in panel_f
     assert r"(1.38,1.43)--(0.43,1.43)" not in panel_f
 
 
@@ -719,6 +721,7 @@ def test_repaired_panel_f_and_full_figure_keep_role_appropriate_strokes() -> Non
 
     assert widths
     assert "line width=1.0pt" in panel_f
+    assert "line width=0.96pt" in panel_f
     assert "line width=0.84pt" in panel_f
     assert "line width=0.42pt" in panel_f  # low-contrast Maxwell baseline
     assert "text=cRed!82!black" in panel_f
@@ -734,10 +737,10 @@ def test_repaired_panel_f_keeps_source_ground_off_the_floating_sample() -> None:
 
     assert "grounded voltage-source return closes only the driven-electrode circuit" in panel_f
     assert "sample and cantilever remain electrically floating" in panel_f
-    assert "force arrow begins on the trapped-charge perimeter" in panel_f
+    assert "result arrow begins on the trapped-charge perimeter" in panel_f
     assert "charge-label leader terminates at the marker perimeter" in panel_f
     assert "(0.88,0.46)--(0.96,0.81)" in panel_f
-    assert "(1.325,1.43)--(0.43,1.43)" in panel_f
+    assert "(1.325,1.43)--(0.34,1.43)" in panel_f
     assert "(3.50,3.58)--(3.65,3.58)--(3.65,3.02)" in panel_f
     assert "(3.00,3.45)--(2.76,3.45)--(2.76,3.30)" in panel_f
 

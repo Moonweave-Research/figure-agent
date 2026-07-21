@@ -319,6 +319,9 @@ def test_force_result_labels_share_the_result_role_cue() -> None:
     normalized = " ".join(skill.split())
 
     assert "reserve the strongest stroke and clearest label for the claimed force/result" in normalized
+    assert "strongest and longest force vector" in normalized
+    assert "same result emphasis near the arrowhead" in normalized
+    assert "steal ownership of the mechanism" in normalized
     assert "its label should share that role cue" in normalized
     assert "generic gray labels are acceptable for apparatus parts and neutral baselines" in normalized
 
