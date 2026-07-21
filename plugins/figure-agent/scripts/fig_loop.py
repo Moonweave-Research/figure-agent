@@ -78,6 +78,7 @@ from status import infer_stage  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RUNS_ROOT = REPO_ROOT / ".scratch" / "fig-loop-runs"
 MODE = "verify-only"
+AUTO_REMEDY_TIMEOUT_SECONDS = 180
 RUN_SCHEMA = "figure-agent.fig-loop-run.v1"
 _GIT_MUTATIONS = frozenset(
     {"add", "commit", "reset", "checkout", "clean", "push", "merge", "rebase"}
@@ -283,15 +284,23 @@ def _run_auto_remedy_command(command: list[str], *, repo_root: Path) -> CommandR
     env = os.environ.copy()
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(REPO_ROOT)
     env["FIGURE_AGENT_WORKSPACE"] = str(repo_root)
-    result = subprocess.run(
-        command,
-        cwd=repo_root,
-        env=env,
-        text=True,
-        capture_output=True,
-        check=False,
-        errors="replace",
-    )
+    try:
+        result = subprocess.run(
+            command,
+            cwd=repo_root,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+            errors="replace",
+            timeout=AUTO_REMEDY_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return CommandResult(
+            returncode=124,
+            stdout=exc.stdout or "",
+            stderr=(exc.stderr or "") + "\nauto_remedy_timeout",
+        )
     return CommandResult(
         returncode=result.returncode,
         stdout=result.stdout,
