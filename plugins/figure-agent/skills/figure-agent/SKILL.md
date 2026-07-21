@@ -637,6 +637,12 @@ halves, keep those descriptors subordinate to the panel title: use a smaller or
 muted label tier, place them below the reserved header band, and do not let them
 form a second panel-title row across the figure.
 
+For a chemical reaction panel, judge whitespace against the reaction-flow axis
+and the declared product motif, not against rectangular occupancy. Empty space
+after the transformation arrow is acceptable when it protects atom labels and
+does not hide a required reagent, condition, or product; never fill it with
+invented structures or explanatory text solely to make the panel look symmetric.
+
 Compare equivalent axis titles, variables, units, and endpoint labels across
 panels at the final reduction. Keep scientifically co-equal axes on a common
 typographic floor; do not demote a crowded panel's claim-bearing axes to an

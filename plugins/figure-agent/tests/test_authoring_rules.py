@@ -277,6 +277,16 @@ def test_bridge_panel_row_height_requires_two_claim_bearing_halves() -> None:
     assert "claim-bearing content at final reduction" in normalized
     assert "never justify extra height by the panel title alone" in normalized
 
+
+def test_chemical_panel_whitespace_follows_reaction_flow() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(skill.split())
+    assert "chemical reaction panel" in normalized
+    assert "reaction-flow axis" in normalized
+    assert "invented structures" in normalized
+
     repaired = (
         PLUGIN_ROOT
         / "examples"
