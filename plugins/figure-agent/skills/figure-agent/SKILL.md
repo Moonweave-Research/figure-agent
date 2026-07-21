@@ -460,9 +460,12 @@ slightly raise their neutral contrast rather than enlarging the colored traps.
 Panel C-style amorphous-host regression rule: for a real-space polymer host next
 to an energy diagram, use a small number of non-periodic traces whose combined
 coverage reads as one disordered host field. Vary orientation, span, curvature,
-and local amplitude, keep every trace bounded inside the film, and allow longer
-or visually entangled paths when isolated short fragments would look unfinished.
-Place each equal-size shallow/deep core directly on a continuous host trace.
+and local amplitude, keep every trace bounded inside the film, and do not freeze
+the repair to an exact trace count. Allow longer or visually entangled paths when
+isolated short fragments would look unfinished, but if a long smooth path reads
+as a surface wrinkle, lamella, or specimen-spanning sine wave at reduction,
+replace it with shorter, differently oriented matrix fragments. Place each
+equal-size shallow/deep core directly on a continuous host trace or local kink.
 The core alone may carry the category; if extra localization emphasis is truly
 needed, change color or weight over only a short asymmetric section of that same
 path. Do not add a colored path section by default when the neutral host already

@@ -247,8 +247,11 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     assert "small number of non-periodic traces" in skill
     assert "combined" in skill
     assert "coverage reads as one disordered host field" in skill
-    assert "allow longer or visually entangled paths" in normalized
-    assert "directly on a continuous host trace" in skill
+    assert "do not freeze the repair to an exact trace count" in normalized
+    assert "Allow longer or visually entangled paths" in normalized
+    assert "surface wrinkle, lamella, or specimen-spanning sine wave" in normalized
+    assert "shorter, differently oriented matrix fragments" in normalized
+    assert "directly on a continuous host trace or local kink" in normalized
     assert "short asymmetric" in skill
     assert "The core alone may carry the category" in skill
     assert "Audit the whole host field" in skill
@@ -268,16 +271,21 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     real_space = panel_c.split("% Energy-space view:", 1)[0]
     host_texture = real_space.split("% Local contrast follows", 1)[0]
 
-    assert host_texture.count("plot[smooth] coordinates") == 5
-    assert "specimen-spanning amorphous host" in real_space
-    assert "entangled" in real_space
-    assert "trap-free cross-field trace" in real_space
-    assert "structural cues, not literal chain topology" in real_space
+    assert 4 <= host_texture.count("% amorphous trace") <= 7
+    assert "plot[smooth] coordinates" not in host_texture
+    assert "Restrained amorphous-host cues" in real_space
+    assert "short, differently oriented fragments" in real_space
+    assert "surface" in real_space
+    assert "literal chain topology" in real_space
+    assert "Local contrast follows the neutral host geometry" in real_space
+    assert "no flattened halos or" in real_space
+    assert "repeated wing strokes" in real_space
     assert real_space.count("line width=1.20pt") == 0
     assert "cAmber!36!black" not in real_space
     assert r"\fill[cBlue!13]" not in real_space
     assert r"\fill[cRed!12]" not in real_space
     assert "circle (0.075)" in real_space
+    assert "0.075) circle" not in real_space
 
     core_fills = re.findall(
         r"\\fill\[(cBlue|cRed)!80\] \(([0-9.]+),([0-9.]+)\) circle \(0\.075\);",
