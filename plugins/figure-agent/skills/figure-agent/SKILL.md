@@ -481,6 +481,10 @@ remains legible at reduction scale. A repeated dot centered between two short ho
 a separate bridge stroke behind the dot, or a flattened pastel halo is a
 winged-dot defect: it reads as an icon rather than a localized state. If a
 contour is physically necessary, keep it compact, asymmetric, and subordinate.
+At print scale, each colored trap core must retain a visible local host cue:
+the neutral trace must remain legible through or immediately beside the core.
+Reject isolated dot-on-field placement when the trace disappears at reduction;
+do not add a separate bridge stroke or ornamental arm to manufacture anchoring.
 
 Treat a few low-contrast, non-periodic paths bounded inside an amorphous film as
 matrix-chain texture, not surface wrinkles or measured topography by default.

@@ -260,6 +260,8 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     assert "read as surface topography" in normalized
     assert "short asymmetric" in skill
     assert "The core alone may carry the category" in skill
+    assert "visible local host cue" in normalized
+    assert "Reject isolated" in skill
     assert "Audit the whole host field" in skill
     assert "winged-dot defect" in skill
     assert "repairing sparse matrix occupancy is preferred to shrinking the panel" in normalized
