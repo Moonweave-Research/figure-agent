@@ -29,6 +29,7 @@ TERMINAL_APPLY_STATUSES = {
     "applied_unverified",
     "applied_with_failed_verification",
 }
+POST_APPLY_COMMAND_TIMEOUT_SECONDS = 180
 
 
 class CandidateApplyError(ValueError):
@@ -424,14 +425,24 @@ def _post_apply_checks(name: str, paths: runtime_paths.RuntimePaths) -> dict[str
     }
     checks: dict[str, dict[str, Any]] = {}
     for stage, command in commands.items():
-        completed = subprocess.run(
-            command,
-            cwd=paths.workspace_root,
-            env=env,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+        try:
+            completed = subprocess.run(
+                command,
+                cwd=paths.workspace_root,
+                env=env,
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=POST_APPLY_COMMAND_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired as exc:
+            checks[stage] = {
+                "status": "timed_out",
+                "returncode": 124,
+                "stdout_tail": _output_tail(exc.stdout or ""),
+                "stderr_tail": _output_tail(exc.stderr or ""),
+            }
+            continue
         checks[stage] = {
             "status": "success" if completed.returncode == 0 else "failed",
             "returncode": completed.returncode,
@@ -841,18 +852,28 @@ def _compile_current_source(
     build/<name>.pdf, so the value-preservation gate has a pre-mutation label
     baseline. Best-effort: if it fails, the baseline stays absent and the gate
     fails closed (M3)."""
-    return subprocess.run(
-        [
-            "bash",
-            str(paths.scripts_dir / "compile.sh"),
-            str(paths.examples_dir / name / f"{name}.tex"),
-        ],
-        cwd=paths.workspace_root,
-        env=_post_apply_env(paths),
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    command = [
+        "bash",
+        str(paths.scripts_dir / "compile.sh"),
+        str(paths.examples_dir / name / f"{name}.tex"),
+    ]
+    try:
+        return subprocess.run(
+            command,
+            cwd=paths.workspace_root,
+            env=_post_apply_env(paths),
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=POST_APPLY_COMMAND_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return subprocess.CompletedProcess(
+            command,
+            124,
+            stdout=exc.stdout or "",
+            stderr=(exc.stderr or "") + "\npost_apply_compile_timeout",
+        )
 
 
 def _rollback_compile_status(
