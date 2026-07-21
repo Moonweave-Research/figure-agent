@@ -197,9 +197,12 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
         encoding="utf-8"
     )
+    normalized = " ".join(skill.split())
     assert "Panel C-style amorphous-host regression rule" in skill
-    assert "three or four short, non-periodic traces" in skill
-    assert "varied orientation, length, and amplitude" in skill
+    assert "small number of non-periodic traces" in skill
+    assert "combined" in skill
+    assert "coverage reads as one disordered host field" in skill
+    assert "allow longer or visually entangled paths" in normalized
     assert "directly on a continuous host trace" in skill
     assert "short asymmetric" in skill
     assert "The core alone may carry the category" in skill
@@ -220,8 +223,10 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     host_texture = real_space.split("% Local contrast follows", 1)[0]
 
     assert host_texture.count("plot[smooth] coordinates") == 4
-    assert "Four irregular, field-spanning traces" in real_space
-    assert "field-spanning traces provide a sparse amorphous-host cue" in real_space
+    assert "one sparse," in real_space
+    assert "entangled amorphous host" in real_space
+    assert "subordinate cross-field trace is deliberately trap-free" in real_space
+    assert "structural cues, not literal chain topology" in real_space
     assert real_space.count("line width=1.20pt") == 0
     assert "cAmber!36!black" not in real_space
     assert r"\fill[cBlue!13]" not in real_space

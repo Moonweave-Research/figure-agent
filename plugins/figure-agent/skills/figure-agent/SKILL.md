@@ -449,8 +449,10 @@ matrix; if low-contrast traces disappear, add a few non-periodic host paths or
 slightly raise their neutral contrast rather than enlarging the colored traps.
 
 Panel C-style amorphous-host regression rule: for a real-space polymer host next
-to an energy diagram, draw the host as three or four short, non-periodic traces
-with varied orientation, length, and amplitude, all bounded inside the film.
+to an energy diagram, use a small number of non-periodic traces whose combined
+coverage reads as one disordered host field. Vary orientation, span, curvature,
+and local amplitude, keep every trace bounded inside the film, and allow longer
+or visually entangled paths when isolated short fragments would look unfinished.
 Place each equal-size shallow/deep core directly on a continuous host trace.
 The core alone may carry the category; if extra localization emphasis is truly
 needed, change color or weight over only a short asymmetric section of that same
@@ -473,6 +475,9 @@ the specimen is empty and every trace exists only to flank a colored core. Give
 the neutral matrix enough irregular span and spatial coverage to read first as
 one disordered material, while keeping it sparse enough that it cannot be
 mistaken for a molecular structure, lamellar texture, or measured topography.
+Do not satisfy amorphousness only by making each local curve non-periodic: the
+traces must also form a coherent specimen-scale texture rather than a collection
+of unrelated placeholder strokes.
 
 For a floating charged dielectric/cantilever near a driven electrode, distinguish
 the neutral Maxwell-attraction baseline from the charge-mediated Coulomb result
