@@ -19,6 +19,7 @@ import repair_transaction
 RECEIPT_SCHEMA = "figure-agent.repair-materialization-receipt.v2"
 STRICT_STATUS_SCHEMA = "figure-agent.strict-status.v1"
 REPAIR_ATTEMPT = re.compile(r"execution-repair-v[1-9][0-9]*")
+COMPILE_TIMEOUT_SECONDS = 180
 REQUIRED_DETECTOR_REPORTS = {
     "collisions": "figure-agent.text-collisions.v1",
     "visual_clash": None,
@@ -571,13 +572,23 @@ def finalize_materialized_candidate(
         }
         repair_transaction.atomic_write_json(receipt_path, prepared)
         receipt = prepared
-        completed = subprocess.run(
-            ["bash", str(compile_script), str(output)],
-            cwd=plugin_root,
-            env=env,
-            capture_output=True,
-            check=False,
-        )
+        compile_command = ["bash", str(compile_script), str(output)]
+        try:
+            completed = subprocess.run(
+                compile_command,
+                cwd=plugin_root,
+                env=env,
+                capture_output=True,
+                check=False,
+                timeout=COMPILE_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired as exc:
+            completed = subprocess.CompletedProcess(
+                compile_command,
+                124,
+                stdout=exc.stdout or b"",
+                stderr=(exc.stderr or b"") + b"\nauthoring_repair_compile_timeout",
+            )
         if _sha256_bytes(output.read_bytes()) != output_sha256:
             raise AuthoringRepairFinalizeError("materialized output changed during compile")
         compile_evidence: dict[str, Any] = {
