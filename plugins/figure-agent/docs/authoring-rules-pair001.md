@@ -166,11 +166,11 @@ rules:
     superseded_reason: Confirmed family-level authority must not force unverified model-specific controls or a reusable faceplate primitive.
   - id: pair001.print-scale-registration
     category: style_lock
-    rule: Size and weight elements so they register at the real print scale (178 mm width), not only on screen; verify thin features and small shapes stay visible at print scale.
+    rule: Size and weight elements against the declared final physical size, not a fixed screen zoom or legacy 178 mm proxy. For Nature-family main figures, record whether the working target is constrained by column width or by the 170 mm maximum-height guidance; verify fonts, thin features, small shapes, panel letters, and inter-panel gutters at that target before judging proportions.
     source:
-      kind: iteration_comment
-      locator: examples/fig1_overview_v2_pair_001_vault/fig1_overview_v2_pair_001_vault.tex:670
-      quote: "registers at 178mm print scale as a visible"
+      kind: hand_patch_commit
+      locator: "Fig1 updated-agent redraw final-size audit (2026-07-21)"
+      quote: "Current 150.7 x 153.6 mm render reaches 170 mm height at about 166.8 mm width; 180/183 mm width would exceed the 170 mm height guidance."
     transfer_policy: use_as_question
   - id: pair001.balanced-saturation-hierarchy
     category: style_lock

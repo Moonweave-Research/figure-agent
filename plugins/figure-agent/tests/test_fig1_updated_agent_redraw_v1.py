@@ -24,6 +24,7 @@ sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
 import authoring_context_pack  # noqa: E402
 import authoring_execution_packet  # noqa: E402
+import check_physics_grounding  # noqa: E402
 from semantic_legibility_contract import (  # noqa: E402
     validate_semantic_legibility_contract,
 )
@@ -31,6 +32,12 @@ from semantic_legibility_contract import (  # noqa: E402
 
 def _yaml(relative: str) -> dict:
     return yaml.safe_load((FIXTURE / relative).read_text(encoding="utf-8"))
+
+
+def _tikz_pair(value: str) -> tuple[float, float]:
+    match = re.fullmatch(r"\(([0-9.]+),([0-9.]+)\)", value)
+    assert match, value
+    return float(match.group(1)), float(match.group(2))
 
 
 def _historical_bytes(commit: str, source_path: str) -> bytes:
@@ -85,9 +92,31 @@ def test_redraw_is_independent_and_keeps_floating_panel_f_topology() -> None:
     assert r"\PanelFFloatingCantilever" in source
 
     result = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
-    assert result["summary"]["object_role_count"] == 9
-    assert result["summary"]["visible_connector_count"] == 4
+    assert result["summary"]["object_role_count"] == 22
+    assert result["summary"]["visible_connector_count"] == 14
+    assert result["summary"]["label_ownership_count"] == 4
     assert result["summary"]["floating_object_count"] == 1
+
+
+def test_redraw_semantic_contract_binds_c_d_e_relations() -> None:
+    contract = _yaml("semantic_contract.yaml")
+    result = validate_semantic_legibility_contract(contract)
+
+    protected = set(result["protected_relations"])
+    assert "real_space_trap_populations_correspond_to_energy_diagram_states" in protected
+    assert "high_n_power_law_decays_faster_than_low_n_power_law" in protected
+    assert "corona_charged_sample_is_manually_transferred_to_noncontact_ispd_measurement" in protected
+    assert "surface_potential_decay_is_transformed_into_derived_trap_distribution" in protected
+    assert "tau_d_remains_energy_domain_interval_between_shallow_and_deep_peaks" in protected
+
+    connectors = {
+        item["connector_id"]: item
+        for item in result["semantic_legibility"]["visible_connectors"]
+    }
+    assert connectors["panel_c.shallow_population_corresponds_to_energy_state"]["render_style"] == "population_correspondence"
+    assert connectors["panel_d.constant_voltage_owns_transient"]["declared_role"] == "operating_condition"
+    assert connectors["panel_e.decay_feeds_raw_to_derived_transform"]["render_style"] == "transformation_arrow"
+    assert connectors["panel_e.transform_outputs_trap_distribution"]["to_object"] == "panel_e.derived_trap_distribution"
     assert result["summary"]["visual_review_required"] is True
     assert result["publication_acceptance"] == "not_claimed"
 
@@ -333,6 +362,51 @@ def test_repaired_panel_letters_follow_nature_communications_case() -> None:
         assert f"{{{upper}}};" not in source
 
 
+def test_repaired_declares_height_limited_final_print_size_contract() -> None:
+    spec = _yaml("spec.yaml")
+    contract = spec["final_size_contract"]
+
+    assert contract["basis"] == "height_limited_nature_family_main_figure"
+    natural_width, natural_height = contract["natural_size_mm"]
+    target_width = contract["target_width_mm"]
+    max_height = contract["max_height_mm"]
+    assert math.isclose(natural_width, 150.7, abs_tol=0.1)
+    assert math.isclose(natural_height, 153.6, abs_tol=0.1)
+    assert math.isclose(target_width, natural_width * max_height / natural_height, abs_tol=0.2)
+    assert math.isclose(target_width, 166.8, abs_tol=0.2)
+    assert contract["double_column_reference_mm"]["nature_communications"] == 180.0
+    assert contract["double_column_reference_mm"]["nature_figure_guide"] == 183.0
+    assert natural_height * 180.0 / natural_width > max_height
+    assert natural_height * 183.0 / natural_width > max_height
+
+
+def test_repaired_declares_compile_visible_physics_grounding() -> None:
+    briefing = (FIXTURE / "briefing.md").read_text(encoding="utf-8")
+    spec = _yaml("spec.yaml")
+
+    assert check_physics_grounding.has_physics_invariants(briefing) is True
+    assert check_physics_grounding.has_semantic_assertions(spec) is True
+    assert check_physics_grounding.grounding_status(FIXTURE)["status"] == "grounded"
+    assertion_ids = {item["id"] for item in spec["semantic_assertions"]}
+    assert assertion_ids == {
+        "panel-f-coulomb-result-left-of-maxwell-baseline",
+        "panel-f-trapped-charge-left-of-driven-electrode",
+    }
+
+
+def test_repaired_font_hierarchy_fits_declared_final_print_size() -> None:
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    contract = _yaml("spec.yaml")["final_size_contract"]
+    scale = contract["target_width_mm"] / contract["natural_size_mm"][0]
+
+    for style_name in ("panel letter", "panel title", "body label", "small label"):
+        declaration = source.split(f"{style_name}/.style=", 1)[1].splitlines()[0]
+        size = re.search(r"\\fontsize\{([0-9.]+)\}", declaration)
+        assert size, style_name
+        final_size_pt = float(size.group(1)) * scale
+        assert 5.0 <= final_size_pt <= 7.0
+
+
 def test_repaired_panel_descriptors_do_not_form_a_second_title_band() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     declaration = source.split("panel title/.style=", 1)[1].splitlines()[0]
@@ -386,7 +460,7 @@ def test_repaired_s8_atom_labels_survive_reduction() -> None:
     assert r"\fontsize{3.1}{3.8}\selectfont" not in panel_a
 
 
-def test_repaired_panel_a_strokes_survive_nature_double_column_scale() -> None:
+def test_repaired_panel_a_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     separators = source.split("% Panel A", 1)[0].split(
         "% Open publication canvas", 1
@@ -399,13 +473,13 @@ def test_repaired_panel_a_strokes_survive_nature_double_column_scale() -> None:
         )
     ]
 
-    # The source is about 150 mm wide and is intended for a 180 mm two-column
-    # figure. 0.84 pt at source scale therefore renders at approximately 1 pt.
+    # The source is about 150 mm wide and audits against a declared
+    # height-limited final width, so 0.84 pt stays close to a 1 pt print stroke.
     assert widths
     assert min(widths) >= 0.84
 
 
-def test_repaired_panel_b_strokes_survive_nature_double_column_scale() -> None:
+def test_repaired_panel_b_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_b = source.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     widths = [
@@ -419,7 +493,7 @@ def test_repaired_panel_b_strokes_survive_nature_double_column_scale() -> None:
     assert min(widths) >= 0.84
 
 
-def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
+def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_c = source.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
     widths = [
@@ -524,7 +598,7 @@ def test_repaired_shared_semantic_lines_survive_nature_scale() -> None:
         assert float(width.group(1)) >= 0.84
 
 
-def test_repaired_panel_d_strokes_survive_nature_double_column_scale() -> None:
+def test_repaired_panel_d_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_d = source.split("% Panel D", 1)[1].split("% Panel E", 1)[0]
     widths = [
@@ -582,7 +656,7 @@ def test_repaired_panel_d_high_n_line_is_geometrically_steeper() -> None:
     assert "rotate=-21.1" in panel_d
 
 
-def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
+def test_repaired_panel_e_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
     widths = [
@@ -600,9 +674,26 @@ def test_repaired_panel_e_strokes_survive_nature_double_column_scale() -> None:
     assert "anchor=north, align=center" in panel_e
     assert "{manual transfer}" not in panel_e
     assert "{derive};" in panel_e
-    assert "(4.08,1.52)--(4.08,1.08)" in panel_e
-    assert "anchor=west, text=cGray!78!black] at (4.13,1.30)" in panel_e
-    assert "anchor=north, text=cGray!78!black] at (3.80,1.18)" not in panel_e
+    transform = re.search(
+        r"Explicit raw-to-derived transformation\.\n"
+        r"\s*\\draw\[[^\]]*Stealth[^\]]*\][^\n]*\n"
+        r"\s*(\([0-9.]+,[0-9.]+\))--(\([0-9.]+,[0-9.]+\));\n"
+        r"\s*\\node\[small label, anchor=west, text=cGray!78!black\] at "
+        r"(\([0-9.]+,[0-9.]+\)) \{derive\};",
+        panel_e,
+    )
+    assert transform
+    tail = _tikz_pair(transform.group(1))
+    head = _tikz_pair(transform.group(2))
+    label = _tikz_pair(transform.group(3))
+    source_plot_boundary = {"x_min": 0.66, "x_max": 4.24, "y_axis": 1.52}
+    derived_region = {"x_min": 0.66, "x_max": 4.24, "y_min": 0.36, "y_max": 1.42}
+    assert math.isclose(tail[1], source_plot_boundary["y_axis"], abs_tol=0.01)
+    assert source_plot_boundary["x_min"] <= tail[0] <= source_plot_boundary["x_max"]
+    assert derived_region["x_min"] <= head[0] <= derived_region["x_max"]
+    assert derived_region["y_min"] <= head[1] <= derived_region["y_max"]
+    assert math.isclose(tail[0], head[0], abs_tol=0.01)
+    assert label[0] > tail[0] and head[1] < label[1] < tail[1]
     assert "Kelvin" not in panel_e
     assert r"\shade" not in panel_e
     assert "opacity=" not in panel_e

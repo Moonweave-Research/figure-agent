@@ -21,5 +21,18 @@ instrument decoration, and keep labels outside the depicted apparatus. The
 publication target is Nature Communications. In Panel F, the voltage-source
 return is grounded; the sample and cantilever remain electrically floating.
 
+## §6. Physics invariants
+
+- Panel C preserves a shared energy orientation: energy increases upward and
+  deep trap states sit lower than shallow trap states.
+- Panel D preserves a constant-voltage transient-current comparison; the
+  high-\(n\) power-law response decays faster than the low-\(n\) response.
+- Panel E preserves the manual ISPD sequence: gridless two-terminal corona
+  charging, manual sample transfer, grounded measurement substrate, non-contact
+  ESVM acquisition, and derivation of \(g(E_t)\).
+- Panel F preserves the floating topology: the grounded voltage-source return
+  belongs to the driven-electrode circuit, not to the sample or cantilever, and
+  the Coulomb repulsion result acts away from the driven electrode.
+
 Machine checks support inspection only. A named human review is required before
 any development-baseline or publication claim.

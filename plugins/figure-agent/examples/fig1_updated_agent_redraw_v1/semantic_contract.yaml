@@ -2,8 +2,21 @@ schema: figure-agent.failure-first-semantic-contract.v1
 selector_id: figure1.redraw_v1
 required_objects:
   - panel_c.trap_landscape
+  - panel_c.real_space_host
+  - panel_c.shallow_trap_population
+  - panel_c.deep_trap_population
+  - panel_c.energy_diagram
+  - panel_c.correspondence
   - panel_d.transient_current
+  - panel_d.constant_voltage_condition
+  - panel_d.low_n_power_law
+  - panel_d.high_n_power_law
+  - panel_e.corona_charging_state
+  - panel_e.manual_transfer
   - panel_e.ispd_probe
+  - panel_e.surface_potential_decay
+  - panel_e.raw_to_derived_transform
+  - panel_e.derived_trap_distribution
   - panel_f.mechanical_jig
   - panel_f.cantilever
   - panel_f.electrode
@@ -21,7 +34,12 @@ repair:
   max_source_blocks: 6
 protected_relations:
   - shallow_and_deep_traps_share_one_energy_orientation
+  - real_space_trap_populations_correspond_to_energy_diagram_states
   - transient_current_decays_under_constant_voltage
+  - high_n_power_law_decays_faster_than_low_n_power_law
+  - corona_charged_sample_is_manually_transferred_to_noncontact_ispd_measurement
+  - surface_potential_decay_is_transformed_into_derived_trap_distribution
+  - tau_d_remains_energy_domain_interval_between_shallow_and_deep_peaks
   - ispd_probe_remains_separate_from_sample_surface
   - mechanical_jig_holds_cantilever
   - cantilever_separated_from_electrode_by_air_gap
@@ -33,12 +51,51 @@ semantic_legibility:
     - object_id: panel_c.trap_landscape
       declared_role: energy_landscape
       forbidden_readings: [quantitative_density_fit]
+    - object_id: panel_c.real_space_host
+      declared_role: amorphous_polymer_matrix
+      forbidden_readings: [lamellar_texture, surface_topography]
+    - object_id: panel_c.shallow_trap_population
+      declared_role: localized_shallow_trap_sites
+      forbidden_readings: [separate_particle_phase]
+    - object_id: panel_c.deep_trap_population
+      declared_role: localized_deep_trap_sites
+      forbidden_readings: [separate_particle_phase]
+    - object_id: panel_c.energy_diagram
+      declared_role: schematic_energy_domain_view
+      forbidden_readings: [calibrated_density_fit]
+    - object_id: panel_c.correspondence
+      declared_role: population_mapping_between_views
+      forbidden_readings: [transport_trajectory]
     - object_id: panel_d.transient_current
       declared_role: qualitative_decay_plot
       forbidden_readings: [calibrated_measurement]
+    - object_id: panel_d.constant_voltage_condition
+      declared_role: operating_condition
+      forbidden_readings: [measured_curve]
+    - object_id: panel_d.low_n_power_law
+      declared_role: qualitative_low_exponent_decay
+      forbidden_readings: [fitted_numeric_exponent]
+    - object_id: panel_d.high_n_power_law
+      declared_role: qualitative_high_exponent_decay
+      forbidden_readings: [fitted_numeric_exponent]
+    - object_id: panel_e.corona_charging_state
+      declared_role: gridless_two_terminal_charging_state
+      forbidden_readings: [kelvin_probe_station, grounded_charging_stage]
+    - object_id: panel_e.manual_transfer
+      declared_role: discrete_manual_sample_relocation
+      forbidden_readings: [automated_motion_stage, conveyor_scan]
     - object_id: panel_e.ispd_probe
       declared_role: noncontact_measurement_probe
       forbidden_readings: [sample_electrode]
+    - object_id: panel_e.surface_potential_decay
+      declared_role: raw_surface_potential_decay
+      forbidden_readings: [calibrated_fit_points]
+    - object_id: panel_e.raw_to_derived_transform
+      declared_role: measurement_to_distribution_transformation
+      forbidden_readings: [floating_down_arrow]
+    - object_id: panel_e.derived_trap_distribution
+      declared_role: qualitative_trap_density_distribution
+      forbidden_readings: [source_bound_data_points]
     - object_id: panel_f.mechanical_jig
       declared_role: mechanical_fixture
       forbidden_readings: [electrical_contact]
@@ -58,6 +115,56 @@ semantic_legibility:
       declared_role: directed_force
       forbidden_readings: [annotation_leader]
   visible_connectors:
+    - connector_id: panel_c.shallow_population_corresponds_to_energy_state
+      from_object: panel_c.shallow_trap_population
+      to_object: panel_c.energy_diagram
+      declared_role: semantic_correspondence
+      render_style: population_correspondence
+    - connector_id: panel_c.deep_population_corresponds_to_energy_state
+      from_object: panel_c.deep_trap_population
+      to_object: panel_c.energy_diagram
+      declared_role: semantic_correspondence
+      render_style: population_correspondence
+    - connector_id: panel_d.constant_voltage_owns_transient
+      from_object: panel_d.constant_voltage_condition
+      to_object: panel_d.transient_current
+      declared_role: operating_condition
+      render_style: condition_label
+    - connector_id: panel_d.low_n_trace_is_current_response
+      from_object: panel_d.transient_current
+      to_object: panel_d.low_n_power_law
+      declared_role: qualitative_response_trace
+      render_style: response_trace
+    - connector_id: panel_d.high_n_trace_is_current_response
+      from_object: panel_d.transient_current
+      to_object: panel_d.high_n_power_law
+      declared_role: qualitative_response_trace
+      render_style: response_trace
+    - connector_id: panel_e.charging_state_transfers_to_measurement_state
+      from_object: panel_e.corona_charging_state
+      to_object: panel_e.manual_transfer
+      declared_role: process_stage_transition
+      render_style: stage_transition
+    - connector_id: panel_e.manual_transfer_places_sample_under_ispd_probe
+      from_object: panel_e.manual_transfer
+      to_object: panel_e.ispd_probe
+      declared_role: process_stage_transition
+      render_style: stage_transition
+    - connector_id: panel_e.ispd_probe_produces_surface_potential_decay
+      from_object: panel_e.ispd_probe
+      to_object: panel_e.surface_potential_decay
+      declared_role: measurement_acquisition
+      render_style: measurement_result
+    - connector_id: panel_e.decay_feeds_raw_to_derived_transform
+      from_object: panel_e.surface_potential_decay
+      to_object: panel_e.raw_to_derived_transform
+      declared_role: measurement_transformation
+      render_style: transformation_arrow
+    - connector_id: panel_e.transform_outputs_trap_distribution
+      from_object: panel_e.raw_to_derived_transform
+      to_object: panel_e.derived_trap_distribution
+      declared_role: measurement_transformation
+      render_style: transformation_arrow
     - connector_id: panel_f.jig_holds_cantilever
       from_object: panel_f.mechanical_jig
       to_object: panel_f.cantilever
@@ -86,6 +193,10 @@ semantic_legibility:
       to_object: panel_f.ground_reference
       declared_role: ground_return
   label_ownership:
+    - label_id: panel_e.derive_label
+      owner: panel_e.raw_to_derived_transform
+    - label_id: panel_e.tau_d_label
+      owner: panel_e.derived_trap_distribution
     - label_id: panel_f.air_gap_label
       owner: panel_f.cantilever
     - label_id: panel_f.applied_voltage_label

@@ -166,6 +166,23 @@ def test_pair001_binds_raw_to_derived_transformations() -> None:
     assert "dedicated transformation lane" in rule["rule"]
 
 
+def test_pair001_print_scale_registration_uses_declared_physical_size() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "pair001.print-scale-registration"
+    )
+    assert "declared final physical size" in rule["rule"]
+    assert "fixed screen zoom or legacy 178 mm proxy" in rule["rule"]
+    assert "170 mm maximum-height guidance" in rule["rule"]
+    assert "panel letters" in rule["rule"]
+    assert "178 mm" not in rule["source"]["quote"]
+
+
 def test_general_caliper_rule_requires_visible_endpoint_projections_at_reduction() -> None:
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
         encoding="utf-8"
