@@ -228,39 +228,30 @@
     (0.90,1.23) rectangle (6.12,4.30);
   \draw[cAmber!58!black, line width=0.90pt, rounded corners=0.7mm]
     (0.90,1.23) rectangle (6.12,4.30);
-  % Restrained amorphous-host cues: short, differently oriented fragments give
-  % the film a sparse disordered matrix without turning into lamellae, surface
-  % wrinkles, or literal chain topology. Each localized core sits on a host
-  % trace or local kink, so the sites read as embedded states rather than
-  % colored particles hovering above the specimen.
-  % amorphous trace
-  \draw[cGray!36, line width=0.74pt, line cap=round]
-    (1.10,3.78) .. controls (1.38,3.60) and (1.72,3.78) .. (2.02,3.66)
-    .. controls (2.36,3.52) and (2.48,3.74) .. (2.72,3.64)
-    .. controls (3.00,3.52) and (3.16,3.40) .. (3.44,3.48);
-  % amorphous trace
-  \draw[cGray!34, line width=0.74pt, line cap=round]
-    (3.82,2.70) .. controls (4.10,2.98) and (4.38,2.72) .. (4.64,2.84)
-    .. controls (4.92,2.96) and (5.14,2.82) .. (5.42,2.78);
-  % amorphous trace
-  \draw[cGray!33, line width=0.72pt, line cap=round]
-    (1.14,1.86) .. controls (1.34,1.70) and (1.44,1.56) .. (1.55,1.63)
-    .. controls (1.84,1.84) and (2.08,1.66) .. (2.36,1.56)
-    .. controls (2.52,1.50) and (2.60,1.70) .. (2.72,1.78);
-  % amorphous trace
-  \draw[cGray!33, line width=0.72pt, line cap=round]
-    (4.72,1.42) .. controls (4.98,1.68) and (5.18,1.54) .. (5.42,1.64)
-    .. controls (5.70,1.76) and (5.78,1.98) .. (5.98,2.20);
-  % amorphous trace
-  \draw[cGray!24, line width=0.64pt, line cap=round]
-    (1.28,2.66) .. controls (1.58,2.92) and (1.94,2.78) .. (2.30,2.68)
-    .. controls (2.54,2.62) and (2.64,2.84) .. (2.78,2.88);
-  % amorphous trace
-  \draw[cGray!24, line width=0.64pt, line cap=round]
-    (3.28,2.16) .. controls (3.54,2.40) and (3.88,2.30) .. (4.22,2.18)
-    .. controls (4.58,2.04) and (4.76,2.42) .. (5.18,2.16);
-  % Local contrast follows the neutral host geometry; no flattened halos or
-  % repeated wing strokes are added around the trap cores.
+  % Five irregular traces overlap in visual range to read as one sparse,
+  % entangled, specimen-spanning amorphous host rather than four trap-specific
+  % support strokes or surface-wrinkle decoration.
+  % They are structural cues, not literal chain topology or measured roughness.
+  \draw[cGray!36, line width=0.78pt, line cap=round] plot[smooth] coordinates
+    {(1.06,4.02) (1.45,3.70) (1.95,3.55) (2.38,3.72)
+     (2.72,3.64) (3.02,3.22) (2.78,2.82) (2.18,2.55)
+     (1.62,2.68) (1.12,2.52)};
+  \draw[cGray!34, line width=0.78pt, line cap=round] plot[smooth] coordinates
+    {(0.98,1.42) (1.18,1.86) (1.55,1.63) (1.90,1.48)
+     (2.30,1.70) (2.75,2.12) (3.20,2.00) (3.58,2.28)};
+  \draw[cGray!32, line width=0.76pt, line cap=round] plot[smooth] coordinates
+    {(3.04,3.95) (3.45,3.48) (3.95,3.04) (4.64,2.84)
+     (5.05,3.22) (5.42,2.96) (5.86,3.45) (6.02,3.92)};
+  \draw[cGray!31, line width=0.76pt, line cap=round] plot[smooth] coordinates
+    {(3.46,1.45) (3.88,1.82) (4.36,2.22) (4.86,2.05)
+     (5.42,1.64) (5.78,1.92) (6.02,2.38)};
+  % A trap-free cross-field trace prevents the texture from decomposing into
+  % one decorative stroke per colored site and fills the otherwise empty
+  % upper-left lane without creating a regular lamellar rhythm.
+  \draw[cGray!24, line width=0.72pt, line cap=round] plot[smooth] coordinates
+    {(1.08,3.02) (1.48,2.86) (1.98,3.02) (2.62,2.74)
+     (3.30,2.54) (3.90,2.72) (4.52,2.38) (5.20,2.58)
+     (5.92,2.24)};
   % Equal core area carries categorical identity without a false magnitude cue.
   \fill[cBlue!80] (1.55,1.63) circle (0.075);
   \draw[cBlue!95!black, line width=0.28pt] (1.55,1.63) circle (0.075);

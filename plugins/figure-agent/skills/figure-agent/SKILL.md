@@ -466,6 +466,10 @@ isolated short fragments would look unfinished, but if a long smooth path reads
 as a surface wrinkle, lamella, or specimen-spanning sine wave at reduction,
 replace it with shorter, differently oriented matrix fragments. Place each
 equal-size shallow/deep core directly on a continuous host trace or local kink.
+Do not over-correct into many isolated worm-like fragments: if the texture reads
+as biological worms, cracks, scratches, or loose debris instead of a single
+amorphous polymer host, restore fewer smooth irregular paths with enough shared
+visual span to bind the matrix.
 The core alone may carry the category; if extra localization emphasis is truly
 needed, change color or weight over only a short asymmetric section of that same
 path. Do not add a colored path section by default when the neutral host already

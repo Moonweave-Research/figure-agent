@@ -533,20 +533,19 @@ def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
     host_texture = real_space.split("% Local contrast follows", 1)[0]
     assert "both trap classes are localized sites in one disordered film" in real_space
     assert r"\foreach \xx/\yy" not in real_space
-    assert "Restrained amorphous-host cues" in real_space
+    assert "specimen-spanning amorphous host" in real_space
     assert r"\fill[cBlue!30" not in real_space
     assert r"\fill[cRed!28" not in real_space
     assert r"\fill[cBlue!13]" not in real_space
     assert r"\fill[cRed!12]" not in real_space
-    assert "short, differently oriented fragments" in real_space
-    assert "surface" in real_space
-    assert "wrinkles" in real_space
-    assert "literal chain topology" in real_space
-    assert 4 <= host_texture.count("% amorphous trace") <= 7
-    assert "plot[smooth] coordinates" not in host_texture
-    assert "Local contrast follows the neutral host geometry" in real_space
-    assert "repeated wing strokes" in real_space
+    assert "Five irregular traces" in real_space
+    assert host_texture.count("plot[smooth] coordinates") == 5
+    assert "trap-free cross-field trace" in real_space
+    assert "structural cues, not literal chain topology" in real_space
     assert real_space.count("line width=1.20pt") == 0
+    assert "(1.06,4.02)" in real_space
+    assert "(3.46,1.45)" in real_space
+    assert "surface-wrinkle decoration" in real_space
     assert "cAmber!36!black" not in real_space
     assert "fill=cBlue!9" not in real_space
     assert "fill=cRed!8" not in real_space
