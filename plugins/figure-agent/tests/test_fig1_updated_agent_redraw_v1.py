@@ -459,18 +459,18 @@ def test_repaired_panel_c_strokes_survive_nature_double_column_scale() -> None:
     host_texture = real_space.split("% Local contrast follows", 1)[0]
     assert "both trap classes are localized sites in one disordered film" in real_space
     assert r"\foreach \xx/\yy" not in real_space
-    assert "entangled amorphous host" in real_space
+    assert "specimen-spanning amorphous host" in real_space
     assert r"\fill[cBlue!30" not in real_space
     assert r"\fill[cRed!28" not in real_space
     assert r"\fill[cBlue!13]" not in real_space
     assert r"\fill[cRed!12]" not in real_space
-    assert "Three irregular traces" in real_space
-    assert host_texture.count("plot[smooth] coordinates") == 4
-    assert "subordinate cross-field trace is deliberately trap-free" in real_space
+    assert "Five irregular traces" in real_space
+    assert host_texture.count("plot[smooth] coordinates") == 5
+    assert "trap-free cross-field trace" in real_space
     assert real_space.count("line width=1.20pt") == 0
-    assert "(1.02,1.46)" in real_space
-    assert "(3.38,1.42)" in real_space
-    assert "rather than four trap-specific support strokes" in real_space
+    assert "(1.06,4.02)" in real_space
+    assert "(3.46,1.45)" in real_space
+    assert "surface-wrinkle decoration" in real_space
     assert "cAmber!36!black" not in real_space
     assert "fill=cBlue!9" not in real_space
     assert "fill=cRed!8" not in real_space

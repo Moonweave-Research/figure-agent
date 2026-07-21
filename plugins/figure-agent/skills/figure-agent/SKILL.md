@@ -477,7 +477,11 @@ one disordered material, while keeping it sparse enough that it cannot be
 mistaken for a molecular structure, lamellar texture, or measured topography.
 Do not satisfy amorphousness only by making each local curve non-periodic: the
 traces must also form a coherent specimen-scale texture rather than a collection
-of unrelated placeholder strokes.
+of unrelated placeholder strokes. If a full-width host panel feels visually
+oversized because the matrix is sparse, first check whether the host field has
+enough specimen-spanning coverage at print reduction; repairing sparse matrix
+occupancy is preferred to shrinking the panel when the neighboring energy
+diagram and correspondence marks still need the available row height.
 
 For a floating charged dielectric/cantilever near a driven electrode, distinguish
 the neutral Maxwell-attraction baseline from the charge-mediated Coulomb result

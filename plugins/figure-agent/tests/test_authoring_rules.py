@@ -208,6 +208,7 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     assert "The core alone may carry the category" in skill
     assert "Audit the whole host field" in skill
     assert "winged-dot defect" in skill
+    assert "repairing sparse matrix occupancy is preferred to shrinking the panel" in normalized
 
     repaired = (
         PLUGIN_ROOT
@@ -222,10 +223,10 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     real_space = panel_c.split("% Energy-space view:", 1)[0]
     host_texture = real_space.split("% Local contrast follows", 1)[0]
 
-    assert host_texture.count("plot[smooth] coordinates") == 4
-    assert "one sparse," in real_space
-    assert "entangled amorphous host" in real_space
-    assert "subordinate cross-field trace is deliberately trap-free" in real_space
+    assert host_texture.count("plot[smooth] coordinates") == 5
+    assert "specimen-spanning amorphous host" in real_space
+    assert "entangled" in real_space
+    assert "trap-free cross-field trace" in real_space
     assert "structural cues, not literal chain topology" in real_space
     assert real_space.count("line width=1.20pt") == 0
     assert "cAmber!36!black" not in real_space

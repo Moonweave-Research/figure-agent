@@ -228,25 +228,30 @@
     (0.90,1.23) rectangle (6.12,4.30);
   \draw[cAmber!58!black, line width=0.90pt, rounded corners=0.7mm]
     (0.90,1.23) rectangle (6.12,4.30);
-  % Three irregular traces overlap in visual range to read as one sparse,
-  % entangled amorphous host rather than four trap-specific support strokes.
+  % Five irregular traces overlap in visual range to read as one sparse,
+  % entangled, specimen-spanning amorphous host rather than four trap-specific
+  % support strokes or surface-wrinkle decoration.
   % They are structural cues, not literal chain topology or measured roughness.
-  \draw[cGray!32, line width=0.76pt] plot[smooth] coordinates
-    {(1.02,1.46) (1.28,1.92) (1.55,1.63) (1.95,1.38)
-     (2.35,1.62) (2.68,2.20) (3.05,2.82) (3.18,3.36)
-     (2.72,3.64) (2.20,3.38) (1.72,3.52) (1.22,3.92)};
-  \draw[cGray!29, line width=0.76pt] plot[smooth] coordinates
-    {(3.38,1.42) (3.82,1.85) (4.20,2.40) (4.64,2.84)
-     (5.04,3.20) (5.44,2.96) (5.86,3.50) (6.00,3.90)};
-  \draw[cGray!26, line width=0.72pt] plot[smooth] coordinates
-    {(3.58,3.88) (4.04,3.44) (4.42,2.96) (4.72,2.32)
-     (5.05,1.88) (5.42,1.64) (5.72,1.96) (6.02,2.32)};
-  % A subordinate cross-field trace is deliberately trap-free: it prevents the
-  % host texture from decomposing into one decorative stroke per colored site.
-  \draw[cGray!21, line width=0.72pt] plot[smooth] coordinates
-    {(1.10,2.72) (1.48,2.46) (1.92,2.61) (2.38,2.43)
-     (2.84,2.10) (3.28,2.30) (3.72,2.73) (4.18,2.58)
-     (4.68,2.18) (5.12,2.44) (5.56,2.31) (5.98,2.52)};
+  \draw[cGray!36, line width=0.78pt, line cap=round] plot[smooth] coordinates
+    {(1.06,4.02) (1.45,3.70) (1.95,3.55) (2.38,3.72)
+     (2.72,3.64) (3.02,3.22) (2.78,2.82) (2.18,2.55)
+     (1.62,2.68) (1.12,2.52)};
+  \draw[cGray!34, line width=0.78pt, line cap=round] plot[smooth] coordinates
+    {(0.98,1.42) (1.18,1.86) (1.55,1.63) (1.90,1.48)
+     (2.30,1.70) (2.75,2.12) (3.20,2.00) (3.58,2.28)};
+  \draw[cGray!32, line width=0.76pt, line cap=round] plot[smooth] coordinates
+    {(3.04,3.95) (3.45,3.48) (3.95,3.04) (4.64,2.84)
+     (5.05,3.22) (5.42,2.96) (5.86,3.45) (6.02,3.92)};
+  \draw[cGray!31, line width=0.76pt, line cap=round] plot[smooth] coordinates
+    {(3.46,1.45) (3.88,1.82) (4.36,2.22) (4.86,2.05)
+     (5.42,1.64) (5.78,1.92) (6.02,2.38)};
+  % A trap-free cross-field trace prevents the texture from decomposing into
+  % one decorative stroke per colored site and fills the otherwise empty
+  % upper-left lane without creating a regular lamellar rhythm.
+  \draw[cGray!24, line width=0.72pt, line cap=round] plot[smooth] coordinates
+    {(1.08,3.02) (1.48,2.86) (1.98,3.02) (2.62,2.74)
+     (3.30,2.54) (3.90,2.72) (4.52,2.38) (5.20,2.58)
+     (5.92,2.24)};
   % Equal core area carries categorical identity without a false magnitude cue.
   \fill[cBlue!80] (1.55,1.63) circle (0.075);
   \draw[cBlue!95!black, line width=0.28pt] (1.55,1.63) circle (0.075);
