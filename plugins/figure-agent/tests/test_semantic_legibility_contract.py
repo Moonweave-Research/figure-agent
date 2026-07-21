@@ -252,3 +252,15 @@ def test_compile_pipeline_runs_opt_in_contract_gate_before_tex_lint() -> None:
     tex_lint = script.index("scripts/lint_tex.py")
     assert contract_gate < tex_lint
     assert 'if [[ -f "$SEMANTIC_CONTRACT" ]]' in script
+
+
+def test_compile_pipeline_falls_back_to_fixture_semantic_contract_for_nested_repairs() -> None:
+    script = COMPILE_SCRIPT.read_text(encoding="utf-8")
+
+    assert 'SEMANTIC_CONTRACT="$(dirname "$TEX_INPUT")/semantic_contract.yaml"' in script
+    assert (
+        'if [[ ! -f "$SEMANTIC_CONTRACT" && -n "$FIXTURE_ROOT" && '
+        '-f "$FIXTURE_ROOT/semantic_contract.yaml" ]]; then'
+        in script
+    )
+    assert 'SEMANTIC_CONTRACT="$FIXTURE_ROOT/semantic_contract.yaml"' in script

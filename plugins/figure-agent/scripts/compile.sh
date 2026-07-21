@@ -82,6 +82,9 @@ if [[ -n "$FIXTURE_NAME" ]]; then
 fi
 
 SEMANTIC_CONTRACT="$(dirname "$TEX_INPUT")/semantic_contract.yaml"
+if [[ ! -f "$SEMANTIC_CONTRACT" && -n "$FIXTURE_ROOT" && -f "$FIXTURE_ROOT/semantic_contract.yaml" ]]; then
+  SEMANTIC_CONTRACT="$FIXTURE_ROOT/semantic_contract.yaml"
+fi
 if [[ -f "$SEMANTIC_CONTRACT" ]]; then
   echo 'Gate: Semantic role, connector, and label contract...' >&2
   "${UV_RUN[@]}" python3 \
