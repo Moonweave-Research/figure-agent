@@ -412,12 +412,17 @@ def test_repaired_font_hierarchy_fits_declared_final_print_size() -> None:
 def test_repaired_panel_descriptors_do_not_form_a_second_title_band() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     declaration = source.split("panel title/.style=", 1)[1].splitlines()[0]
+    panel_c = source.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
     assert r"\bfseries" not in declaration
     size = re.search(r"\\fontsize\{([0-9.]+)\}", declaration)
     assert size
     assert float(size.group(1)) <= 6.5
     assert "text=cGray!90!black" in declaration
+    assert r"\node[small label, text=cGray!78!black, anchor=west] at (0.90,4.62) {real space};" in panel_c
+    assert r"\node[small label, text=cGray!78!black, anchor=west] at (7.72,4.84) {energy diagram};" in panel_c
+    assert r"\node[body label, anchor=west] at (0.90,4.80) {real space};" not in panel_c
+    assert r"\node[body label, anchor=west] at (7.72,5.02) {energy diagram};" not in panel_c
 
 
 def test_repaired_lower_row_uses_one_aligned_header_band() -> None:

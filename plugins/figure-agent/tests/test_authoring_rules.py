@@ -326,6 +326,18 @@ def test_force_result_labels_share_the_result_role_cue() -> None:
     assert "generic gray labels are acceptable for apparatus parts and neutral baselines" in normalized
 
 
+def test_internal_subview_descriptors_stay_below_title_tier() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(skill.split())
+
+    assert "internal subviews such as real-space and energy-space halves" in normalized
+    assert "subordinate to the panel title" in normalized
+    assert "below the reserved header band" in normalized
+    assert "second panel-title row" in normalized
+
+
 def test_pair001_requires_one_ground_symbol_grammar() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"

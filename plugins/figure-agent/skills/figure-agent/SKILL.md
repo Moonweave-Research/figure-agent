@@ -622,6 +622,11 @@ and labels; bold weight may distinguish them, but materially oversized letters
 that dominate the first visual fixation are a hierarchy defect unless the journal
 or paper-wide style explicitly requires that scale.
 
+When a panel contains internal subviews such as real-space and energy-space
+halves, keep those descriptors subordinate to the panel title: use a smaller or
+muted label tier, place them below the reserved header band, and do not let them
+form a second panel-title row across the figure.
+
 Compare equivalent axis titles, variables, units, and endpoint labels across
 panels at the final reduction. Keep scientifically co-equal axes on a common
 typographic floor; do not demote a crowded panel's claim-bearing axes to an

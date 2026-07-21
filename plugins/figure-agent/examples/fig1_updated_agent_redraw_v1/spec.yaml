@@ -37,8 +37,17 @@ text_boundary_checks:
     text_phrases:
       - id: panel_c_title
         words: [Localized, trap, landscape]
+  - id: panel-c-subview-descriptors
+    kind: rect
+    role: panel_subview_descriptor_region
+    mode: contain_text
+    bbox_pdf_cm: [0.85, 5.45, 10.35, 5.96]
+    clearance_pt: 0.0
+    text_phrases:
       - id: panel_c_real_space_subtitle
         words: [real, space]
+      - id: panel_c_energy_diagram_subtitle
+        words: [energy, diagram]
   - id: panel-c-real-space-labels
     kind: rect
     role: trap_label_region
