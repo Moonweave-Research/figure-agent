@@ -183,6 +183,34 @@ def test_pair001_print_scale_registration_uses_declared_physical_size() -> None:
     assert "178 mm" not in rule["source"]["quote"]
 
 
+def test_current_candidate_status_and_label_path_coverage_are_learned() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized_skill = " ".join(skill.split())
+    assert (
+        "Do not let a stale canonical root hide a fresh declared repair candidate"
+        in normalized_skill
+    )
+    assert "do not let a fresh repair candidate imply canonical promotion" in normalized_skill
+    assert "zero checked items as a coverage gap" in normalized_skill
+
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "pair001.current-candidate-and-label-path-coverage"
+    )
+    assert "declare it as the current candidate" in rule["rule"]
+    assert "non-empty text-boundary and label-path checks" in rule["rule"]
+    assert "force-label" in rule["rule"]
+    assert "derive-arrow" in rule["rule"]
+    assert "correspondence-line" in rule["rule"]
+    assert "checked=0" in rule["source"]["quote"]
+
+
 def test_general_caliper_rule_requires_visible_endpoint_projections_at_reduction() -> None:
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
         encoding="utf-8"

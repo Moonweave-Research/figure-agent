@@ -12,6 +12,12 @@ final_size_contract:
     nature_communications: 180.0
     nature_figure_guide: 183.0
   note: Current aspect ratio exceeds the 170 mm height guidance if scaled to a full double-column width, so print-scale audits use the height-limited 166.8 mm working target unless a later global compaction changes the aspect ratio.
+current_candidate:
+  role: nested_repair_candidate
+  source: review/failure-first/comparable-v3-repair-c5/repaired.tex
+  build_pdf: review/failure-first/comparable-v3-repair-c5/build/repaired.pdf
+  build_png: review/failure-first/comparable-v3-repair-c5/build/repaired.png
+  publication_acceptance: not_claimed
 semantic_assertions:
   - id: panel-f-coulomb-result-left-of-maxwell-baseline
     relation: left_of
@@ -21,6 +27,122 @@ semantic_assertions:
     relation: left_of
     subject: trapped
     reference: electrode
+text_boundary_checks:
+  - id: panel-c-title-band
+    kind: rect
+    role: panel_title_region
+    mode: contain_text
+    bbox_pdf_cm: [0.85, 5.15, 3.65, 5.78]
+    clearance_pt: 0.0
+    text_phrases:
+      - id: panel_c_title
+        words: [Localized, trap, landscape]
+      - id: panel_c_real_space_subtitle
+        words: [real, space]
+  - id: panel-c-real-space-labels
+    kind: rect
+    role: trap_label_region
+    mode: contain_text
+    bbox_pdf_cm: [1.05, 9.05, 6.10, 9.62]
+    clearance_pt: 0.0
+    text_phrases:
+      - id: panel_c_shallow_sites
+        words: [shallow, sites]
+      - id: panel_c_deep_sites
+        words: [deep, sites]
+  - id: panel-c-energy-labels
+    kind: rect
+    role: energy_diagram_label_region
+    mode: contain_text
+    bbox_pdf_cm: [8.05, 6.55, 12.15, 7.05]
+    clearance_pt: 0.0
+    text_phrases:
+      - id: panel_c_mobility_edge
+        words: [mobility, edge]
+  - id: panel-d-plot-labels
+    kind: rect
+    role: transient_current_plot_label_region
+    mode: contain_text
+    bbox_pdf_cm: [0.20, 12.55, 4.35, 15.18]
+    clearance_pt: 0.0
+    text_phrases:
+      - id: panel_d_low_n
+        words: [low, n]
+      - id: panel_d_high_n
+        words: [high, n]
+      - id: panel_d_log_t
+        words: [log, t]
+  - id: panel-e-apparatus-labels
+    kind: rect
+    role: ispd_apparatus_label_region
+    mode: contain_text
+    bbox_pdf_cm: [5.30, 10.45, 9.95, 13.98]
+    clearance_pt: 0.0
+    text_phrases:
+      - id: panel_e_grounded_substrate
+        words: [grounded, substrate]
+      - id: panel_e_manual_sample_transfer
+        words: [manual, sample, transfer]
+  - id: panel-f-force-labels
+    kind: rect
+    role: coulomb_force_label_region
+    mode: contain_text
+    bbox_pdf_cm: [10.20, 10.35, 14.25, 14.95]
+    clearance_pt: 0.0
+    text_phrases:
+      - id: panel_f_coulomb_repulsion
+        words: [Coulomb, repulsion]
+      - id: panel_f_maxwell_attraction
+        words: [Maxwell, attraction]
+      - id: panel_f_trapped_charge
+        words: [trapped, charge]
+      - id: panel_f_air_gap
+        words: [air, gap]
+label_path_proximity_checks:
+  - id: panel-c-shallow-correspondence-line
+    kind: horizontal_line
+    role: shallow_correspondence_reference
+    y_pdf_cm: 7.42
+    x_range_pdf_cm: [4.75, 7.75]
+    clearance_pt: 0.1
+    defect_kind: label_stacked_on_reference_line
+    text_allowlist: [shallow, deep]
+  - id: panel-c-deep-correspondence-line
+    kind: horizontal_line
+    role: deep_correspondence_reference
+    y_pdf_cm: 8.65
+    x_range_pdf_cm: [5.55, 7.75]
+    clearance_pt: 0.1
+    defect_kind: label_stacked_on_reference_line
+    text_allowlist: [shallow, deep]
+  - id: panel-e-derive-arrow-lane
+    kind: vertical_line
+    role: ispd_derive_arrow_lane
+    x_pdf_cm: 9.12
+    y_range_pdf_cm: [12.45, 13.50]
+    clearance_pt: 0.1
+    defect_kind: label_path_near_miss
+    text_allowlist: [derive]
+  - id: panel-f-maxwell-arrow-lane
+    kind: horizontal_line
+    role: maxwell_attraction_arrow_lane
+    y_pdf_cm: 13.22
+    x_range_pdf_cm: [11.55, 13.30]
+    clearance_pt: 0.1
+    defect_kind: label_path_near_miss
+    text_phrases:
+      - id: maxwell_attraction_label
+        words: [Maxwell, attraction]
+  - id: panel-f-coulomb-arrow-lane
+    kind: horizontal_line
+    role: coulomb_repulsion_arrow_lane
+    y_pdf_cm: 13.63
+    x_range_pdf_cm: [10.45, 11.60]
+    clearance_pt: 0.1
+    defect_kind: label_path_near_miss
+    text_phrases:
+      - id: coulomb_repulsion_label
+        words: [Coulomb, repulsion]
 authoring_context_pack:
   enabled: true
   visual_asset_ids:

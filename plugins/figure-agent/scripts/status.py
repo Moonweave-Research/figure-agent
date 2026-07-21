@@ -97,6 +97,66 @@ def _source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
     return tuple(path for path in candidates if path.exists())
 
 
+def _fixture_local_path(example_dir: Path, value: object) -> Path | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    relative = Path(value.strip())
+    if relative.is_absolute() or ".." in relative.parts:
+        return None
+    path = example_dir / relative
+    try:
+        path.resolve(strict=False).relative_to(example_dir.resolve(strict=False))
+    except ValueError:
+        return None
+    if path.is_symlink():
+        return None
+    return path
+
+
+def _current_candidate_spec(example_dir: Path, spec: dict) -> dict[str, Any] | None:
+    raw = spec.get("current_candidate")
+    if not isinstance(raw, dict):
+        return None
+    source = _fixture_local_path(example_dir, raw.get("source"))
+    if source is None or not source.is_file():
+        return {
+            "state": "invalid",
+            "reason": "current_candidate_source_missing_or_unsafe",
+        }
+    build_pdf = _fixture_local_path(
+        example_dir,
+        raw.get("build_pdf") or source.parent.joinpath("build", f"{source.stem}.pdf").as_posix(),
+    )
+    build_png = _fixture_local_path(
+        example_dir,
+        raw.get("build_png") or source.parent.joinpath("build", f"{source.stem}.png").as_posix(),
+    )
+    if build_pdf is None:
+        return {
+            "state": "invalid",
+            "reason": "current_candidate_build_pdf_unsafe",
+        }
+    return {
+        "state": "declared",
+        "source": source,
+        "build_pdf": build_pdf,
+        "build_png": build_png,
+        "role": str(raw.get("role") or "repair_candidate"),
+        "publication_acceptance": str(raw.get("publication_acceptance") or "not_claimed"),
+    }
+
+
+def _candidate_source_paths(example_dir: Path, candidate: dict[str, Any]) -> tuple[Path, ...]:
+    source = candidate.get("source")
+    paths: list[Path] = []
+    if isinstance(source, Path):
+        paths.append(source)
+    for path in (example_dir / "briefing.md", example_dir / "spec.yaml", STYLE_LOCK_PATH):
+        if path.exists():
+            paths.append(path)
+    return tuple(paths)
+
+
 def _authoring_context_paths(example_dir: Path) -> tuple[Path, ...]:
     candidates = (
         example_dir / "authoring_contract.md",
@@ -511,16 +571,25 @@ def _load_build_json_mapping(path: Path) -> tuple[dict[str, Any] | None, str | N
     return payload, None
 
 
-def _assertion_evidence_summary(path: Path) -> dict[str, Any]:
+def _json_report_display_path(path: Path, example_dir: Path | None) -> str:
+    if example_dir is not None:
+        display = _artifact_display_path(example_dir, path)
+        if display is not None:
+            return display
+    return f"build/{path.name}"
+
+
+def _assertion_evidence_summary(path: Path, example_dir: Path | None = None) -> dict[str, Any]:
+    display_path = _json_report_display_path(path, example_dir)
     payload, error = _load_build_json_mapping(path)
     if error is not None:
-        return {"state": error, "path": f"build/{path.name}"}
+        return {"state": error, "path": display_path}
     assert payload is not None
     issues = payload.get("issues")
     issue_count = len(issues) if isinstance(issues, list) else 0
     summary = {
         "state": "needs_action" if issue_count else "passed",
-        "path": f"build/{path.name}",
+        "path": display_path,
         "schema": payload.get("schema"),
         "total": payload.get("total"),
         "checked": payload.get("checked"),
@@ -529,16 +598,17 @@ def _assertion_evidence_summary(path: Path) -> dict[str, Any]:
     return {key: value for key, value in summary.items() if value is not None}
 
 
-def _convention_receipt_summary(path: Path) -> dict[str, Any]:
+def _convention_receipt_summary(path: Path, example_dir: Path | None = None) -> dict[str, Any]:
+    display_path = _json_report_display_path(path, example_dir)
     payload, error = _load_build_json_mapping(path)
     if error is not None:
-        return {"state": error, "path": f"build/{path.name}"}
+        return {"state": error, "path": display_path}
     assert payload is not None
     counts = payload.get("counts")
     total = counts.get("total") if isinstance(counts, dict) else None
     summary = {
         "state": "present",
-        "path": f"build/{path.name}",
+        "path": display_path,
         "schema": payload.get("schema"),
         "total": total,
         "counts": counts if isinstance(counts, dict) else None,
@@ -546,24 +616,26 @@ def _convention_receipt_summary(path: Path) -> dict[str, Any]:
     return {key: value for key, value in summary.items() if value is not None}
 
 
-def _physics_grounding_summary(path: Path) -> dict[str, Any]:
+def _physics_grounding_summary(path: Path, example_dir: Path | None = None) -> dict[str, Any]:
+    display_path = _json_report_display_path(path, example_dir)
     payload, error = _load_build_json_mapping(path)
     if error is not None:
-        return {"state": error, "path": f"build/{path.name}"}
+        return {"state": error, "path": display_path}
     assert payload is not None
     summary = {
         "state": "present",
-        "path": f"build/{path.name}",
+        "path": display_path,
         "schema": payload.get("schema"),
         "status": payload.get("status"),
     }
     return {key: value for key, value in summary.items() if value is not None}
 
 
-def _strict_status_summary(path: Path) -> dict[str, Any]:
+def _strict_status_summary(path: Path, example_dir: Path | None = None) -> dict[str, Any]:
+    display_path = _json_report_display_path(path, example_dir)
     payload, error = _load_build_json_mapping(path)
     if error is not None:
-        return {"state": error, "path": f"build/{path.name}"}
+        return {"state": error, "path": display_path}
     assert payload is not None
     state = payload.get("state")
     if payload.get("schema") != STRICT_STATUS_SCHEMA or state not in {
@@ -571,24 +643,34 @@ def _strict_status_summary(path: Path) -> dict[str, Any]:
         "passed",
         "failed",
     }:
-        return {"state": "invalid", "path": f"build/{path.name}"}
+        return {"state": "invalid", "path": display_path}
     return {
         "state": state,
-        "path": f"build/{path.name}",
+        "path": display_path,
         "schema": payload["schema"],
         "strict_requested": payload.get("strict_requested") is True,
         "detector_failed": payload.get("detector_failed") is True,
     }
 
 
-def _geometry_coverage_summary(path: Path) -> dict[str, Any]:
+def _artifact_display_path(example_dir: Path, path: Path | None) -> str | None:
+    if path is None:
+        return None
+    try:
+        return path.relative_to(example_dir).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _geometry_coverage_summary(path: Path, example_dir: Path | None = None) -> dict[str, Any]:
+    display_path = _json_report_display_path(path, example_dir)
     payload, error = _load_build_json_mapping(path)
     if error is not None:
-        return {"state": error, "path": f"build/{path.name}"}
+        return {"state": error, "path": display_path}
     assert payload is not None
     coverage = payload.get("geometry_parse_coverage")
     if not isinstance(coverage, dict):
-        return {"state": "invalid", "path": f"build/{path.name}"}
+        return {"state": "invalid", "path": display_path}
     total = coverage.get("total_operations")
     parsed = coverage.get("parsed_operations")
     ratio = coverage.get("coverage_ratio")
@@ -603,7 +685,7 @@ def _geometry_coverage_summary(path: Path) -> dict[str, Any]:
         return {"state": "invalid", "path": f"build/{path.name}"}
     summary = {
         "state": "present",
-        "path": f"build/{path.name}",
+        "path": display_path,
         "schema": payload.get("schema"),
         "coverage_ratio": ratio,
         "parsed_operations": parsed,
@@ -624,17 +706,28 @@ def _geometry_coverage_summary(path: Path) -> dict[str, Any]:
     return summary
 
 
-def _spine_evidence_summary(example_dir: Path) -> dict[str, Any]:
-    build_dir = example_dir / "build"
+def _spine_evidence_summary(example_dir: Path, build_dir: Path | None = None) -> dict[str, Any]:
+    build_dir = build_dir or example_dir / "build"
+    convention_path = build_dir / "convention_receipt.json"
+    if build_dir != example_dir / "build" and not convention_path.is_file():
+        convention_path = example_dir / "build" / "convention_receipt.json"
     sources = {
-        "tex_assertions": _assertion_evidence_summary(build_dir / "tex_assertions.json"),
+        "tex_assertions": _assertion_evidence_summary(
+            build_dir / "tex_assertions.json",
+            example_dir,
+        ),
         "semantic_assertions": _assertion_evidence_summary(
-            build_dir / "semantic_assertions.json"
+            build_dir / "semantic_assertions.json",
+            example_dir,
         ),
         "convention_receipt": _convention_receipt_summary(
-            build_dir / "convention_receipt.json"
+            convention_path,
+            example_dir,
         ),
-        "physics_grounding": _physics_grounding_summary(build_dir / "physics_grounding.json"),
+        "physics_grounding": _physics_grounding_summary(
+            build_dir / "physics_grounding.json",
+            example_dir,
+        ),
     }
     states = [str(item.get("state")) for item in sources.values()]
     present_states = {"passed", "present", "needs_action"}
@@ -649,6 +742,7 @@ def _spine_evidence_summary(example_dir: Path) -> dict[str, Any]:
     return {
         "schema": SPINE_EVIDENCE_SCHEMA,
         "fixture": example_dir.name,
+        "build_dir": _artifact_display_path(example_dir, build_dir),
         "state": state,
         **sources,
     }
@@ -704,12 +798,26 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         example_dir,
         critique_is_current=result.get("critique_state") == CRITIQUE_FRESH,
     )
-    result["spine_evidence"] = _spine_evidence_summary(example_dir)
+    current_candidate = result.get("current_candidate")
+    candidate_build_dir = None
+    if isinstance(current_candidate, dict) and current_candidate.get("state") in {
+        "fresh",
+        "stale",
+    }:
+        build_pdf = current_candidate.get("build_pdf_abs")
+        if isinstance(build_pdf, Path):
+            candidate_build_dir = build_pdf.parent
+        current_candidate.pop("build_pdf_abs", None)
+    result["spine_evidence"] = _spine_evidence_summary(example_dir, candidate_build_dir)
     result["promotion_queue"] = _promotion_queue_summary(example_dir)
-    build_dir = example_dir / "build"
-    result["strict_evidence"] = _strict_status_summary(build_dir / "strict_status.json")
+    build_dir = candidate_build_dir or example_dir / "build"
+    result["strict_evidence"] = _strict_status_summary(
+        build_dir / "strict_status.json",
+        example_dir,
+    )
     result["geometry_coverage"] = _geometry_coverage_summary(
-        build_dir / "undeclared_geometry.json"
+        build_dir / "undeclared_geometry.json",
+        example_dir,
     )
     metrics_summary = reference_aesthetic_metrics_summary(example_dir)
     if metrics_summary is not None:
@@ -723,6 +831,38 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         elif state == "severe_divergence":
             result.setdefault("notes", []).append("reference_aesthetic_metrics_severe")
     return _with_status_explanation(result)
+
+
+def _resolve_current_candidate(
+    example_dir: Path,
+    spec: dict,
+    *,
+    canonical_render_state: str,
+) -> dict[str, Any] | None:
+    candidate = _current_candidate_spec(example_dir, spec)
+    if candidate is None:
+        return None
+    if candidate.get("state") != "declared":
+        return candidate
+    build_pdf = candidate["build_pdf"]
+    source_paths = _candidate_source_paths(example_dir, candidate)
+    if not build_pdf.exists():
+        state = RENDER_MISSING
+    elif _is_stale(source_paths, (build_pdf,)):
+        state = RENDER_STALE
+    else:
+        state = RENDER_FRESH
+    return {
+        "schema": "figure-agent.current-candidate.v1",
+        "state": state.lower(),
+        "role": candidate["role"],
+        "source": _artifact_display_path(example_dir, candidate["source"]),
+        "build_pdf": _artifact_display_path(example_dir, build_pdf),
+        "build_png": _artifact_display_path(example_dir, candidate.get("build_png")),
+        "build_pdf_abs": build_pdf,
+        "canonical_render_state": canonical_render_state,
+        "publication_acceptance": candidate["publication_acceptance"],
+    }
 
 
 def _append_reference_image_check(
@@ -920,6 +1060,23 @@ def infer_stage(example_dir: Path) -> dict:
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
     render_state = _compute_render_state(example_dir, spec_path, tex_path, build_pdf, sources)
+    canonical_render_state = render_state
+    current_candidate = _resolve_current_candidate(
+        example_dir,
+        spec,
+        canonical_render_state=canonical_render_state,
+    )
+    if isinstance(current_candidate, dict):
+        candidate_state = str(current_candidate.get("state") or "").upper()
+        if candidate_state in {RENDER_MISSING, RENDER_STALE, RENDER_FRESH}:
+            render_state = candidate_state
+            checks.append(("current_candidate", candidate_state.lower()))
+            if candidate_state == RENDER_STALE:
+                notes.append("current_candidate_render_stale")
+            elif candidate_state == RENDER_MISSING:
+                notes.append("current_candidate_render_missing")
+        elif current_candidate.get("state") == "invalid":
+            notes.append(str(current_candidate.get("reason") or "current_candidate_invalid"))
     _append_prerequisite_notes(notes, spec, previews_dir, briefing_path)
     _append_reference_image_check(checks, notes, spec, example_dir)
     _append_panel_reference_checks(notes, spec, example_dir)
@@ -948,6 +1105,8 @@ def infer_stage(example_dir: Path) -> dict:
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,
+            "canonical_render_state": canonical_render_state,
+            "current_candidate": current_candidate,
             **_status_vector(
                 1,
                 notes,
@@ -1009,6 +1168,8 @@ def infer_stage(example_dir: Path) -> dict:
                     "notes": notes,
                     "accepted": accepted,
                     "exports_substate": exports_substate,
+                    "canonical_render_state": canonical_render_state,
+                    "current_candidate": current_candidate,
                     "release_decision": release_decision,
                     **_status_vector(
                         4,
@@ -1052,6 +1213,8 @@ def infer_stage(example_dir: Path) -> dict:
                     "notes": notes,
                     "accepted": accepted,
                     "exports_substate": exports_substate,
+                    "canonical_render_state": canonical_render_state,
+                    "current_candidate": current_candidate,
                     **_status_vector(
                         3,
                         notes,
@@ -1090,6 +1253,8 @@ def infer_stage(example_dir: Path) -> dict:
             "notes": notes,
             "accepted": accepted,
             "exports_substate": exports_substate,
+            "canonical_render_state": canonical_render_state,
+            "current_candidate": current_candidate,
             **_status_vector(
                 2,
                 notes,
@@ -1146,6 +1311,8 @@ def infer_stage(example_dir: Path) -> dict:
         "notes": [],
         "accepted": accepted,
         "exports_substate": exports_substate,
+        "canonical_render_state": canonical_render_state,
+        "current_candidate": current_candidate,
         **_status_vector(
             0,
             [],
@@ -1186,6 +1353,17 @@ def _print_single(result: dict) -> None:
             "  Current human review: "
             f"{current_review.get('state', '?')}"
             f" ({detail or '?'})"
+        )
+    current_candidate = result.get("current_candidate")
+    if isinstance(current_candidate, dict):
+        source = current_candidate.get("source") or "?"
+        build_pdf = current_candidate.get("build_pdf") or "?"
+        print(
+            "  Current candidate: "
+            f"{current_candidate.get('state', '?')} "
+            f"source={source} "
+            f"render={build_pdf} "
+            f"canonical_render={current_candidate.get('canonical_render_state', '?')}"
         )
     audit_evidence = result.get("audit_evidence")
     if isinstance(audit_evidence, dict):

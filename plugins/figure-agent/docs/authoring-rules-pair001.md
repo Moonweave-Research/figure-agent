@@ -180,6 +180,14 @@ rules:
       locator: examples/fig1_updated_agent_redraw_v1/briefing.md
       quote: "it is not a privileged visual hero"
     transfer_policy: use_as_constraint
+  - id: pair001.current-candidate-and-label-path-coverage
+    category: label_binding
+    rule: "When a Fig1 repair child is the active review target, declare it as the current candidate and require non-empty text-boundary and label-path checks for high-risk title, force-label, derive-arrow, correspondence-line, and curve-label lanes. A strict compile with zero checked text-boundary or label-path items is a coverage gap, not evidence that those recurring LLM omissions are systemically guarded."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig1 nested repair c5 status/coverage audit (2026-07-21)"
+      quote: "strict compile green and top-level status were reading different source-of-truth surfaces; text-boundary and label-path detector reports both had checked=0."
+    transfer_policy: use_as_constraint
   - id: pair001.label-tone-and-rotation-legibility
     category: label_binding
     rule: Keep labels legible; avoid a same-tone label on a same-tone fill, and avoid near-vertical rotated labels because a sloped label on a near-vertical element is unreadable.

@@ -332,6 +332,15 @@ loses ownership of its referent, or the full glyph bounds enter a neighboring
 semantic lane; a detector hit caused by the intended display bezel, axis shaft,
 or curve-following placement is an accounted intentional overlay.
 
+When a repair child, candidate sandbox, or fixture-local override is the current
+object under review, status and closeout must say which source/render evidence
+they are reading. Do not let a stale canonical root hide a fresh declared repair
+candidate, and do not let a fresh repair candidate imply canonical promotion,
+human acceptance, or publication acceptance. Treat strict-compile green with
+`text_boundary_checks` or `label_path_proximity_checks` at zero checked items as
+a coverage gap, not as proof that recurring label/path defects are systemically
+guarded.
+
 For every dimension, caliper, interval, or delta annotation, identify both named
 referents and verify that each endpoint touches or is visibly projected from its
 referent; a floating measurement is a defect. Inspect both endpoint projections

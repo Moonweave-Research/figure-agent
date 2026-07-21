@@ -219,6 +219,83 @@ def test_status_surfaces_pending_current_render_review(tmp_path: Path) -> None:
     assert ("current_render_review", "pending") in result["checks"]
 
 
+def test_status_projects_declared_repair_candidate_evidence(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "candidate_status_demo"
+    build = fig_dir / "build"
+    repair = fig_dir / "review" / "failure-first" / "candidate-c5"
+    repair_build = repair / "build"
+    repair_build.mkdir(parents=True)
+    build.mkdir(parents=True)
+    (fig_dir / "briefing.md").write_text("briefing", encoding="utf-8")
+    (fig_dir / f"{fig_dir.name}.tex").write_text("root tex\n", encoding="utf-8")
+    (fig_dir / "spec.yaml").write_text(
+        f"name: {fig_dir.name}\n"
+        "panels: []\n"
+        "style_profile: polymer-default\n"
+        "current_candidate:\n"
+        "  role: nested_repair_candidate\n"
+        "  source: review/failure-first/candidate-c5/repaired.tex\n"
+        "  build_pdf: review/failure-first/candidate-c5/build/repaired.pdf\n"
+        "  build_png: review/failure-first/candidate-c5/build/repaired.png\n"
+        "  publication_acceptance: not_claimed\n",
+        encoding="utf-8",
+    )
+    (repair / "repaired.tex").write_text("candidate tex\n", encoding="utf-8")
+    (build / f"{fig_dir.name}.pdf").write_bytes(b"stale-root-pdf")
+    (build / "convention_receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.convention-receipt.v1",
+                "fixture": fig_dir.name,
+                "counts": {"total": 3},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    old_time = time.time() - 100
+    os.utime(build / f"{fig_dir.name}.pdf", (old_time, old_time))
+    (repair_build / "repaired.pdf").write_bytes(b"candidate-pdf")
+    (repair_build / "repaired.png").write_bytes(b"candidate-png")
+    (repair_build / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": True,
+                "detector_failed": False,
+                "state": "passed",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (repair_build / "physics_grounding.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.physics-grounding.v1",
+                "fixture": fig_dir.name,
+                "status": "grounded",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert result["render_state"] == "FRESH"
+    assert result["canonical_render_state"] == "STALE"
+    assert result["current_candidate"]["state"] == "fresh"
+    assert result["current_candidate"]["source"] == (
+        "review/failure-first/candidate-c5/repaired.tex"
+    )
+    assert ("current_candidate", "fresh") in result["checks"]
+    assert result["strict_evidence"]["state"] == "passed"
+    assert result["spine_evidence"]["physics_grounding"]["status"] == "grounded"
+    assert result["spine_evidence"]["convention_receipt"]["state"] == "present"
+    assert result["spine_evidence"]["convention_receipt"]["path"] == "build/convention_receipt.json"
+
+
 @pytest.fixture(autouse=True)
 def stable_style_lock_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep status tests independent from checkout mtimes."""
