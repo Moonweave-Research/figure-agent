@@ -538,13 +538,16 @@ def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
     assert r"\fill[cRed!28" not in real_space
     assert r"\fill[cBlue!13]" not in real_space
     assert r"\fill[cRed!12]" not in real_space
-    assert "Five irregular traces" in real_space
+    assert "Five low-contrast irregular traces" in real_space
     assert host_texture.count("plot[smooth] coordinates") == 5
+    assert real_space.count("opacity=") >= 5
     assert "trap-free cross-field trace" in real_space
     assert "structural cues, not literal chain topology" in real_space
     assert real_space.count("line width=1.20pt") == 0
     assert "(1.06,4.02)" in real_space
     assert "(3.46,1.45)" in real_space
+    assert "(6.02,3.92)" not in real_space
+    assert "(6.02,2.38)" not in real_space
     assert "surface-wrinkle decoration" in real_space
     assert "cAmber!36!black" not in real_space
     assert "fill=cBlue!9" not in real_space

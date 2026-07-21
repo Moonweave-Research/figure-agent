@@ -255,6 +255,9 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     assert "Do not over-correct into many isolated worm-like fragments" in normalized
     assert "biological worms, cracks, scratches, or loose debris" in normalized
     assert "restore fewer smooth irregular paths" in normalized
+    assert "print-scale contrast, opacity, stroke weight" in normalized
+    assert "endpoint containment repairs" in normalized
+    assert "read as surface topography" in normalized
     assert "short asymmetric" in skill
     assert "The core alone may carry the category" in skill
     assert "Audit the whole host field" in skill
@@ -275,10 +278,12 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
     host_texture = real_space.split("% Local contrast follows", 1)[0]
 
     assert host_texture.count("plot[smooth] coordinates") == 5
+    assert "low-contrast irregular traces" in real_space
     assert "specimen-spanning amorphous host" in real_space
     assert "entangled" in real_space
     assert "trap-free cross-field trace" in real_space
     assert "structural cues, not literal chain topology" in real_space
+    assert real_space.count("opacity=") >= 5
     assert "% amorphous trace" not in host_texture
     assert real_space.count("line width=1.20pt") == 0
     assert "cAmber!36!black" not in real_space
