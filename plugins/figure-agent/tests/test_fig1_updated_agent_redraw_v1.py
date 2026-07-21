@@ -222,7 +222,7 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     assert r"{trapped charge $q_{\mathrm{tr}}$}" in source
     assert r"(1.09,0.42)--(1.02,0.82)" not in source
     assert "text=cBlue" not in panel_f
-    assert "text=cRed" not in panel_f
+    assert "text=cRed!82!black" in panel_f
     assert "text=cGray!88!black" in panel_f
     assert "text=cGray!92!black" in panel_f
     assert r"{$V_{\mathrm{app}}$}" in panel_f
@@ -626,6 +626,7 @@ def test_repaired_panel_f_and_full_figure_keep_role_appropriate_strokes() -> Non
     assert "line width=1.0pt" in panel_f
     assert "line width=0.84pt" in panel_f
     assert "line width=0.42pt" in panel_f  # low-contrast Maxwell baseline
+    assert "text=cRed!82!black" in panel_f
     assert r"{mechanical\\clamp}" in panel_f
     assert r"{floating polymer\\cantilever}" in panel_f
     assert r"{trapped charge $q_{\mathrm{tr}}$}" in panel_f

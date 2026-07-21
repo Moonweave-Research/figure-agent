@@ -501,9 +501,12 @@ Apply a visual-budget check to mechanism overlays: field guides are supporting
 context, not a second result curve. Keep them to the minimum number of thin
 traces needed to establish the field, keep their label outside the force-arrow
 lane, and reserve the strongest stroke and clearest label for the claimed
-force/result. Likewise, a disordered host should use a few legible paths with
-controlled contrast; adding more faint scribbles is not a substitute for
-material identity.
+force/result. When the claimed result arrow uses a category or result color,
+its label should share that role cue unless the color would collide with a
+different declared variable; generic gray labels are acceptable for apparatus
+parts and neutral baselines, not for the primary force result. Likewise, a
+disordered host should use a few legible paths with controlled contrast; adding
+more faint scribbles is not a substitute for material identity.
 
 Force labels need endpoint anchoring, not just geometric non-overlap: place the
 label beside the arrowhead or along a clearly dedicated annotation lane, never

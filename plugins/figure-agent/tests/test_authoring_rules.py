@@ -255,6 +255,17 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
         assert protected in panel_c
 
 
+def test_force_result_labels_share_the_result_role_cue() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(skill.split())
+
+    assert "reserve the strongest stroke and clearest label for the claimed force/result" in normalized
+    assert "its label should share that role cue" in normalized
+    assert "generic gray labels are acceptable for apparatus parts and neutral baselines" in normalized
+
+
 def test_pair001_requires_one_ground_symbol_grammar() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
