@@ -387,10 +387,10 @@ def test_installed_smoke_suite_all_fixtures_have_passing_detector_contracts() ->
         for result in payload["results"]
     } == {
         "smoke_label_overlap_demo": 1,
-        "smoke_leader_line_demo": 1,
-        "smoke_panel_spacing_demo": 1,
-        "smoke_contrast_demo": 1,
-        "smoke_annotation_box_demo": 1,
+        "smoke_leader_line_demo": 0,
+        "smoke_panel_spacing_demo": 0,
+        "smoke_contrast_demo": 0,
+        "smoke_annotation_box_demo": 0,
     }
 
 

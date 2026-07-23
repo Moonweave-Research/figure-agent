@@ -262,7 +262,6 @@ def test_fig_agent_candidates_accepts_design_safe_family_aliases(tmp_path: Path)
     families = {
         "label_offset": "label_offset",
         "text_width_refit": "text_width_refit",
-        "panel_spacing_adjustment": "panel_spacing_adjust",
         "stroke_hierarchy_adjustment": "line_weight_style",
         "nonsemantic_background_quieting": "gradient_depth_fill",
     }
@@ -287,6 +286,29 @@ def test_fig_agent_candidates_accepts_design_safe_family_aliases(tmp_path: Path)
         assert "fig-agent compile candidate_demo --strict" in candidate["verification"][
             "required_commands"
         ]
+
+
+def test_fig_agent_candidates_refuses_unimplemented_family_aliases(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(
+        "% Panel C\n\\node at (3.0, 2.4) {mobility edge};\n", encoding="utf-8"
+    )
+    for family in ("connector-routing", "panel-layout", "contrast-repair", "annotation-box-layout"):
+        result = _run(
+            workspace,
+            "candidates",
+            "candidate_demo",
+            "--panel",
+            "C",
+            "--family",
+            family,
+            "--json",
+        )
+        assert result.returncode == 0, result.stderr
+        payload = json.loads(result.stdout)
+        assert payload["candidates"] == []
+        assert payload["refusals"] == [{"code": "edit_family_not_implemented"}]
 
 
 def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
