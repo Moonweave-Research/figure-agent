@@ -73,17 +73,32 @@ fixtures:
 
   - fixture: fig1_updated_agent_redraw_v1
     reference_image: false
-    text_boundary_check_ids: []
-    label_path_check_ids: []
+    text_boundary_check_ids:
+      - panel-c-energy-split
+      - panel-c-title-band
+      - panel-d-plot-header
+      - panel-e-apparatus-header
+      - panel-f-title-band
+    label_path_check_ids:
+      - panel-c-mobility-edge
+      - panel-c-thermal-escape
+      - panel-d-transient-decay
+      - panel-e-grounded-substrate
+      - panel-e-probe-shaft
+      - panel-e-sample-transfer
+      - panel-e-vs-meter-lead
+      - panel-f-coulomb-force
+      - panel-f-ground-return
     aesthetic_intent: false
     critique_reference_pack: false
     paper_aesthetic_context:
     journal_art_direction_playbook:
-    adoption_status: deferred_geometry_needed
+    adoption_status: adopted_high_risk
     rationale: >
-      The editable TeX carries high-risk Panel F connector, grounding, and label
-      semantics. Those hazards require fixture-specific geometry adoption even
-      though no reference image is declared.
+      The editable TeX carries high-risk Panel C energy labels, Panel E probe and
+      grounded-substrate paths, and Panel F force and ground-return labels. The
+      fixture now adopts explicit boundary/path checks while keeping promotion
+      and publication acceptance human-only.
 
   - fixture: fig3_trap_schematic_slice3_semantic
     reference_image: true

@@ -9,7 +9,9 @@
     "render_pdf": "build/repaired.pdf",
     "render_png": "build/repaired.png",
     "strict_status": "build/strict_status.json",
-    "physics_grounding": "build/physics_grounding.json"
+    "physics_grounding": "build/physics_grounding.json",
+    "text_boundary_clash": "build/text_boundary_clash.json",
+    "label_path_proximity": "build/label_path_proximity.json"
   },
   "promotion_state": "candidate_only",
   "human_gate": "pending"

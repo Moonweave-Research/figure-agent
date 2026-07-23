@@ -34,5 +34,12 @@ return is grounded; the sample and cantilever remain electrically floating.
   belongs to the driven-electrode circuit, not to the sample or cantilever, and
   the Coulomb repulsion result acts away from the driven electrode.
 
+## Physics invariants
+
+- Panel C energy increases upward; the mobility edge is above the thermal-escape
+  annotation and deeper wells are lower in the energy landscape.
+- Panel F Coulomb force points away from the driven electrode; the grounded
+  source return does not ground the sample or cantilever.
+
 Machine checks support inspection only. A named human review is required before
 any development-baseline or publication claim.

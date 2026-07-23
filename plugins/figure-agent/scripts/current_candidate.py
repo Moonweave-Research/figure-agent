@@ -19,6 +19,8 @@ _EVIDENCE_KEYS = {
     "render_png": "render_png",
     "strict_status": "strict_status",
     "physics_grounding": "physics_grounding",
+    "text_boundary_clash": "text_boundary_clash",
+    "label_path_proximity": "label_path_proximity",
 }
 
 
@@ -71,6 +73,19 @@ def _physics_state(path: Path | None) -> str:
     return str(status) if status else "UNDECLARED"
 
 
+def _checked_count(path: Path | None) -> int | None:
+    """Read a detector's declared-check count without treating missing evidence as green."""
+
+    if path is None or not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    value = payload.get("checked") if isinstance(payload, dict) else None
+    return value if isinstance(value, int) and value >= 0 else None
+
+
 def resolve_current_candidate(example_dir: Path) -> dict[str, Any]:
     """Return an explicit candidate summary without changing stage inference."""
 
@@ -119,6 +134,12 @@ def resolve_current_candidate(example_dir: Path) -> dict[str, Any]:
         "render_png_state": _artifact_state(source_path, artifacts["render_png"]),
         "strict_state": _strict_state(artifacts["strict_status"]),
         "physics_state": _physics_state(artifacts["physics_grounding"]),
+        "text_boundary_state": _artifact_state(
+            source_path, artifacts["text_boundary_clash"]
+        ),
+        "text_boundary_checked": _checked_count(artifacts["text_boundary_clash"]),
+        "label_path_state": _artifact_state(source_path, artifacts["label_path_proximity"]),
+        "label_path_checked": _checked_count(artifacts["label_path_proximity"]),
         "evidence_paths": {
             key: path.relative_to(example_dir).as_posix() if path else None
             for key, path in artifacts.items()

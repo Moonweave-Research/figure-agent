@@ -156,6 +156,128 @@ authoring_context_pack:
   enabled: true
   visual_asset_ids:
     - panel_f_floating_cantilever
+semantic_assertions:
+  - id: panel-c-mobility-edge-above-thermal-escape
+    relation: above
+    subject: mobility
+    reference: thermal
+    tolerance_pt: 2.0
+text_boundary_checks:
+  - id: panel-c-title-band
+    kind: horizontal_line
+    role: panel_c_header_boundary
+    y_pdf_cm: 6.70
+    x_range_pdf_cm: [0.56, 14.70]
+    clearance_pt: 1.0
+  - id: panel-c-energy-split
+    kind: vertical_line
+    role: panel_c_real_space_energy_separator
+    x_pdf_cm: 7.38
+    y_range_pdf_cm: [9.20, 10.75]
+    clearance_pt: 1.0
+  - id: panel-d-plot-header
+    kind: horizontal_line
+    role: panel_d_apparatus_result_boundary
+    y_pdf_cm: 12.50
+    x_range_pdf_cm: [0.73, 4.58]
+    clearance_pt: 1.0
+  - id: panel-e-apparatus-header
+    kind: horizontal_line
+    role: panel_e_apparatus_result_boundary
+    y_pdf_cm: 12.55
+    x_range_pdf_cm: [5.68, 9.63]
+    clearance_pt: 1.0
+  - id: panel-f-title-band
+    kind: horizontal_line
+    role: panel_f_header_boundary
+    y_pdf_cm: 12.38
+    x_range_pdf_cm: [10.90, 14.63]
+    clearance_pt: 1.0
+label_path_proximity_checks:
+  - id: panel-c-mobility-edge
+    kind: horizontal_line
+    role: panel_c_mobility_edge_reference
+    y_pdf_cm: 7.45
+    x_range_pdf_cm: [8.40, 14.26]
+    clearance_pt: 0.5
+    text_phrases:
+      - id: mobility-edge
+        words: [mobility, edge]
+  - id: panel-c-thermal-escape
+    kind: polyline
+    role: panel_c_thermal_escape_path
+    points_pdf_cm:
+      - [10.14, 8.15]
+      - [10.33, 8.52]
+      - [10.68, 8.31]
+      - [10.70, 7.79]
+    clearance_pt: 1.0
+    text_phrases:
+      - id: thermal-escape
+        words: [thermal, escape]
+  - id: panel-d-transient-decay
+    kind: polyline
+    role: panel_d_trap_mediated_decay
+    points_pdf_cm:
+      - [1.10, 14.29]
+      - [1.63, 14.60]
+      - [2.00, 15.10]
+      - [2.66, 15.26]
+      - [3.30, 15.41]
+      - [3.82, 15.44]
+      - [4.30, 15.45]
+    clearance_pt: 1.0
+    text_phrases:
+      - id: trap-mediated-decay
+        words: [trap-mediated, decay]
+  - id: panel-e-probe-shaft
+    kind: vertical_line
+    role: panel_e_probe_axis
+    x_pdf_cm: 7.36
+    y_range_pdf_cm: [12.78, 13.11]
+    clearance_pt: 1.0
+    text_allowlist: [probe]
+  - id: panel-e-vs-meter-lead
+    kind: horizontal_line
+    role: panel_e_vs_meter_connection
+    y_pdf_cm: 12.98
+    x_range_pdf_cm: [7.46, 8.70]
+    clearance_pt: 1.0
+    text_phrases:
+      - id: vs-meter
+        words: [Vs, meter]
+  - id: panel-e-sample-transfer
+    kind: horizontal_line
+    role: panel_e_manual_sample_transfer
+    y_pdf_cm: 12.88
+    x_range_pdf_cm: [6.70, 7.48]
+    clearance_pt: 1.0
+    text_allowlist: [motion, stage]
+  - id: panel-e-grounded-substrate
+    kind: horizontal_line
+    role: panel_e_grounded_substrate_boundary
+    y_pdf_cm: 13.56
+    x_range_pdf_cm: [6.43, 8.28]
+    clearance_pt: 1.0
+    text_allowlist: [grounded, substrate]
+  - id: panel-f-coulomb-force
+    kind: horizontal_line
+    role: panel_f_coulomb_force_arrow
+    y_pdf_cm: 14.26
+    x_range_pdf_cm: [10.96, 11.76]
+    clearance_pt: 1.0
+    text_phrases:
+      - id: coulomb-force
+        words: [Coulomb, force]
+  - id: panel-f-ground-return
+    kind: polyline
+    role: panel_f_grounded_source_return
+    points_pdf_cm:
+      - [13.80, 12.20]
+      - [14.00, 12.20]
+      - [14.20, 12.20]
+    clearance_pt: 1.0
+    text_allowlist: [grounded, source, return]
 panels:
   - id: A
     caption: polymer repeat-unit schematic
