@@ -58,6 +58,30 @@ def test_fewer_than_three_eligible_events_yields_no_prior() -> None:
 
     assert index["schema"] == "figure-agent.quality-memory-index.v1"
     assert index["event_count"] == 1
+
+
+def test_human_verdict_rewards_once_when_detector_outcome_also_exists() -> None:
+    accepted = _event(
+        "candidate_accepted", "label_offset", "unknown", "CAND001", quality_movement=None
+    )
+    accepted["outcome"]["human_label"] = "accept"
+    applied = _event(
+        "candidate_applied", "label_offset", "improved", "CAND001", quality_movement="improved"
+    )
+    index = quality_memory_index.build_memory_index([accepted, applied])
+    assert index["families"]["label_offset"]["attempts"] == 1
+    assert index["families"]["label_offset"]["improved"] == 1
+    assert index["duplicate_experience_attempt_count"] == 1
+
+
+def test_human_reject_is_negative_reward_without_detector_outcome() -> None:
+    rejected = _event(
+        "candidate_rejected", "label_offset", "unknown", "CAND001", quality_movement=None
+    )
+    rejected["outcome"]["human_label"] = "reject"
+    index = quality_memory_index.build_memory_index([rejected])
+    assert index["families"]["label_offset"]["attempts"] == 1
+    assert index["families"]["label_offset"]["regressed"] == 1
     assert index["eligible_prior_count"] == 0
     assert index["families"]["label_offset"]["attempts"] == 1
     assert index["families"]["label_offset"]["recommended_prior"] == 0.0

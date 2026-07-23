@@ -141,6 +141,64 @@ def test_build_apply_readiness_reports_ready_for_local_acceptance(tmp_path: Path
     assert readiness["required_commands"][0].startswith("fig-agent accept-candidate")
 
 
+@pytest.mark.parametrize(
+    ("decision", "expected_status"),
+    [("accept", "accepted_pending_apply"), ("reject", "rejected")],
+)
+def test_readiness_projects_current_hash_bound_human_decision(
+    tmp_path: Path, decision: str, expected_status: str
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _write_semantic_review(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision=decision,
+        reviewer="local-user",
+        rationale="reviewed exact render",
+        workspace_root=workspace,
+    )
+    readiness = candidate_acceptance.build_apply_readiness(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+    assert readiness["status"] == expected_status
+    assert readiness["human_decision"] == decision
+    assert readiness["blocking_reasons"] == []
+    assert bool(readiness["required_commands"]) is (decision == "accept")
+
+
+def test_readiness_rejects_tampered_human_decision_evidence(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _write_semantic_review(fixture)
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="reject",
+        reviewer="local-user",
+        rationale="reviewed exact render",
+        workspace_root=workspace,
+    )
+    acceptance_path = fixture / "build" / "candidates" / "CAND001" / "acceptance.json"
+    acceptance = json.loads(acceptance_path.read_text(encoding="utf-8"))
+    acceptance["candidate_manifest_sha256"] = "sha256:" + "0" * 64
+    acceptance_path.write_text(json.dumps(acceptance), encoding="utf-8")
+    readiness = candidate_acceptance.build_apply_readiness(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+    assert readiness["status"] == "blocked"
+    assert "acceptance_manifest_hash_mismatch" in readiness["blocking_reasons"]
+
+
 def test_apply_readiness_allows_reviewed_detector_backed_vector_clearance(
     tmp_path: Path,
 ) -> None:

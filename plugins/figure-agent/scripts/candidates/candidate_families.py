@@ -36,6 +36,12 @@ CANONICAL_FAMILY_EDIT_CLASS = {
     "gradient-depth-fill": "gradient_depth_fill",
     "nonsemantic_background_quieting": "gradient_depth_fill",
 }
+IMPLEMENTED_EDIT_CLASSES = {
+    "label_offset",
+    "text_width_refit",
+    "line_weight_style",
+    "gradient_depth_fill",
+}
 CANONICAL_EXPECTED_DELTA = {
     "label_offset": "improve label clearance",
     "text_width_refit": "refit wrapped label footprint without changing label text",
@@ -228,8 +234,10 @@ def _apply_edit_transform(edit_class: str, text: str) -> tuple[str, str] | None:
         light, dark = stops
         replacement = gradient_depth_fill.shade_flat_fill(text, light=light, dark=dark)
         return (replacement, "gradient_depth_fill") if replacement is not None else None
-    replacement = bounded_coordinate_offset.offset_first_coordinate(text)
-    return (replacement, "bounded_coordinate_offset") if replacement is not None else None
+    if edit_class == "label_offset":
+        replacement = bounded_coordinate_offset.offset_first_coordinate(text)
+        return (replacement, "bounded_coordinate_offset") if replacement is not None else None
+    return None
 
 
 def _semantic_risks_for(edit_class: str) -> list[str]:
@@ -432,6 +440,8 @@ def build_family_candidates(
             return _refusal(name, source, "no_supported_candidate")
 
     if family in CANONICAL_FAMILY_EDIT_CLASS:
+        if CANONICAL_FAMILY_EDIT_CLASS[family] not in IMPLEMENTED_EDIT_CLASSES:
+            return _refusal(name, source, "edit_family_not_implemented")
         return _canonical_family_candidates(
             name,
             source=source,

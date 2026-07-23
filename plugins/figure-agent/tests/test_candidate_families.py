@@ -4,6 +4,8 @@ import re
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import candidate_families  # noqa: E402
@@ -155,38 +157,35 @@ def test_energy_trap_family_emits_review_only_panel_candidate(tmp_path: Path) ->
 
 def test_canonical_smoke_families_emit_expected_edit_classes(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
-    cases = [
-        ("smoke_label_overlap_demo", "label-repair", "label_offset"),
-        ("smoke_leader_line_demo", "connector-routing", "leader_line_reroute"),
-        ("smoke_panel_spacing_demo", "panel-layout", "panel_spacing_adjust"),
-        ("smoke_contrast_demo", "contrast-repair", "contrast_boost"),
-        ("smoke_annotation_box_demo", "annotation-box-layout", "annotation_box_resize"),
-    ]
-    for fixture_name, family, edit_class in cases:
-        _simple_fixture(workspace, fixture_name)
+    fixture_name = "smoke_label_overlap_demo"
+    _simple_fixture(workspace, fixture_name)
+    payload = candidate_families.build_family_candidates(
+        fixture_name, panel="A", family="label-repair", workspace_root=workspace
+    )
+    candidate = payload["candidates"][0]
+    assert candidate["edit_class"] == "label_offset"
+    assert candidate["operations"][0]["semantic_kind"] == "bounded_coordinate_offset"
 
-        payload = candidate_families.build_family_candidates(
-            fixture_name,
-            panel="A",
-            family=family,
-            workspace_root=workspace,
-        )
 
-        assert payload["refusals"] == []
-        candidate = payload["candidates"][0]
-        assert candidate["family"] == family
-        assert candidate["edit_class"] == edit_class
-        assert candidate["apply_authority"] == "review_only"
-        assert candidate["verification"]["required_commands"] == [
-            f"fig-agent compile {fixture_name} --strict",
-            f"fig-agent status {fixture_name} --json",
-        ]
-        assert candidate["target"]["panel"] == "A"
-        assert candidate["selector"]["kind"] == "tex_selector.v1"
-        assert candidate["selector"]["panel"] == "A"
-        assert candidate["operations"][0]["semantic_kind"] == "bounded_coordinate_offset"
-        if edit_class == "label_offset":
-            assert candidate["semantic_risks"] == []
+@pytest.mark.parametrize(
+    ("fixture_name", "family"),
+    [
+        ("smoke_leader_line_demo", "connector-routing"),
+        ("smoke_panel_spacing_demo", "panel-layout"),
+        ("smoke_contrast_demo", "contrast-repair"),
+        ("smoke_annotation_box_demo", "annotation-box-layout"),
+    ],
+)
+def test_hollow_canonical_families_fail_loud(
+    tmp_path: Path, fixture_name: str, family: str
+) -> None:
+    workspace = tmp_path / "workspace"
+    _simple_fixture(workspace, fixture_name)
+    payload = candidate_families.build_family_candidates(
+        fixture_name, panel="A", family=family, workspace_root=workspace
+    )
+    assert payload["candidates"] == []
+    assert payload["refusals"] == [{"code": "edit_family_not_implemented"}]
 
 
 def test_canonical_family_requires_explicit_panel(tmp_path: Path) -> None:

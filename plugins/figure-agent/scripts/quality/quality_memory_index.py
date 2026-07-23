@@ -64,6 +64,11 @@ def _reward_state(event: dict[str, Any]) -> str:
     outcome = event.get("outcome")
     if not isinstance(outcome, dict):
         return "unknown"
+    human_label = outcome.get("human_label")
+    if human_label == "accept":
+        return "improved"
+    if human_label == "reject":
+        return "regressed"
     quality_movement = outcome.get("quality_movement")
     if quality_movement in ELIGIBLE_OUTCOMES:
         return str(quality_movement)
@@ -122,6 +127,10 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
         event_type = "candidate_unchosen"
     elif human_decision_kind in {"auto_accept_recommended", "convergence_deferred"}:
         event_type = "candidate_recommended"
+    elif apply_status == "blocked" and outcome.get("human_label") == "accept":
+        event_type = "candidate_accepted"
+    elif apply_status == "blocked" and outcome.get("human_label") == "reject":
+        event_type = "candidate_rejected"
     return {
         "schema": "figure-agent.quality-memory-event.v1",
         "fixture": record.get("fixture"),
@@ -147,6 +156,7 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
             "quality_movement": quality_movement,
             "reason": apply_status,
             "evidence_paths": [f"docs/experience-log/{record.get('fixture')}.jsonl"],
+            "human_label": outcome.get("human_label"),
         },
         "metrics": {"candidate_rank_score": rank_score} if rank_score is not None else {},
     }
@@ -205,6 +215,7 @@ def build_memory_index(
     unknown_event_count = 0
     counterfactual_unchosen_count = 0
     duplicate_experience_attempt_count = 0
+    seen_reward_attempt_keys: set[tuple[str, str, str, str, str, str, str]] = set()
     seen_experience_attempt_keys: set[tuple[str, str, str, str, str, str, str]] = set()
 
     for event in events:
@@ -219,6 +230,7 @@ def build_memory_index(
         state = _outcome_state(event)
         reward_state = _reward_state(event)
         event_type = str(event.get("event_type") or "")
+        is_attempt = event_type in ATTEMPT_EVENT_TYPES
         pre_state = event.get("pre_state") if isinstance(event.get("pre_state"), dict) else {}
         post_state = event.get("post_state") if isinstance(event.get("post_state"), dict) else {}
         template_id = str(post_state.get("template_id") or "unknown")
@@ -227,7 +239,7 @@ def build_memory_index(
         fixture = str(event.get("fixture") or "")
         stable_experience_key = (
             fixture,
-            event_type,
+            str(event.get("candidate_id") or ""),
             family,
             panel,
             subregion,
@@ -240,11 +252,18 @@ def build_memory_index(
         )
         if event_type in {"candidate_recommended", "candidate_unchosen"}:
             seen_experience_attempt_keys.add(stable_experience_key)
+        duplicate_reward_attempt = (
+            is_attempt
+            and reward_state in ELIGIBLE_OUTCOMES
+            and stable_experience_key in seen_reward_attempt_keys
+        )
+        if is_attempt and reward_state in ELIGIBLE_OUTCOMES:
+            seen_reward_attempt_keys.add(stable_experience_key)
+        duplicate_experience_attempt = duplicate_experience_attempt or duplicate_reward_attempt
         if duplicate_experience_attempt:
             duplicate_experience_attempt_count += 1
         if event_type == "candidate_unchosen" and not duplicate_experience_attempt:
             counterfactual_unchosen_count += 1
-        is_attempt = event_type in ATTEMPT_EVENT_TYPES
         family_known = not _is_unknown(family)
         target_known = not _is_unknown(panel) and not _is_unknown(subregion)
         unknown_outcome = (

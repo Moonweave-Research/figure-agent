@@ -306,6 +306,17 @@ Every `figure-agent.run.v1` step now carries additive `execution_evidence`. Unex
 
 Compile evidence is limited to the named render, detector/report, convention, and perception outputs; adjudication evidence is the exact `critique_adjudication.yaml`; export evidence is the fixture's PDF, SVG, PNG, and TIFF. Queue-bound fig-loop capture uses the exact returned run directory and completes fingerprinting before the self-owned lease is released. Direct fig-loop capture accepts exactly one newly created immediate child of `.scratch/fig-loop-runs/` whose manifest names the fixture, never a latest/mtime guess. Queue-run preserves the nested `figure-agent.run.v1` payload as-is and does not wrap or duplicate step evidence.
 
+Candidate readiness projects an existing human decision only when its candidate,
+manifest, normalized render, and current editable-source evidence remain exact.
+`accept` becomes `accepted_pending_apply`; `reject` and `defer` remain terminal
+local review states; stale or tampered evidence is blocked rather than reported
+as current. Accept/reject decisions are appended to experience memory at review
+time. The memory index treats the human verdict and any later detector recheck
+as one candidate attempt, with the explicit human verdict as the reward signal,
+so detector success cannot count the same accepted attempt twice. Candidate
+families without a family-specific transform emit
+`edit_family_not_implemented`; they may not masquerade as coordinate offsets.
+
 Closed-loop handoffs use these contracts rather than another workflow shell:
 `figure-agent.repair-materialization-preview.v1`, `figure-agent.repair-materialization-receipt.v2`,
 `figure-agent.repair-execution-packet.v4`, `figure-agent.repair-authority-contract.v1`,

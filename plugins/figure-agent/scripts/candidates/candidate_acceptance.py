@@ -232,6 +232,38 @@ def _is_same_candidate_apply_result(
     return isinstance(candidate_hash, str) and candidate_hash == manifest.get("candidate_hash")
 
 
+def _current_acceptance_state(
+    sandbox: Path,
+    *,
+    candidate_id: str,
+    manifest_path: Path,
+    manifest: dict[str, Any],
+    render_manifest_path: Path,
+) -> tuple[str | None, list[str]]:
+    acceptance_path = sandbox / "acceptance.json"
+    if not acceptance_path.exists():
+        return None, []
+    acceptance = _load_json(acceptance_path, "acceptance")
+    blocking: list[str] = []
+    if acceptance.get("schema") != ACCEPTANCE_SCHEMA:
+        blocking.append("acceptance_schema_invalid")
+    if acceptance.get("candidate_id") != candidate_id:
+        blocking.append("acceptance_candidate_id_mismatch")
+    if acceptance.get("candidate_hash") != manifest.get("candidate_hash"):
+        blocking.append("acceptance_candidate_hash_mismatch")
+    if acceptance.get("candidate_manifest_sha256") != _sha256_file(manifest_path):
+        blocking.append("acceptance_manifest_hash_mismatch")
+    if acceptance.get("render_manifest_sha256") != normalized_render_manifest_sha256(
+        render_manifest_path
+    ):
+        blocking.append("acceptance_render_hash_mismatch")
+    decision = acceptance.get("decision")
+    if decision not in ACCEPTANCE_DECISIONS:
+        blocking.append("acceptance_decision_invalid")
+        return None, blocking
+    return str(decision), blocking
+
+
 def build_apply_readiness(
     name: str,
     candidate_id: str,
@@ -239,6 +271,7 @@ def build_apply_readiness(
     candidate_set_path: Path,
     workspace_root: Path | None = None,
     plugin_root: Path | None = None,
+    _ignore_existing_decision: bool = False,
 ) -> dict[str, Any]:
     (
         example_dir,
@@ -282,6 +315,17 @@ def build_apply_readiness(
     apply_result_path = (
         example_dir / "build" / "candidates" / safe_candidate_id / "apply_result.json"
     )
+    sandbox = apply_result_path.parent
+    human_decision, acceptance_blocking = (None, [])
+    if not _ignore_existing_decision:
+        human_decision, acceptance_blocking = _current_acceptance_state(
+            sandbox,
+            candidate_id=safe_candidate_id,
+            manifest_path=manifest_path,
+            manifest=manifest,
+            render_manifest_path=_render_manifest_path,
+        )
+    blocking.extend(acceptance_blocking)
     if apply_result_path.is_file():
         apply_result = _load_json(apply_result_path, "apply_result")
         if apply_result.get(
@@ -293,17 +337,26 @@ def build_apply_readiness(
         name,
         candidate_set_file,
     )
-    status = "ready_for_local_acceptance" if not blocking else "blocked"
-    return {
-        "schema": READINESS_SCHEMA,
-        "figure_name": name,
-        "candidate_id": safe_candidate_id,
-        "candidate_set_path": candidate_set_relative,
-        "status": status,
-        "blocking_reasons": blocking,
-        "required_commands": []
-        if blocking
-        else [
+    if blocking:
+        status = "blocked"
+    elif human_decision == "accept":
+        status = "accepted_pending_apply"
+    elif human_decision == "reject":
+        status = "rejected"
+    elif human_decision == "defer":
+        status = "deferred"
+    else:
+        status = "ready_for_local_acceptance"
+    if status == "accepted_pending_apply":
+        required_commands = [
+            (
+                f"fig-agent apply-candidate {name} {safe_candidate_id} "
+                f"--candidate-set {candidate_set_relative} "
+                f"--acceptance build/candidates/{safe_candidate_id}/acceptance.json --json"
+            )
+        ]
+    elif status == "ready_for_local_acceptance":
+        required_commands = [
             (
                 f"fig-agent accept-candidate {name} {safe_candidate_id} "
                 f"--candidate-set {candidate_set_relative} "
@@ -314,7 +367,18 @@ def build_apply_readiness(
                 f"--candidate-set {candidate_set_relative} "
                 f"--acceptance build/candidates/{safe_candidate_id}/acceptance.json --json"
             ),
-        ],
+        ]
+    else:
+        required_commands = []
+    return {
+        "schema": READINESS_SCHEMA,
+        "figure_name": name,
+        "candidate_id": safe_candidate_id,
+        "candidate_set_path": candidate_set_relative,
+        "status": status,
+        "human_decision": human_decision,
+        "blocking_reasons": blocking,
+        "required_commands": required_commands,
     }
 
 
@@ -355,6 +419,7 @@ def write_acceptance(
             candidate_set_path=candidate_set_path,
             workspace_root=workspace_root,
             plugin_root=plugin_root,
+            _ignore_existing_decision=True,
         )
         if readiness["status"] != "ready_for_local_acceptance":
             raise CandidateAcceptanceError("candidate is not ready for local acceptance")

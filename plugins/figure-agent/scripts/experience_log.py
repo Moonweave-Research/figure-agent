@@ -840,11 +840,10 @@ def build_apply_records(
         created_at = _artifact_time(apply_path)
         base_tex_hash = _source_before_hash(example_dir, name, apply_result)
         outcome_artifact = apply_path
-    elif human_label == "reject":
-        # A human rejected the candidate before any apply ran, so no
-        # apply_result.json exists. Record the reject learning signal with a
-        # no-apply status; quality stays neutral because a human reject is
-        # suppressed by human_label, not scored as a regression.
+    elif human_label in {"accept", "reject"}:
+        # A human decision is independently useful evidence even before apply.
+        # Quality memory resolves the verdict and any later detector outcome as
+        # one candidate attempt, so recording this now cannot double-count it.
         apply_result = {}
         post_apply = {}
         apply_status = "blocked"
@@ -1005,6 +1004,45 @@ def append_reject_record(
             action.get("candidate_id") == candidate_id
             and action.get("candidate_hash") == candidate_hash
             and outcome.get("human_label") == "reject"
+        ):
+            return None
+    return append_apply_record(
+        name,
+        candidate_id,
+        workspace_root=paths.workspace_root,
+        plugin_root=paths.plugin_root,
+        candidate_set_path=candidate_set_path,
+    )
+
+
+def append_human_decision_record(
+    name: str,
+    candidate_id: str,
+    *,
+    workspace_root: Path | None = None,
+    plugin_root: Path | None = None,
+    candidate_set_path: Path | None = None,
+) -> dict[str, Any] | None:
+    """Append one idempotent accept/reject row for the exact candidate hash."""
+    fixture_identity.validate_fixture_name(name)
+    fixture_identity.validate_fixture_name(candidate_id)
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=workspace_root,
+        plugin_root=plugin_root,
+    )
+    sandbox = _candidate_sandbox(paths.examples_dir / name, candidate_id)
+    acceptance = _acceptance_payload(sandbox)
+    decision = acceptance.get("decision") if isinstance(acceptance, dict) else None
+    if decision not in {"accept", "reject"}:
+        raise ExperienceLogError("acceptance_not_human_decision")
+    candidate_hash = acceptance.get("candidate_hash")
+    for record in load_experience_records(paths.plugin_root, name):
+        action = record.get("action") if isinstance(record.get("action"), dict) else {}
+        outcome = record.get("outcome") if isinstance(record.get("outcome"), dict) else {}
+        if (
+            action.get("candidate_id") == candidate_id
+            and action.get("candidate_hash") == candidate_hash
+            and outcome.get("human_label") == decision
         ):
             return None
     return append_apply_record(
