@@ -48,7 +48,7 @@ def test_fig1_candidate_briefing_and_semantic_assertion_ground_physics() -> None
     assert "## Physics invariants" in briefing
     assert spec["semantic_assertions"]
     assert spec["semantic_assertions"][0]["id"] == (
-        "panel-c-mobility-edge-above-thermal-escape"
+        "panel-c-mobility-edge-left-of-thermal-escape"
     )
 
 

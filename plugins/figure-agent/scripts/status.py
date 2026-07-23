@@ -769,7 +769,9 @@ def _promotion_queue_summary(example_dir: Path) -> dict[str, Any]:
 
 
 def _finalize_status(result: dict, example_dir: Path) -> dict:
-    result["current_candidate"] = current_candidate.resolve_current_candidate(example_dir)
+    explicit_candidate = current_candidate.resolve_current_candidate(example_dir)
+    if explicit_candidate.get("state") != "NOT_DECLARED" or result.get("current_candidate") is None:
+        result["current_candidate"] = explicit_candidate
     result["closed_loop_attempt"] = closed_loop_current_state.resolve_current_attempt(
         workspace_root=example_dir.parents[1],
         fixture=example_dir.name,
@@ -800,16 +802,26 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         example_dir,
         critique_is_current=result.get("critique_state") == CRITIQUE_FRESH,
     )
-    current_candidate = result.get("current_candidate")
+    candidate_info = result.get("current_candidate")
     candidate_build_dir = None
-    if isinstance(current_candidate, dict) and current_candidate.get("state") in {
+    if isinstance(candidate_info, dict) and candidate_info.get("state") in {
         "fresh",
         "stale",
+        "VALID",
     }:
-        build_pdf = current_candidate.get("build_pdf_abs")
+        build_pdf = candidate_info.get("build_pdf_abs")
         if isinstance(build_pdf, Path):
             candidate_build_dir = build_pdf.parent
-        current_candidate.pop("build_pdf_abs", None)
+        elif candidate_info.get("state") == "VALID":
+            evidence_paths = candidate_info.get("evidence_paths")
+            render_path = (
+                evidence_paths.get("render_pdf")
+                if isinstance(evidence_paths, dict)
+                else None
+            )
+            if isinstance(render_path, str) and render_path:
+                candidate_build_dir = (example_dir / render_path).parent
+        candidate_info.pop("build_pdf_abs", None)
     result["spine_evidence"] = _spine_evidence_summary(example_dir, candidate_build_dir)
     result["promotion_queue"] = _promotion_queue_summary(example_dir)
     build_dir = candidate_build_dir or example_dir / "build"

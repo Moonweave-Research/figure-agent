@@ -19,6 +19,11 @@ current_candidate:
   build_png: review/failure-first/comparable-v3-repair-c5/build/repaired.png
   publication_acceptance: not_claimed
 semantic_assertions:
+  - id: panel-c-mobility-edge-left-of-thermal-escape
+    relation: left_of
+    subject: mobility
+    reference: thermal
+    tolerance_pt: 2.0
   - id: panel-f-coulomb-result-left-of-maxwell-baseline
     relation: left_of
     subject: repulsion
@@ -107,73 +112,11 @@ text_boundary_checks:
         words: [trapped, charge]
       - id: panel_f_air_gap
         words: [air, gap]
-label_path_proximity_checks:
-  - id: panel-c-shallow-correspondence-line
-    kind: horizontal_line
-    role: shallow_correspondence_reference
-    y_pdf_cm: 7.42
-    x_range_pdf_cm: [4.75, 7.75]
-    clearance_pt: 0.1
-    defect_kind: label_stacked_on_reference_line
-    text_allowlist: [shallow, deep]
-  - id: panel-c-deep-correspondence-line
-    kind: horizontal_line
-    role: deep_correspondence_reference
-    y_pdf_cm: 8.65
-    x_range_pdf_cm: [5.55, 7.75]
-    clearance_pt: 0.1
-    defect_kind: label_stacked_on_reference_line
-    text_allowlist: [shallow, deep]
-  - id: panel-e-derive-arrow-lane
-    kind: vertical_line
-    role: ispd_derive_arrow_lane
-    x_pdf_cm: 9.12
-    y_range_pdf_cm: [12.45, 13.50]
-    clearance_pt: 0.1
-    defect_kind: label_path_near_miss
-    text_allowlist: [derive]
-  - id: panel-f-maxwell-arrow-lane
-    kind: horizontal_line
-    role: maxwell_attraction_arrow_lane
-    y_pdf_cm: 13.22
-    x_range_pdf_cm: [11.55, 13.30]
-    clearance_pt: 0.1
-    defect_kind: label_path_near_miss
-    text_phrases:
-      - id: maxwell_attraction_label
-        words: [Maxwell, attraction]
-  - id: panel-f-coulomb-arrow-lane
-    kind: horizontal_line
-    role: coulomb_repulsion_arrow_lane
-    y_pdf_cm: 13.63
-    x_range_pdf_cm: [10.45, 11.60]
-    clearance_pt: 0.1
-    defect_kind: label_path_near_miss
-    text_phrases:
-      - id: coulomb_repulsion_label
-        words: [Coulomb, repulsion]
-authoring_context_pack:
-  enabled: true
-  visual_asset_ids:
-    - panel_f_floating_cantilever
-semantic_assertions:
-  - id: panel-c-mobility-edge-above-thermal-escape
-    relation: above
-    subject: mobility
-    reference: thermal
-    tolerance_pt: 2.0
-text_boundary_checks:
-  - id: panel-c-title-band
-    kind: horizontal_line
-    role: panel_c_header_boundary
-    y_pdf_cm: 6.70
-    x_range_pdf_cm: [0.56, 14.70]
-    clearance_pt: 1.0
   - id: panel-c-energy-split
     kind: vertical_line
     role: panel_c_real_space_energy_separator
     x_pdf_cm: 7.38
-    y_range_pdf_cm: [9.20, 10.75]
+    y_range_pdf_cm: [6.00, 10.10]
     clearance_pt: 1.0
   - id: panel-d-plot-header
     kind: horizontal_line
@@ -184,7 +127,7 @@ text_boundary_checks:
   - id: panel-e-apparatus-header
     kind: horizontal_line
     role: panel_e_apparatus_result_boundary
-    y_pdf_cm: 12.55
+    y_pdf_cm: 13.20
     x_range_pdf_cm: [5.68, 9.63]
     clearance_pt: 1.0
   - id: panel-f-title-band
@@ -193,6 +136,10 @@ text_boundary_checks:
     y_pdf_cm: 12.38
     x_range_pdf_cm: [10.90, 14.63]
     clearance_pt: 1.0
+authoring_context_pack:
+  enabled: true
+  visual_asset_ids:
+    - panel_f_floating_cantilever
 label_path_proximity_checks:
   - id: panel-c-mobility-edge
     kind: horizontal_line
