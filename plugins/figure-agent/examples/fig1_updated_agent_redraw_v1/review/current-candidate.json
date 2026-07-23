@@ -1,0 +1,16 @@
+{
+  "schema": "figure-agent.current-candidate-pointer.v1",
+  "fixture": "fig1_updated_agent_redraw_v1",
+  "candidate_id": "comparable-v3-repair-c5",
+  "candidate_root": "review/failure-first/comparable-v3-repair-c5",
+  "source_path": "repaired.tex",
+  "source_sha256": "sha256:02f811518956a50fd3e3ae526807260a44b792edcf5e2292472a48c977fa4118",
+  "evidence": {
+    "render_pdf": "build/repaired.pdf",
+    "render_png": "build/repaired.png",
+    "strict_status": "build/strict_status.json",
+    "physics_grounding": "build/physics_grounding.json"
+  },
+  "promotion_state": "candidate_only",
+  "human_gate": "pending"
+}

@@ -16,6 +16,7 @@ sys.path.insert(0, str(SCRIPTS_DIR / "checks"))
 sys.path.insert(0, str(SCRIPTS_DIR / "quality"))
 
 import closed_loop_current_state
+import current_candidate
 import current_render_review_scaffold
 import human_decision_record
 import runtime_paths
@@ -768,6 +769,7 @@ def _promotion_queue_summary(example_dir: Path) -> dict[str, Any]:
 
 
 def _finalize_status(result: dict, example_dir: Path) -> dict:
+    result["current_candidate"] = current_candidate.resolve_current_candidate(example_dir)
     result["closed_loop_attempt"] = closed_loop_current_state.resolve_current_attempt(
         workspace_root=example_dir.parents[1],
         fixture=example_dir.name,
@@ -1355,16 +1357,27 @@ def _print_single(result: dict) -> None:
             f" ({detail or '?'})"
         )
     current_candidate = result.get("current_candidate")
-    if isinstance(current_candidate, dict):
-        source = current_candidate.get("source") or "?"
-        build_pdf = current_candidate.get("build_pdf") or "?"
-        print(
-            "  Current candidate: "
-            f"{current_candidate.get('state', '?')} "
-            f"source={source} "
-            f"render={build_pdf} "
-            f"canonical_render={current_candidate.get('canonical_render_state', '?')}"
-        )
+    if isinstance(current_candidate, dict) and current_candidate.get("state") != "NOT_DECLARED":
+        if current_candidate.get("candidate_id"):
+            print(
+                "  Current candidate: "
+                f"{current_candidate.get('candidate_id', '?')} "
+                f"state={current_candidate.get('state', '?')} "
+                f"render={current_candidate.get('render_state', '?')} "
+                f"strict={current_candidate.get('strict_state', '?')} "
+                f"physics={current_candidate.get('physics_state', '?')} "
+                f"promotion={current_candidate.get('promotion_state', '?')}"
+            )
+        else:
+            source = current_candidate.get("source") or "?"
+            build_pdf = current_candidate.get("build_pdf") or "?"
+            print(
+                "  Current candidate: "
+                f"{current_candidate.get('state', '?')} "
+                f"source={source} "
+                f"render={build_pdf} "
+                f"canonical_render={current_candidate.get('canonical_render_state', '?')}"
+            )
     audit_evidence = result.get("audit_evidence")
     if isinstance(audit_evidence, dict):
         blocking_items = audit_evidence.get("blocking_items")

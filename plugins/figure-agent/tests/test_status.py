@@ -294,6 +294,73 @@ def test_status_projects_declared_repair_candidate_evidence(tmp_path: Path) -> N
     assert result["spine_evidence"]["physics_grounding"]["status"] == "grounded"
     assert result["spine_evidence"]["convention_receipt"]["state"] == "present"
     assert result["spine_evidence"]["convention_receipt"]["path"] == "build/convention_receipt.json"
+def test_status_surfaces_explicit_nested_current_candidate_without_promoting_it(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "candidate_status_demo"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    source = fig_dir / "review" / "candidate-c1" / "repaired.tex"
+    source.parent.mkdir(parents=True)
+    source.write_text("candidate", encoding="utf-8")
+    pointer = {
+        "schema": "figure-agent.current-candidate-pointer.v1",
+        "fixture": fig_dir.name,
+        "candidate_id": "candidate-c1",
+        "candidate_root": "review/candidate-c1",
+        "source_path": "repaired.tex",
+        "source_sha256": _sha256(source),
+        "evidence": {
+            "render_pdf": "build/repaired.pdf",
+            "render_png": "build/repaired.png",
+            "strict_status": "build/strict_status.json",
+            "physics_grounding": "build/physics_grounding.json",
+        },
+        "promotion_state": "candidate_only",
+        "human_gate": "pending",
+    }
+    pointer_path = fig_dir / "review" / "current-candidate.json"
+    pointer_path.write_text(json.dumps(pointer), encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+
+    candidate = result["current_candidate"]
+    assert candidate["state"] == "VALID"
+    assert candidate["candidate_id"] == "candidate-c1"
+    assert candidate["render_state"] == "MISSING"
+    assert candidate["strict_state"] == "MISSING"
+    assert candidate["physics_state"] == "UNDECLARED"
+    assert candidate["promotion_state"] == "candidate_only"
+    assert result["stage"] == 1
+
+
+def test_current_candidate_pointer_rejects_source_escape(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "candidate_status_escape"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    pointer_path = fig_dir / "review" / "current-candidate.json"
+    pointer_path.parent.mkdir(parents=True)
+    pointer_path.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.current-candidate-pointer.v1",
+                "fixture": fig_dir.name,
+                "candidate_id": "escape",
+                "candidate_root": "review/../..",
+                "source_path": "outside.tex",
+                "evidence": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    candidate = infer_stage(fig_dir)["current_candidate"]
+
+    assert candidate == {
+        "path": "review/current-candidate.json",
+        "state": "INVALID",
+        "reason": "pointer_path_invalid",
+    }
 
 
 @pytest.fixture(autouse=True)
