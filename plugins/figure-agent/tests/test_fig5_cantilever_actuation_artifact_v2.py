@@ -175,11 +175,12 @@ def test_fig5_source_off_label_uses_the_switch_lane() -> None:
     )
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     match = re.search(
-        r"\\node\[labelStd,anchor=west\] at \((\d+\.\d+),(\d+\.\d+)\)"
+        r"\\node\[labelStd,anchor=east\] at \((\d+\.\d+),(\d+\.\d+)\)"
         r" \{source OFF\};",
         panel_b,
     )
     assert match is not None
+    assert 1.05 < float(match.group(1)) < 1.25
     y = float(match.group(2))
     assert 1.05 < y < 1.30
 
