@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -40,6 +41,7 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "air_gap_coupling_is_capacitor_like_schematic_only" in protected
     assert "conditional_reverse_bend_owns_force_hierarchy" in protected
     assert "clamp_axis_aligns_with_cantilever_centerline" in protected
+    assert "reverse_response_is_faster_than_initial_attraction" in protected
     assert "panel_a.standalone_two_terminal_charger" in forbidden
     assert "panel_a.polarization_measurement_instrument" in forbidden
     assert "panel_a.esvm_measurement_head" in forbidden
@@ -154,3 +156,23 @@ def test_fig5_response_trace_has_no_erased_gap_shortcut() -> None:
     assert "\\draw[white" not in panel_d
     assert panel_d.count("\\draw[cBlue!82!black,line width=1.05pt]") == 1
     assert "{$t=0$}" in panel_d
+
+
+def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panels = [
+        tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0],
+        tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0],
+        tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0],
+    ]
+    clamp_pattern = re.compile(
+        r"\\fill\[cGray![0-9]+\].*?4\.05\).*?4\.34\)", re.DOTALL
+    )
+    electrode_pattern = re.compile(
+        r"\\fill\[cGray!28\].*?4\.34\)", re.DOTALL
+    )
+    assert all(clamp_pattern.search(panel) for panel in panels)
+    assert all(electrode_pattern.search(panel) for panel in panels)
+    assert all("\\draw[apparatus]" in panel for panel in panels)

@@ -43,6 +43,7 @@ protected_relations:
   - conditional_reverse_bend_owns_force_hierarchy
   - clamp_axis_aligns_with_cantilever_centerline
   - response_trace_is_qualitative_not_calibrated_data
+  - reverse_response_is_faster_than_initial_attraction
 
 repair:
   family: actuation_geometry_and_mechanism_contract

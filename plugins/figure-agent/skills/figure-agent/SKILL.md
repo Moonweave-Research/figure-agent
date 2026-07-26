@@ -575,6 +575,14 @@ do not let a clean compile or local non-overlap hide it. Bind the repair to the
 specific rendered path and add a fixture-local geometry assertion when the
 support axis can otherwise drift.
 
+When repeated apparatus panels form one causal row, align their shared visual
+datums before judging local spacing: clamp/fixed-end height and driven-electrode
+top should not staircase from panel to panel, and an ON/OFF state change should
+be carried by labels or line treatment rather than an unexplained plate-color
+change. A local shift that creates a different mounting height or a different
+electrode color role is a cross-panel consistency defect even when every panel
+passes its own collision check.
+
 For a qualitative time-response trace, preserve one continuous event-owned
 path from the declared observation origin. Show a hold or isolation interval as
 an ordinary plateau or a labeled event band, not a white erasure, double-slash,
@@ -582,7 +590,10 @@ or broken-line shortcut. A polarity reversal should cross the neutral baseline
 smoothly, and any recovery tail should remain subordinate to the observed
 response. An abrupt lobe, unexplained gap, or discontinuous sign change is a
 waveform-morphology defect even when the axes, labels, and collision detectors
-all pass.
+all pass. When the evidence says the reversal changes faster than the initial
+attraction, encode that asymmetry as a shorter, steeper transition while keeping
+the trace qualitative; a symmetric smooth sigmoid is a semantic defect, not a
+neutral style choice.
 
 Treat `blocking_total: 0` as a machine gate result, not as proof of a clean
 render. If the visual-clash report contains report-only or near-miss candidates,

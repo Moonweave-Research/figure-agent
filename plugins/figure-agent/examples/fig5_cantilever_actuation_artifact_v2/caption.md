@@ -14,4 +14,5 @@ positive plateau rather than represented as a calibrated time ratio. The trace
 then shows source OFF, the isolation interval, an abrupt polarity-switch response,
 a negative excursion, and schematic recovery. The gray Maxwell term is shown only as a
 polarity-independent attractive baseline; the red sign-changing term is the
-mechanism under test.
+mechanism under test. The reversal is drawn as a visibly faster transition than
+the initial attraction; this is a qualitative rate cue, not a calibrated time fit.

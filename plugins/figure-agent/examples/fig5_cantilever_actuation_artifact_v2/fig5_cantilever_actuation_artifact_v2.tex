@@ -108,22 +108,23 @@
 
   % The open clip is the reader-facing causal change; it is not a generic
   % charger symbol and the film is deliberately shown without a bend claim.
-  \fill[cGray!38] (1.18,3.96) rectangle (2.20,4.24);
-  \draw[apparatus] (1.18,3.96) rectangle (2.20,4.24);
-  \draw[wire] (1.69,4.24)--(1.69,4.54);
-  \node[labelMute,anchor=west] at (2.00,4.54) {clip opens};
+  % The fixed-end and electrode tops share Panel A's visual datum.
+  \fill[cGray!38] (1.18,4.05) rectangle (2.20,4.34);
+  \draw[apparatus] (1.18,4.05) rectangle (2.20,4.34);
+  \draw[wire] (1.69,4.34)--(1.69,4.52);
+  \node[labelMute,anchor=west] at (2.00,4.52) {clip opens};
   \fill[polymer,rounded corners=0.25mm]
-    (1.55,3.96) -- (1.78,3.96) -- (1.75,1.52) -- (1.52,1.52) -- cycle;
+    (1.55,4.05) -- (1.78,4.05) -- (1.75,1.52) -- (1.52,1.52) -- cycle;
   \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.25mm]
-    (1.55,3.96) -- (1.78,3.96) -- (1.75,1.52) -- (1.52,1.52);
+    (1.55,4.05) -- (1.78,4.05) -- (1.75,1.52) -- (1.52,1.52);
   \node[qmark] at (1.66,3.28) {};
   \node[qmark] at (1.65,2.57) {};
   \node[qmark] at (1.64,1.91) {};
   \node[labelStd,text=cRed!80!black,anchor=east] at (1.10,2.58)
     {retained $q_{\mathrm{tr}}$};
   \draw[leader,cRed!58!black] (1.16,2.51)--(1.65,2.57);
-  \fill[cGray!15] (3.42,1.38) rectangle (3.70,4.02);
-  \draw[cGray!58!black,line width=0.72pt] (3.42,1.38) rectangle (3.70,4.02);
+  \fill[cGray!28] (3.42,1.38) rectangle (3.70,4.34);
+  \draw[apparatus] (3.42,1.38) rectangle (3.70,4.34);
   \node[labelMute,anchor=east] at (3.30,2.20) {drive off};
   \draw[wire] (0.46,0.96)--(1.04,0.96);
   \draw[wire] (1.18,0.96)--(1.74,0.96);
@@ -144,16 +145,18 @@
   \node[panelTitle,anchor=west] at (0.44,5.12) {reversed-drive force balance};
   \node[labelMute,anchor=west] at (0.44,4.78) {$-5\,\mathrm{kV}$; floating clip; illustrative condition};
 
-  \fill[cGray!38] (0.94,3.88) rectangle (1.92,4.15);
-  \draw[apparatus] (0.94,3.88) rectangle (1.92,4.15);
+  % Keep the fixed-end and electrode tops on the same datum as Panels A/B;
+  % the reverse-bend silhouette changes direction, not its mounting height.
+  \fill[cGray!38] (0.94,4.05) rectangle (1.92,4.34);
+  \draw[apparatus] (0.94,4.05) rectangle (1.92,4.34);
   % Named source anchors let the geometry gate measure the fixed-end center,
   % rather than trusting a prose rule or a visual coincidence.
-  \coordinate (panel-c-clamp-axis) at (1.43,4.15);
-  \coordinate (panel-c-clamp-top) at (1.43,4.48);
-  \coordinate (panel-c-cantilever-left) at (1.35,3.88);
-  \coordinate (panel-c-cantilever-right) at (1.51,3.88);
+  \coordinate (panel-c-clamp-axis) at (1.43,4.05);
+  \coordinate (panel-c-clamp-top) at (1.43,4.52);
+  \coordinate (panel-c-cantilever-left) at (1.35,4.05);
+  \coordinate (panel-c-cantilever-right) at (1.51,4.05);
   \draw[wire] (panel-c-clamp-axis)--(panel-c-clamp-top);
-  \node[labelMute,anchor=west] at (1.67,4.48) {floating clip};
+  \node[labelMute,anchor=west] at (1.67,4.52) {floating clip};
   % One conditional response silhouette makes the competing-arrow result
   % legible without introducing a second, supposedly observed bend snapshot.
   \fill[polymer,rounded corners=0.30mm]
@@ -172,8 +175,8 @@
   \node[labelStd,text=cRed!80!black,anchor=east] at (0.82,3.30)
     {$q_{\mathrm{tr}}$};
   \draw[leader,cRed!58!black] (0.88,3.24)--(1.39,3.30);
-  \fill[cGray!28] (3.44,1.28) rectangle (3.72,4.04);
-  \draw[apparatus] (3.44,1.28) rectangle (3.72,4.04);
+  \fill[cGray!28] (3.44,1.28) rectangle (3.72,4.34);
+  \draw[apparatus] (3.44,1.28) rectangle (3.72,4.34);
   \node[labelStd,anchor=east] at (3.34,2.08) {drive electrode};
   \node[labelStd,text=cRed!82!black,anchor=east] at (3.34,3.64) {$-5\,\mathrm{kV}$};
   \draw[baselineArrow] (1.49,3.12)--(2.30,3.12);
@@ -209,15 +212,14 @@
   \node[labelMute,anchor=west] at (0.76,4.42)
     {$+5\,\mathrm{kV}$ precharge: 20 min (compressed)};
   \draw[cBlue!82!black,line width=1.05pt]
-    (0.74,2.52) .. controls (0.79,3.24) and (0.90,3.56) .. (1.04,3.62)
-    .. controls (1.20,3.68) and (1.38,3.66) .. (1.46,3.62)
-    .. controls (1.52,3.62) and (1.60,3.61) .. (1.64,3.59)
-    .. controls (1.76,3.42) and (1.82,3.02) .. (1.92,2.72)
-    .. controls (2.10,2.38) and (2.22,1.96) .. (2.38,1.68)
-    .. controls (2.54,1.40) and (2.68,1.28) .. (2.80,1.38)
-    .. controls (3.08,1.50) and (3.32,1.82) .. (3.48,2.06);
+    (0.74,2.52) .. controls (0.78,2.70) and (0.93,3.20) .. (1.08,3.48)
+    .. controls (1.18,3.61) and (1.38,3.62) .. (1.64,3.59)
+    .. controls (1.70,3.40) and (1.77,2.80) .. (1.86,2.52)
+    .. controls (1.94,2.06) and (2.00,1.55) .. (2.20,1.35)
+    .. controls (2.46,1.17) and (2.84,1.35) .. (3.22,1.78)
+    .. controls (3.46,2.04) and (3.65,2.24) .. (3.84,2.36);
   \draw[cBlue!55!white,dashed,line width=0.82pt]
-    (3.48,2.06) .. controls (3.70,2.22) and (3.88,2.34) .. (4.02,2.42);
+    (3.84,2.36) .. controls (3.90,2.38) and (3.97,2.41) .. (4.02,2.42);
   \draw[cGray!42!black,dashed,line width=0.45pt] (1.46,1.04)--(1.46,3.42);
   \draw[cGray!42!black,dashed,line width=0.55pt] (1.64,1.04)--(1.64,3.56);
   \fill[cRed!85!black] (1.64,3.59) circle (0.75pt);
@@ -229,7 +231,7 @@
     {reversed drive};
   \draw[gapDimension] (1.46,1.24)--(1.64,1.24);
   \node[labelMute,anchor=north] at (1.55,1.16) {$\sim20\,\mathrm{s}$};
-  \node[labelMute,anchor=south west] at (3.10,2.16) {recovery};
+  \node[labelMute,anchor=south west] at (3.20,2.16) {recovery};
 \end{scope}
 
 % Process separators: guide the eye without turning the figure into cards.

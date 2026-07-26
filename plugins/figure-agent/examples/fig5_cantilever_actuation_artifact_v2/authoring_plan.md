@@ -31,11 +31,17 @@ and the actual time ordering in D separate.
 - In C, the Maxwell baseline is a supporting vector and the conditional
   Coulomb vector must visibly own the reverse-bend result; vector length and
   stroke hierarchy must not contradict the stated inequality.
+- Across A-C, clamp/fixed-end tops and driven-electrode tops share one visual
+  datum; ON/OFF is carried by state labels, not by an unexplained plate-color
+  shift.
 - The clamp lead must bisect the cantilever at its fixed end; an off-axis lead
   is a mechanical ownership defect even when no text or path collision fires.
 - D remains qualitative until an exact data/video binding is selected.
 - D must hold the positive bend through source OFF and the short floating
   interval; the polarity-reversal marker owns the onset of the downward trace.
+- D must make the confirmed rate asymmetry visible: the reverse transition is
+  steeper and temporally shorter than the initial attraction, while remaining a
+  qualitative schematic rather than a calibrated fit.
 - A zero blocking count is not a visually clean result when the clash report
   still contains report-only candidates; inspect those candidates at full and
   reduction scale before closing the loop.
