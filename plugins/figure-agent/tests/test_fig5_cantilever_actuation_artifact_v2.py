@@ -144,3 +144,13 @@ def test_fig5_contract_keeps_style_free_and_coordinates_free() -> None:
     assert "tikz" not in forbidden_keys
     assert "coordinates" not in forbidden_keys
     assert "primitive" not in forbidden_keys
+
+
+def test_fig5_response_trace_has_no_erased_gap_shortcut() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_d = tex.split("% Panel D", 1)[1]
+    assert "\\draw[white" not in panel_d
+    assert panel_d.count("\\draw[cBlue!82!black,line width=1.05pt]") == 1
+    assert "{$t=0$}" in panel_d

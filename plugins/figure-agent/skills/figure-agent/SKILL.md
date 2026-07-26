@@ -575,6 +575,15 @@ do not let a clean compile or local non-overlap hide it. Bind the repair to the
 specific rendered path and add a fixture-local geometry assertion when the
 support axis can otherwise drift.
 
+For a qualitative time-response trace, preserve one continuous event-owned
+path from the declared observation origin. Show a hold or isolation interval as
+an ordinary plateau or a labeled event band, not a white erasure, double-slash,
+or broken-line shortcut. A polarity reversal should cross the neutral baseline
+smoothly, and any recovery tail should remain subordinate to the observed
+response. An abrupt lobe, unexplained gap, or discontinuous sign change is a
+waveform-morphology defect even when the axes, labels, and collision detectors
+all pass.
+
 Treat `blocking_total: 0` as a machine gate result, not as proof of a clean
 render. If the visual-clash report contains report-only or near-miss candidates,
 inspect each candidate in the full figure and at final reduction before closing
