@@ -68,6 +68,25 @@ The canonical fixture root may report `render=STALE` while the explicit nested
 candidate reports `render=FRESH`; this is intentional fail-closed provenance,
 not a missing or deleted figure.
 
+### Human-authority snapshot
+
+The user-provided Fig1 snapshot reviewed on 2026-07-26 is the highest-authority
+visual development reference for this figure. It is pixel-equivalent to the
+candidate render above and therefore binds the maintained visual state to:
+
+```text
+branch: fig1-redraw-to-final
+head: 64b3acc0a27fae57ae09b52ac4e73f039da81792
+candidate: comparable-v3-repair-c5
+source: review/failure-first/comparable-v3-repair-c5/repaired.tex
+render: review/failure-first/comparable-v3-repair-c5/build/repaired.png
+```
+
+Stale Fig1 worktrees, older visual candidates, and unrelated ORRO lanes must
+not override this snapshot when recovering or extending the figure. This is a
+development-authority statement only; it does not change `promotion_state`,
+the pending human gate, or the publication boundary above.
+
 ### Current machine evidence
 
 Evidence below is from the candidate build directory above:
