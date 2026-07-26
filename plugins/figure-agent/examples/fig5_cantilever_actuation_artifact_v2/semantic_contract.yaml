@@ -41,6 +41,7 @@ protected_relations:
   - maxwell_baseline_is_polarity_independent
   - conditional_reverse_bend_is_not_observed_snapshot
   - conditional_reverse_bend_owns_force_hierarchy
+  - clamp_axis_aligns_with_cantilever_centerline
   - response_trace_is_qualitative_not_calibrated_data
 
 repair:

@@ -562,6 +562,10 @@ conditional force balance, the supporting baseline must not be longer or heavier
 than the result-owning conditional vector when the declared inequality says the
 conditional term dominates.
 
+Also check the support-axis ownership: the clamp lead, wire, or mounting stem
+must bisect the fixed end of the cantilever. A visible off-axis stem makes the
+member look pasted beside its support even when the outline itself is smooth.
+
 Treat `blocking_total: 0` as a machine gate result, not as proof of a clean
 render. If the visual-clash report contains report-only or near-miss candidates,
 inspect each candidate in the full figure and at final reduction before closing
