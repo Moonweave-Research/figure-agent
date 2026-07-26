@@ -553,6 +553,15 @@ hairpin, tube, field line, or paired wires, redraw the silhouette directly;
 do not compensate by adding texture, charges, arrows, or a reusable primitive.
 This is an outcome constraint, not a fixed Bezier recipe.
 
+When a cantilever is authored as a filled strip, treat independently authored
+edges with unmatched tangents or an arbitrary free-end closure as a structural
+defect. The two edges must express one shared mechanical centerline: a readable
+clamp tangent, a smooth deflection progression, and a free-end cap that follows
+the local beam direction. Force-vector tails must touch that same member. In a
+conditional force balance, the supporting baseline must not be longer or heavier
+than the result-owning conditional vector when the declared inequality says the
+conditional term dominates.
+
 Treat `blocking_total: 0` as a machine gate result, not as proof of a clean
 render. If the visual-clash report contains report-only or near-miss candidates,
 inspect each candidate in the full figure and at final reduction before closing

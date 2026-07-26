@@ -138,12 +138,16 @@
   % One conditional response silhouette makes the competing-arrow result
   % legible without introducing a second, supposedly observed bend snapshot.
   \fill[polymer,rounded corners=0.30mm]
-    (1.27,3.88) .. controls (1.25,3.32) and (1.05,2.50) .. (0.60,1.46)
-    -- (0.75,1.41) .. controls (1.25,2.31) and (1.43,3.10) .. (1.45,3.88) -- cycle;
+    (1.29,3.88) .. controls (1.29,3.56) and (1.28,3.26) .. (1.20,2.96)
+    .. controls (1.08,2.54) and (0.86,1.94) .. (0.62,1.46)
+    -- (0.78,1.42) .. controls (1.03,1.99) and (1.25,2.54) .. (1.36,2.97)
+    .. controls (1.44,3.33) and (1.45,3.64) .. (1.45,3.88) -- cycle;
   \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.30mm]
-    (1.27,3.88) .. controls (1.25,3.32) and (1.05,2.50) .. (0.60,1.46)
-    -- (0.75,1.41) .. controls (1.25,2.31) and (1.43,3.10) .. (1.45,3.88);
-  \node[qmark] at (1.30,3.30) {};
+    (1.29,3.88) .. controls (1.29,3.56) and (1.28,3.26) .. (1.20,2.96)
+    .. controls (1.08,2.54) and (0.86,1.94) .. (0.62,1.46)
+    -- (0.78,1.42) .. controls (1.03,1.99) and (1.25,2.54) .. (1.36,2.97)
+    .. controls (1.44,3.33) and (1.45,3.64) .. (1.45,3.88);
+  \node[qmark] at (1.33,3.30) {};
   \node[qmark] at (1.17,2.60) {};
   \node[qmark] at (0.90,1.92) {};
   \node[labelStd,text=cRed!80!black,anchor=east] at (0.82,3.30)
@@ -153,10 +157,10 @@
   \draw[apparatus] (3.44,1.28) rectangle (3.72,4.04);
   \node[labelStd,anchor=east] at (3.34,2.08) {drive electrode};
   \node[labelStd,text=cRed!82!black,anchor=east] at (3.34,3.64) {$-5\,\mathrm{kV}$};
-  \draw[baselineArrow] (1.42,3.12)--(3.08,3.12);
+  \draw[baselineArrow] (1.43,3.12)--(2.30,3.12);
   \node[labelStd,anchor=south,text=cGray!74!black] at (2.48,3.18)
     {Maxwell attraction};
-  \draw[forceAway] (1.02,2.38)--(0.34,2.38);
+  \draw[forceAway] (1.08,2.38)--(0.18,2.38);
   \node[labelStd,text=cRed!84!black,anchor=south east] at (0.96,2.50)
     {Coulomb};
   \node[labelMute,align=center] at (2.24,0.82)

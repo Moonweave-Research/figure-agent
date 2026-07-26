@@ -40,6 +40,7 @@ protected_relations:
   - coulomb_term_changes_sign_with_drive_polarity
   - maxwell_baseline_is_polarity_independent
   - conditional_reverse_bend_is_not_observed_snapshot
+  - conditional_reverse_bend_owns_force_hierarchy
   - response_trace_is_qualitative_not_calibrated_data
 
 repair:

@@ -38,6 +38,7 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "charge_phase_is_actuation_state" in protected
     assert "cantilever_faces_drive_electrode_across_air_gap" in protected
     assert "air_gap_coupling_is_capacitor_like_schematic_only" in protected
+    assert "conditional_reverse_bend_owns_force_hierarchy" in protected
     assert "panel_a.standalone_two_terminal_charger" in forbidden
     assert "panel_a.polarization_measurement_instrument" in forbidden
     assert "panel_a.esvm_measurement_head" in forbidden

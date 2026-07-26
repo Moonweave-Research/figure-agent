@@ -28,6 +28,9 @@ and the actual time ordering in D separate.
 - B must visibly show both source OFF and clip GND open.
 - C must label the force balance as conditional; its one reverse-bent member
   may not imply an observed force vector or a second measured bend snapshot.
+- In C, the Maxwell baseline is a supporting vector and the conditional
+  Coulomb vector must visibly own the reverse-bend result; vector length and
+  stroke hierarchy must not contradict the stated inequality.
 - D remains qualitative until an exact data/video binding is selected.
 - A zero blocking count is not a visually clean result when the clash report
   still contains report-only candidates; inspect those candidates at full and
