@@ -566,6 +566,15 @@ Also check the support-axis ownership: the clamp lead, wire, or mounting stem
 must bisect the fixed end of the cantilever. A visible off-axis stem makes the
 member look pasted beside its support even when the outline itself is smooth.
 
+When a mechanism figure repeats a cantilever across panels, compare the
+silhouette family as well as each panel's local collision state. The fixed-end
+axis, material width, edge separation, bend progression, and free-end cap should
+remain mechanically legible across the sequence. A single panel that becomes a
+tapered wedge, ribbon, or sharply closed slat is a cross-panel morphology defect;
+do not let a clean compile or local non-overlap hide it. Bind the repair to the
+specific rendered path and add a fixture-local geometry assertion when the
+support axis can otherwise drift.
+
 Treat `blocking_total: 0` as a machine gate result, not as proof of a clean
 render. If the visual-clash report contains report-only or near-miss candidates,
 inspect each candidate in the full figure and at final reduction before closing

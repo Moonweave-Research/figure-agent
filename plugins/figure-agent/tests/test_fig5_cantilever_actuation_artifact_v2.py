@@ -115,6 +115,14 @@ def test_fig5_declares_deterministic_clamp_axis_geometry_check() -> None:
     ]
     assert alignment["reference_coordinate"] == "panel-c-clamp-axis"
 
+    actuation_alignment = assertions["actuation-clamp-axis-bisects-cantilever-fixed-end"]
+    assert actuation_alignment["kind"] == "centerline_aligned"
+    assert actuation_alignment["edge_coordinates"] == [
+        "panel-a-cantilever-left",
+        "panel-a-cantilever-right",
+    ]
+    assert actuation_alignment["reference_coordinate"] == "panel-a-clamp-axis"
+
 
 def test_fig5_contract_keeps_style_free_and_coordinates_free() -> None:
     contract = _yaml("semantic_contract.yaml")
