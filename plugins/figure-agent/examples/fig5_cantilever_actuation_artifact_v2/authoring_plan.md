@@ -26,6 +26,8 @@ and the actual time ordering in D separate.
 - A/B/C/D must remain visually distinguishable as apparatus, electrical
   boundary, conditional mechanism, and response trace.
 - B must visibly show both source OFF and clip GND open.
+- B's source OFF label belongs to the switch lane below the specimen tip; it
+  must not sit on the cantilever's free-end level where ownership is ambiguous.
 - C must label the force balance as conditional; its one reverse-bent member
   may not imply an observed force vector or a second measured bend snapshot.
 - In C, the Maxwell baseline is a supporting vector and the conditional

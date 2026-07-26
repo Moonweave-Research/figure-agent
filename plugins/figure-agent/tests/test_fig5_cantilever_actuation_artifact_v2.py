@@ -169,6 +169,21 @@ def test_fig5_response_trace_has_no_erased_gap_shortcut() -> None:
     assert "\\mathrm{s}" not in tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
 
+def test_fig5_source_off_label_uses_the_switch_lane() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
+    match = re.search(
+        r"\\node\[labelStd,anchor=west\] at \((\d+\.\d+),(\d+\.\d+)\)"
+        r" \{source OFF\};",
+        panel_b,
+    )
+    assert match is not None
+    y = float(match.group(2))
+    assert 1.05 < y < 1.30
+
+
 def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None:
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"

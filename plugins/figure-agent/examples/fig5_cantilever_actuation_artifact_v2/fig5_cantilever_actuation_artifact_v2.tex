@@ -136,7 +136,9 @@
   \draw[wire] (1.04,0.96)--(1.18,1.13);
   \fill[white] (1.11,0.96) circle (0.58pt);
   \draw[cGray!78!black,line width=0.62pt] (1.11,0.96) circle (0.58pt);
-  \node[labelStd,anchor=west] at (0.46,1.38) {source OFF};
+  % Keep the state label in the switch lane, below the specimen tip, so it
+  % names the electrical transition rather than the cantilever itself.
+  \node[labelStd,anchor=west] at (0.46,1.18) {source OFF};
   \node[labelMute,align=left,anchor=west] at (0.46,0.56)
     {clip GND open\\[-0.4pt]reference potential fixed};
 \end{scope}
