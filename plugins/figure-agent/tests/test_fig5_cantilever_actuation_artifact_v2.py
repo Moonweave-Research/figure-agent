@@ -41,6 +41,7 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "air_gap_coupling_is_capacitor_like_schematic_only" in protected
     assert "conditional_reverse_bend_owns_force_hierarchy" in protected
     assert "clamp_axis_aligns_with_cantilever_centerline" in protected
+    assert "same_mounted_film_scale_across_panels" in protected
     assert "reverse_response_is_faster_than_initial_attraction" in protected
     assert "panel_a.standalone_two_terminal_charger" in forbidden
     assert "panel_a.polarization_measurement_instrument" in forbidden
@@ -171,8 +172,18 @@ def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None
         r"\\fill\[cGray![0-9]+\].*?4\.05\).*?4\.34\)", re.DOTALL
     )
     electrode_pattern = re.compile(
-        r"\\fill\[cGray!28\].*?4\.34\)", re.DOTALL
+        r"\\fill\[cGray!28\].*?1\.40\).*?4\.34\)", re.DOTALL
     )
     assert all(clamp_pattern.search(panel) for panel in panels)
     assert all(electrode_pattern.search(panel) for panel in panels)
     assert all("\\draw[apparatus]" in panel for panel in panels)
+
+    polymer_blocks = [
+        panel.split("\\fill[polymer", 1)[1].split("\\node[qmark]", 1)[0]
+        for panel in panels
+    ]
+    free_end_levels = [
+        min(float(value) for value in re.findall(r",\s*(\d+\.\d+)\)", block))
+        for block in polymer_blocks
+    ]
+    assert max(free_end_levels) - min(free_end_levels) <= 0.08

@@ -31,9 +31,9 @@ and the actual time ordering in D separate.
 - In C, the Maxwell baseline is a supporting vector and the conditional
   Coulomb vector must visibly own the reverse-bend result; vector length and
   stroke hierarchy must not contradict the stated inequality.
-- Across A-C, clamp/fixed-end tops and driven-electrode tops share one visual
-  datum; ON/OFF is carried by state labels, not by an unexplained plate-color
-  shift.
+- Across A-C, clamp/fixed-end tops, driven-electrode tops, member width, and
+  free-end datum share one visual scale; ON/OFF is carried by state labels, not
+  by an unexplained plate-color or specimen-size shift.
 - The clamp lead must bisect the cantilever at its fixed end; an off-axis lead
   is a mechanical ownership defect even when no text or path collision fires.
 - D remains qualitative until an exact data/video binding is selected.

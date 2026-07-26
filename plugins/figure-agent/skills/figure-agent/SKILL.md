@@ -582,6 +582,11 @@ be carried by labels or line treatment rather than an unexplained plate-color
 change. A local shift that creates a different mounting height or a different
 electrode color role is a cross-panel consistency defect even when every panel
 passes its own collision check.
+The same rule applies to the member scale: repeated views of one mounted film
+must share its apparent width and free-end datum within the schematic tolerance;
+do not let a bent state become a shorter or thinner specimen merely because its
+path was redrawn freehand. Local centerline and collision checks do not establish
+this cross-panel size contract, so declare and test it at the fixture level.
 
 For a qualitative time-response trace, preserve one continuous event-owned
 path from the declared observation origin. Show a hold or isolation interval as
