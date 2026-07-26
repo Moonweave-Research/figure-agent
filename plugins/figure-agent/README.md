@@ -60,8 +60,10 @@ Supporting commands are explicit but are not required in every default flow:
 ```
 
 The classification is shared with the root README through
-`docs/public-command-route.yaml`. It documents navigation only; the wider
-callable-surface compaction in R4 remains open.
+`docs/public-command-route.yaml`. Runtime enters through `/fig_status` and
+`/fig_run`; the longer route above documents the supported workflow around
+that entrypoint. This is navigation only; the wider callable-surface compaction
+in R4 remains open.
 
 Compatibility and specialist adapters remain callable for historical workflows,
 but they are not co-equal default entry points:

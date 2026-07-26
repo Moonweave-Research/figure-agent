@@ -4,6 +4,12 @@ authority: docs/figure-agent.md
 
 # This is the canonical documented workflow route, not a retirement of the
 # wider callable compatibility surface. R4 surface compaction remains open.
+# Runtime exposes the shorter status -> run entry route; the workflow route
+# below describes the supported user-facing sequence around that entrypoint.
+runtime_entry_route:
+  - fig_status
+  - fig_run
+
 default_route:
   - fig_new
   - fig_status

@@ -78,7 +78,8 @@ for supported hosts. Runtime roots are explicit:
 - `FIGURE_AGENT_PLUGIN_ROOT` or `CLAUDE_PLUGIN_ROOT` locates installed code.
 - `FIGURE_AGENT_WORKSPACE` or `CLAUDE_PROJECT_DIR` locates user fixtures.
 
-The default route is:
+The runtime entry route is `/fig_status` followed by `/fig_run`. The supported
+documented workflow around that entrypoint is:
 
 1. `/fig_new` creates a fixture contract.
 2. `/fig_status` is the canonical first read.

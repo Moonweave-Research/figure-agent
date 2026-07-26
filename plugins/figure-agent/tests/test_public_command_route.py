@@ -51,3 +51,12 @@ def test_route_contract_does_not_claim_callable_surface_compaction() -> None:
     for text in (root, plugin):
         assert "callable-surface compaction" in text
         assert "remains" in text
+
+
+def test_route_contract_declares_runtime_entry_route() -> None:
+    contract = yaml.safe_load(
+        (PLUGIN_ROOT / "docs" / "public-command-route.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert contract["runtime_entry_route"] == ["fig_status", "fig_run"]

@@ -38,8 +38,8 @@ The canonical documented workflow route is:
 /fig_export    /fig_closeout
 ```
 
-This route does not retire supporting or compatibility commands. The shared
-classification lives in
+This route does not retire supporting or compatibility commands. Runtime enters
+through `/fig_status` and `/fig_run`; the shared classification lives in
 [`plugins/figure-agent/docs/public-command-route.yaml`](plugins/figure-agent/docs/public-command-route.yaml);
 callable-surface compaction remains unfinished roadmap work.
 
