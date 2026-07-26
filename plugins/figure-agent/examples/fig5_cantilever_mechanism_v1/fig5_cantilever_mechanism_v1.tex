@@ -1,0 +1,206 @@
+% fig5_cantilever_mechanism_v1 — first Figure Agent cantilever authoring trial.
+% The four panels follow the current experiment handoff:
+% two-terminal HV charge -> manual transfer -> grounded ESVM measurement ->
+% floating cantilever Coulomb response.
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{arrows.meta,calc,decorations.pathmorphing,positioning}
+
+\begin{document}
+\resizebox{178mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\sffamily\fontsize{6.2}{7.4}\selectfont},
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
+    text=cGray!92!black},
+  panelTitle/.style={font=\sffamily\bfseries\fontsize{6.6}{7.9}\selectfont,
+    text=cGray!86!black},
+  labelStd/.style={font=\sffamily\fontsize{5.5}{6.6}\selectfont,
+    text=cGray!88!black},
+  labelMute/.style={font=\sffamily\itshape\fontsize{5.1}{6.1}\selectfont,
+    text=cGray!62!black},
+  wire/.style={cGray!78!black,line width=0.82pt,line cap=round,line join=round},
+  apparatus/.style={cGray!18,draw=cGray!78!black,line width=0.82pt},
+  polymer/.style={cAmber!10,draw=cAmber!72!black,line width=0.95pt},
+  leader/.style={cGray!58!black,line width=0.40pt},
+  processArrow/.style={-{Stealth[length=3.8pt,width=2.8pt]},cGray!70!black,
+    line width=0.72pt},
+  forceArrow/.style={-{Stealth[length=4.8pt,width=3.5pt]},cRed!88!black,
+    line width=1.02pt},
+  ground/.style={cGray!72!black,line width=0.82pt},
+  qmark/.style={circle,fill=cRed!80!black,draw=cRed!95!black,line width=0.25pt,
+    inner sep=0pt,minimum size=1.55mm},
+]
+
+% ================================================================
+% Panel A — two-terminal charging (no ground, no grid)
+% ================================================================
+% Panel A
+\begin{scope}[shift={(0.00,0.00)}]
+  \node[panelLetter,anchor=west] at (0.10,5.12) {a};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {two-terminal HV charge};
+
+  % HV source with two explicit terminals; neither terminal is earth ground.
+  \fill[cGray!8,rounded corners=0.8mm] (1.32,3.96) rectangle (2.75,4.65);
+  \draw[apparatus,rounded corners=0.8mm] (1.32,3.96) rectangle (2.75,4.65);
+  \node[labelStd] at (2.04,4.40) {HV};
+  \node[labelMute,text=cRed!78!black,anchor=east] at (1.47,3.80) {HV+};
+  \node[labelMute,text=cBlue!70!black,anchor=west] at (2.60,3.80) {$V_{-}$};
+
+  % Two terminal electrodes across a thin polymer film.
+  \fill[cGray!34] (0.54,1.83) rectangle (0.82,2.75);
+  \draw[wire] (0.54,1.83) rectangle (0.82,2.75);
+  \fill[cGray!34] (3.26,1.83) rectangle (3.54,2.75);
+  \draw[wire] (3.26,1.83) rectangle (3.54,2.75);
+  \fill[polymer] (0.82,2.08) rectangle (3.26,2.50);
+  \node[labelStd,anchor=north] at (2.04,1.86) {poly(S-r-DIB) film};
+  \draw[wire] (1.58,3.96)--(1.58,3.22)--(0.68,3.22)--(0.68,2.75);
+  \draw[wire] (2.49,3.96)--(2.49,3.22)--(3.40,3.22)--(3.40,2.75);
+  \node[labelMute,anchor=west] at (0.12,3.54) {terminal 1};
+  \node[labelMute,anchor=east] at (4.02,3.54) {terminal 2};
+
+  % Trapped charge cue appears inside the film, never in free space.
+  \node[qmark] at (1.25,2.29) {};
+  \node[qmark] at (2.03,2.37) {};
+  \node[qmark] at (2.76,2.20) {};
+  \node[labelStd,text=cRed!80!black,anchor=west] at (0.92,2.98)
+    {trapped charge $q_{\mathrm{tr}}$};
+  \draw[leader,cRed!58!black] (1.72,2.95)--(1.68,2.43);
+  \node[labelMute,align=center] at (2.04,1.22)
+    {no charging-stage ground\\[-0.5pt]no grid electrode};
+\end{scope}
+
+% ================================================================
+% Panel B — manual transfer
+% ================================================================
+% Panel B
+\begin{scope}[shift={(4.45,0.00)}]
+  \node[panelLetter,anchor=west] at (0.10,5.12) {b};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {manual transfer};
+
+  % Before/after states of one specimen; the ghost is a state cue, not a machine.
+  \fill[cGray!11,densely dashed] (0.50,2.10) rectangle (1.88,2.38);
+  \draw[cGray!55!black,dashed,line width=0.72pt] (0.50,2.10) rectangle (1.88,2.38);
+  \fill[polymer] (2.48,2.10) rectangle (3.86,2.38);
+  \node[labelMute,anchor=north] at (1.19,1.86) {before};
+  \node[labelStd,anchor=north] at (3.17,1.86) {after};
+  \node[qmark] at (2.82,2.24) {};
+  \node[qmark] at (3.43,2.24) {};
+  \draw[processArrow] (1.98,2.25) .. controls (2.12,3.13) and (2.32,3.13) .. (2.48,2.54);
+  \node[labelStd,anchor=south,align=center] at (1.95,3.45)
+    {same charged\\[-0.5pt]specimen};
+  \node[labelStd,text=cAmber!72!black,anchor=north] at (3.17,1.50)
+    {poly(S-r-DIB) film};
+  \node[labelMute,align=center] at (2.22,0.92)
+    {discrete manual relocation\\[-0.5pt]not a motion stage};
+\end{scope}
+
+% ================================================================
+% Panel C — grounded measurement / ESVM
+% ================================================================
+% Panel C
+\begin{scope}[shift={(8.90,0.00)}]
+  \node[panelLetter,anchor=west] at (0.10,5.12) {c};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {grounded ESVM measurement};
+
+  % ESVM head: fixed, non-contact, family-level silhouette.
+  \fill[cGray!20] (1.28,3.40) rectangle (1.68,4.23);
+  \draw[apparatus] (1.28,3.40) rectangle (1.68,4.23);
+  \draw[wire] (1.48,4.23) .. controls (1.84,4.18) and (2.07,4.05) .. (2.38,3.88);
+  \node[labelStd,anchor=south] at (1.48,4.28) {ESVM head};
+  \node[labelMute,anchor=west] at (1.82,3.58) {fixed standoff};
+
+  % Film-on-conductive-substrate stack.
+  \fill[polymer] (0.62,2.48) rectangle (2.84,2.74);
+  \draw[wire] (0.62,2.48) rectangle (2.84,2.74);
+  \fill[cGray!22] (0.48,2.05) rectangle (2.98,2.48);
+  \draw[wire] (0.48,2.05) rectangle (2.98,2.48);
+  \node[labelStd,anchor=north] at (1.73,1.91) {grounded substrate};
+  \node[qmark] at (1.10,2.61) {};
+  \node[qmark] at (2.36,2.61) {};
+  \draw[ground] (2.78,2.26)--(3.25,2.26)--(3.25,1.70);
+  \draw[ground] (3.11,1.70)--(3.39,1.70) (3.15,1.63)--(3.35,1.63)
+    (3.20,1.56)--(3.30,1.56);
+  \node[labelMute,anchor=west] at (3.36,1.70) {ground};
+
+  % V_s readout, connected to the ESVM head rather than to the substrate.
+  \fill[cGray!8,rounded corners=0.6mm] (3.18,3.12) rectangle (4.08,4.06);
+  \draw[apparatus,rounded corners=0.6mm] (3.18,3.12) rectangle (4.08,4.06);
+  \fill[cGray!76!black] (3.30,3.35) rectangle (3.96,3.74);
+  \node[font=\sffamily\fontsize{5.5}{6.5}\selectfont,text=white] at (3.63,3.55) {$V_s$};
+  \node[labelStd,anchor=south] at (3.63,4.12) {$V_s$ meter};
+  \draw[wire] (2.38,3.88)--(3.18,3.88);
+  \node[labelMute,align=center] at (1.72,0.92)
+    {non-contact induction measurement\\[-0.5pt]ground belongs to substrate};
+\end{scope}
+
+% ================================================================
+% Panel D — floating cantilever Coulomb response
+% ================================================================
+% Panel D
+\begin{scope}[shift={(13.35,0.00)}]
+  \node[panelLetter,anchor=west] at (0.10,5.12) {d};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {floating cantilever response};
+
+  % Mechanical clamp and electrically floating top connection.
+  \fill[cGray!38] (1.34,4.12) rectangle (2.34,4.42);
+  \draw[apparatus] (1.34,4.12) rectangle (2.34,4.42);
+  \draw[wire] (1.84,4.42)--(1.84,4.72);
+  \node[circle,draw=cGray!72!black,fill=white,inner sep=0pt,minimum size=1.5mm]
+    at (1.84,4.82) {};
+  \node[labelMute,anchor=west] at (2.08,4.82) {floating};
+  \node[labelStd,anchor=east] at (1.25,4.26) {clip};
+
+  % Vertical polymer beam: curved, with a tilted tip and compact material texture.
+  \fill[polymer,rounded corners=0.5mm]
+    (1.69,4.12) .. controls (1.68,3.38) and (1.46,2.58) .. (0.88,1.20)
+    -- (1.10,1.10) .. controls (1.80,2.44) and (2.08,3.34) .. (2.00,4.12) -- cycle;
+  \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.5mm]
+    (1.69,4.12) .. controls (1.68,3.38) and (1.46,2.58) .. (0.88,1.20)
+    -- (1.10,1.10) .. controls (1.80,2.44) and (2.08,3.34) .. (2.00,4.12);
+  \draw[cAmber!52!black,line width=0.45pt,opacity=0.55]
+    (1.83,3.98) .. controls (1.82,3.37) and (1.57,2.56) .. (1.00,1.20);
+  \node[labelStd,anchor=west] at (0.20,3.96) {polymer cantilever};
+  \draw[leader] (1.28,3.90)--(1.67,3.74);
+
+  % Trapped charge cores stay embedded in the beam.
+  \node[qmark] at (1.70,3.32) {};
+  \node[qmark] at (1.51,2.61) {};
+  \node[qmark] at (1.24,1.90) {};
+  \node[labelStd,text=cRed!80!black,anchor=west,align=left] at (0.18,1.62)
+    {trapped\\charge $q_{tr}$};
+  \draw[leader,cRed!58!black] (0.98,1.82)--(1.43,2.58);
+
+  % Nearby driven electrode, separated by a visible air gap.
+  \fill[cGray!28] (3.25,0.92) rectangle (3.56,4.05);
+  \draw[apparatus] (3.25,0.92) rectangle (3.56,4.05);
+  \node[labelStd,anchor=west,align=left] at (3.68,2.66) {driven\\electrode};
+  \fill[cGray!8,rounded corners=0.6mm] (2.82,4.12) rectangle (3.75,4.68);
+  \draw[apparatus,rounded corners=0.6mm] (2.82,4.12) rectangle (3.75,4.68);
+  \node[labelStd] at (3.28,4.42) {$V_{\mathrm{app}}$};
+  \draw[wire] (3.28,4.12)--(3.28,4.05);
+  \draw[wire] (2.82,4.28)--(2.56,4.28)--(2.56,3.96);
+  \draw[ground] (2.56,3.96)--(2.56,3.68);
+  \draw[ground] (2.42,3.68)--(2.70,3.68) (2.46,3.61)--(2.66,3.61)
+    (2.51,3.54)--(2.61,3.54);
+
+  % Primary result: away from the driven electrode. No competing Maxwell glyph.
+  \draw[forceArrow] (1.33,2.62)--(0.42,2.62);
+  \node[font=\sffamily\bfseries\fontsize{5.5}{6.5}\selectfont,
+    text=cRed!84!black,anchor=south west,align=left] at (0.18,2.92)
+    {Coulomb\\repulsion};
+
+  % Air-gap dimension touches both named bodies.
+  \draw[cGray!30,line width=0.45pt] (1.12,1.02)--(1.12,0.72) (3.25,0.92)--(3.25,0.72);
+  \draw[<->, >={Stealth[length=3.0pt,width=2.2pt]},cGray!56!black,line width=0.72pt]
+    (1.14,0.72)--(3.23,0.72);
+  \node[labelStd,fill=white,inner sep=1.1pt,anchor=north] at (2.18,0.66) {air gap};
+\end{scope}
+
+% Restrained inter-stage separators; they are process dividers, not UI cards.
+\foreach \x in {4.34,8.79,13.24} {
+  \draw[cGray!28!black,dash pattern=on 1.5pt off 2.0pt,line width=0.38pt]
+    (\x,0.55)--(\x,4.78);
+}
+\end{tikzpicture}%
+}
+\end{document}

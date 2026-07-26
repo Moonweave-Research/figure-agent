@@ -1,0 +1,96 @@
+name: fig5_cantilever_mechanism_v1
+title: "Fig 5 — Charge-to-cantilever actuation pathway (first Figure Agent trial)"
+style_profile: polymer-paper
+undeclared_geometry_profile: schematic
+visual_clash_cap: 8
+
+tex_assertions:
+  - id: cantilever-force-repels-from-electrode
+    source_name: fig5_cantilever_mechanism_v1.tex
+    anchor_style: forceArrow
+    axis: x
+    direction: decreasing
+    minimum_matches: 1
+    require_unidirectional_arrow: true
+
+# The first render caught visual collisions, but an empty declaration would
+# make a clean detector report meaningless.  These checks bind the process
+# separators and the two apparatus bodies whose labels must remain outside
+# the drawn hardware.
+text_boundary_checks:
+  - id: process-separator-a-b
+    kind: vertical_line
+    role: panel_separator
+    x_pdf_cm: 4.34
+    y_range_pdf_cm: [0.55, 4.78]
+    clearance_pt: 0.5
+  - id: process-separator-b-c
+    kind: vertical_line
+    role: panel_separator
+    x_pdf_cm: 8.79
+    y_range_pdf_cm: [0.55, 4.78]
+    clearance_pt: 0.5
+  - id: process-separator-c-d
+    kind: vertical_line
+    role: panel_separator
+    x_pdf_cm: 13.24
+    y_range_pdf_cm: [0.55, 4.78]
+    clearance_pt: 0.5
+  - id: panel-c-esvm-head-label-clearance
+    kind: rect
+    role: apparatus_body
+    mode: avoid_inside
+    bbox_pdf_cm: [10.18, 1.20, 10.58, 1.80]
+    clearance_pt: 0.5
+  - id: panel-d-driven-electrode-label-clearance
+    kind: rect
+    role: apparatus_body
+    mode: avoid_inside
+    bbox_pdf_cm: [16.60, 1.25, 16.91, 4.28]
+    clearance_pt: 0.5
+
+label_path_proximity_checks:
+  - id: manual-transfer-arrow-label-lane
+    kind: polyline
+    role: process_arrow
+    points_pdf_cm: [[6.43, 2.95], [6.57, 2.07], [6.77, 2.07], [6.93, 2.66]]
+    clearance_pt: 4.0
+    text_allowlist: [same, charged, specimen]
+  - id: cantilever-force-arrow-label-lane
+    kind: horizontal_line
+    role: force_arrow
+    y_pdf_cm: 2.62
+    x_range_pdf_cm: [13.77, 14.68]
+    clearance_pt: 4.0
+    text_phrases:
+      - id: coulomb_repulsion
+        words: [Coulomb, repulsion]
+  - id: cantilever-charge-leader-lane
+    kind: polyline
+    role: charge_leader
+    points_pdf_cm: [[14.33, 3.38], [14.78, 2.62]]
+    clearance_pt: 3.0
+    text_phrases:
+      - id: trapped_charge
+        words: [trapped, charge]
+
+panels:
+  - id: A
+    caption: Two-terminal high-voltage charging without grid or charging-stage ground
+    bbox_pdf_cm: [0.00, 0.00, 4.25, 5.20]
+  - id: B
+    caption: Manual transfer of the same charged specimen
+    bbox_pdf_cm: [4.25, 0.00, 8.50, 5.20]
+  - id: C
+    caption: Grounded-substrate ESVM measurement state
+    bbox_pdf_cm: [8.50, 0.00, 12.75, 5.20]
+  - id: D
+    caption: Floating cantilever bends away from a driven electrode
+    bbox_pdf_cm: [12.75, 0.00, 17.80, 5.20]
+
+notes: |
+  First authoring trial for the standalone cantilever figure. The briefing is
+  the paper-local semantic authority; this spec carries only lightweight panel
+  and direction checks. A clean machine gate is development evidence, not a
+  publication verdict. Human review must inspect the rendered process and the
+  grounding/force ownership at reduction scale.

@@ -140,13 +140,40 @@ historical test assumptions, not the current charge/transfer/measurement setup.
 Do not copy its `grounded poling` or automatic phase story into a new figure
 without a new paper-local authority decision.
 
-## 5. Recommended next figure
+## 5. Standalone cantilever candidate
 
-Start a new fixture only after this handoff has been read:
+The first standalone cantilever candidate has now been authored in a new
+fixture, after reading this handoff:
 
 ```text
 fig5_cantilever_mechanism_v1
 ```
+
+Source and render:
+
+```text
+plugins/figure-agent/examples/fig5_cantilever_mechanism_v1/fig5_cantilever_mechanism_v1.tex
+plugins/figure-agent/examples/fig5_cantilever_mechanism_v1/build/fig5_cantilever_mechanism_v1.png
+```
+
+This is a first Figure Agent authoring trial, not a publication-final figure
+or an accepted artifact. Its current machine evidence is:
+
+| Evidence | State |
+|---|---|
+| strict compile | `passed` |
+| physics grounding | `grounded` |
+| text-boundary declarations | `checked=5`, `total=0` |
+| label/path declarations | `checked=3`, `total=0` |
+| TeX force-direction assertion | `checked=1`, `issue_count=0` |
+| visual clash | `blocking_total=0`, `report_only_total=6` |
+| Figure Agent status | `render=FRESH`, `acceptance=NOT_DECLARED` |
+| host critique/export | required/not created |
+
+The first strict render exposed label/path defects in the ESVM and transfer
+lanes; those were corrected before the current green render. The remaining
+`report_only` visual candidates and the host critique are deliberately left as
+human review gates rather than silently promoted or suppressed.
 
 The first authoring slice should be a low-detail, experiment-grounded process
 schematic:
@@ -202,6 +229,15 @@ For any new fixture, follow the repository workflow in this order:
 ```text
 fig-agent status → fig_new → briefing/spec/caption → author source → fig_compile → rendered review → fig_critique/fig_ground as applicable
 ```
+
+For the current standalone cantilever candidate:
+
+```bash
+./bin/fig-agent status fig5_cantilever_mechanism_v1
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig5_cantilever_mechanism_v1/fig5_cantilever_mechanism_v1.tex
+```
+
+Inspect the generated PNG at 100%, 50%, and 33% before any critique or export.
 
 Do not promote a nested candidate to canonical, set `accepted: true`, force a
 golden artifact, or claim publication acceptance from this handoff.
