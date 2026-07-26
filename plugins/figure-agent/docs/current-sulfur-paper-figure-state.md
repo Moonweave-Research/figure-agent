@@ -189,10 +189,28 @@ plugins/figure-agent/examples/fig5_cantilever_actuation_artifact_v2/fig5_cantile
 
 The corresponding worktree is
 `/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-dogfood`
-on branch `fig5-actuation-development`. The source currently has intentional
-uncommitted WIP, so no Fig5 render or acceptance state is claimed here. This is
-an exploratory Figure Agent artifact, not a publication-final figure or an
+on branch `fig5-actuation-development`. Its current clean HEAD is
+`a662bb42` (`Keep the repeated cantilever scale consistent`). This is an
+exploratory Figure Agent artifact, not a publication-final figure or an
 accepted artifact.
+
+The current Fig5 machine state is:
+
+| Evidence | State |
+|---|---|
+| strict compile | `passed` |
+| conventions | `present` (`17`) |
+| physics grounding | `grounded` |
+| render/export | `FRESH` |
+| acceptance | `NOT_DECLARED` |
+| final-ready | `false` |
+
+Current render and export paths:
+
+```text
+examples/fig5_cantilever_actuation_artifact_v2/build/fig5_cantilever_actuation_artifact_v2.png
+examples/fig5_cantilever_actuation_artifact_v2/exports/fig5_cantilever_actuation_artifact_v2.png
+```
 
 The latest Fig5 authoring contract is the four-stage causal story:
 
