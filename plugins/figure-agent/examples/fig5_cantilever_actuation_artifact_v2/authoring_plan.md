@@ -34,6 +34,8 @@ and the actual time ordering in D separate.
 - The clamp lead must bisect the cantilever at its fixed end; an off-axis lead
   is a mechanical ownership defect even when no text or path collision fires.
 - D remains qualitative until an exact data/video binding is selected.
+- D must hold the positive bend through source OFF and the short floating
+  interval; the polarity-reversal marker owns the onset of the downward trace.
 - A zero blocking count is not a visually clean result when the clash report
   still contains report-only candidates; inspect those candidates at full and
   reduction scale before closing the loop.
