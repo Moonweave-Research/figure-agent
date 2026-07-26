@@ -29,10 +29,11 @@ charge, not an application demo.
 3. `-V drive`: the nearby driven electrode reverses polarity. The
    polarity-dependent Coulomb term changes sign, while the Maxwell attraction
    is a polarity-independent baseline.
-4. `reverse bend`: the video trace begins from a preconditioned state. The
-   20-minute actuation hold is explicitly compressed outside the response time
-   scale; the observed trace then shows an OFF/isolation interval, an abrupt
-   polarity-switch response, a negative excursion, and slower recovery.
+4. `reverse bend`: the video trace begins at `t=0`, defined as source OFF after
+   the 20-minute precharge. The hold enters as an incoming precondition rather
+   than as a visually comparable trace duration; the observed trace then shows
+   the short isolation interval, a polarity-switch response, a negative
+   excursion, and schematic recovery.
 
 ## Physics invariants
 

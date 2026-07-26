@@ -24,9 +24,10 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 13
+    assert contract["summary"]["object_role_count"] == 14
     assert contract["summary"]["visible_connector_count"] == 7
-    assert contract["summary"]["label_ownership_count"] == 8
+    assert contract["summary"]["label_ownership_count"] == 9
+    assert contract["summary"]["panel_story_role_count"] == 4
 
 
 def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() -> None:
@@ -52,10 +53,15 @@ def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> Non
         "off-float",
     ]
     assert [stage["id"] for stage in checks["qualitative-response-sequence"]["stages"]] == [
-        "precondition",
-        "off-isolate",
+        "observation-origin",
         "reversed-drive",
+        "recovery",
     ]
+    origin_phrases = checks["qualitative-response-sequence"]["stages"][0]["text_phrases"]
+    assert {tuple(item["words"]) for item in origin_phrases} == {
+        ("t", "=", "0"),
+        ("OFF",),
+    }
 
 
 def test_fig5_contract_keeps_style_free_and_coordinates_free() -> None:

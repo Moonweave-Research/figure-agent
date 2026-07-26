@@ -49,22 +49,20 @@ process_stage_visibility_checks:
     reading_axis: x
     minimum_stage_separation_pt: 12.0
     stages:
-      - id: precondition
+      - id: observation-origin
         text_phrases:
-          - id: precondition-label
-            words: [precondition]
-          - id: compressed-label
-            words: [compressed]
-      - id: off-isolate
-        text_phrases:
-          - id: off-isolate-label
+          - id: t-zero-label
+            words: [t, "=", "0"]
+          - id: off-label
             words: ["OFF"]
-          - id: isolate-label
-            words: [isolate]
       - id: reversed-drive
         text_phrases:
           - id: reversed-drive-label
             words: [reversed, drive]
+      - id: recovery
+        text_phrases:
+          - id: recovery-label
+            words: [recovery]
 
 text_boundary_checks:
   - id: panel-separator-a-b
@@ -108,7 +106,7 @@ label_path_proximity_checks:
   - id: trace-switch-line
     kind: vertical_line
     role: polarity_switch
-    x_pdf_cm: 15.63
+    x_pdf_cm: 15.23
     y_range_pdf_cm: [1.08, 3.75]
     clearance_pt: 3.0
     text_phrases:
@@ -126,7 +124,7 @@ panels:
     caption: Same cantilever bends in opposite directions under reversed drive
     bbox_pdf_cm: [8.50, 0.00, 12.75, 5.20]
   - id: D
-    caption: Qualitative response trace with compressed preconditioning outside the observed time scale
+    caption: Qualitative response trace beginning at the source-off observation origin
     bbox_pdf_cm: [12.75, 0.00, 17.80, 5.20]
 
 notes: |

@@ -92,6 +92,7 @@ def test_accepts_declared_object_connector_and_label_roles() -> None:
         "visible_connector_count": 1,
         "forbidden_connector_count": 1,
         "label_ownership_count": 1,
+        "panel_story_role_count": 0,
         "electrical_node_count": 2,
         "electrical_connection_count": 0,
         "floating_object_count": 1,
@@ -107,6 +108,35 @@ def test_accepts_non_electrical_figure_without_topology_section() -> None:
     assert result["summary"]["electrical_node_count"] == 0
     assert result["summary"]["electrical_connection_count"] == 0
     assert result["summary"]["floating_object_count"] == 0
+
+
+def test_accepts_distinct_panel_reader_tasks_in_declared_order() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["panel_story"] = {
+        "reading_order": ["A", "B"],
+        "panels": [
+            {"panel_id": "A", "role": "setup", "reader_task": "Establish the geometry."},
+            {"panel_id": "B", "role": "result", "reader_task": "Show the response."},
+        ],
+    }
+
+    result = validate_semantic_legibility_contract(contract)
+
+    assert result["summary"]["panel_story_role_count"] == 2
+
+
+def test_rejects_redundant_panel_story_roles() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["panel_story"] = {
+        "reading_order": ["A", "B"],
+        "panels": [
+            {"panel_id": "A", "role": "setup", "reader_task": "Establish the geometry."},
+            {"panel_id": "B", "role": "setup", "reader_task": "Repeat the geometry."},
+        ],
+    }
+
+    with pytest.raises(SemanticLegibilityContractError, match="panel_story_panel_invalid"):
+        validate_semantic_legibility_contract(contract)
 
 
 def test_rejects_required_object_without_declared_role() -> None:

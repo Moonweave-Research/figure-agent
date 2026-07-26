@@ -17,6 +17,7 @@ required_objects:
   - panel_b.coulomb_force
   - panel_c.forward_bend
   - panel_c.reverse_bend
+  - panel_d.time_origin
   - panel_d.response_trace
   - panel_d.polarity_switch
 
@@ -84,6 +85,9 @@ semantic_legibility:
     - object_id: panel_d.response_trace
       declared_role: qualitative_bend_trace
       forbidden_readings: [calibrated_current_waveform]
+    - object_id: panel_d.time_origin
+      declared_role: source_off_observation_origin
+      forbidden_readings: [missing_time_origin, twenty_minute_trace_plateau]
     - object_id: panel_d.polarity_switch
       declared_role: drive_polarity_reversal
       forbidden_readings: [time_axis_break]
@@ -148,7 +152,24 @@ semantic_legibility:
       owner: panel_b.maxwell_baseline
     - label_id: panel_d.polarity_label
       owner: panel_d.polarity_switch
+    - label_id: panel_d.time_origin_label
+      owner: panel_d.time_origin
     - label_id: panel_d.trace_label
       owner: panel_d.response_trace
+  panel_story:
+    reading_order: [A, B, C, D]
+    panels:
+      - panel_id: A
+        role: setup
+        reader_task: Establish the air-gap actuation and source-off floating transition.
+      - panel_id: B
+        role: mechanism
+        reader_task: Separate the polarity-independent Maxwell term from the charge-mediated Coulomb term.
+      - panel_id: C
+        role: comparison
+        reader_task: Compare opposite bend directions for the same mounted film.
+      - panel_id: D
+        role: result
+        reader_task: Show the qualitative time ordering from the observation origin through reversal and recovery.
 
 publication_acceptance: not_claimed

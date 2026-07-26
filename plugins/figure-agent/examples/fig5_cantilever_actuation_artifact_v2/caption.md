@@ -8,9 +8,10 @@ measured capacitance or a polarization-measurement instrument. The grounded
 charge state and the source-off / floating state are shown as separate electrical
 stages for the same mounted cantilever. After OFF / float, reversing the nearby
 drive polarity changes the sign of the Coulomb term and reverses the bending
-direction. The 20-minute charge hold is shown as compressed preconditioning,
-rather than as a calibrated interval on the qualitative response axis. The trace
-then shows the isolation interval, an abrupt polarity-switch response, a negative
-excursion, and slower relaxation. The gray Maxwell term is shown only as a
+direction. The trace begins at $t=0$, defined by source OFF after the 20-minute
+precharge; this hold enters as a separate precondition rather than a calibrated
+interval on the qualitative response axis. The trace then shows the isolation
+interval, an abrupt polarity-switch response, a negative excursion, and schematic
+recovery. The gray Maxwell term is shown only as a
 polarity-independent attractive baseline; the red sign-changing term is the
 mechanism under test.

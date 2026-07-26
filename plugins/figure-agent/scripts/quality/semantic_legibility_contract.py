@@ -34,6 +34,16 @@ CONNECTOR_STYLE_FAMILIES = {
     "ground_return": "electrical_",
     "grounded_source_return": "electrical_",
 }
+PANEL_STORY_ROLES = {
+    "setup",
+    "mechanism",
+    "result",
+    "comparison",
+    "control",
+    "workflow",
+    "context",
+    "model",
+}
 
 
 class SemanticLegibilityContractError(ValueError):
@@ -177,6 +187,55 @@ def _label_ownership(
     return values
 
 
+def _panel_story(section: dict[str, Any]) -> list[dict[str, Any]]:
+    """Validate an opt-in reader-task contract for a multi-panel story.
+
+    This records why a panel exists in the reader's first pass. It deliberately
+    does not prescribe a composition or a drawing primitive, but it prevents a
+    mechanism figure from silently accumulating repeated apparatus panels with
+    no distinct reading task.
+    """
+    story = section.get("panel_story")
+    if story is None:
+        return []
+    if not isinstance(story, dict):
+        raise SemanticLegibilityContractError("panel_story_invalid")
+    order = story.get("reading_order")
+    panels = story.get("panels")
+    if (
+        not isinstance(order, list)
+        or len(order) < 2
+        or not all(_nonempty_string(panel_id) for panel_id in order)
+        or len(set(order)) != len(order)
+        or not isinstance(panels, list)
+        or len(panels) != len(order)
+    ):
+        raise SemanticLegibilityContractError("panel_story_invalid")
+
+    declared: dict[str, dict[str, Any]] = {}
+    roles: set[str] = set()
+    for panel in panels:
+        if not isinstance(panel, dict):
+            raise SemanticLegibilityContractError("panel_story_panel_invalid")
+        panel_id = panel.get("panel_id")
+        role = panel.get("role")
+        reader_task = panel.get("reader_task")
+        if (
+            not _nonempty_string(panel_id)
+            or panel_id in declared
+            or panel_id not in order
+            or role not in PANEL_STORY_ROLES
+            or role in roles
+            or not _nonempty_string(reader_task)
+        ):
+            raise SemanticLegibilityContractError("panel_story_panel_invalid")
+        declared[panel_id] = panel
+        roles.add(role)
+    if set(declared) != set(order):
+        raise SemanticLegibilityContractError("panel_story_order_mismatch")
+    return [declared[panel_id] for panel_id in order]
+
+
 def _electrical_topology(
     section: dict[str, Any],
     required: set[str],
@@ -282,6 +341,7 @@ def validate_semantic_legibility_contract(payload: object) -> dict[str, Any]:
     visible_connectors = _visible_connectors(section, required)
     forbidden_connectors = _forbidden_connectors(section, required)
     label_ownership = _label_ownership(section, required)
+    panel_story = _panel_story(section)
     electrical_nodes, electrical_connections = _electrical_topology(
         section, required, visible_connectors
     )
@@ -293,6 +353,7 @@ def validate_semantic_legibility_contract(payload: object) -> dict[str, Any]:
             "visible_connector_count": len(visible_connectors),
             "forbidden_connector_count": len(forbidden_connectors),
             "label_ownership_count": len(label_ownership),
+            "panel_story_role_count": len(panel_story),
             "electrical_node_count": len(electrical_nodes),
             "electrical_connection_count": len(electrical_connections),
             "floating_object_count": sum(
