@@ -126,6 +126,14 @@ def test_fig5_declares_deterministic_clamp_axis_geometry_check() -> None:
     ]
     assert actuation_alignment["reference_coordinate"] == "panel-a-clamp-axis"
 
+    isolation_alignment = assertions["isolation-clamp-axis-bisects-cantilever-fixed-end"]
+    assert isolation_alignment["kind"] == "centerline_aligned"
+    assert isolation_alignment["edge_coordinates"] == [
+        "panel-b-cantilever-left",
+        "panel-b-cantilever-right",
+    ]
+    assert isolation_alignment["reference_coordinate"] == "panel-b-clamp-axis"
+
 
 def test_fig5_contract_keeps_style_free_and_coordinates_free() -> None:
     contract = _yaml("semantic_contract.yaml")
@@ -177,6 +185,17 @@ def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None
     assert all(clamp_pattern.search(panel) for panel in panels)
     assert all(electrode_pattern.search(panel) for panel in panels)
     assert all("\\draw[apparatus]" in panel for panel in panels)
+
+    coordinate_pattern = re.compile(
+        r"\\coordinate \(panel-([abc])-cantilever-(left|right)\)"
+        r"\s+at \((\d+\.\d+),4\.05\)"
+    )
+    widths: dict[str, dict[str, float]] = {}
+    for panel_id, edge, x in coordinate_pattern.findall(tex):
+        widths.setdefault(panel_id, {})[edge] = float(x)
+    assert set(widths) == {"a", "b", "c"}
+    member_widths = [edges["right"] - edges["left"] for edges in widths.values()]
+    assert max(member_widths) - min(member_widths) <= 0.01
 
     polymer_blocks = [
         panel.split("\\fill[polymer", 1)[1].split("\\node[qmark]", 1)[0]
