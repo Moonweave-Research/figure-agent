@@ -12,7 +12,7 @@ not replace `docs/figure-agent.md`, which remains the product authority.
 Use this worktree for the current Fig1 candidate:
 
 ```text
-/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-dogfood
+/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig1-authority
 ```
 
 Current branch:
@@ -232,7 +232,7 @@ existence of a nearby electrode.
 From a fresh session:
 
 ```bash
-cd "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-dogfood/plugins/figure-agent"
+cd "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig1-authority/plugins/figure-agent"
 ./bin/fig-agent status fig1_updated_agent_redraw_v1
 FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/repaired.tex
 ```
