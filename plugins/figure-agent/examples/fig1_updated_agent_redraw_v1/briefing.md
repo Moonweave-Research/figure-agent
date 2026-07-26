@@ -1,5 +1,11 @@
 # Fig1 updated-agent redraw v1
 
+> **Current handoff (2026-07-26):** the maintained render is the explicit
+> nested candidate `review/failure-first/comparable-v3-repair-c5/repaired.tex`.
+> It is a development baseline (`candidate_only`), not publication-final.
+> Reproducibility and next-figure instructions live in
+> `docs/current-sulfur-paper-figure-state.md`.
+
 This is an additive full-figure candidate, not a modification of the historical
 v5f source. It must explain one narrative: sulfur-rich poly(S-r-DIB) has a
 composition-dependent trap landscape, measured independently by transient

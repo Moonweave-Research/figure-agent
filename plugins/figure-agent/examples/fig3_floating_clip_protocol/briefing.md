@@ -1,5 +1,10 @@
 # Briefing — fig3_floating_clip_protocol
 
+> **Status (2026-07-26): legacy SI/methods validation fixture, not current
+> experiment authority.** Its grounded-poling and four-phase polarity-reversal
+> assumptions are retained for historical regression evidence only. Read
+> `docs/current-sulfur-paper-figure-state.md` before authoring a new figure.
+
 > **Genre**: Nature Communications **SI / methods** figure (not main text). Clean
 > white background, schematic. A 4-phase process timeline.
 > **Diagnostic intent (2026-06-20)**: figure #3, chosen as a DIFFERENT genre from

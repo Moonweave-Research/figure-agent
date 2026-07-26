@@ -232,6 +232,8 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 **Read these first:**
 - `docs/figure-agent.md` — the sole product contract and executable roadmap.
   Start here.
+- `docs/current-sulfur-paper-figure-state.md` — current Fig1 baseline,
+  experiment-grounded protocol corrections, and the next cantilever handoff.
 - `docs/architecture-overview.md` — the shipped layer-by-layer reference.
 - `docs/v0.9-operator-playbook.md` — release-candidate command sequence for
   single-fixture, queue, host critique, closeout, and release/golden operation.
