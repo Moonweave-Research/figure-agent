@@ -78,6 +78,7 @@ semantic_legibility:
       to_object: panel_f.cantilever
       declared_role: force_direction
       render_style: force_directional
+      epistemic_status: derived
   forbidden_connectors:
     - from_object: panel_f.mechanical_jig
       to_object: panel_f.cantilever

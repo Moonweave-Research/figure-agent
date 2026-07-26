@@ -38,6 +38,13 @@ relations, and forbidden readings before strict compile can pass. Keep
 unresolved electrical topology explicit; never infer a charging instrument,
 contact, ground path, or measurement stage from the word “charging”. This
 contract constrains meaning, not the author's TikZ style or primitive choices.
+Every rendered force-direction connector must declare whether its direction is
+observed, derived, or conditional. A conditional force direction needs its
+visible condition and must use a conditional force style; never let a
+plausible-but-unverified arrow read as a measured vector. A panel declared as
+an observed comparison must bind a source-traceable evidence asset. Until that
+asset is selected, call the panel a schematic state comparison or remove it;
+do not silently upgrade a redraw into evidence.
 Keep superseded rules in catalog provenance, but exclude them from authoring
 context so stale hypotheses cannot compete with later human-confirmed rules.
 Before product-level work, read `docs/figure-agent.md`. It is the sole active

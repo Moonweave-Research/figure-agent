@@ -171,6 +171,81 @@ def test_rejects_mechanical_attachment_with_electrical_render_style() -> None:
         validate_semantic_legibility_contract(contract)
 
 
+def test_rejects_force_direction_without_epistemic_status() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["visible_connectors"] = [
+        {
+            "connector_id": "panel_f.force",
+            "from_object": "panel_f.mechanical_jig",
+            "to_object": "panel_f.cantilever",
+            "declared_role": "force_direction",
+            "render_style": "force_directional",
+        }
+    ]
+
+    with pytest.raises(
+        SemanticLegibilityContractError, match="force_direction_epistemic_status_invalid"
+    ):
+        validate_semantic_legibility_contract(contract)
+
+
+def test_rejects_conditional_force_without_condition_or_conditional_style() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["visible_connectors"] = [
+        {
+            "connector_id": "panel_f.force",
+            "from_object": "panel_f.mechanical_jig",
+            "to_object": "panel_f.cantilever",
+            "declared_role": "force_direction",
+            "render_style": "force_directional",
+            "epistemic_status": "conditional",
+        }
+    ]
+
+    with pytest.raises(
+        SemanticLegibilityContractError, match="force_direction_condition_missing"
+    ):
+        validate_semantic_legibility_contract(contract)
+
+
+def test_accepts_explicitly_conditional_force_direction() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["visible_connectors"] = [
+        {
+            "connector_id": "panel_f.force",
+            "from_object": "panel_f.mechanical_jig",
+            "to_object": "panel_f.cantilever",
+            "declared_role": "force_direction",
+            "render_style": "force_conditional",
+            "epistemic_status": "conditional",
+            "condition": "Illustrated polarity only.",
+        }
+    ]
+
+    validate_semantic_legibility_contract(contract)
+
+
+def test_rejects_observed_comparison_without_evidence_source() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["panel_story"] = {
+        "reading_order": ["A", "B"],
+        "panels": [
+            {"panel_id": "A", "role": "setup", "reader_task": "Establish the geometry."},
+            {
+                "panel_id": "B",
+                "role": "comparison",
+                "reader_task": "Compare observed response states.",
+                "comparison_basis": "observed_evidence",
+            },
+        ],
+    }
+
+    with pytest.raises(
+        SemanticLegibilityContractError, match="panel_story_evidence_source_missing"
+    ):
+        validate_semantic_legibility_contract(contract)
+
+
 @pytest.mark.parametrize("owner", [None, ["panel_f.cantilever", "panel_f.mechanical_jig"]])
 def test_rejects_label_without_one_declared_owner(owner: object) -> None:
     contract = valid_contract()

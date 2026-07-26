@@ -105,8 +105,8 @@
 % Panel B
 \begin{scope}[shift={(4.45,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {b};
-  \node[panelTitle,anchor=west] at (0.44,5.12) {force balance after reversal};
-  \node[labelMute,anchor=west] at (0.44,4.78) {floating film; reversed drive};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {conditional force competition};
+  \node[labelMute,anchor=west] at (0.44,4.78) {floating film; illustrative condition};
 
   % This panel is a force ledger, not another competing bend snapshot.
   \fill[cGray!38] (0.94,3.88) rectangle (1.92,4.15);
@@ -127,17 +127,17 @@
   \draw[apparatus] (3.44,1.28) rectangle (3.72,4.04);
   \node[labelStd,anchor=east] at (3.34,2.08) {drive electrode};
 
-  % Separate lanes make ownership of the polarity-independent and charge-
-  % mediated terms visible without drawing a second specimen.
+  % Separate lanes record an illustrated force condition rather than an
+  % independently observed force vector or a second bend snapshot.
   \draw[baselineArrow] (1.84,3.12)--(3.08,3.12);
   \node[labelStd,anchor=south,text=cGray!74!black] at (2.48,3.18)
     {Maxwell attraction};
   \draw[forceAway] (1.02,2.38)--(0.34,2.38);
-  \node[labelStd,text=cRed!84!black,anchor=north west] at (0.16,2.18)
+  \node[labelStd,text=cRed!84!black,anchor=south west] at (0.34,1.08)
     {Coulomb};
   \node[labelMute,align=center] at (2.24,0.82)
-    {$+V$: both terms toward electrode;\\[-0.5pt]
-     reversed drive: Coulomb opposes Maxwell};
+    {illustrated reversal: $F_{\mathrm{C}}$ opposes $F_{\mathrm{M}}$;\\[-0.5pt]
+     reverse bend if $|F_{\mathrm{C}}|>|F_{\mathrm{M}}|$};
 \end{scope}
 
 % ================================================================
@@ -146,9 +146,9 @@
 % Panel C
 \begin{scope}[shift={(8.90,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {c};
-  \node[panelTitle,anchor=west] at (0.44,5.12) {opposite bend of the same film};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {schematic opposite-bend states};
 
-  % The upper observed state bends toward the driven electrode during the
+  % The upper schematic state bends toward the driven electrode during the
   % grounded +5 kV actuation hold.
   \node[labelMute,anchor=west] at (0.34,4.56) {$+5\,\mathrm{kV}$; clip GND};
   \fill[cGray!28] (3.46,3.24) rectangle (3.72,4.20);
@@ -163,7 +163,7 @@
     -- (2.59,3.30) .. controls (1.91,3.59) and (1.66,3.82) .. (1.66,3.94);
   \node[labelStd,text=cBlue!82!black,anchor=west] at (2.56,3.52) {$+\theta$};
 
-  % After isolation and polarity reversal, the observed cantilever bends away
+  % After isolation and polarity reversal, the schematic cantilever bends away
   % from the same electrode.
   \node[labelMute,anchor=west] at (0.34,2.26) {$-5\,\mathrm{kV}$; clip floating};
   \fill[cGray!28] (3.46,1.14) rectangle (3.72,2.10);

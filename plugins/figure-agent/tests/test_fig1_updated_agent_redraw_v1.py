@@ -406,6 +406,7 @@ def test_repaired_declares_compile_visible_physics_grounding() -> None:
     assert check_physics_grounding.grounding_status(FIXTURE)["status"] == "grounded"
     assertion_ids = {item["id"] for item in spec["semantic_assertions"]}
     assert assertion_ids == {
+        "panel-c-mobility-edge-left-of-thermal-escape",
         "panel-f-coulomb-result-left-of-maxwell-baseline",
         "panel-f-trapped-charge-left-of-driven-electrode",
     }

@@ -77,16 +77,16 @@ semantic_legibility:
       declared_role: polarity_independent_attraction
       forbidden_readings: [decorative_baseline, second_coulomb_force]
     - object_id: panel_c.forward_bend
-      declared_role: observed_bend_state
+      declared_role: schematic_bend_state
       forbidden_readings: [abstract_direction_arrow]
     - object_id: panel_c.reverse_bend
-      declared_role: observed_bend_state
+      declared_role: schematic_bend_state
       forbidden_readings: [independent_second_sample]
     - object_id: panel_d.response_trace
       declared_role: qualitative_bend_trace
       forbidden_readings: [calibrated_current_waveform]
     - object_id: panel_d.time_origin
-      declared_role: source_off_observation_origin
+      declared_role: actuation_onset_time_origin
       forbidden_readings: [missing_time_origin, twenty_minute_trace_plateau]
     - object_id: panel_d.polarity_switch
       declared_role: drive_polarity_reversal
@@ -102,6 +102,7 @@ semantic_legibility:
       to_object: panel_a.attraction_force
       declared_role: force_direction
       render_style: force_directional
+      epistemic_status: derived
     - connector_id: panel_a.charge_enters_isolation
       from_object: panel_a.actuation_charge_state
       to_object: panel_a.off_float_transition
@@ -111,7 +112,9 @@ semantic_legibility:
       from_object: panel_b.trapped_charge
       to_object: panel_b.coulomb_force
       declared_role: force_direction
-      render_style: force_directional
+      render_style: force_conditional
+      epistemic_status: conditional
+      condition: Illustrated reversed-polarity condition; the charge-mediated term opposes the Maxwell baseline.
     - connector_id: panel_b.maxwell_baseline_is_separate_term
       from_object: panel_b.maxwell_baseline
       to_object: panel_b.coulomb_force
@@ -167,7 +170,8 @@ semantic_legibility:
         reader_task: Separate the polarity-independent Maxwell term from the charge-mediated Coulomb term.
       - panel_id: C
         role: comparison
-        reader_task: Compare opposite bend directions for the same mounted film.
+        reader_task: Keep the two schematic bend states distinct until source-traceable video evidence is selected.
+        comparison_basis: schematic_state
       - panel_id: D
         role: result
         reader_task: Show the qualitative time ordering from the observation origin through reversal and recovery.

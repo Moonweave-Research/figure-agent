@@ -16,7 +16,7 @@ tex_assertions:
     direction: increasing
     minimum_matches: 1
     require_unidirectional_arrow: true
-  - id: reversed-coulomb-force-points-away-from-drive
+  - id: illustrated-coulomb-force-points-away-from-drive
     source_name: fig5_cantilever_actuation_artifact_v2.tex
     anchor_style: forceAway
     axis: x
@@ -83,6 +83,13 @@ text_boundary_checks:
     x_pdf_cm: 13.38
     y_range_pdf_cm: [0.55, 4.78]
     clearance_pt: 0.5
+  - id: panel-b-coulomb-label-rail
+    kind: rect
+    role: force_label_rail
+    mode: contain_text
+    bbox_pdf_cm: [4.95, 4.15, 5.90, 4.42]
+    clearance_pt: 0.0
+    text_allowlist: [Coulomb]
 
 label_path_proximity_checks:
   - id: manual-sequence-arrow
@@ -94,14 +101,14 @@ label_path_proximity_checks:
     text_phrases:
       - id: off_float
         words: ['OFF', float]
-  - id: force-sign-arrow
+  - id: panel-b-coulomb-arrow
     kind: horizontal_line
-    role: force_arrow
-    y_pdf_cm: 2.40
-    x_range_pdf_cm: [8.68, 10.12]
+    role: conditional_force_arrow
+    y_pdf_cm: 2.38
+    x_range_pdf_cm: [4.76, 5.50]
     clearance_pt: 3.0
     text_phrases:
-      - id: coulomb_force
+      - id: coulomb_label
         words: [Coulomb]
   - id: trace-switch-line
     kind: vertical_line
@@ -118,13 +125,13 @@ panels:
     caption: Same-cantilever actuation charge followed by a visibly distinct source-off floating state
     bbox_pdf_cm: [0.00, 0.00, 4.25, 5.20]
   - id: B
-    caption: Polarity reversal changes the sign of the Coulomb contribution
+    caption: Illustrated conditional force competition after drive reversal
     bbox_pdf_cm: [4.25, 0.00, 8.50, 5.20]
   - id: C
-    caption: Same cantilever bends in opposite directions under reversed drive
+    caption: Schematic opposite-bend state comparison pending source-traceable video evidence
     bbox_pdf_cm: [8.50, 0.00, 12.75, 5.20]
   - id: D
-    caption: Qualitative response trace beginning at the source-off observation origin
+    caption: Qualitative response trace beginning at actuation onset
     bbox_pdf_cm: [12.75, 0.00, 17.80, 5.20]
 
 notes: |

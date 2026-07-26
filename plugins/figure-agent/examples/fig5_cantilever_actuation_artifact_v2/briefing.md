@@ -54,7 +54,11 @@ charge, not an application demo.
 ## Scope
 
 - This artifact does not select representative video frames yet.
-- It does not claim a single exact force direction for every geometry.
+- The B-panel arrows are an explicitly labelled, illustrated force condition:
+  they show the charge-mediated term opposing the Maxwell baseline, not a
+  directly measured force vector or a geometry-independent sign assignment.
+- C is schematic until a source-traceable pair of representative video frames
+  is selected; it must not be presented as primary visual evidence before then.
 - It intentionally omits ESVM; ESVM belongs to the charge-state measurement
   story, not the center of this actuation evidence panel.
 - The trace is a qualitative redraw of the observed waveform shape, not a

@@ -158,6 +158,12 @@ def load_process_stage_visibility_checks(
     if not isinstance(spec, dict):
         raise ProcessStageVisibilityError("spec.yaml must be a mapping")
 
+    raw_checks = spec.get("process_stage_visibility_checks")
+    if raw_checks is None:
+        return {}, []
+    if not isinstance(raw_checks, list):
+        raise ProcessStageVisibilityError("process_stage_visibility_checks must be a list")
+
     panels: dict[str, list[float]] = {}
     for index, panel in enumerate(spec.get("panels", [])):
         if not isinstance(panel, dict) or not _nonempty(panel.get("id")):
@@ -170,12 +176,6 @@ def load_process_stage_visibility_checks(
             page_height_pt=page_size_pt[1],
             field=f"panels[{index}].bbox_pdf_cm",
         )
-
-    raw_checks = spec.get("process_stage_visibility_checks")
-    if raw_checks is None:
-        return panels, []
-    if not isinstance(raw_checks, list):
-        raise ProcessStageVisibilityError("process_stage_visibility_checks must be a list")
 
     checks: list[dict[str, Any]] = []
     seen_checks: set[str] = set()

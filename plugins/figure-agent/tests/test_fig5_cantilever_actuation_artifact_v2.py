@@ -44,6 +44,24 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "panel_a.corona_needle" in forbidden
 
 
+def test_fig5_marks_reverse_force_as_conditional_and_c_state_as_schematic() -> None:
+    contract = _yaml("semantic_contract.yaml")
+    connectors = {
+        item["connector_id"]: item
+        for item in contract["semantic_legibility"]["visible_connectors"]
+    }
+    panel_story = {
+        item["panel_id"]: item
+        for item in contract["semantic_legibility"]["panel_story"]["panels"]
+    }
+
+    coulomb = connectors["panel_b.trapped_charge_drives_coulomb_term"]
+    assert coulomb["epistemic_status"] == "conditional"
+    assert coulomb["render_style"] == "force_conditional"
+    assert coulomb["condition"]
+    assert panel_story["C"]["comparison_basis"] == "schematic_state"
+
+
 def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> None:
     spec = _yaml("spec.yaml")
     checks = {item["id"]: item for item in spec["process_stage_visibility_checks"]}

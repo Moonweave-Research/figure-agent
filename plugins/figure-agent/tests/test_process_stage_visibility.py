@@ -139,6 +139,25 @@ process_stage_visibility_checks:
         load_process_stage_visibility_checks(spec, page_size_pt=(220, 140))
 
 
+def test_load_process_stage_visibility_checks_ignores_panels_without_opt_in(tmp_path: Path) -> None:
+    spec = tmp_path / "spec.yaml"
+    spec.write_text(
+        """
+panels:
+  - id: A
+    caption: A panel without a process-stage contract.
+""",
+        encoding="utf-8",
+    )
+
+    panels, checks = load_process_stage_visibility_checks(
+        spec, page_size_pt=(220, 140)
+    )
+
+    assert panels == {}
+    assert checks == []
+
+
 def test_process_stage_visibility_payload_names_fixture_from_build_parent() -> None:
     payload = process_stage_visibility_payload(
         Path("examples/fig5/build/figure.pdf"), [], checked=2

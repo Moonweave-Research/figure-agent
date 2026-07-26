@@ -44,6 +44,8 @@ PANEL_STORY_ROLES = {
     "context",
     "model",
 }
+FORCE_DIRECTION_EPISTEMIC_STATUSES = {"observed", "derived", "conditional"}
+COMPARISON_BASES = {"observed_evidence", "schematic_state", "quantitative_data"}
 
 
 class SemanticLegibilityContractError(ValueError):
@@ -137,6 +139,21 @@ def _visible_connectors(
             raise SemanticLegibilityContractError(
                 "visible_connector_style_role_mismatch"
             )
+        if declared_role == "force_direction":
+            epistemic_status = item.get("epistemic_status")
+            if epistemic_status not in FORCE_DIRECTION_EPISTEMIC_STATUSES:
+                raise SemanticLegibilityContractError(
+                    "force_direction_epistemic_status_invalid"
+                )
+            if epistemic_status == "conditional":
+                if not _nonempty_string(item.get("condition")):
+                    raise SemanticLegibilityContractError(
+                        "force_direction_condition_missing"
+                    )
+                if render_style != "force_conditional":
+                    raise SemanticLegibilityContractError(
+                        "force_direction_conditional_render_style_invalid"
+                    )
         seen.add(connector_id)
     return values
 
@@ -229,6 +246,17 @@ def _panel_story(section: dict[str, Any]) -> list[dict[str, Any]]:
             or not _nonempty_string(reader_task)
         ):
             raise SemanticLegibilityContractError("panel_story_panel_invalid")
+        if role == "comparison":
+            comparison_basis = panel.get("comparison_basis")
+            if comparison_basis not in COMPARISON_BASES:
+                raise SemanticLegibilityContractError("panel_story_comparison_basis_invalid")
+            if (
+                comparison_basis == "observed_evidence"
+                and not _nonempty_string(panel.get("evidence_source"))
+            ):
+                raise SemanticLegibilityContractError(
+                    "panel_story_evidence_source_missing"
+                )
         declared[panel_id] = panel
         roles.add(role)
     if set(declared) != set(order):
