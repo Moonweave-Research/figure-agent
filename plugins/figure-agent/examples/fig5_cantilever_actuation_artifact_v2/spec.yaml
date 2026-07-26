@@ -23,6 +23,15 @@ tex_assertions:
     direction: decreasing
     minimum_matches: 1
     require_unidirectional_arrow: true
+  # Coordinate-bound source geometry: the fixed-end edges must be bisected by
+  # the clamp lead so a future redraw cannot silently paste the support off-axis.
+  - id: clamp-axis-bisects-cantilever-fixed-end
+    kind: centerline_aligned
+    source_name: fig5_cantilever_actuation_artifact_v2.tex
+    axis: x
+    edge_coordinates: [panel-c-cantilever-left, panel-c-cantilever-right]
+    reference_coordinate: panel-c-clamp-axis
+    tolerance_cm: 0.02
 
 # A declared intermediate stage must have a visible, ordered reader-facing
 # anchor. This is a semantic/render contract, not a primitive recipe.

@@ -83,6 +83,54 @@ def test_parse_tex_assertions_returns_validated_list():
     assert parsed == [ASSERTION]
 
 
+def test_parse_centerline_alignment_assertion():
+    assertion = {
+        "id": "clamp-axis",
+        "kind": "centerline_aligned",
+        "axis": "x",
+        "edge_coordinates": ["left", "right"],
+        "reference_coordinate": "axis",
+        "tolerance_cm": 0.02,
+    }
+    assert cta.parse_tex_assertions({"tex_assertions": [assertion]}) == [assertion]
+
+
+def test_centerline_alignment_passes_when_support_bisects_fixed_end():
+    tex = """
+    \\coordinate (left) at (1.35,3.88);
+    \\coordinate (right) at (1.51,3.88);
+    \\coordinate (axis) at (1.43,3.88);
+    """
+    assertion = {
+        "id": "clamp-axis",
+        "kind": "centerline_aligned",
+        "axis": "x",
+        "edge_coordinates": ["left", "right"],
+        "reference_coordinate": "axis",
+        "tolerance_cm": 0.02,
+    }
+    assert cta.check_tex_assertions(tex, [assertion]) == []
+
+
+def test_centerline_alignment_flags_an_off_axis_support():
+    tex = """
+    \\coordinate (left) at (1.35,3.88);
+    \\coordinate (right) at (1.51,3.88);
+    \\coordinate (axis) at (1.37,3.88);
+    """
+    assertion = {
+        "id": "clamp-axis",
+        "kind": "centerline_aligned",
+        "axis": "x",
+        "edge_coordinates": ["left", "right"],
+        "reference_coordinate": "axis",
+        "tolerance_cm": 0.02,
+    }
+    issues = cta.check_tex_assertions(tex, [assertion])
+    assert issues[0]["status"] == "violated"
+    assert issues[0]["measured_delta_cm"] == pytest.approx(0.06)
+
+
 def test_parse_tex_assertions_empty_when_absent():
     assert cta.parse_tex_assertions({"name": "x"}) == []
 

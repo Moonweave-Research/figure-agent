@@ -104,6 +104,18 @@ def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> Non
     }
 
 
+def test_fig5_declares_deterministic_clamp_axis_geometry_check() -> None:
+    spec = _yaml("spec.yaml")
+    assertions = {item["id"]: item for item in spec["tex_assertions"]}
+    alignment = assertions["clamp-axis-bisects-cantilever-fixed-end"]
+    assert alignment["kind"] == "centerline_aligned"
+    assert alignment["edge_coordinates"] == [
+        "panel-c-cantilever-left",
+        "panel-c-cantilever-right",
+    ]
+    assert alignment["reference_coordinate"] == "panel-c-clamp-axis"
+
+
 def test_fig5_contract_keeps_style_free_and_coordinates_free() -> None:
     contract = _yaml("semantic_contract.yaml")
 

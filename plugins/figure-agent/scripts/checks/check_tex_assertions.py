@@ -20,6 +20,11 @@ spec.yaml::
 The physics MEANING (decreasing-x = away-from-the-right-electrode = repulsion) is the
 author's interpretation, baked into the declared `direction`; the checker is purely
 mechanical. Report-only by default; --strict exits non-zero on any violation.
+
+Source geometry can also be checked with a `centerline_aligned` assertion. It
+names two fixed-end edge coordinates and one support-axis coordinate declared by
+TikZ `\\coordinate` statements; the checker compares their midpoint on the
+declared axis and fails closed when an anchor is missing or duplicated.
 """
 
 from __future__ import annotations
@@ -80,6 +85,8 @@ _NAMED_COORD_DECL_RE = re.compile(
     r"\\(?:coordinate|node)(?:\s*\[[^\]]*\])?\s*"
     rf"\(\s*({_NAMED_COORD})\s*\)\s*at\s*\(\s*({_NUM})\s*,\s*({_NUM})\s*\)"
 )
+
+CENTERLINE_ALIGNMENT_KIND = "centerline_aligned"
 
 _RAW_DRAW_PATTERN = tuple[re.Pattern[str], tuple[int, int, int, int], int | None]
 
@@ -188,6 +195,21 @@ def _styled_draws_raw(tex_text: str, style: str) -> list[tuple[float, float, flo
         if start is not None and end is not None:
             named_paths.append((*start, *end, match.group(1)))
     return literal_paths + named_paths
+
+
+def _named_coordinate_matches(tex_text: str) -> dict[str, list[tuple[float, float]]]:
+    """Return every numeric declaration for each named TikZ coordinate.
+
+    Duplicate names are kept rather than silently overwritten. A geometry
+    assertion that resolves to more than one declaration is ambiguous and must
+    fail closed instead of choosing whichever declaration happens to be last.
+    """
+    matches: dict[str, list[tuple[float, float]]] = {}
+    for match in _NAMED_COORD_DECL_RE.finditer(_strip_tex_comments(tex_text)):
+        matches.setdefault(match.group(1), []).append(
+            (float(match.group(2)), float(match.group(3)))
+        )
+    return matches
 
 
 def _all_draws_raw(tex_text: str) -> list[tuple[float, float, float, float, str]]:
@@ -352,6 +374,51 @@ def parse_tex_assertions(
     for index, item in enumerate(raw):
         if not isinstance(item, dict):
             raise TexAssertionError(f"tex_assertions[{index}] must be a mapping")
+
+        kind = item.get("kind")
+        if kind is not None:
+            if kind != CENTERLINE_ALIGNMENT_KIND:
+                raise TexAssertionError(
+                    f"tex_assertions[{index}].kind must be {CENTERLINE_ALIGNMENT_KIND!r}"
+                )
+            out: dict = {"kind": kind}
+            for field in ("id", "axis", "reference_coordinate"):
+                value = item.get(field)
+                if not isinstance(value, str) or not value.strip():
+                    raise TexAssertionError(f"tex_assertions[{index}].{field} is required")
+                out[field] = value.strip()
+            edge_coordinates = item.get("edge_coordinates")
+            if (
+                not isinstance(edge_coordinates, list)
+                or len(edge_coordinates) != 2
+                or any(
+                    not isinstance(value, str) or not value.strip()
+                    for value in edge_coordinates
+                )
+            ):
+                raise TexAssertionError(
+                    f"tex_assertions[{index}].edge_coordinates must be two named coordinates"
+                )
+            out["edge_coordinates"] = [value.strip() for value in edge_coordinates]
+            if out["axis"] not in AXES:
+                raise TexAssertionError(f"tex_assertions[{index}].axis must be one of {AXES}")
+            if "tolerance_cm" in item:
+                tol = item["tolerance_cm"]
+                if isinstance(tol, bool) or not isinstance(tol, (int, float)) or tol <= 0:
+                    raise TexAssertionError(f"tex_assertions[{index}].tolerance_cm must be > 0")
+                out["tolerance_cm"] = float(tol)
+            assertion_source_name = item.get("source_name")
+            if assertion_source_name is not None:
+                if not isinstance(assertion_source_name, str) or not assertion_source_name.strip():
+                    raise TexAssertionError(
+                        f"tex_assertions[{index}].source_name must be a string"
+                    )
+                out["source_name"] = assertion_source_name.strip()
+            if source_name is not None and out.get("source_name") not in (None, source_name):
+                continue
+            parsed.append(out)
+            continue
+
         out: dict = {}
         for field in ("id", "axis", "direction"):
             value = item.get(field)
@@ -578,11 +645,65 @@ def check_named_endpoint_assertions(tex_text: str, assertions: list[dict]) -> li
     return issues
 
 
+def _check_centerline_alignment(tex_text: str, assertion: dict) -> dict | None:
+    """Check that two fixed-end edge coordinates bisect a support coordinate."""
+    coordinates = _named_coordinate_matches(tex_text)
+    names = [*assertion["edge_coordinates"], assertion["reference_coordinate"]]
+    for name in names:
+        matches = coordinates.get(name, [])
+        if not matches:
+            return {
+                "id": assertion["id"],
+                "status": "coordinate_missing",
+                "message": f"assertion {assertion['id']!r}: coordinate {name!r} is absent",
+                "coordinate": name,
+            }
+        if len(matches) != 1:
+            return {
+                "id": assertion["id"],
+                "status": "coordinate_ambiguous",
+                "message": (
+                    f"assertion {assertion['id']!r}: coordinate {name!r} has "
+                    f"{len(matches)} declarations"
+                ),
+                "coordinate": name,
+            }
+
+    axis = assertion["axis"]
+    axis_index = 0 if axis == "x" else 1
+    left = coordinates[assertion["edge_coordinates"][0]][0]
+    right = coordinates[assertion["edge_coordinates"][1]][0]
+    reference = coordinates[assertion["reference_coordinate"]][0]
+    edge_center = (left[axis_index] + right[axis_index]) / 2.0
+    delta = edge_center - reference[axis_index]
+    tolerance = assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM)
+    if abs(delta) <= tolerance:
+        return None
+    return {
+        "id": assertion["id"],
+        "status": "violated",
+        "message": (
+            f"assertion {assertion['id']!r} violated: fixed-end center is "
+            f"{abs(delta):.4f} cm off the support axis"
+        ),
+        "axis": axis,
+        "edge_coordinates": assertion["edge_coordinates"],
+        "reference_coordinate": assertion["reference_coordinate"],
+        "measured_delta_cm": abs(delta),
+        "tolerance_cm": tolerance,
+    }
+
+
 def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
     """One issue per assertion that is violated, indeterminate, or whose anchor is
     missing/ambiguous. A passing assertion produces no issue."""
     issues: list[dict] = []
     for assertion in assertions:
+        if assertion.get("kind") == CENTERLINE_ALIGNMENT_KIND:
+            issue = _check_centerline_alignment(tex_text, assertion)
+            if issue is not None:
+                issues.append(issue)
+            continue
         style = assertion.get("anchor_style")
         draws = _styled_draws_raw(tex_text, style) if style else _all_draws_raw(tex_text)
         anchor = repr(style) if style else "any draw near the declared point"
@@ -685,7 +806,7 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
 BLOCKING_STATUSES = (
     "violated", "anchor_missing", "anchor_ambiguous", "insufficient_matches", "arrowhead_invalid",
     "insufficient_named_paths", "named_endpoint_unbound", "named_endpoint_missing",
-    "named_label_binding_missing",
+    "named_label_binding_missing", "coordinate_missing", "coordinate_ambiguous",
 )
 
 
