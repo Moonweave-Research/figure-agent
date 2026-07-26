@@ -1,0 +1,141 @@
+schema: figure-agent.failure-first-semantic-contract.v1
+selector_id: fig5.actuation_mechanism
+
+# This contract records meaning, not drawing style or coordinates.  It is the
+# transfer rule learned from the first Fig5 artifact: "charge" is an
+# electromechanical state in the air-gap actuation geometry, not a generic HV
+# charging station.
+required_objects:
+  - panel_a.cantilever
+  - panel_a.drive_electrode
+  - panel_a.air_gap
+  - panel_a.actuation_charge_state
+  - panel_a.attraction_force
+  - panel_a.off_float_transition
+  - panel_b.trapped_charge
+  - panel_b.coulomb_force
+  - panel_c.forward_bend
+  - panel_c.reverse_bend
+  - panel_d.response_trace
+  - panel_d.polarity_switch
+
+forbidden_implications:
+  - panel_a.standalone_two_terminal_charger
+  - panel_a.polarization_measurement_instrument
+  - panel_a.esvm_measurement_head
+  - panel_a.corona_needle
+  - panel_a.charging_grid
+  - panel_a.sample_outside_actuation_geometry
+  - panel_d.quantitative_measured_waveform
+
+protected_relations:
+  - cantilever_faces_drive_electrode_across_air_gap
+  - charge_phase_is_actuation_state
+  - attraction_acts_during_charge
+  - air_gap_coupling_is_capacitor_like_schematic_only
+  - off_float_precedes_drive_polarity_reversal
+  - trapped_charge_remains_on_same_specimen_after_isolation
+  - coulomb_term_changes_sign_with_drive_polarity
+  - maxwell_baseline_is_polarity_independent
+  - opposite_bend_is_same_specimen_response
+  - response_trace_is_qualitative_not_calibrated_data
+
+repair:
+  family: actuation_geometry_and_mechanism_contract
+  selector_id: fig5.actuation_mechanism
+  max_source_blocks: 1
+
+semantic_legibility:
+  object_roles:
+    - object_id: panel_a.cantilever
+      declared_role: polymer_cantilever
+      forbidden_readings: [horizontal_test_strip, floating_sample_block]
+    - object_id: panel_a.drive_electrode
+      declared_role: active_actuation_electrode
+      forbidden_readings: [measurement_probe, polarization_meter_head]
+    - object_id: panel_a.air_gap
+      declared_role: noncontact_air_gap
+      forbidden_readings: [electrical_wire, solid_contact]
+    - object_id: panel_a.actuation_charge_state
+      declared_role: electromechanical_charge_phase
+      forbidden_readings: [standalone_hv_charger, polarization_measurement]
+    - object_id: panel_a.attraction_force
+      declared_role: charge_phase_attraction
+      forbidden_readings: [decorative_arrow]
+    - object_id: panel_a.off_float_transition
+      declared_role: isolation_transition
+      forbidden_readings: [automated_motion_stage, conveyor_transfer]
+    - object_id: panel_b.trapped_charge
+      declared_role: retained_trapped_charge
+      forbidden_readings: [decorative_bead]
+    - object_id: panel_b.coulomb_force
+      declared_role: polarity_dependent_force
+      forbidden_readings: [annotation_leader]
+    - object_id: panel_c.forward_bend
+      declared_role: observed_bend_state
+      forbidden_readings: [abstract_direction_arrow]
+    - object_id: panel_c.reverse_bend
+      declared_role: observed_bend_state
+      forbidden_readings: [independent_second_sample]
+    - object_id: panel_d.response_trace
+      declared_role: qualitative_bend_trace
+      forbidden_readings: [calibrated_current_waveform]
+    - object_id: panel_d.polarity_switch
+      declared_role: drive_polarity_reversal
+      forbidden_readings: [time_axis_break]
+  visible_connectors:
+    - connector_id: panel_a.air_gap_separates_members
+      from_object: panel_a.cantilever
+      to_object: panel_a.drive_electrode
+      declared_role: separation_by_air_gap
+      render_style: separation_dimension
+    - connector_id: panel_a.attraction_belongs_to_charge_phase
+      from_object: panel_a.actuation_charge_state
+      to_object: panel_a.attraction_force
+      declared_role: force_direction
+      render_style: force_directional
+    - connector_id: panel_a.charge_enters_isolation
+      from_object: panel_a.actuation_charge_state
+      to_object: panel_a.off_float_transition
+      declared_role: process_stage_transition
+      render_style: stage_transition
+    - connector_id: panel_b.trapped_charge_drives_coulomb_term
+      from_object: panel_b.trapped_charge
+      to_object: panel_b.coulomb_force
+      declared_role: force_direction
+      render_style: force_directional
+    - connector_id: panel_d.switch_owns_bend_reversal
+      from_object: panel_d.polarity_switch
+      to_object: panel_c.reverse_bend
+      declared_role: process_stage_transition
+      render_style: stage_transition
+    - connector_id: panel_c.states_share_one_specimen
+      from_object: panel_c.forward_bend
+      to_object: panel_c.reverse_bend
+      declared_role: state_transition
+      render_style: state_transition
+  forbidden_connectors:
+    - from_object: panel_a.cantilever
+      to_object: panel_a.drive_electrode
+      declared_role: electrical_contact
+    - from_object: panel_a.drive_electrode
+      to_object: panel_a.cantilever
+      declared_role: sample_measurement_lead
+    - from_object: panel_a.actuation_charge_state
+      to_object: panel_a.drive_electrode
+      declared_role: measurement_acquisition
+  label_ownership:
+    - label_id: panel_a.air_gap_label
+      owner: panel_a.air_gap
+    - label_id: panel_a.charge_phase_label
+      owner: panel_a.actuation_charge_state
+    - label_id: panel_a.attraction_label
+      owner: panel_a.attraction_force
+    - label_id: panel_b.coulomb_label
+      owner: panel_b.coulomb_force
+    - label_id: panel_d.polarity_label
+      owner: panel_d.polarity_switch
+    - label_id: panel_d.trace_label
+      owner: panel_d.response_trace
+
+publication_acceptance: not_claimed

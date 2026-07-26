@@ -44,7 +44,23 @@ def has_semantic_assertions(spec: dict) -> bool:
     return isinstance(raw, list) and len(raw) > 0
 
 
-def classify_grounding(briefing_text: str, spec: dict) -> str:
+def semantic_contract_required(spec: dict) -> bool:
+    """Whether this fixture opts into a paper-specific semantic contract gate."""
+    return spec.get("semantic_contract_required") is True
+
+
+def classify_grounding(
+    briefing_text: str,
+    spec: dict,
+    *,
+    semantic_contract_present: bool | None = None,
+) -> str:
+    # ``grounded`` historically meant only that prose intent had one directional
+    # or relational assertion.  Mechanism figures may opt into the stronger,
+    # transferable object/relation contract without forcing legacy fixtures to
+    # invent one retroactively.
+    if semantic_contract_required(spec) and semantic_contract_present is False:
+        return "semantic_contract_missing"
     # A figure is enforced by EITHER assertion family: tex_assertions for directional
     # facts (force/bend direction), semantic_assertions for label-relational ones
     # (shallow above deep). Counting only tex_assertions false-WARNs the latter.
@@ -66,9 +82,18 @@ def grounding_status(figure_dir) -> dict:
         # must not collapse into the benign "undeclared" (no-invariants) bucket.
         return {"figure": figure_dir.name, "status": "briefing_missing"}
     briefing_text = briefing.read_text(encoding="utf-8")
+    semantic_contract_present = (
+        (figure_dir / "semantic_contract.yaml").is_file()
+        if semantic_contract_required(spec or {})
+        else None
+    )
     return {
         "figure": figure_dir.name,
-        "status": classify_grounding(briefing_text, spec or {}),
+        "status": classify_grounding(
+            briefing_text,
+            spec or {},
+            semantic_contract_present=semantic_contract_present,
+        ),
     }
 
 
@@ -94,8 +119,17 @@ def main() -> int:
     result = grounding_status(args.figure_dir)
     if args.json_output:
         write_grounding_json(result["figure"], result["status"], args.json_output)
-    non_benign = {"declared_unenforced", "briefing_missing"}
-    if result["status"] == "declared_unenforced":
+    non_benign = {
+        "declared_unenforced",
+        "semantic_contract_missing",
+        "briefing_missing",
+    }
+    if result["status"] == "semantic_contract_missing":
+        print(
+            f"WARN physics_grounding: {result['figure']} opts into a semantic contract "
+            "but semantic_contract.yaml is missing (domain meaning is unbound)"
+        )
+    elif result["status"] == "declared_unenforced":
         print(
             f"WARN physics_grounding: {result['figure']} declares physics invariants but has "
             "no tex_assertions or semantic_assertions (read the briefing §6/§7 and author them)"

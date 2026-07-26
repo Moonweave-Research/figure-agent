@@ -1,0 +1,64 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import yaml
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+FIXTURE = PLUGIN_ROOT / "examples" / "fig5_cantilever_actuation_artifact_v2"
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
+
+from semantic_legibility_contract import (  # noqa: E402
+    validate_semantic_legibility_contract,
+)
+
+
+def _yaml(name: str) -> dict:
+    return yaml.safe_load((FIXTURE / name).read_text(encoding="utf-8"))
+
+
+def test_fig5_requires_a_transferable_mechanism_contract() -> None:
+    spec = _yaml("spec.yaml")
+    assert spec["semantic_contract_required"] is True
+
+    contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
+    assert contract["publication_acceptance"] == "not_claimed"
+    assert contract["summary"]["object_role_count"] == 12
+    assert contract["summary"]["visible_connector_count"] == 6
+
+
+def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() -> None:
+    contract = _yaml("semantic_contract.yaml")
+    protected = set(contract["protected_relations"])
+    forbidden = set(contract["forbidden_implications"])
+
+    assert "charge_phase_is_actuation_state" in protected
+    assert "cantilever_faces_drive_electrode_across_air_gap" in protected
+    assert "air_gap_coupling_is_capacitor_like_schematic_only" in protected
+    assert "panel_a.standalone_two_terminal_charger" in forbidden
+    assert "panel_a.polarization_measurement_instrument" in forbidden
+    assert "panel_a.esvm_measurement_head" in forbidden
+    assert "panel_a.corona_needle" in forbidden
+
+
+def test_fig5_contract_keeps_style_free_and_coordinates_free() -> None:
+    contract = _yaml("semantic_contract.yaml")
+
+    def keys(value: object) -> set[str]:
+        if isinstance(value, dict):
+            result = set(value)
+            for child in value.values():
+                result.update(keys(child))
+            return {str(item) for item in result}
+        if isinstance(value, list):
+            result: set[str] = set()
+            for child in value:
+                result.update(keys(child))
+            return result
+        return set()
+
+    forbidden_keys = {item.lower() for item in keys(contract)}
+    assert "tikz" not in forbidden_keys
+    assert "coordinates" not in forbidden_keys
+    assert "primitive" not in forbidden_keys

@@ -252,8 +252,10 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_
   ${TEX_ASSERTION_SPEC_ARGS[@]+"${TEX_ASSERTION_SPEC_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/tex_assertions.json" \
   "$FILE"
-# Physics-intent grounding meta-check (advisory: which figures still need assertions).
-# Always report-only — it surfaces a TODO, not a defect, so it never fails a build.
+# Physics-intent grounding meta-check (advisory for legacy fixtures; strict for
+# fixtures that explicitly require a semantic contract).  The contract gate
+# prevents a mechanism figure from claiming grounded meaning when only a
+# directional arrow assertion is present.
 # A prospective candidate under a fixture's review tree is deliberately a
 # separate source artifact. Its physics grounding must still resolve against
 # the parent fixture's briefing/spec rather than report a false missing-briefing
@@ -263,6 +265,7 @@ if [[ -n "$FIXTURE_ROOT" && "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/review/"* ]]; the
   PHYSICS_GROUNDING_DIR="$FIXTURE_ROOT"
 fi
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_physics_grounding.py" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/physics_grounding.json" "$PHYSICS_GROUNDING_DIR"
 if [[ -n "$LAYOUT_CONTRACT" && -f "$LAYOUT_CONTRACT" ]]; then
   run_report_check "${UV_RUN[@]}" python3 \

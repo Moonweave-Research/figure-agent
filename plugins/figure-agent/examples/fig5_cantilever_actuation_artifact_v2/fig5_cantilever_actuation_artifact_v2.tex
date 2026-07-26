@@ -1,0 +1,223 @@
+% Exploratory Fig5 artifact: polarity-reversal actuation as a macroscopic
+% trapped-charge probe. This is a story test, not publication-final artwork.
+\documentclass[border=4pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{arrows.meta,calc,positioning}
+
+\begin{document}
+\resizebox{178mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\sffamily\fontsize{6.2}{7.4}\selectfont},
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
+    text=cGray!92!black},
+  panelTitle/.style={font=\sffamily\bfseries\fontsize{6.6}{7.9}\selectfont,
+    text=cGray!86!black},
+  labelStd/.style={font=\sffamily\fontsize{5.5}{6.6}\selectfont,
+    text=cGray!88!black},
+  labelMute/.style={font=\sffamily\itshape\fontsize{5.1}{6.1}\selectfont,
+    text=cGray!62!black},
+  wire/.style={cGray!78!black,line width=0.82pt,line cap=round,line join=round},
+  apparatus/.style={cGray!18,draw=cGray!78!black,line width=0.82pt},
+  polymer/.style={cAmber!10,draw=cAmber!72!black,line width=0.95pt},
+  leader/.style={cGray!58!black,line width=0.40pt},
+  processArrow/.style={-{Stealth[length=3.8pt,width=2.8pt]},cGray!70!black,
+    line width=0.72pt},
+  coulombArrow/.style={-{Stealth[length=4.8pt,width=3.5pt]},cRed!88!black,
+    line width=1.02pt},
+  coulombArrowReverse/.style={-{Stealth[length=4.8pt,width=3.5pt]},cRed!88!black,
+    line width=1.02pt},
+  fieldCue/.style={cGray!48!black,dashed,line width=0.45pt,line cap=round},
+  baselineArrow/.style={-{Stealth[length=3.6pt,width=2.6pt]},cGray!62!black,
+    line width=0.62pt},
+  qmark/.style={circle,fill=cRed!80!black,draw=cRed!95!black,line width=0.25pt,
+    inner sep=0pt,minimum size=1.55mm},
+  axis/.style={-{Stealth[length=3.2pt,width=2.4pt]},cGray!72!black,
+    line width=0.62pt},
+]
+
+% ================================================================
+% Panel A — actuation charge, then source-off floating state
+% ================================================================
+% Panel A
+\begin{scope}[shift={(0.00,0.00)}]
+  \node[panelLetter,anchor=west] at (0.10,5.12) {a};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {charge \textrightarrow{} OFF / float};
+
+  % The charge state is the actuation geometry itself: a cantilever faces a
+  % nearby drive electrode across an air gap and bends toward it.
+  \fill[cGray!34] (0.92,4.05) rectangle (1.82,4.34);
+  \draw[apparatus] (0.92,4.05) rectangle (1.82,4.34);
+  \draw[wire] (1.37,4.34)--(1.37,4.68);
+  \node[labelMute,anchor=east] at (0.82,4.20) {clip};
+  \fill[polymer,rounded corners=0.45mm]
+    (1.20,4.05) .. controls (1.22,3.48) and (1.42,2.94) .. (2.26,2.25)
+    -- (2.40,2.43) .. controls (1.69,3.13) and (1.55,3.59) .. (1.58,4.05) -- cycle;
+  \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.45mm]
+    (1.20,4.05) .. controls (1.22,3.48) and (1.42,2.94) .. (2.26,2.25)
+    -- (2.40,2.43) .. controls (1.69,3.13) and (1.55,3.59) .. (1.58,4.05);
+  \fill[cGray!28] (3.12,1.78) rectangle (3.42,4.34);
+  \draw[apparatus] (3.12,1.78) rectangle (3.42,4.34);
+  \node[labelStd,anchor=south,align=center] at (3.27,4.58) {drive electrode};
+  \node[labelStd,text=cRed!82!black,anchor=west] at (3.52,4.12)
+    {$V_{\mathrm{drive}}$};
+  \node[qmark] at (1.38,3.57) {};
+  \node[qmark] at (1.55,3.08) {};
+  \node[qmark] at (1.88,2.67) {};
+  \node[labelStd,text=cRed!80!black,anchor=west] at (0.26,3.04)
+    {trapped charge};
+  \draw[leader,cRed!58!black] (0.90,3.08)--(1.45,3.30);
+
+  % Short field cues make the air-gap coupling legible without drawing a
+  % capacitor or a measurement instrument as a separate object.
+  \draw[fieldCue] (2.39,2.32) .. controls (2.62,2.23) and (2.86,2.23) .. (3.10,2.32);
+  \draw[fieldCue] (2.37,2.43) .. controls (2.62,2.52) and (2.86,2.52) .. (3.10,2.43);
+  \draw[fieldCue] (2.46,2.12) .. controls (2.66,2.06) and (2.86,2.06) .. (3.10,2.12);
+  \node[labelMute,anchor=east] at (3.02,1.68)
+    {air gap};
+  \draw[coulombArrow] (2.08,3.02)--(2.84,3.02);
+  \node[labelStd,text=cRed!84!black,anchor=south] at (2.46,3.08)
+    {attraction};
+
+  % Explicit OFF / float transition keeps the same specimen in the story.
+  \draw[processArrow] (2.18,1.58)--(2.18,1.16);
+  \node[labelMute,anchor=west] at (2.38,1.40) {OFF / float};
+  \fill[cGray!34] (0.82,1.08) rectangle (1.52,1.28);
+  \draw[apparatus] (0.82,1.08) rectangle (1.52,1.28);
+  \draw[wire] (1.17,1.08)--(1.17,0.78);
+  \fill[polymer,rounded corners=0.22mm] (1.10,0.78) rectangle (1.24,0.98);
+  \draw[cAmber!72!black,line width=0.72pt] (1.10,0.78)--(1.10,0.98);
+  \node[qmark] at (1.17,0.88) {};
+  \node[circle,draw=cGray!72!black,fill=white,inner sep=0pt,minimum size=1.5mm]
+    at (1.17,1.47) {};
+  \node[labelStd,anchor=west] at (1.36,1.47) {floating};
+  \node[labelMute,anchor=west] at (1.32,0.66)
+    {charge retained after isolation};
+\end{scope}
+
+% ================================================================
+% Panel B — force decomposition and polarity switch
+% ================================================================
+% Panel B
+\begin{scope}[shift={(4.45,0.00)}]
+  \node[panelLetter,anchor=west] at (0.10,5.12) {b};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {polarity changes the force sign};
+
+  % Side-view geometry shared by both polarities.
+  \fill[cGray!28] (3.38,1.22) rectangle (3.66,4.26);
+  \draw[apparatus] (3.38,1.22) rectangle (3.66,4.26);
+  \node[labelStd,anchor=east] at (3.30,2.75) {drive electrode};
+  \fill[cGray!38] (0.96,4.12) rectangle (1.98,4.40);
+  \draw[apparatus] (0.96,4.12) rectangle (1.98,4.40);
+  \draw[wire] (1.47,4.40)--(1.47,4.76);
+  \node[labelMute,anchor=west] at (1.72,4.76) {floating clip};
+  \fill[polymer,rounded corners=0.5mm]
+    (1.30,4.12) .. controls (1.30,3.34) and (1.05,2.58) .. (0.82,1.52)
+    -- (1.08,1.42) .. controls (1.56,2.60) and (1.78,3.40) .. (1.72,4.12) -- cycle;
+  \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.5mm]
+    (1.30,4.12) .. controls (1.30,3.34) and (1.05,2.58) .. (0.82,1.52)
+    -- (1.08,1.42) .. controls (1.56,2.60) and (1.78,3.40) .. (1.72,4.12);
+  \node[qmark] at (1.35,3.28) {};
+  \node[qmark] at (1.17,2.53) {};
+  \node[qmark] at (0.97,1.90) {};
+  \node[labelStd,text=cRed!80!black,anchor=west] at (0.20,3.18)
+    {$q_{\mathrm{tr}}$};
+  \draw[leader,cRed!58!black] (0.72,3.12)--(1.18,2.65);
+
+  % Polarity-dependent term; the polarity-independent Maxwell baseline is
+  % summarized in the muted footer rather than competing with this arrow.
+  \draw[coulombArrow] (1.10,2.52)--(0.34,2.52);
+  \node[labelStd,text=cRed!84!black,anchor=south west] at (0.18,2.58)
+    {$F_C\propto q_{\mathrm{tr}}E$};
+  \draw[processArrow] (2.05,2.05)--(2.05,1.62);
+  \node[labelMute,align=center] at (2.22,0.88)
+    {Maxwell $E^2$: polarity-independent;\\[-0.5pt]Coulomb term reverses with $E$};
+\end{scope}
+
+% ================================================================
+% Panel C — two observed bend directions
+% ================================================================
+% Panel C
+\begin{scope}[shift={(8.90,0.00)}]
+  \node[panelLetter,anchor=west] at (0.10,5.12) {c};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {opposite bending after reversal};
+
+  % Upper state: positive angle.
+  \node[labelStd,anchor=west] at (0.20,4.52) {$+V$ state};
+  \fill[cGray!28] (3.42,3.34) rectangle (3.66,4.48);
+  \draw[apparatus] (3.42,3.34) rectangle (3.66,4.48);
+  \fill[cGray!34] (1.08,4.20) rectangle (1.92,4.42);
+  \draw[apparatus] (1.08,4.20) rectangle (1.92,4.42);
+  \draw[cGray!45!black,dashed,line width=0.62pt]
+    (1.50,4.20)--(1.50,3.30);
+  \fill[polymer,rounded corners=0.45mm]
+    (1.36,4.20) .. controls (1.28,3.88) and (1.12,3.62) .. (0.72,3.32)
+    -- (0.86,3.18) .. controls (1.42,3.46) and (1.66,3.84) .. (1.64,4.20) -- cycle;
+  \draw[cAmber!72!black,line width=0.92pt]
+    (1.36,4.20) .. controls (1.28,3.88) and (1.12,3.62) .. (0.72,3.32)
+    -- (0.86,3.18) .. controls (1.42,3.46) and (1.66,3.84) .. (1.64,4.20);
+  \draw[coulombArrow] (1.08,3.56)--(0.52,3.56);
+  \node[labelStd,text=cRed!84!black,anchor=west] at (1.88,3.53) {$+\theta$};
+  \node[labelMute,anchor=east] at (3.28,3.90) {video state};
+
+  % Lower state: negative angle, mirrored response.
+  \node[labelStd,anchor=west] at (0.20,2.30) {$-V$ after reversal};
+  \fill[cGray!28] (3.42,1.12) rectangle (3.66,2.26);
+  \draw[apparatus] (3.42,1.12) rectangle (3.66,2.26);
+  \fill[cGray!34] (1.08,1.98) rectangle (1.92,2.20);
+  \draw[apparatus] (1.08,1.98) rectangle (1.92,2.20);
+  \draw[cGray!45!black,dashed,line width=0.62pt]
+    (1.50,1.98)--(1.50,1.08);
+  \fill[polymer,rounded corners=0.45mm]
+    (1.36,1.98) .. controls (1.48,1.66) and (1.72,1.40) .. (2.30,1.12)
+    -- (2.42,1.28) .. controls (1.86,1.56) and (1.62,1.82) .. (1.64,1.98) -- cycle;
+  \draw[cAmber!72!black,line width=0.92pt]
+    (1.36,1.98) .. controls (1.48,1.66) and (1.72,1.40) .. (2.30,1.12)
+    -- (2.42,1.28) .. controls (1.86,1.56) and (1.62,1.82) .. (1.64,1.98);
+  \draw[coulombArrowReverse] (1.96,1.57)--(2.62,1.57);
+  \node[labelStd,text=cRed!84!black,anchor=west] at (1.88,1.86) {$-\theta$};
+  \node[labelMute,anchor=east] at (3.28,1.68) {opposite direction};
+  \node[labelMute,align=center] at (2.14,0.70)
+    {same specimen; only drive polarity is reversed};
+\end{scope}
+
+% ================================================================
+% Panel D — qualitative video-derived trace
+% ================================================================
+% Panel D
+\begin{scope}[shift={(13.35,0.00)}]
+  \node[panelLetter,anchor=west] at (0.10,5.12) {d};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {video response signature};
+
+  % Axes and zero line.
+  \draw[axis] (0.62,1.02)--(0.62,4.08);
+  \draw[axis] (0.62,2.52)--(4.02,2.52);
+  \node[labelMute,rotate=90,anchor=south] at (0.30,2.56) {bend angle};
+  \node[labelMute,anchor=north east] at (4.00,0.92) {time};
+  \node[labelMute,anchor=east] at (0.56,3.63) {$+\theta$};
+  \node[labelMute,anchor=east] at (0.56,1.46) {$-\theta$};
+
+  % Qualitative trace: positive plateau, abrupt switch, negative excursion,
+  % then slow recovery. It is not a quantitative data plot.
+  \draw[cBlue!82!black,line width=1.05pt]
+    (0.74,2.55) .. controls (0.79,3.42) and (0.92,3.64) .. (1.20,3.68)
+    .. controls (1.72,3.72) and (2.28,3.70) .. (2.62,3.66)
+    .. controls (2.68,3.52) and (2.68,2.85) .. (2.73,2.20)
+    .. controls (2.82,1.56) and (3.12,1.42) .. (3.36,1.58)
+    .. controls (3.65,1.78) and (3.86,2.20) .. (3.98,2.50);
+  \draw[cGray!42!black,dashed,line width=0.55pt] (2.68,1.04)--(2.68,4.08);
+  \fill[cRed!85!black] (2.68,2.52) circle (0.75pt);
+  \node[labelStd,anchor=south west] at (0.84,3.72) {$+V$};
+  \node[labelStd,text=cRed!84!black,anchor=south west,align=left] at (2.74,3.04)
+    {polarity\\[-0.5pt]reversal};
+  \node[labelMute,align=center] at (2.32,0.52)
+    {abrupt sign change\\[-0.5pt]then slower relaxation};
+\end{scope}
+
+% Process separators: guide the eye without turning the figure into cards.
+\foreach \x in {4.34,8.79,13.24} {
+  \draw[cGray!28!black,dash pattern=on 1.5pt off 2.0pt,line width=0.38pt]
+    (\x,0.55)--(\x,4.78);
+}
+\end{tikzpicture}%
+}
+\end{document}

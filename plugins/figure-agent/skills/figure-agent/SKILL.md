@@ -31,6 +31,13 @@ compilation in scope when they compile explicit paper-local files, Style Lock
 tokens, source-anchored rule catalogs, and opt-in semantic claims/invariants.
 They are not prompt-loop revival, generation execution, or automatic physics
 detection.
+For mechanism figures, a prose physics section plus one arrow assertion is not
+scientific validation. When a fixture sets `semantic_contract_required: true`,
+its coordinate-free semantic contract must declare the objects, visible
+relations, and forbidden readings before strict compile can pass. Keep
+unresolved electrical topology explicit; never infer a charging instrument,
+contact, ground path, or measurement stage from the word “charging”. This
+contract constrains meaning, not the author's TikZ style or primitive choices.
 Keep superseded rules in catalog provenance, but exclude them from authoring
 context so stale hypotheses cannot compete with later human-confirmed rules.
 Before product-level work, read `docs/figure-agent.md`. It is the sole active

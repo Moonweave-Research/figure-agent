@@ -49,6 +49,59 @@ def test_classify_declared_unenforced():
     assert cpg.classify_grounding(BRIEFING_WITH, {}) == "declared_unenforced"
 
 
+def test_semantic_contract_required_is_missing_without_contract():
+    spec = {
+        "semantic_contract_required": True,
+        "tex_assertions": [{"id": "force"}],
+    }
+    assert (
+        cpg.classify_grounding(
+            BRIEFING_WITH,
+            spec,
+            semantic_contract_present=False,
+        )
+        == "semantic_contract_missing"
+    )
+
+
+def test_grounding_status_exposes_missing_semantic_contract(tmp_path):
+    fixture = _figure(
+        tmp_path,
+        BRIEFING_WITH,
+        "name: demo\nsemantic_contract_required: true\n"
+        "tex_assertions:\n  - id: force\n",
+    )
+    assert cpg.grounding_status(fixture) == {
+        "figure": "demo",
+        "status": "semantic_contract_missing",
+    }
+
+
+def test_strict_grounding_fails_when_required_contract_is_missing(tmp_path, monkeypatch):
+    fixture = _figure(
+        tmp_path,
+        BRIEFING_WITH,
+        "name: demo\nsemantic_contract_required: true\n"
+        "tex_assertions:\n  - id: force\n",
+    )
+    monkeypatch.setattr(
+        "sys.argv",
+        ["check_physics_grounding.py", str(fixture), "--strict"],
+    )
+    assert cpg.main() == 1
+
+
+def test_required_contract_present_keeps_directional_grounding(tmp_path):
+    fixture = _figure(
+        tmp_path,
+        BRIEFING_WITH,
+        "name: demo\nsemantic_contract_required: true\n"
+        "tex_assertions:\n  - id: force\n",
+    )
+    (fixture / "semantic_contract.yaml").write_text("schema: placeholder\n", encoding="utf-8")
+    assert cpg.grounding_status(fixture)["status"] == "grounded"
+
+
 def test_classify_undeclared():
     assert (
         cpg.classify_grounding(BRIEFING_WITHOUT, {"tex_assertions": [{"id": "a"}]}) == "undeclared"

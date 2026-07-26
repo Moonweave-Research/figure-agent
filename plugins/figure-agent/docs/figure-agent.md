@@ -146,6 +146,19 @@ No lower state implies a higher one. Machine gates and model critiques use
 `publication_acceptance: not_claimed`; any external record is evidence, not plugin
 authority.
 
+### Mechanism semantic-contract rule
+
+`physics_grounding=grounded` means only that a briefing declares physics intent
+and at least one directional or relational assertion is wired. It is not a
+scientific-validity verdict. A mechanism fixture may set
+`semantic_contract_required: true` in `spec.yaml` to require the existing
+coordinate-free semantic-legibility contract before a strict compile can pass.
+That contract must name the scientific objects and their visible relations,
+record forbidden readings, and keep unresolved electrical topology explicit
+rather than inferred from the word “charging”. The contract is a transferable
+meaning guard, not a TikZ primitive, coordinate recipe, style lock, or
+publication-acceptance claim.
+
 Promotion requires two materially different figure families, prospectively recorded correction time, named human outcomes, no semantic/relation regression, and reproducible evidence.
 Reports require passing `correction_time_gate` and `lineage_gate`: A/B share task/model/budget/start; C is B's hash-bound repair child, not an independent generation.
 Rejected and neutral attempts remain failure evidence.
