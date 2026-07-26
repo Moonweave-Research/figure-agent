@@ -133,13 +133,14 @@
 
   \fill[cGray!38] (0.94,3.88) rectangle (1.92,4.15);
   \draw[apparatus] (0.94,3.88) rectangle (1.92,4.15);
-  \draw[wire] (1.43,4.15)--(1.43,4.48);
-  \node[labelMute,anchor=west] at (1.67,4.48) {floating clip};
   % Named source anchors let the geometry gate measure the fixed-end center,
   % rather than trusting a prose rule or a visual coincidence.
-  \coordinate (panel-c-clamp-axis) at (1.43,3.88);
+  \coordinate (panel-c-clamp-axis) at (1.43,4.15);
+  \coordinate (panel-c-clamp-top) at (1.43,4.48);
   \coordinate (panel-c-cantilever-left) at (1.35,3.88);
   \coordinate (panel-c-cantilever-right) at (1.51,3.88);
+  \draw[wire] (panel-c-clamp-axis)--(panel-c-clamp-top);
+  \node[labelMute,anchor=west] at (1.67,4.48) {floating clip};
   % One conditional response silhouette makes the competing-arrow result
   % legible without introducing a second, supposedly observed bend snapshot.
   \fill[polymer,rounded corners=0.30mm]

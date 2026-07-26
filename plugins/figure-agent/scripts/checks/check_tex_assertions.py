@@ -212,6 +212,13 @@ def _named_coordinate_matches(tex_text: str) -> dict[str, list[tuple[float, floa
     return matches
 
 
+def _named_coordinate_usage(tex_text: str, name: str) -> bool:
+    """Return whether a named coordinate is used outside its declaration."""
+    source = _strip_tex_comments(tex_text)
+    source = _NAMED_COORD_DECL_RE.sub("", source)
+    return f"({name})" in source
+
+
 def _all_draws_raw(tex_text: str) -> list[tuple[float, float, float, float, str]]:
     """Every straight or `to[...]` draw as (x1, y1, x2, y2, option_body)."""
     return _match_raw_draws(
@@ -668,6 +675,16 @@ def _check_centerline_alignment(tex_text: str, assertion: dict) -> dict | None:
                 ),
                 "coordinate": name,
             }
+        if not _named_coordinate_usage(tex_text, name):
+            return {
+                "id": assertion["id"],
+                "status": "coordinate_unbound",
+                "message": (
+                    f"assertion {assertion['id']!r}: coordinate {name!r} is declared "
+                    "but not used by a rendered path"
+                ),
+                "coordinate": name,
+            }
 
     axis = assertion["axis"]
     axis_index = 0 if axis == "x" else 1
@@ -807,6 +824,7 @@ BLOCKING_STATUSES = (
     "violated", "anchor_missing", "anchor_ambiguous", "insufficient_matches", "arrowhead_invalid",
     "insufficient_named_paths", "named_endpoint_unbound", "named_endpoint_missing",
     "named_label_binding_missing", "coordinate_missing", "coordinate_ambiguous",
+    "coordinate_unbound",
 )
 
 
