@@ -1885,6 +1885,39 @@ def test_release_mode_ignores_reference_calibrated_score_for_gate_selection(
     assert "release_ready is false" in summary["reason"]
 
 
+def test_driver_blocks_invalid_paper_plan_before_workflow_action(tmp_path: Path) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+    status = _release_ready_status()
+    status.update(
+        {
+            "paper_plan": {
+                "schema": "figure-agent.paper-plan-status.v1",
+                "state": "INVALID",
+                "reason": "invalid_current_candidate_pointer",
+            },
+            "acceptance_state": "NOT_DECLARED",
+            "workflow_ready": False,
+            "golden_ready": False,
+            "release_ready": False,
+            "final_ready": False,
+        }
+    )
+
+    summary = fig_driver._select_action(
+        "driver_demo",
+        mode="review",
+        goal="review",
+        status=status,
+        example_dir=fixture,
+    )
+
+    assert summary["action"] == "human_gate_stop"
+    assert summary["safe_command"] is None
+    assert summary["stop_boundary"] == "paper_plan_invalid"
+    assert "paper figure map binding is invalid" in summary["reason"]
+
+
 def test_release_mode_surfaces_publication_gate_blocker(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
