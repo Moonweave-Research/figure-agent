@@ -166,16 +166,23 @@
   \node[labelMute,anchor=west] at (1.67,4.52) {floating clip};
   % One conditional response silhouette makes the competing-arrow result
   % legible without introducing a second, supposedly observed bend snapshot.
-  \fill[polymer,rounded corners=0.30mm]
-    (panel-c-cantilever-left) .. controls (1.33,3.56) and (1.32,3.26) .. (1.24,2.96)
-    .. controls (1.12,2.54) and (0.90,1.94) .. (0.66,1.46)
-    -- (0.86,1.42) .. controls (1.10,1.99) and (1.33,2.54) .. (1.44,2.97)
-    .. controls (1.52,3.33) and (1.53,3.64) .. (panel-c-cantilever-right) -- cycle;
-  \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.30mm]
-    (panel-c-cantilever-left) .. controls (1.33,3.56) and (1.32,3.26) .. (1.24,2.96)
-    .. controls (1.12,2.54) and (0.90,1.94) .. (0.66,1.46)
-    -- (0.86,1.42) .. controls (1.10,1.99) and (1.33,2.54) .. (1.44,2.97)
-    .. controls (1.52,3.33) and (1.53,3.64) .. (panel-c-cantilever-right);
+  % Its free-end curvature and effective length mirror Panel A so the reader
+  % sees one mounted film under reversed forcing, not a second sample.
+  \fill[polymer,rounded corners=0.35mm]
+    (panel-c-cantilever-right)
+      .. controls (1.53,3.50) and (1.45,2.85) .. (1.15,2.30)
+      .. controls (0.90,1.85) and (0.65,1.55) .. (0.54,1.45)
+      .. controls (0.48,1.37) and (0.39,1.40) .. (0.35,1.50)
+      .. controls (0.55,1.66) and (0.80,2.05) .. (1.02,2.50)
+      .. controls (1.25,3.05) and (1.31,3.60) .. (panel-c-cantilever-left)
+      -- cycle;
+  \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.45mm]
+    (panel-c-cantilever-right)
+      .. controls (1.53,3.50) and (1.45,2.85) .. (1.15,2.30)
+      .. controls (0.90,1.85) and (0.65,1.55) .. (0.54,1.45)
+      .. controls (0.48,1.37) and (0.39,1.40) .. (0.35,1.50)
+      .. controls (0.55,1.66) and (0.80,2.05) .. (1.02,2.50)
+      .. controls (1.25,3.05) and (1.31,3.60) .. (panel-c-cantilever-left);
   \node[qmark] at (1.39,3.30) {};
   \node[qmark] at (1.23,2.60) {};
   \node[qmark] at (0.96,1.92) {};

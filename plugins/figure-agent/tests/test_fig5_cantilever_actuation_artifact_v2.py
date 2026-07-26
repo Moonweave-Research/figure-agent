@@ -224,3 +224,18 @@ def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None
         for block in polymer_blocks
     ]
     assert max(free_end_levels) - min(free_end_levels) <= 0.08
+
+
+def test_fig5_reverse_bend_keeps_the_same_rounded_member_extent() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+    panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
+
+    assert "rounded corners=0.35mm" in panel_a
+    assert "rounded corners=0.45mm" in panel_a
+    assert "rounded corners=0.35mm" in panel_c
+    assert "rounded corners=0.45mm" in panel_c
+    assert "(2.45,1.50)" in panel_a
+    assert "(0.35,1.50)" in panel_c

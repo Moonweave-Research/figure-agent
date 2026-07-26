@@ -36,6 +36,9 @@ and the actual time ordering in D separate.
 - Across A-C, clamp/fixed-end tops, driven-electrode tops, member width, and
   free-end datum share one visual scale; ON/OFF is carried by state labels, not
   by an unexplained plate-color or specimen-size shift.
+- A and C must use mirrored smooth free-end closures and comparable effective
+  length so polarity reversal reads as one cantilever changing direction, not
+  as two differently shaped specimens.
 - The clamp lead must bisect the cantilever at its fixed end; an off-axis lead
   is a mechanical ownership defect even when no text or path collision fires.
 - D remains qualitative until an exact data/video binding is selected.
