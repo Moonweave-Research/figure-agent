@@ -165,6 +165,8 @@ def test_fig5_response_trace_has_no_erased_gap_shortcut() -> None:
     assert "\\draw[white" not in panel_d
     assert panel_d.count("\\draw[cBlue!82!black,line width=1.05pt]") == 1
     assert "{$t=0$}" in panel_d
+    assert "\\mathrm{s}" not in panel_d
+    assert "\\mathrm{s}" not in tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
 
 def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None:

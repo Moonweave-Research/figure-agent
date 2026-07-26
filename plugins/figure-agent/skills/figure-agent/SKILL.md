@@ -625,6 +625,9 @@ compressed/off-axis preconditioning rather than giving it an apparently linear
 span that competes with the measured or qualitative relaxation interval. A
 schematic trace must not imply a duration ratio that the experiment does not
 support.
+Do not add an exact isolation or transfer duration merely to make an event
+interval look quantitative; if that timing is not bound to the selected data,
+show the state transition and its ownership without a numeric seconds label.
 
 Do not solve that problem by omitting the response origin. When a mechanism
 trace starts after a long precondition, show a visible reader-facing `$t=0$`

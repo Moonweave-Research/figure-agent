@@ -42,6 +42,8 @@ and the actual time ordering in D separate.
 - D must make the confirmed rate asymmetry visible: the reverse transition is
   steeper and temporally shorter than the initial attraction, while remaining a
   qualitative schematic rather than a calibrated fit.
+- D should show the source-off/floating state as an event-owned interval without
+  an exact seconds label until that timing is bound to selected data.
 - A zero blocking count is not a visually clean result when the clash report
   still contains report-only candidates; inspect those candidates at full and
   reduction scale before closing the loop.
