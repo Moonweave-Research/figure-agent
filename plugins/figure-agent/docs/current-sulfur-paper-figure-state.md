@@ -18,8 +18,19 @@ Use this worktree for the current Fig1 candidate:
 Current branch:
 
 ```text
-fig1-redraw-to-final
+fig1-authority
 ```
+
+The active standalone cantilever work is deliberately separate:
+
+```text
+worktree: /Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-dogfood
+branch: fig5-actuation-development
+fixture: examples/fig5_cantilever_actuation_artifact_v2
+```
+
+That directory name is historical; the Git branch is the authoritative Fig5
+identity. Its dirty WIP is preserved and must not be treated as Fig1 source.
 
 Do not edit these paths for this work:
 
@@ -75,12 +86,15 @@ visual development reference for this figure. It is pixel-equivalent to the
 candidate render above and therefore binds the maintained visual state to:
 
 ```text
-branch: fig1-redraw-to-final
-head: 64b3acc0a27fae57ae09b52ac4e73f039da81792
+branch: fig1-authority
+head: 2bb14af8fe16ee0762340c136a2f2b65e1c32669
 candidate: comparable-v3-repair-c5
 source: review/failure-first/comparable-v3-repair-c5/repaired.tex
 render: review/failure-first/comparable-v3-repair-c5/build/repaired.png
 ```
+
+The snapshot was originally authored on `fig1-redraw-to-final`; after the
+Fig1/Fig5 split, its maintained authority is the `fig1-authority` branch above.
 
 Stale Fig1 worktrees, older visual candidates, and unrelated ORRO lanes must
 not override this snapshot when recovering or extending the figure. This is a
@@ -161,22 +175,43 @@ without a new paper-local authority decision.
 
 ## 5. Standalone cantilever candidate
 
-The first standalone cantilever candidate has now been authored in a new
-fixture, after reading this handoff:
+The active standalone cantilever development is in a separate Fig5 fixture:
 
 ```text
-fig5_cantilever_mechanism_v1
+fig5_cantilever_actuation_artifact_v2
 ```
 
-Source and render:
+Source:
 
 ```text
-plugins/figure-agent/examples/fig5_cantilever_mechanism_v1/fig5_cantilever_mechanism_v1.tex
-plugins/figure-agent/examples/fig5_cantilever_mechanism_v1/build/fig5_cantilever_mechanism_v1.png
+plugins/figure-agent/examples/fig5_cantilever_actuation_artifact_v2/fig5_cantilever_actuation_artifact_v2.tex
 ```
 
-This is a first Figure Agent authoring trial, not a publication-final figure
-or an accepted artifact. Its current machine evidence is:
+The corresponding worktree is
+`/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-dogfood`
+on branch `fig5-actuation-development`. The source currently has intentional
+uncommitted WIP, so no Fig5 render or acceptance state is claimed here. This is
+an exploratory Figure Agent artifact, not a publication-final figure or an
+accepted artifact.
+
+The latest Fig5 authoring contract is the four-stage causal story:
+
+```text
+two-terminal HV charge → source-off isolation → reversed-drive force balance → continuous bend response
+```
+
+Its current plan/caption/source are co-located in the Fig5 fixture:
+
+```text
+examples/fig5_cantilever_actuation_artifact_v2/authoring_plan.md
+examples/fig5_cantilever_actuation_artifact_v2/caption.md
+examples/fig5_cantilever_actuation_artifact_v2/fig5_cantilever_actuation_artifact_v2.tex
+```
+
+Do not import the old `fig5_cantilever_mechanism_v1` machine evidence into this
+new artifact. The old fixture remains historical evidence only.
+
+The last validated evidence for the former v1 sandbox was:
 
 | Evidence | State |
 |---|---|
@@ -194,18 +229,18 @@ lanes; those were corrected before the current green render. The remaining
 `report_only` visual candidates and the host critique are deliberately left as
 human review gates rather than silently promoted or suppressed.
 
-The first authoring slice should be a low-detail, experiment-grounded process
+The current authoring slice is a low-detail, experiment-grounded process
 schematic:
 
 ```text
 two-terminal HV charge → manual specimen transfer → grounded measurement state → cantilever response
 ```
 
-Before any TikZ is authored, create the new fixture's `briefing.md`, `spec.yaml`,
-and `caption.md`. The first source draft should contain only the apparatus
-topology and claim-bearing arrows. Add material texture, gradients, and
-editorial polish only after the force direction, grounding ownership, manual
-transfer agency, and air gap survive 100%, 50%, and 33% review.
+The current fixture already has its authoring plan and caption. Further edits
+must preserve only the apparatus topology and claim-bearing arrows until the
+force direction, grounding ownership, manual transfer agency, and air gap
+survive 100%, 50%, and 33% review. Material texture, gradients, and editorial
+polish remain downstream work.
 
 ### Future cantilever invariants
 
@@ -249,11 +284,12 @@ For any new fixture, follow the repository workflow in this order:
 fig-agent status → fig_new → briefing/spec/caption → author source → fig_compile → rendered review → fig_critique/fig_ground as applicable
 ```
 
-For the current standalone cantilever candidate:
+For the active standalone cantilever candidate:
 
 ```bash
-./bin/fig-agent status fig5_cantilever_mechanism_v1
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig5_cantilever_mechanism_v1/fig5_cantilever_mechanism_v1.tex
+cd "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-dogfood/plugins/figure-agent"
+./bin/fig-agent status fig5_cantilever_actuation_artifact_v2
+FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig5_cantilever_actuation_artifact_v2/fig5_cantilever_actuation_artifact_v2.tex
 ```
 
 Inspect the generated PNG at 100%, 50%, and 33% before any critique or export.
