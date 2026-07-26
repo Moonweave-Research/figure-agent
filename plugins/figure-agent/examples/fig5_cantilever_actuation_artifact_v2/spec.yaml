@@ -51,7 +51,7 @@ process_stage_visibility_checks:
     stages:
       - id: observation-origin
         text_phrases:
-          - id: t-zero-label
+          - id: actuation-onset-label
             words: [t, "=", "0"]
           - id: off-label
             words: ["OFF"]

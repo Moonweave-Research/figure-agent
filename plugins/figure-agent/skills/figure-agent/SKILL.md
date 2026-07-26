@@ -557,8 +557,8 @@ support.
 
 Do not solve that problem by omitting the response origin. When a mechanism
 trace starts after a long precondition, show a visible reader-facing `$t=0$`
-anchor and define the event that creates it (for example source OFF or the start
-of observation). The precondition may feed that origin with a callout or process
+anchor and define the event that creates it (for example actuation onset, source
+OFF, or the start of observation). The precondition may feed that origin with a callout or process
 connector, but must not replace the x-axis origin or masquerade as its duration.
 For fixture-local response stories, declare the origin, switching event, and
 recovery in `process_stage_visibility_checks` in their rendered reading order.

@@ -191,19 +191,22 @@
   \draw[axis] (0.62,1.02)--(0.62,4.08);
   \draw[axis] (0.62,2.52)--(4.02,2.52);
   \node[labelMute,rotate=90,anchor=south] at (0.30,2.56) {bend angle};
-  \node[labelMute,anchor=north east] at (4.00,0.92) {time after $t=0$};
+  \node[labelMute,anchor=north east] at (4.00,0.92) {time from actuation onset};
   \node[labelMute,anchor=east] at (0.56,3.63) {$+\theta$};
   \node[labelMute,anchor=east] at (0.56,1.46) {$-\theta$};
 
-  % The response plot begins at a real observation origin.  The 20-minute
-  % charge hold is an incoming precondition, not an apparent trace duration.
+  % The plot begins at the actuation onset: the cantilever angle is neutral at
+  % t=0, then reaches the positive charged state over a compressed 20-minute
+  % precharge interval before source OFF and polarity reversal.
   \node[labelMute,anchor=west] at (0.76,4.42)
-    {precharge: $+5\,\mathrm{kV}$ for 20 min};
-  \node[labelStd,anchor=west] at (0.98,3.96) {$t=0$: source OFF};
-  \node[labelMute,anchor=west] at (0.98,3.75) {clip floating};
-  \draw[cGray!58!black,line width=0.72pt] (0.74,3.62)--(0.94,3.62);
+    {$+5\,\mathrm{kV}$ precharge: 20 min (compressed)};
   \draw[cBlue!82!black,line width=1.05pt]
-    (0.98,3.62) .. controls (1.16,3.63) and (1.32,3.62) .. (1.46,3.56)
+    (0.74,2.52) .. controls (0.79,3.24) and (0.90,3.56) .. (1.04,3.62);
+  \draw[white,line width=2.1pt] (1.05,3.62)--(1.26,3.62);
+  \draw[cGray!72!black,line width=0.58pt] (1.08,3.52)--(1.16,3.72);
+  \draw[cGray!72!black,line width=0.58pt] (1.18,3.52)--(1.26,3.72);
+  \draw[cBlue!82!black,line width=1.05pt]
+    (1.28,3.62) .. controls (1.36,3.62) and (1.42,3.60) .. (1.46,3.56)
     .. controls (1.64,3.36) and (1.84,2.86) .. (2.06,2.52)
     .. controls (2.24,1.74) and (2.52,1.30) .. (2.80,1.38)
     .. controls (3.08,1.50) and (3.32,1.82) .. (3.48,2.06);
@@ -212,8 +215,10 @@
   \draw[cGray!42!black,dashed,line width=0.45pt] (1.46,1.04)--(1.46,3.42);
   \draw[cGray!42!black,dashed,line width=0.55pt] (1.64,1.04)--(1.64,3.42);
   \fill[cRed!85!black] (1.64,3.40) circle (0.75pt);
-  \draw[cGray!72!black,line width=0.45pt] (0.98,2.52)--(0.98,2.38);
-  \node[labelMute,anchor=north] at (0.98,2.30) {$t=0$};
+  \draw[cGray!72!black,line width=0.45pt] (0.74,2.52)--(0.74,2.38);
+  \node[labelMute,anchor=north] at (0.74,2.30) {$t=0$};
+  \node[labelStd,anchor=south east] at (1.40,4.00) {source OFF};
+  \node[labelMute,anchor=south east] at (1.40,3.78) {clip floating};
   \node[labelStd,text=cRed!84!black,anchor=south west] at (1.72,3.04)
     {reversed drive};
   \draw[gapDimension] (1.46,1.24)--(1.64,1.24);
