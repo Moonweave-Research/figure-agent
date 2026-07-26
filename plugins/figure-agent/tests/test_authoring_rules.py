@@ -121,6 +121,30 @@ def test_project_rule_preserves_floating_coulomb_topology() -> None:
     assert "points away from the driven electrode" in rule["rule"]
 
 
+def test_project_rule_preserves_reversed_cantilever_morphology() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-project.md"
+    )
+
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "polymer_paper_project.reversed-cantilever-morphology"
+    )
+    assert "reflection about the fixed-end axis" in rule["rule"]
+    assert "comparable effective length" in rule["rule"]
+    assert "smooth free-end closure" in rule["rule"]
+    assert "sharply pointed specimen" in rule["rule"]
+    assert rule["source"]["kind"] == "hand_patch_commit"
+
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized_skill = " ".join(skill.split())
+    assert "intended reflection about the fixed-end axis" in normalized_skill
+    assert "one-state taper, angular cap" in normalized_skill
+
+
 def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"

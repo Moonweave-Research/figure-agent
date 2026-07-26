@@ -75,6 +75,14 @@ rules:
       locator: "examples/fig3_floating_clip_protocol vertical re-draw (2026-06-20)"
       quote: "clip on TOP, polymer hangs down"
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.reversed-cantilever-morphology
+    category: physics_semantics
+    rule: "When the same mounted cantilever is shown under reversed force or drive polarity, compare the rendered silhouettes after accounting for the intended reflection about the fixed-end axis. Unless the evidence declares a different deformation magnitude, preserve comparable effective length, edge separation, and a smooth free-end closure; encode the changed direction with force vectors, state labels, or polarity rather than changing the member into a shorter or sharply pointed specimen. A one-state taper, angular cap, or materially different extent is a cross-panel morphology defect even when each local outline is collision-free."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig5 polarity-reversal morphology audit, commit 9e5b9c3f (2026-07-27)"
+      quote: "Attraction and repulsion bends read as differently shaped specimens because one free end was rounded and long while the other was angular and short."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.floating-coulomb-isolation
     category: physics_semantics
     rule: "For the floating Coulomb-response apparatus, the grounded voltage-source return and driven lead belong only to the electrode circuit; the polymer sample and cantilever remain electrically floating. Bind the trapped-charge label to a representative charge marker with a clear leader, bind the repulsion arrow tail to a trapped-charge marker, and ensure its arrowhead points away from the driven electrode."

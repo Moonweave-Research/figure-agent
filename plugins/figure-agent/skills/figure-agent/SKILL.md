@@ -575,6 +575,15 @@ do not let a clean compile or local non-overlap hide it. Bind the repair to the
 specific rendered path and add a fixture-local geometry assertion when the
 support axis can otherwise drift.
 
+When the same cantilever is shown under reversed force or drive polarity,
+compare the two silhouettes after accounting for the intended reflection about
+the fixed-end axis. Unless the evidence declares a different deformation
+magnitude, preserve comparable effective length, edge separation, and a smooth
+free-end closure; encode the changed direction with force vectors, state labels,
+or polarity rather than changing the member into a shorter or sharply pointed
+specimen. A one-state taper, angular cap, or materially different extent is a
+cross-panel morphology defect even when each local outline is collision-free.
+
 When repeated apparatus panels form one causal row, align their shared visual
 datums before judging local spacing: clamp/fixed-end height and driven-electrode
 top should not staircase from panel to panel, and an ON/OFF state change should
