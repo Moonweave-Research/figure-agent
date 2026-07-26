@@ -1,11 +1,8 @@
 # Sulfur-Polymer Paper — Figure Plan (canonical)
 
-> **Status:** approved 2026-06-22 (brainstormed with the user). Supersedes the per-figure
-> briefings' implied numbering where they conflict — the existing example fixtures
-> (fig2_trap_design_space, fig3_floating_clip_protocol, fig4_trap_energy_diagram,
-> fig5_actuation_mechanism) were **tool-dogfood targets**, not this paper's figure plan.
-> **Source paper:** `~/Google Drive/My Drive/Research/02_Surfur_Polymer/sulfur_manuscript_ncomms.docx`
-> (target: Nature Communications; currently under-written — only ISPD content drafted).
+> **Status:** approved narrative plan. `docs/paper_figure_map.yaml` is the
+> machine-readable authority for current fixture placement; fixture names in
+> this design document are explanatory and cannot override that map.
 
 ## Spine (paper's central argument)
 **Charge-trapping characterization → mechanism synthesis.** Multiple electrical
@@ -34,7 +31,7 @@ understanding.
 | **Fig2** | dielectric / polarization-response mechanism | ε_r vs composition + P–E loops | "tunable dielectric that stores charge" |
 | **Fig3** | cell structure → current flows → charge gets trapped → current↓ / resistance↑; meaning of the trap-conduction-law fit; why a given composition traps better | R(t)↑ over time + trap-law fit, composition series, 1 representative reference | "direct evidence: trapping happens during conduction (the bridge)" |
 | **Fig4** | trap energy landscape (shallow vs deep states, retention) | ISPD surface-potential decay curves + trap energy distribution N_t(E); S80 optimum | "the traps' energies / depths / lifetimes, quantified" |
-| **Fig5 (last)** | cantilever actuation mechanism (trapped charge → polarity-dependent bending) | deflection data (if any) | "the trapped charge does work (payoff)" |
+| **Fig5 (last)** | actuation charge → OFF/float → reversed drive → reverse bend and slow recovery | qualitative response trace; measured data only when bound | "the trapped charge produces a polarity-dependent mechanical response (payoff)" |
 
 ## Figure-grouping rationale (resolves the user's open questions)
 - **Resistance → Fig3 (its own figure), NOT Fig2, NOT merged with ISPD.** Three reasons:
@@ -56,8 +53,15 @@ understanding.
 - Slice 1 premium levers should be authored against the schematic demands of THESE figures
   (e.g. Fig3 mechanism schematic, Fig4 energy landscape), not a bare primitive.
 
-## Open / next
-- Manuscript is under-written — only ISPD (Methods/Results) drafted; ε_r, resistance, P–E,
-  cantilever sections + figure legends for Fig1/2/3/5 still to be written.
-- First concrete schematic to build: **Fig3 mechanism schematic** (cell → conduction →
-  trapping → R↑/I↓ + fit-meaning + composition reason), slim/dense.
+## Current placement contract
+
+- Fig1 is bound to `fig1_updated_agent_redraw_v1` through its explicit current-candidate pointer.
+- Fig2 remains `planned_missing`; this is advisory, not a hidden fixture assignment.
+- Fig3 is bound to `fig3_resistance_mechanism`.
+- Fig4 is bound to `fig4_trap_energy_diagram`.
+- Fig5 is bound to `fig5_cantilever_actuation_artifact_v2`.
+- Prior dogfood, vault, and first-trial fixtures remain classified non-main evidence.
+
+Placement changes must update the machine map and exact fixture `paper_binding`
+together. Do not add worktree paths, branch names, commit hashes, copied detector
+counts, or session next steps to this durable plan.

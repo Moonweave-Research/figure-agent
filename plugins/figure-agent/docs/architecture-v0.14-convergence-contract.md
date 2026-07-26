@@ -1,5 +1,9 @@
 # Architecture v0.14 — Figure Convergence Contract
 
+> **Document status: Historical proposal/evidence — non-authoritative and not
+> agent-executable.** Implemented fragments must be verified in code and tests;
+> this document cannot override [`figure-agent.md`](figure-agent.md).
+
 **Date**: 2026-07-06
 **Status**: initial implementation slice
 

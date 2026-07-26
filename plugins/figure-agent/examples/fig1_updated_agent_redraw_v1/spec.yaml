@@ -1,5 +1,9 @@
 name: fig1_updated_agent_redraw_v1
 paper_id: pair001
+paper_binding:
+  paper_id: pair001
+  figure_id: fig1
+  role_id: overview_structure_charge_trapping
 title: Fig 1 — charge trapping in sulfur-rich polymer
 style_profile: polymer-paper
 undeclared_geometry_profile: schematic

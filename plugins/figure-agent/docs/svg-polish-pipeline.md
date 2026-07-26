@@ -1,5 +1,10 @@
 # SVG Polish Pipeline (TikZ Skeleton → SVG Mastering) — Issue / Pre-Spec
 
+> **Document status: Retired historical proposal — non-authoritative and not
+> agent-executable.** The built-in SVG-polish engine is retired; SVG remains a
+> derived export/inspection surface. Current authority is
+> [`figure-agent.md`](figure-agent.md).
+
 **Status:** ISSUE (pre-design). No implementation committed.
 **Filed:** 2026-05-15
 **Drives from:** `session_learnings_2026_05_04_eod_l3_ceiling.md` (Gap 2 = next big lever), `session_strategic_direction_2026_05_04.md` (Gap 2 deferred — timing now under review).

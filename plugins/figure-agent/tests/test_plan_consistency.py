@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -13,104 +14,191 @@ import check_plan_consistency  # noqa: E402
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _write_fixture(examples: Path, name: str, briefing: str = "alpha beta\n") -> None:
+def _write_fixture(
+    examples: Path,
+    name: str,
+    *,
+    paper_id: str = "paper-demo",
+    figure_id: str = "fig1",
+    role_id: str = "role-demo",
+) -> None:
     fixture = examples / name
     fixture.mkdir(parents=True)
-    (fixture / "spec.yaml").write_text(f"name: {name}\n", encoding="utf-8")
-    (fixture / "briefing.md").write_text(briefing, encoding="utf-8")
-
-
-def test_plan_consistency_reports_unmapped_role_drift_and_non_main(
-    tmp_path: Path,
-) -> None:
-    examples = tmp_path / "examples"
-    _write_fixture(examples, "mapped", "totally unrelated words\n")
-    _write_fixture(examples, "extra", "extra fixture\n")
-    _write_fixture(examples, "sandboxed", "sandbox fixture\n")
-    plan_map = tmp_path / "paper_figure_map.yaml"
-    plan_map.write_text(
+    (fixture / "spec.yaml").write_text(
         yaml.safe_dump(
             {
-                "schema": "figure-agent.paper-figure-map.v1",
-                "plan_doc": "docs/plan.md",
-                "figures": {
-                    "fig1": {
-                        "fixtures": ["mapped"],
-                        "role": "charge trapping mechanism",
-                    }
+                "name": name,
+                "paper_binding": {
+                    "paper_id": paper_id,
+                    "figure_id": figure_id,
+                    "role_id": role_id,
                 },
-                "non_main": {"sandbox": ["sandboxed"]},
             },
-            sort_keys=True,
+            sort_keys=False,
         ),
         encoding="utf-8",
     )
 
-    report = check_plan_consistency.build_report(examples, plan_map)
-    findings = {(finding["code"], finding.get("fixture")) for finding in report["findings"]}
 
-    assert ("role_drift", "mapped") in findings
-    assert ("unmapped_fixture", "extra") in findings
-    assert ("non_main_fixture", "sandboxed") in findings
-
-
-def test_plan_consistency_reports_missing_and_sandbox_states_from_synthetic_map(
-    tmp_path: Path,
+def _write_map(
+    path: Path,
+    *,
+    fixture: str = "mapped",
+    include_extra_classification: bool = True,
 ) -> None:
-    examples = tmp_path / "examples"
-    _write_fixture(examples, "sandboxed", "sandbox fixture\n")
-    _write_fixture(examples, "superseded", "superseded fixture\n")
-    plan_map = tmp_path / "paper_figure_map.yaml"
-    plan_map.write_text(
+    non_main = {"regression": ["extra"]} if include_extra_classification else {}
+    path.write_text(
         yaml.safe_dump(
             {
-                "schema": "figure-agent.paper-figure-map.v1",
+                "schema": check_plan_consistency.MAP_SCHEMA,
+                "paper_id": "paper-demo",
                 "plan_doc": "docs/plan.md",
                 "figures": {
                     "fig1": {
-                        "fixtures": [],
-                        "role": "missing figure",
-                        "status": "missing",
+                        "figure_id": "fig1",
+                        "role_id": "role-demo",
+                        "status": "active_candidate",
+                        "fixture": fixture,
                     },
                     "fig2": {
-                        "fixtures": [],
-                        "role": "sandbox figure",
-                        "sandbox": ["sandboxed"],
+                        "figure_id": "fig2",
+                        "role_id": "planned-role",
+                        "status": "planned_missing",
                     },
                 },
-                "non_main": {"superseded": ["superseded"]},
+                "non_main": non_main,
             },
-            sort_keys=True,
+            sort_keys=False,
         ),
         encoding="utf-8",
     )
+
+
+def test_plan_consistency_uses_exact_bindings_and_advisory_states(tmp_path: Path) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    _write_fixture(examples, "extra", figure_id="regression", role_id="regression")
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map)
+
     report = check_plan_consistency.build_report(examples, plan_map)
-    findings = {
-        (finding["code"], finding.get("figure"), finding.get("fixture"), finding.get("state"))
+    advisories = {
+        (finding["code"], finding.get("fixture"), finding.get("figure"))
         for finding in report["findings"]
+        if finding["severity"] == "advisory"
     }
 
-    assert ("planned_figure_missing", "fig1", None, "missing") in findings
-    assert ("non_main_fixture", None, "sandboxed", "sandbox") in findings
-    assert ("non_main_fixture", None, "superseded", "superseded") in findings
-    assert report["schema"] == "figure-agent.plan-consistency.v1"
+    assert report["blocking_count"] == 0
+    assert ("planned_figure_missing", None, "fig2") in advisories
+    assert ("non_main_fixture", "extra", None) in advisories
+    assert report["schema"] == "figure-agent.plan-consistency.v2"
 
 
-def test_fig_agent_plan_check_is_report_only(tmp_path: Path) -> None:
+def test_plan_consistency_rejects_binding_mismatch_and_unmapped_fixture(
+    tmp_path: Path,
+) -> None:
     examples = tmp_path / "examples"
-    _write_fixture(examples, "extra", "extra fixture\n")
+    _write_fixture(examples, "mapped", role_id="wrong-role")
+    _write_fixture(examples, "unmapped", figure_id="other", role_id="other")
     plan_map = tmp_path / "paper_figure_map.yaml"
-    plan_map.write_text(
-        yaml.safe_dump(
-            {
-                "schema": "figure-agent.paper-figure-map.v1",
-                "plan_doc": "docs/plan.md",
-                "figures": {},
-            },
-            sort_keys=True,
-        ),
-        encoding="utf-8",
+    _write_map(plan_map, include_extra_classification=False)
+
+    report = check_plan_consistency.build_report(examples, plan_map)
+    blocking = {(item["code"], item.get("fixture")) for item in report["findings"]}
+
+    assert ("paper_binding_mismatch", "mapped") in blocking
+    assert ("unmapped_fixture", "unmapped") in blocking
+    assert report["blocking_count"] == 2
+
+
+def test_plan_consistency_resolves_declared_current_candidate_pointer(
+    tmp_path: Path,
+) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    pointer = examples / "mapped/review/current-candidate.json"
+    pointer.parent.mkdir(parents=True)
+    pointer.write_text(json.dumps({"fixture": "mapped"}), encoding="utf-8")
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map, include_extra_classification=False)
+    payload = yaml.safe_load(plan_map.read_text(encoding="utf-8"))
+    payload["figures"]["fig1"]["source_pointer"] = "review/current-candidate.json"
+    plan_map.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+    report = check_plan_consistency.build_report(examples, plan_map)
+
+    assert report["blocking_count"] == 0
+
+
+def test_plan_consistency_blocks_unclassified_spec_less_example(tmp_path: Path) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    (examples / "artifact_without_spec").mkdir(parents=True)
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map, include_extra_classification=False)
+
+    report = check_plan_consistency.build_report(examples, plan_map)
+
+    assert any(
+        item["code"] == "unclassified_spec_less_example"
+        and item["directory"] == "artifact_without_spec"
+        and item["severity"] == "blocking"
+        for item in report["findings"]
     )
+
+
+def test_plan_consistency_allows_scoped_non_fixture_artifact(tmp_path: Path) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    (examples / "artifact_without_spec").mkdir(parents=True)
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map, include_extra_classification=False)
+    payload = yaml.safe_load(plan_map.read_text(encoding="utf-8"))
+    payload["non_fixture_artifacts"] = [
+        {
+            "directory": "artifact_without_spec",
+            "classification": "experiment_evidence",
+            "scope": "A bounded historical experiment packet",
+            "rationale": "No source or compile contract exists, so this is not a fixture.",
+        }
+    ]
+    plan_map.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+    report = check_plan_consistency.build_report(examples, plan_map)
+
+    assert report["blocking_count"] == 0
+    assert any(
+        item["code"] == "non_fixture_artifact"
+        and item["directory"] == "artifact_without_spec"
+        and item["severity"] == "advisory"
+        for item in report["findings"]
+    )
+
+
+def test_real_plan_map_classifies_every_top_level_example_directory() -> None:
+    report = check_plan_consistency.build_report(
+        PLUGIN_ROOT / "examples",
+        PLUGIN_ROOT / "docs" / "paper_figure_map.yaml",
+    )
+
+    assert report["blocking_count"] == 0
+    exemptions = {
+        item["directory"]
+        for item in report["findings"]
+        if item["code"] == "non_fixture_artifact"
+    }
+    assert exemptions == {
+        "fig1_direct_svg_cleanroom_baseline",
+        "fig1_panel_f_svg_backend_pilot",
+    }
+
+
+def test_fig_agent_plan_check_strict_allows_advisory_only_map(tmp_path: Path) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    _write_fixture(examples, "extra", figure_id="regression", role_id="regression")
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map)
 
     result = subprocess.run(
         [
@@ -121,6 +209,7 @@ def test_fig_agent_plan_check_is_report_only(tmp_path: Path) -> None:
             "python",
             str(PLUGIN_ROOT / "bin" / "fig-agent"),
             "plan-check",
+            "--strict",
             "--examples-dir",
             str(examples),
             "--map",
@@ -133,6 +222,39 @@ def test_fig_agent_plan_check_is_report_only(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0
+    assert '"blocking_count": 0' in result.stdout
+    assert "planned_figure_missing" in result.stdout
+
+
+def test_fig_agent_plan_check_strict_blocks_unmapped_fixture(tmp_path: Path) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    _write_fixture(examples, "unmapped", figure_id="other", role_id="other")
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map, include_extra_classification=False)
+
+    result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(PLUGIN_ROOT),
+            "python",
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "plan-check",
+            "--strict",
+            "--examples-dir",
+            str(examples),
+            "--map",
+            str(plan_map),
+        ],
+        cwd=PLUGIN_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
     assert "unmapped_fixture" in result.stdout
 
 
@@ -154,6 +276,6 @@ def test_fig_agent_plan_check_defaults_are_plugin_root_relative(tmp_path: Path) 
     )
 
     assert result.returncode == 0
-    assert '"schema": "figure-agent.plan-consistency.v1"' in result.stdout
+    assert '"schema": "figure-agent.plan-consistency.v2"' in result.stdout
     assert str(PLUGIN_ROOT / "docs" / "paper_figure_map.yaml") in result.stdout
     assert str(PLUGIN_ROOT / "examples") in result.stdout

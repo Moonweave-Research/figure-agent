@@ -74,10 +74,16 @@ fixtures:
   - fixture: fig1_updated_agent_redraw_v1
     reference_image: false
     text_boundary_check_ids:
+      - panel-c-energy-labels
+      - panel-c-real-space-labels
       - panel-c-energy-split
+      - panel-c-subview-descriptors
       - panel-c-title-band
+      - panel-d-plot-labels
       - panel-d-plot-header
+      - panel-e-apparatus-labels
       - panel-e-apparatus-header
+      - panel-f-force-labels
       - panel-f-title-band
     label_path_check_ids:
       - panel-c-mobility-edge
@@ -167,61 +173,6 @@ fixtures:
       Compact band diagram has three line-body-only label-path checks and no
       reference-grounded critique requirement.
 
-  - fixture: fig1_overview_v2
-    reference_image: true
-    text_boundary_check_ids: []
-    label_path_check_ids: []
-    aesthetic_intent: false
-    critique_reference_pack: false
-    paper_aesthetic_context:
-    journal_art_direction_playbook:
-    adoption_status: deferred_reference_only
-    rationale: >
-      Reference-grounded critique exists, but deterministic boundary/path checks
-      need fixture-specific geometry rather than copied coordinates from the
-      vault variant.
-
-  - fixture: golden_trap_depth_picture
-    reference_image: true
-    text_boundary_check_ids: []
-    label_path_check_ids: []
-    aesthetic_intent: false
-    critique_reference_pack: false
-    paper_aesthetic_context:
-    journal_art_direction_playbook:
-    adoption_status: deferred_reference_only
-    rationale: >
-      Golden/reference fixture is useful for critique and export gates; adding
-      boundary/path checks needs a separate geometry pass to avoid false
-      positives in the target-picture layout.
-
-  - fixture: n3_trial_01_trap_depth
-    reference_image: true
-    text_boundary_check_ids: []
-    label_path_check_ids: []
-    aesthetic_intent: false
-    critique_reference_pack: false
-    paper_aesthetic_context:
-    journal_art_direction_playbook:
-    adoption_status: deferred_reference_only
-    rationale: >
-      Reference-grounded trial fixture has critique coverage, but row/component
-      boundary geometry is not declared yet.
-
-  - fixture: n3_trial_02_actuation_sequence
-    reference_image: true
-    text_boundary_check_ids: []
-    label_path_check_ids: []
-    aesthetic_intent: false
-    critique_reference_pack: true
-    paper_aesthetic_context:
-    journal_art_direction_playbook:
-    adoption_status: deferred_reference_only
-    rationale: >
-      Reference-grounded sequence fixture now has a critique reference pack for
-      reference-learning dogfood, but explicit path/boundary hazards still need
-      a fixture-specific adoption pass.
-
   - fixture: fig3_trapping_concept
     reference_image: false
     text_boundary_check_ids: []
@@ -301,19 +252,6 @@ fixtures:
       Synthetic benchmark fixture is part of the smoke corpus, but it does not
       yet declare spec-level boundary/path check geometry for audit adoption.
 
-  - fixture: fig5_floating_clip_mechanism
-    reference_image: false
-    text_boundary_check_ids: []
-    label_path_check_ids: []
-    aesthetic_intent: false
-    critique_reference_pack: false
-    paper_aesthetic_context:
-    journal_art_direction_playbook:
-    adoption_status: deferred_geometry_needed
-    rationale: >
-      Fixture has panel boxes but no reference image; deterministic checks would
-      need explicit fixture geometry before adoption.
-
   - fixture: fig2_trap_design_space
     reference_image: false
     text_boundary_check_ids: []
@@ -381,6 +319,48 @@ fixtures:
     rationale: >
       Newly tracked real fixture has not yet adopted deterministic boundary/path
       checks.
+
+  - fixture: fig5_cantilever_actuation_artifact_v2
+    reference_image: false
+    text_boundary_check_ids:
+      - panel-c-coulomb-label-rail
+      - panel-separator-a-b
+      - panel-separator-b-c
+      - panel-separator-c-d
+    label_path_check_ids:
+      - manual-sequence-arrow
+      - panel-c-coulomb-arrow
+      - trace-switch-line
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      The active Fig5 fixture binds process separators, Coulomb-force label
+      ownership, the manual sequence arrow, and the response-trace switch line
+      to deterministic audit checks.
+
+  - fixture: fig5_cantilever_mechanism_v1
+    reference_image: false
+    text_boundary_check_ids:
+      - panel-c-esvm-head-label-clearance
+      - panel-d-driven-electrode-label-clearance
+      - process-separator-a-b
+      - process-separator-b-c
+      - process-separator-c-d
+    label_path_check_ids:
+      - cantilever-charge-leader-lane
+      - cantilever-force-arrow-label-lane
+      - manual-transfer-arrow-label-lane
+    aesthetic_intent: false
+    critique_reference_pack: false
+    paper_aesthetic_context:
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      The superseded first trial remains regression evidence with exact apparatus
+      boundary and label-path declarations; it is not a current paper binding.
 
   - fixture: fig1_overview_v4_pair_001_vault
     reference_image: true

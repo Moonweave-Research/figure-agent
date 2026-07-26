@@ -1,0 +1,28 @@
+schema: figure-agent.public-command-route.v1
+status: active_reference
+authority: docs/figure-agent.md
+
+# This is the canonical documented workflow route, not a retirement of the
+# wider callable compatibility surface. R4 surface compaction remains open.
+default_route:
+  - fig_new
+  - fig_status
+  - fig_compile
+  - fig_critique
+  - fig_adjudicate
+  - fig_run
+  - fig_export
+  - fig_closeout
+
+supporting:
+  - fig_ground
+  - fig_context_pack
+
+compatibility:
+  - fig_extract
+  - fig_drive
+  - fig_loop
+  - fig_improve
+  - fig_queue
+  - fig_queue_run
+  - fig_e2e_smoke

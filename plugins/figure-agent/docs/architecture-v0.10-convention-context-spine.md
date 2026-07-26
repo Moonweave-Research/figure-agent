@@ -1,5 +1,9 @@
 # figure-agent v0.10 — Convention/Context Spine
 
+> **Document status: Historical proposal/evidence — non-authoritative and not
+> agent-executable.** It cannot override the current roadmap in
+> [`figure-agent.md`](figure-agent.md).
+
 Status: direction approved 2026-06-20 via `/keelplane` adversarial judgment
 (verdict STANDS). **Rev 4 (2026-07-03):** refreshed against current code truth:
 semantic assertion tolerance/`indeterminate` and the compile-time convention

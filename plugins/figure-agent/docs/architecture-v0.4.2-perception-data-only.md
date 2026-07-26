@@ -1,6 +1,12 @@
 # Architecture v0.4.2 — Perception Data Only (D-1)
 
-**Status:** DRAFT (2026-05-08, rev 1 — path convention corrected from `build/<name>/` to `examples/<name>/build/` after Codex caught the inconsistency with live `/fig_compile` layout) — handoff to Codex session for implementation
+> **Document status: Implemented historical design record — non-authoritative
+> and not agent-executable.** The active compile path emits the descriptive
+> perception pack under `examples/<name>/build/perception/`. Current product
+> authority is [`figure-agent.md`](figure-agent.md).
+
+**Historical status:** Drafted 2026-05-08 and subsequently implemented. The
+document records the design decision; live code and tests define exact behavior.
 **Predecessors (rejected):** `architecture-v0.4-build-perception-pack.md`, `architecture-v0.4.1-build-perception-pack.md`. See `feedback_perception_spec_rejected.md` for the lesson driving this scope.
 **Successor companion:** `architecture-v0.5-per-panel-reference-workflow.md` (D-2).
 **Scope owner:** Codex session (implementation), not this session.

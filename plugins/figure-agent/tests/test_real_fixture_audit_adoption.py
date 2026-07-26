@@ -35,8 +35,7 @@ def _load_contracts() -> list[dict[str, Any]]:
 
 def _load_spec(fixture: str) -> dict[str, Any]:
     spec_path = EXAMPLES_ROOT / fixture / "spec.yaml"
-    if not spec_path.is_file():
-        pytest.skip(f"real fixture not present in this plugin tree: {fixture}")
+    assert spec_path.is_file(), f"stale audit fixture entry: {fixture}"
     data = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
     assert isinstance(data, dict)
     return data
@@ -59,8 +58,9 @@ def _ids(items: object) -> list[str]:
 
 def test_real_fixture_audit_adoption_contract_covers_all_real_fixtures() -> None:
     contracts = _load_contracts()
-    contract_names = {contract["fixture"] for contract in contracts}
-    assert set(_real_fixture_names()).issubset(contract_names)
+    contract_names = [contract["fixture"] for contract in contracts]
+    assert len(contract_names) == len(set(contract_names))
+    assert set(_real_fixture_names()) == set(contract_names)
     for contract in contracts:
         assert contract["adoption_status"] in ADOPTION_STATUSES
         assert isinstance(contract["rationale"], str)

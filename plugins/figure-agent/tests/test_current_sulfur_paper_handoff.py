@@ -3,58 +3,84 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import yaml
+
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 HANDOFF = PLUGIN_ROOT / "docs/current-sulfur-paper-figure-state.md"
+PLAN_MAP = PLUGIN_ROOT / "docs/paper_figure_map.yaml"
 
 
-def test_current_handoff_binds_fig1_candidate_and_machine_evidence() -> None:
+def _plan_map() -> dict[str, object]:
+    payload = yaml.safe_load(PLAN_MAP.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    return payload
+
+
+def test_handoff_describes_every_machine_resolved_main_figure() -> None:
+    text = HANDOFF.read_text(encoding="utf-8")
+    figures = _plan_map()["figures"]
+    assert isinstance(figures, dict)
+
+    for figure, entry in figures.items():
+        assert isinstance(entry, dict)
+        assert figure.casefold() in text.casefold()
+        if entry["status"] == "active_candidate":
+            fixture = entry["fixture"]
+            assert isinstance(fixture, str)
+            assert fixture in text
+        else:
+            assert entry["status"] == "planned_missing"
+            assert "planned" in text
+
+
+def test_handoff_contains_durable_experiment_contracts() -> None:
     text = HANDOFF.read_text(encoding="utf-8")
 
     for required in (
-        "fig1-redraw-to-final",
-        "comparable-v3-repair-c5/repaired.tex",
-        "source_sha256: sha256:6f0a40a221da752f0fdefe34238c74f9bfe8513e5f1e026bbac774f7d3670741",
-        "promotion_state: candidate_only",
-        "human_gate: pending",
-        "strict compile",
-        "physics grounding",
-        "checked=11",
-        "checked=9",
-        "publication acceptance | not claimed",
-    ):
-        assert required in text
-
-
-def test_current_handoff_preserves_experiment_specific_protocol() -> None:
-    text = HANDOFF.read_text(encoding="utf-8")
-
-    for required in (
-        "gridless two-terminal high-voltage",
-        "manually moved",
+        "gridless, two-terminal high-voltage",
+        "moved manually",
         "grounded conductive substrate",
         "induction-type electrostatic surface voltmeter",
-        "not a Kelvin probe/KPFM schematic",
-        "motion stage",
-        "grid electrode",
-        "protective-ground symbol",
+        "not a Kelvin probe or KPFM schematic",
+        "Actuation charge",
+        "OFF / float",
+        "Reversed drive",
+        "Maxwell attraction",
+        "q_tr E",
     ):
         assert required in text
 
 
-def test_legacy_cantilever_fixtures_are_explicitly_non_authoritative() -> None:
-    fig5 = (PLUGIN_ROOT / "examples/fig5_actuation_mechanism/briefing.md").read_text(
-        encoding="utf-8"
-    )
-    fig3 = (PLUGIN_ROOT / "examples/fig3_floating_clip_protocol/briefing.md").read_text(
-        encoding="utf-8"
-    )
+def test_handoff_does_not_freeze_transient_repository_state() -> None:
+    text = HANDOFF.read_text(encoding="utf-8")
 
-    fig5_flat = re.sub(r"\s+", " ", fig5)
-    fig3_flat = re.sub(r"\s+", " ", fig3)
-    assert "legacy validation sandbox" in fig5_flat
-    assert "current experiment" in fig5_flat
-    assert "authority" in fig5_flat
-    assert "legacy SI/methods validation fixture" in fig3_flat
-    assert "current" in fig3_flat
-    assert "docs/current-sulfur-paper-figure-state.md" in fig5
-    assert "docs/current-sulfur-paper-figure-state.md" in fig3
+    forbidden_patterns = (
+        r"/Users/",
+        r"\.worktrees/",
+        r"\bbranch:\s",
+        r"\bhead:\s",
+        r"source_sha256",
+        r"sha256:[0-9a-f]+",
+        r"checked=\d+",
+        r"blocking_total=\d+",
+        r"render=FRESH",
+        r"Updated:",
+        r"next session",
+    )
+    for pattern in forbidden_patterns:
+        assert re.search(pattern, text, flags=re.IGNORECASE) is None
+
+
+def test_historical_cantilever_fixtures_are_non_main_in_machine_map() -> None:
+    plan_map = _plan_map()
+    non_main = plan_map["non_main"]
+    assert isinstance(non_main, dict)
+    classified = {
+        fixture: classification
+        for classification, fixtures in non_main.items()
+        for fixture in fixtures
+    }
+
+    assert classified["fig5_actuation_mechanism"] == "regression"
+    assert classified["fig5_cantilever_mechanism_v1"] == "superseded"
+    assert classified["fig3_floating_clip_protocol"] == "si"

@@ -1,13 +1,12 @@
 # Figure Agent
 
-Figure Agent is an agentic system for creating publication-quality scientific
-and technical figures.
+Figure Agent is a paper-figure quality kernel for scientific schematics. A
+human, LLM, or declared domain tool authors the figure; the kernel preserves
+intent and evidence, renders editable source, detects reproducibility and
+legibility failures, and routes bounded repair without claiming publication
+acceptance.
 
 It is not a graph plotting library. It is not a matplotlib wrapper. It is not a one-shot image generator.
-
-The system turns figure intent into an editable figure representation, renders
-candidate figures, critiques them visually and semantically, checks journal
-compliance, and iteratively repairs the figure until it converges.
 
 Convergence means reaching the highest achievable scientific-figure aesthetic
 quality while staying strictly inside the target journal's guidelines. Journal rules are hard constraints; beauty is optimized only within those constraints.
@@ -31,12 +30,18 @@ Or point at the marketplace manifest:
 claude plugin add path/to/this/repo/.claude-plugin/marketplace.json
 ```
 
-After install, the six commands are available in any Claude Code session:
+The canonical documented workflow route is:
 
 ```
-/fig_new       /fig_extract    /fig_compile
-/fig_critique  /fig_export     /fig_status
+/fig_new       /fig_status      /fig_compile
+/fig_critique  /fig_adjudicate  /fig_run
+/fig_export    /fig_closeout
 ```
+
+This route does not retire supporting or compatibility commands. The shared
+classification lives in
+[`plugins/figure-agent/docs/public-command-route.yaml`](plugins/figure-agent/docs/public-command-route.yaml);
+callable-surface compaction remains unfinished roadmap work.
 
 ## What's inside
 
@@ -47,11 +52,11 @@ After install, the six commands are available in any Claude Code session:
 └── plugins/
     └── figure-agent/           ← the plugin itself
         ├── README.md           ← full documentation (start here)
-        ├── commands/           ← the six slash commands
+        ├── commands/           ← public and compatibility command adapters
         ├── skills/             ← workflow skill
         ├── scripts/            ← compile, export, critique, perception pack
         ├── examples/           ← per-figure folders (specs, briefings, sources)
-        └── docs/               ← architecture, golden targets, dogfood trials
+        └── docs/               ← authority, references, project state, evidence
 ```
 
 ## Documentation
@@ -63,10 +68,16 @@ authority:
 
 The operational docs live in [`plugins/figure-agent/README.md`](plugins/figure-agent/README.md). It covers:
 
-- A start-to-finish walkthrough (one figure, six commands)
-- Current state (what's shipped in v0.5.0)
-- What's experimental / proposed (filed pre-spec issues)
-- The documentation map (architecture, golden targets, trials)
+- A start-to-finish walkthrough for the canonical documented route
+- Current state for plugin version v0.9.3
+- The supported and compatibility command surfaces
+- The active operational architecture and human/machine boundaries
+
+Document status is machine-readable in
+[`plugins/figure-agent/docs/document-status.yaml`](plugins/figure-agent/docs/document-status.yaml).
+Only the authority and approved operational references ship in the generic
+Cowork package; paper-local state, plans, trials, and historical proposals do
+not instruct installed agents.
 
 ## License + author
 

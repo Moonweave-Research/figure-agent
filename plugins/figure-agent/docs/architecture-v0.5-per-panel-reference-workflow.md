@@ -1,6 +1,13 @@
 # Architecture v0.5 — Per-Panel Reference Workflow (D-2)
 
-**Status:** DRAFT (2026-05-08) — handoff to Codex session for implementation
+> **Document status: Implemented historical design record — non-authoritative
+> and not agent-executable.** Per-panel critique is active, and a participating
+> panel requires both `reference_image` and `bbox_pdf_cm`; there is no
+> figure-level-reference fallback. Current authority is
+> [`figure-agent.md`](figure-agent.md).
+
+**Historical status:** Drafted 2026-05-08 and subsequently implemented with the
+explicit two-field contract and a warning for incomplete panel declarations.
 **Predecessor:** `architecture-v0.4.2-perception-data-only.md` (companion D-1, ships first).
 **Drives from:** `feedback_perception_spec_rejected.md`, `feedback_reference_dilemma_hybrid.md`, `feedback_element_iteration_workflow.md`, `project_v0_2_critique_reference_grounding.md`.
 **Scope owner:** Codex session (implementation), not this session.

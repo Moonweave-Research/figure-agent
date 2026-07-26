@@ -1,4 +1,8 @@
 name: fig4_trap_energy_diagram
+paper_binding:
+  paper_id: pair001
+  figure_id: fig4
+  role_id: trap_energy_distribution
 title: "Fig 4 — Bimodal trap-state energy landscape of sulfur polymer (schematic)"
 style_profile: polymer-paper
 undeclared_geometry_profile: schematic

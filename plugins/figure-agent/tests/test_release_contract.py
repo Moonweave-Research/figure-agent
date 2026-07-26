@@ -325,10 +325,10 @@ def test_cowork_package_includes_authoring_context_pack_runtime_and_docs(
         "scripts/authoring_rules.py",
         "scripts/semantic_contracts.py",
         "scripts/authoring_context_pack.py",
-        "docs/authoring-rules-pair001.md",
         "commands/fig_context_pack.md",
     }:
         assert required in names
+    assert "docs/authoring-rules-pair001.md" not in names
     for forbidden in {
         "dist/",
         "examples/fig1_overview_v2_pair_001_vault/caption.md",

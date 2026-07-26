@@ -1,3 +1,7 @@
+> **Document status: Historical evidence — non-authoritative and not
+> agent-executable.** Its paper-map and plan-check descriptions are superseded
+> by current code, tests, and [`docs/figure-agent.md`](../../figure-agent.md).
+
 # Issue 100H/I - Schema Capability Matrix and Module Ownership Map
 
 Status: completed on main in commit `d3ccf37`; merged by `200910c`

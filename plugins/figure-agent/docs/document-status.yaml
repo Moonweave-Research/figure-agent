@@ -1,0 +1,77 @@
+schema: figure-agent.document-status-policy.v1
+authority: docs/figure-agent.md
+
+# Classification is first-match-wins. An unmatched document is unclassified,
+# cannot ship, and cannot instruct an agent.
+classes:
+  authority:
+    active: true
+    ship: true
+    agent_executable: true
+  reference:
+    active: true
+    ship: true
+    agent_executable: false
+  project_state:
+    active: true
+    ship: false
+    agent_executable: true
+  evidence:
+    active: false
+    ship: false
+    agent_executable: false
+  historical:
+    active: false
+    ship: false
+    agent_executable: false
+
+rules:
+  - path: docs/figure-agent.md
+    class: authority
+  - paths:
+      - docs/architecture-overview.md
+      - docs/authoring-rules-project.md
+      - docs/briefing-semantic-schema-v1.md
+      - docs/critique-evaluation-rubric-v1.md
+      - docs/document-status.yaml
+      - docs/external-vision-review.md
+      - docs/figure-design-philosophy.md
+      - docs/humanizer-layer-v1.md
+      - docs/multi-lens-qa-recipe.md
+      - docs/public-command-route.yaml
+      - docs/style-pack-catalog.md
+      - docs/v0.9-operator-playbook.md
+    class: reference
+  - paths:
+      - docs/current-sulfur-paper-figure-state.md
+      - docs/paper_figure_map.yaml
+    class: project_state
+  - globs:
+      - docs/evidence/**
+      - docs/decision-packets/**
+      - docs/decision-records/**
+      - docs/experience-log/**
+      - docs/style-benchmark-comparisons/**
+      - docs/style-benchmark-packs/**
+      - docs/authoring-rules-pair001.md
+      - docs/wave8-source-boundary-handoff.md
+    class: evidence
+  - globs:
+      - docs/historical/**
+      - docs/milestones/**
+      - docs/milestones-archive/**
+      - docs/superpowers/**
+      - docs/trials/**
+      - docs/architecture-v0.*
+      - docs/golden-target-*.md
+      - docs/svg-polish-pipeline.md
+      - docs/v0.5-panel-reference-doc-code-mismatch.md
+      - docs/execution-plan.md
+      - docs/mcp-facade-design.md
+      - docs/product-spec.md
+      - docs/quality-kernel-goal.md
+      - docs/roadmap-*.md
+      - docs/snippet-vendor-candidates.md
+      - docs/subregion-iteration-tool.md
+      - docs/system-audit-upgrade-spec.md
+    class: historical

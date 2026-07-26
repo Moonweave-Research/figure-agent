@@ -1,5 +1,10 @@
 # Golden Target 001 - Converged Trap-Depth Picture
 
+> **Document status: Historical target specification — non-authoritative and
+> not agent-executable.** The fixture remains evidence unless its current spec
+> and acceptance gates say otherwise. Current authority is
+> [`figure-agent.md`](figure-agent.md).
+
 **Date**: 2026-04-29
 **Status**: first quality-kernel target
 **Source**: user-provided PNG in the 2026-04-29 review session

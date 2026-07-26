@@ -1,270 +1,144 @@
-# Current sulfur-paper figure state and next-session handoff
+# Sulfur-paper figure authority and handoff
 
-**Updated:** 2026-07-26
-**Status:** Fig1 development baseline is frozen for now; it is not publication-final.
+This document preserves the durable scientific and workflow contracts for the
+sulfur-polymer paper. It deliberately does not record a local worktree, branch,
+commit, source hash, copied detector count, render freshness, or session-specific
+next action. Those facts change during development and must be resolved from the
+repository at run time.
 
-This document is the session handoff for the sulfur/polymer figure work. It is
-the place to recover the current state without relying on chat history. It does
-not replace `docs/figure-agent.md`, which remains the product authority.
+## Machine source of truth
 
-## 1. Worktree authority
+`docs/paper_figure_map.yaml` owns paper placement. Each active fixture carries
+the same exact `paper_id`, `figure_id`, and `role_id` in `spec.yaml`. A fixture
+is not a main-paper figure merely because its name or briefing resembles a role.
 
-Use this worktree for the current Fig1 candidate:
+The current paper bindings are:
 
-```text
-/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-dogfood
-```
+| Figure | Role | Fixture authority |
+|---|---|---|
+| Fig1 | overview, structure, and charge-trapping concept | `fig1_updated_agent_redraw_v1`, resolved through `review/current-candidate.json` |
+| Fig2 | dielectric and polarization response | planned; no active fixture |
+| Fig3 | transient conduction and trapping | `fig3_resistance_mechanism` |
+| Fig4 | trap-energy distribution | `fig4_trap_energy_diagram` |
+| Fig5 | cantilever actuation payoff | `fig5_cantilever_actuation_artifact_v2` |
 
-Current branch:
+All other real fixtures are explicitly classified in the map as regression,
+pilot, reference, superseded, SI, or sandbox evidence. They do not override an
+active binding.
 
-```text
-fig1-redraw-to-final
-```
-
-Do not edit these paths for this work:
-
-```text
-/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]
-/Users/choemun-yeong/workspace/ResearchOS/[figure-agent-py]
-/tmp/figure-agent-next
-```
-
-The main checkout has user-owned WIP. `/tmp/figure-agent-next` was used for
-system-only verification and must not be mistaken for the maintained figure
-source.
-
-## 2. Fig1 baseline
-
-The maintained Fig1 source is the nested repair candidate, not the canonical
-fixture-root TeX:
-
-```text
-plugins/figure-agent/examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/repaired.tex
-```
-
-The explicit current-candidate pointer is:
-
-```text
-plugins/figure-agent/examples/fig1_updated_agent_redraw_v1/review/current-candidate.json
-```
-
-It binds the candidate source to:
-
-```text
-source_sha256: sha256:6f0a40a221da752f0fdefe34238c74f9bfe8513e5f1e026bbac774f7d3670741
-promotion_state: candidate_only
-human_gate: pending
-```
-
-The source of the current render is therefore:
-
-```text
-plugins/figure-agent/examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/build/repaired.png
-```
-
-The current candidate is a usable internal development baseline. It is not a
-golden artifact, accepted artifact, submission file, or publication verdict.
-The canonical fixture root may report `render=STALE` while the explicit nested
-candidate reports `render=FRESH`; this is intentional fail-closed provenance,
-not a missing or deleted figure.
-
-### Human-authority snapshot
-
-The user-provided Fig1 snapshot reviewed on 2026-07-26 is the highest-authority
-visual development reference for this figure. It is pixel-equivalent to the
-candidate render above and therefore binds the maintained visual state to:
-
-```text
-branch: fig1-redraw-to-final
-head: 64b3acc0a27fae57ae09b52ac4e73f039da81792
-candidate: comparable-v3-repair-c5
-source: review/failure-first/comparable-v3-repair-c5/repaired.tex
-render: review/failure-first/comparable-v3-repair-c5/build/repaired.png
-```
-
-Stale Fig1 worktrees, older visual candidates, and unrelated ORRO lanes must
-not override this snapshot when recovering or extending the figure. This is a
-development-authority statement only; it does not change `promotion_state`,
-the pending human gate, or the publication boundary above.
-
-### Current machine evidence
-
-Evidence below is from the candidate build directory above:
-
-| Evidence | State |
-|---|---|
-| strict compile | `passed` |
-| physics grounding | `grounded` |
-| text-boundary declarations | `checked=11`, `total=0` |
-| label/path declarations | `checked=9`, `total=0` |
-| semantic assertions | `checked=3`, `issue_count=0` |
-| visual clash | `blocking_total=0`, `report_only_total=26` |
-| human acceptance | not declared |
-| publication acceptance | not claimed |
-
-Machine green is only the first evidence layer. The remaining Fig1 gate is a
-human visual review at full size, reduction size, and intended print size. Open
-questions are the final balance of A/B, the amount of visual weight assigned to
-C, and the scientific reading of the C energy landscape. Do not expand C or
-reopen A/B merely to manufacture another machine diff.
-
-## 3. Fig1 scientific contract now in force
-
-These are the paper-local decisions already encoded in the active Fig1
-briefing/semantic contract:
-
-- Panel E charging is a gridless two-terminal high-voltage state. Do not add a
-  protective-ground symbol or a grid electrode to the charging stage.
-- The specimen is manually moved from charging to the adjacent measurement
-  station. Do not depict a motion stage, conveyor, or automated scan.
-- The measurement state has a grounded conductive substrate.
-- The sensing method is an induction-type electrostatic surface voltmeter
-  (ESVM, SK-family level only). It is not a Kelvin probe/KPFM schematic.
-- Panel E maps the measured surface-potential decay `V_s(t)` to a qualitative
-  derived `g(E_t)` distribution; it is not a fitted data plot.
-- Panel F keeps the sample/cantilever electrically floating while the grounded
-  return belongs to the driven-electrode source circuit.
-- Panel F currently contains a thin Maxwell-attraction baseline and a stronger
-  Coulomb-repulsion result. This is part of the current candidate's visible
-  composition and remains a human scientific interpretation gate for any
-  future standalone cantilever figure; do not silently strengthen, remove, or
-  reinterpret it in the next figure.
-
-The active source and contracts are the authority for the current Fig1 render:
-
-```text
-examples/fig1_updated_agent_redraw_v1/briefing.md
-examples/fig1_updated_agent_redraw_v1/spec.yaml
-examples/fig1_updated_agent_redraw_v1/semantic_contract.yaml
-examples/fig1_updated_agent_redraw_v1/authority.yaml
-```
-
-## 4. Existing cantilever fixtures are not current authority
-
-Two existing fixtures are useful historical evidence but must not be extended
-blindly:
-
-### `examples/fig5_actuation_mechanism`
-
-This is a v0.10 convention-validation sandbox. Its source tests a vertical
-cantilever, clip-on-top convention and a side-electrode force arrow. Its
-`+V/-V` actuation story is not the current experimental protocol. Keep it as a
-regression artifact; do not treat its TeX as the next publication figure.
-
-### `examples/fig3_floating_clip_protocol`
-
-This is an SI/methods validation fixture whose briefing assumes grounded poling,
-clip disconnection, and a four-phase polarity-reversal sequence. Those are
-historical test assumptions, not the current charge/transfer/measurement setup.
-Do not copy its `grounded poling` or automatic phase story into a new figure
-without a new paper-local authority decision.
-
-## 5. Standalone cantilever candidate
-
-The first standalone cantilever candidate has now been authored in a new
-fixture, after reading this handoff:
-
-```text
-fig5_cantilever_mechanism_v1
-```
-
-Source and render:
-
-```text
-plugins/figure-agent/examples/fig5_cantilever_mechanism_v1/fig5_cantilever_mechanism_v1.tex
-plugins/figure-agent/examples/fig5_cantilever_mechanism_v1/build/fig5_cantilever_mechanism_v1.png
-```
-
-This is a first Figure Agent authoring trial, not a publication-final figure
-or an accepted artifact. Its current machine evidence is:
-
-| Evidence | State |
-|---|---|
-| strict compile | `passed` |
-| physics grounding | `grounded` |
-| text-boundary declarations | `checked=5`, `total=0` |
-| label/path declarations | `checked=3`, `total=0` |
-| TeX force-direction assertion | `checked=1`, `issue_count=0` |
-| visual clash | `blocking_total=0`, `report_only_total=6` |
-| Figure Agent status | `render=FRESH`, `acceptance=NOT_DECLARED` |
-| host critique/export | required/not created |
-
-The first strict render exposed label/path defects in the ESVM and transfer
-lanes; those were corrected before the current green render. The remaining
-`report_only` visual candidates and the host critique are deliberately left as
-human review gates rather than silently promoted or suppressed.
-
-The first authoring slice should be a low-detail, experiment-grounded process
-schematic:
-
-```text
-two-terminal HV charge → manual specimen transfer → grounded measurement state → cantilever response
-```
-
-Before any TikZ is authored, create the new fixture's `briefing.md`, `spec.yaml`,
-and `caption.md`. The first source draft should contain only the apparatus
-topology and claim-bearing arrows. Add material texture, gradients, and
-editorial polish only after the force direction, grounding ownership, manual
-transfer agency, and air gap survive 100%, 50%, and 33% review.
-
-### Future cantilever invariants
-
-- Cantilever is vertical, with the clip/clamp above and polymer hanging down.
-- The cantilever is mechanically clamped but electrically isolated during the
-  response scene.
-- The driven electrode and its grounded source return are separate from the
-  cantilever and trapped-charge path.
-- The air gap is visibly non-contact and has a clear named referent.
-- `q_{tr}` markers are embedded in the polymer body, not floating beside it.
-- The primary force arrow touches its source and points to its declared result;
-  no direction is invented when polarity is not declared.
-- No Kelvin-probe fork, vibration arc, grid electrode, automatic motion stage,
-  or unverified model-specific instrument detail.
-- No quantitative force, angle, voltage, or fitted displacement is added to a
-  qualitative mechanism schematic unless a paper-local source declares it.
-
-If the next paper-local authority confirms polarity-reversed actuation, make it
-a separate declared sequence. Do not infer bidirectionality merely from the
-existence of a nearby electrode.
-
-## 6. Reproduce the current state
-
-From a fresh session:
+To recover live state, run:
 
 ```bash
-cd "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/fig3-dogfood/plugins/figure-agent"
+./bin/fig-agent plan-check --strict
 ./bin/fig-agent status fig1_updated_agent_redraw_v1
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/repaired.tex
+./bin/fig-agent status fig5_cantilever_actuation_artifact_v2
 ```
 
-Then inspect the candidate render, not the canonical-root export:
+Read current-candidate pointers and generated evidence directly. Never copy
+their hashes, counts, or freshness into this handoff.
 
-```text
-examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/build/repaired.png
-```
+## Acceptance boundary
 
-For any new fixture, follow the repository workflow in this order:
+Strict compile, physics grounding, semantic assertions, collision checks, and a
+fresh render are machine evidence only. They do not establish human acceptance,
+publication acceptance, or a canonical promotion. Fig1's nested candidate must
+remain `candidate_only` until a human gate explicitly changes that state.
 
-```text
-fig-agent status → fig_new → briefing/spec/caption → author source → fig_compile → rendered review → fig_critique/fig_ground as applicable
-```
+## Fig1 scientific contract
 
-For the current standalone cantilever candidate:
+### Structure and composition
 
-```bash
-./bin/fig-agent status fig5_cantilever_mechanism_v1
-FIGURE_AGENT_STRICT=1 bash scripts/compile.sh examples/fig5_cantilever_mechanism_v1/fig5_cantilever_mechanism_v1.tex
-```
+- Panel A shows inverse vulcanization and the paper's polymer chemistry without
+  inventing a cross-linked-network claim.
+- Panel B is a qualitative composition series. Chain length and sulfur extent
+  are explanatory cues, not measured molecular-weight or topology data.
+- Chemical notation must preserve conventional aromatic, bond, bracket, and
+  inverse-vulcanization heat-symbol grammar.
 
-Inspect the generated PNG at 100%, 50%, and 33% before any critique or export.
+### Localized traps and electrical evidence
 
-Do not promote a nested candidate to canonical, set `accepted: true`, force a
-golden artifact, or claim publication acceptance from this handoff.
+- Shallow and deep states use a consistent energy orientation and categorical
+  colour grammar.
+- The real-space host is amorphous; texture is explanatory and must not be read
+  as lamellae, cells, or measured microstructure.
+- The energy view is qualitative. Mobility edge, trap depth, escape, and DOS
+  relationships must not acquire undeclared numerical values.
+- Transient current uses the qualitative Curie-von Schweidler relationship.
+  Rendered slope, exponent notation, and low/high-`n` ordering must agree.
 
-## 7. Stop boundary
+### ISPD apparatus and derivation
 
-The next action is documentation-complete and figure-authoring-ready, not
-publication-final. The first new-figure decision that truly requires the paper
-authority is whether the standalone cantilever should show only the current
-single-force response or a polarity-reversed sequence. Until that is declared,
-keep the new figure qualitative and one-directional.
+- Charging is a gridless, two-terminal high-voltage state. Do not add a grid or
+  a protective-ground symbol to the charging stage.
+- The specimen is moved manually to the adjacent measurement station. Do not
+  depict a motion stage, conveyor, or automatic scan.
+- The measurement state uses a grounded conductive substrate.
+- Sensing is by an induction-type electrostatic surface voltmeter at the
+  SK-family level. It is not a Kelvin probe or KPFM schematic.
+- The figure maps measured surface-potential decay `V_s(t)` to a qualitative
+  derived trap distribution `g(E_t)`; it does not show a fitted dataset.
+
+### Compact cantilever cue
+
+- The specimen/cantilever is floating in the response scene.
+- The driven electrode's grounded return belongs to its source circuit, not to
+  the floating specimen.
+- Maxwell attraction is the polarity-independent baseline; the illustrated
+  charge-mediated Coulomb contribution must retain its declared ownership and
+  direction.
+- Any stronger mechanistic interpretation remains a paper-level human gate.
+
+## Fig3 and Fig4 role boundary
+
+- Fig3 owns direct trapping evidence during conduction: capture/release,
+  qualitative transient-current decay, resistance increase, and the
+  composition-dependent state landscape.
+- Fig4 owns trap energy/depth/lifetime quantification and the ISPD-derived
+  distribution story.
+- A schematic must not turn qualitative state breadth into an undeclared
+  numerical exponent, trap density, energy, or composition ranking.
+
+## Fig5 scientific contract
+
+Fig5 tests a polarity-reversal actuation sequence in one persistent apparatus,
+not a generic high-voltage charging station and not an ESVM workflow.
+
+1. **Actuation charge:** a nearby driven electrode biases the same cantilever
+   across a visible air gap; attraction bends it while the charge state is
+   established.
+2. **OFF / float:** the source is switched off and the clip ground is opened.
+   This electrical boundary is a visible stage, not an arrow caption.
+3. **Reversed drive:** the drive polarity reverses and the charge-mediated force
+   acts immediately in the opposite bending direction.
+4. **Response and recovery:** the qualitative trace passes through the reverse
+   excursion and then relaxes slowly toward the Maxwell-dominated direction.
+
+Durable invariants:
+
+- The cantilever, clamp axis, scale, thickness, electrode colour, electrode
+  position, and air gap remain consistent across apparatus stages.
+- The air gap remains non-contact. A capacitor-like cue does not claim measured
+  capacitance.
+- Trapped charge remains in the polymer body after source-off; the drawing must
+  not imply that charge is stored on a disconnected clip.
+- The Coulomb term follows the sign of `q_tr E` and can reverse. Maxwell
+  attraction follows `E^2` and cannot explain reverse bending by itself.
+- Force arrows share a visual scale when compared. Each arrow touches its
+  physical owner and points toward its declared result.
+- The response trace is qualitative unless a paper-local dataset is explicitly
+  bound. It must still preserve event order, neutral origin, fast reverse
+  response, and slower recovery.
+- Video frames, measured angles, time constants, and exact plateau durations are
+  not inferred from the schematic.
+
+## Historical fixtures
+
+- `fig5_actuation_mechanism` is a regression fixture for an earlier convention.
+- `fig5_cantilever_mechanism_v1` is a superseded first authoring trial.
+- `fig3_floating_clip_protocol` is SI/methods evidence with historical boundary
+  assumptions.
+- Fig1 vault fixtures are reference history, not active paper bindings.
+
+Consult `docs/paper_figure_map.yaml` for the complete classification. If a
+fixture changes paper role, update the map, its exact `paper_binding`, and the
+resolver-derived tests together.

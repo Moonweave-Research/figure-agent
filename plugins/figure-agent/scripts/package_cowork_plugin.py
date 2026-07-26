@@ -8,6 +8,7 @@ import zipfile
 from pathlib import Path
 
 import yaml
+from document_status import shippable_document_paths
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
@@ -36,14 +37,13 @@ def _is_generated_or_cache(path: Path) -> bool:
 
 
 def _included_doc_files() -> list[Path]:
-    docs_root = PLUGIN_ROOT / "docs"
-    if not docs_root.is_dir():
-        return []
-    files = [path for path in docs_root.glob("*.md") if path.is_file()]
-    macros_root = docs_root / "macros"
-    if macros_root.is_dir():
-        files.extend(path for path in macros_root.rglob("*.md") if path.is_file())
-    return files
+    return shippable_document_paths(PLUGIN_ROOT)
+
+
+def _contains_personal_absolute_path(path: Path) -> bool:
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    personal_prefixes = ("/" + "Users/", "/" + "home/")
+    return any(prefix in text for prefix in personal_prefixes)
 
 
 def _smoke_fixture_names() -> list[str]:
@@ -98,10 +98,18 @@ def build_zip(output_dir: Path) -> Path:
     version = _version()
     output_dir.mkdir(parents=True, exist_ok=True)
     zip_path = output_dir / f"figure-agent-cowork-{version}.zip"
+    included = [path for path in _included_files() if not _is_generated_or_cache(path)]
+    unsafe = [
+        path.relative_to(PLUGIN_ROOT).as_posix()
+        for path in included
+        if _contains_personal_absolute_path(path)
+    ]
+    if unsafe:
+        raise ValueError(
+            "Cowork package contains personal absolute paths: " + ", ".join(unsafe)
+        )
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for path in _included_files():
-            if _is_generated_or_cache(path):
-                continue
+        for path in included:
             rel = path.relative_to(PLUGIN_ROOT).as_posix()
             info = zipfile.ZipInfo(rel)
             info.date_time = (2026, 1, 1, 0, 0, 0)

@@ -1,13 +1,11 @@
 # Figure Agent
 
-Figure Agent is an agentic system for creating publication-quality scientific
-and technical figures.
+Figure Agent is a paper-figure quality kernel for scientific schematics. A
+human, LLM, or declared domain tool authors the figure; the kernel binds intent
+and evidence, renders editable source, detects reproducibility and legibility
+failures, and routes bounded repair without claiming publication acceptance.
 
 It is not a graph plotting library. It is not a matplotlib wrapper. It is not a one-shot image generator.
-
-The system turns figure intent into an editable figure representation, renders
-candidate figures, critiques them visually and semantically, checks journal
-compliance, and iteratively repairs the figure until it converges.
 
 Convergence means reaching the highest achievable scientific-figure aesthetic
 quality while staying strictly inside the target journal's guidelines. Journal rules are hard constraints; beauty is optimized only within those constraints.
@@ -41,20 +39,29 @@ rendered evidence, and exports clean PDF/SVG.
 
 ## Command surface
 
-Primary route:
+Canonical documented workflow route:
 
 ```
 /fig_new      Start a new figure — chat interview fills briefing.md + spec.yaml
+/fig_status   "Where am I?" — read-only stage check
 /fig_compile  Build the TikZ → PDF + PNG, run Style Lock + collision checks
 /fig_critique Have host Claude read the build PNG and write critique.md
-/fig_ground   Ground physics intent — author tex/semantic assertions from briefing §6/§7
 /fig_adjudicate Scaffold critique_adjudication.yaml after critique lint passes
-/fig_export   Export final PDF / SVG / TIFF / PNG
-/fig_status   "Where am I?" — read-only stage check
 /fig_run      Bounded runner — executes safe mechanical steps, stops at gates
+/fig_export   Export final PDF / SVG / TIFF / PNG
 /fig_closeout Read-only post-patch closeout checklist
+```
+
+Supporting commands are explicit but are not required in every default flow:
+
+```
+/fig_ground   Ground physics intent — author assertions from briefing §6/§7
 /fig_context_pack Read-only authoring context pack (JSON; accepts --json / --format json)
 ```
+
+The classification is shared with the root README through
+`docs/public-command-route.yaml`. It documents navigation only; the wider
+callable-surface compaction in R4 remains open.
 
 Compatibility and specialist adapters remain callable for historical workflows,
 but they are not co-equal default entry points:
@@ -157,7 +164,12 @@ Queue execution delegates each fixture to `/fig_run`, so live driver
 revalidation remains the safety gate. Host, human, release/golden, SVG-polish,
 and closeout rows stay visible as blocked operator handoffs.
 
-**Iteration philosophy.** Don't redraw the figure each time the critique fires. Make small, targeted edits — one polymer chain, one label, one arrow at a time. 5–10 iterations × 1-line patch is the path to paper-grade quality. (See `docs/architecture-v0.5-per-panel-reference-workflow.md` for the per-panel critique workflow.)
+**Iteration philosophy.** Match edit scope to the diagnosed defect. A localized
+collision normally needs a bounded local repair; a wrong composition or
+scientific reading may require a larger redraw. Recompile and inspect fresh
+full, panel, and reduction-scale evidence after every source change. A primitive
+or fixed recipe must not constrain an LLM when free authoring communicates the
+declared meaning better.
 
 ---
 
@@ -232,30 +244,18 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 **Read these first:**
 - `docs/figure-agent.md` — the sole product contract and executable roadmap.
   Start here.
-- `docs/current-sulfur-paper-figure-state.md` — current Fig1 baseline,
-  experiment-grounded protocol corrections, and the next cantilever handoff.
 - `docs/architecture-overview.md` — the shipped layer-by-layer reference.
 - `docs/v0.9-operator-playbook.md` — release-candidate command sequence for
   single-fixture, queue, host critique, closeout, and release/golden operation.
-- `docs/architecture-v0.5-per-panel-reference-workflow.md` — how `/fig_critique` works now.
+- `docs/document-status.yaml` — machine-readable class, ship, and
+  agent-executable policy for every governed document.
 
-**Topic deep-dives:**
-- `docs/architecture-v0.4.2-perception-data-only.md` — the perception data pack.
-- `docs/golden-target-trap-depth-picture.md` — Golden Target 001 spec.
-- `docs/golden-target-001-retrospective.md` — N=1 evidence + gap list.
-- `docs/macros/` — macro API docs (band-diagram, bell-curve, plot-callout).
-- `docs/trials/` — dated dogfood reports.
-
-**Frozen historical (do not maintain, kept for context):**
-- `docs/product-spec.md` and `docs/execution-plan.md` — the previous split
-  authorities, retained in place as legacy evidence.
-- `docs/quality-kernel-goal.md` — prior quality-kernel direction, superseded by
-  `docs/figure-agent.md`.
-- `docs/milestones-archive/2026-05-17-quality-state-hardening.md` — prior issue
-  record for reference contracts, readiness states, manifest hashes, and TIFF
-  quality gates.
-- `docs/historical/design-v0.1.md` — the v0.1 prompt/preview/selection-notes workflow that was removed in v0.2.
-- `docs/historical/roadmap-v0.1.7-selection-notes.md` — superseded rollout decisions.
+`docs/current-sulfur-paper-figure-state.md` and `docs/paper_figure_map.yaml` are
+paper-local `project_state`: they may guide work in this checkout but do not
+ship in the generic Cowork bundle and cannot override the authority. Dated
+architecture versions, golden-target notes, plans, issues, trials, milestones,
+and SVG-polish documents are preserved as non-executable evidence or history.
+Check the manifest instead of inferring currency from a filename or prose claim.
 
 ---
 
@@ -268,7 +268,9 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 - **Plugin install.** Validate with `claude plugin validate .claude-plugin/plugin.json`, `claude plugin validate .`, and `claude plugin validate ../../.claude-plugin/marketplace.json`. Test with `uv run pytest` and `uv run ruff check .`. `uv build` is *not* a release gate.
 - **Plugin install freshness.** Local installs copy the registered marketplace working directory into `~/.claude/plugins/cache/`. Run `fig-agent helper plugin_install_freshness.py` to compare the development plugin tree with the latest local cache and emit `figure-agent.plugin-install-freshness.v1` JSON (`fresh`, `stale`, `missing`, or `invalid`) plus `source_package_hygiene`, `source_git_hygiene`, `marketplace_source_hygiene`, `installed_package_hygiene`, and `installed_example_source_hygiene`; `--json` and `--format json` are accepted as explicit no-op output flags. The command exits `0` only when source/install freshness is `fresh`, source package hygiene is `clean`, source git hygiene is `clean` or unavailable outside git, marketplace source hygiene is `clean` or unavailable, installed package hygiene is `clean`, and installed example source hygiene is `clean`. Follow the emitted `next_action`: different-version stale installs use `claude plugin update figure-agent@figure-agent-local`; same-version stale installs need uninstall + install because Claude does not recopy an already-latest version. If a package hygiene block is `dirty`, run its shell-quoted emitted `next_action`, which calls `fig-agent helper plugin_package_audit.py ... --clean --max-mib 300`, to remove generated build/cache paths and confirm future installs will not copy package junk. During an evidence pass, use `fig-agent helper plugin_package_audit.py ... --clean --preserve-fixture-artifacts --max-mib 300` only when you want to remove cache/virtualenv junk while keeping current `examples/<name>/build` and `exports` evidence for queue or driver inspection; do not use that narrower mode as final package validation. If `source_git_hygiene` is `dirty`, commit, stash, or move aside plugin-root changes before reinstalling so user figure-source edits are not copied into the installed plugin cache as "fresh" plugin state. If `marketplace_source_hygiene` is `dirty`, update the `figure-agent-local` marketplace registration before trusting a raw `claude plugin install`, because Claude installs from the registered marketplace source rather than the current shell directory. If `installed_example_source_hygiene` is `dirty`, reinstall from a clean source tree before trusting installed examples; payload freshness intentionally ignores `examples/`, so this separate hygiene block catches installed example-source drift without treating generated example build products as payload drift. The package audit is conservative in a development git worktree: tracked files and tracked-containing directories are protected from `--clean`.
 - **Detector tuning ledger.** Run `fig-agent helper detector_feedback_ledger.py [fixture ...]` to aggregate existing audit-evidence detector feedback across selected fixtures, or across all `examples/*/critique.md` files when no fixture is selected. The output is read-only `figure-agent.detector-feedback-ledger.v1` JSON that separates detector candidates, accepted false positives, detector-linked defects, and unlinked micro-defects for tuning review; `--json` and `--format json` are accepted as explicit no-op output flags.
-- **Repo location.** Lives under `~/workspace/ResearchOS/` as a sibling to `[Athena]/` and `[Graph_making_hub]/` for development proximity. Plugin install copies to `~/.claude/plugins/cache/…` regardless.
+- **Repo location.** The development checkout location is not part of the
+  product contract. Plugin install copies into the host's plugin cache; runtime
+  roots must come from the declared environment variables above.
 
 ---
 

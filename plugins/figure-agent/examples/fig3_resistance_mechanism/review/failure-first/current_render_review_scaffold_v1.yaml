@@ -4,7 +4,7 @@ created_for: current_three_column_render
 source_inputs:
   tex_sha256: sha256:3eb8349ae637664d76e8a2f4d33e3d583da0b7a687d0cc3efb80ace83d603179
   briefing_sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
-  spec_sha256: sha256:f6df543ef344c87b279d4231fe0f4ee7daa2cdb6f575540e8e7b90e9f3e5cadb
+  spec_sha256: sha256:e2053941ecff6f85bab825297af1579087fb1a87d2b4f4ba356f90d8f64695ec
 render_evidence:
   render_path: build/fig3_resistance_mechanism.pdf
   render_png_path: build/fig3_resistance_mechanism.png

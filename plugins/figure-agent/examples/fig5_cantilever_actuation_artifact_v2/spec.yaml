@@ -1,4 +1,8 @@
 name: fig5_cantilever_actuation_artifact_v2
+paper_binding:
+  paper_id: pair001
+  figure_id: fig5
+  role_id: cantilever_actuation_payoff
 title: "Fig 5 artifact — polarity-reversal actuation probe"
 style_profile: polymer-paper
 undeclared_geometry_profile: schematic

@@ -43,6 +43,9 @@ def test_package_cowork_plugin_zip_contract(tmp_path: Path) -> None:
         "scripts/status.py",
         "styles/polymer-paper-preamble.sty",
         "bin/fig-agent",
+        "docs/figure-agent.md",
+        "docs/architecture-overview.md",
+        "docs/document-status.yaml",
     }
     assert required <= names
     assert not any(name.startswith("examples/fig1_overview_v2") for name in names)
@@ -50,9 +53,48 @@ def test_package_cowork_plugin_zip_contract(tmp_path: Path) -> None:
     assert not any(name.startswith("docs/historical/") for name in names)
     assert not any(name.startswith("docs/milestones/") for name in names)
     assert not any(name.startswith("docs/superpowers/") for name in names)
+    assert "docs/current-sulfur-paper-figure-state.md" not in names
+    assert "docs/paper_figure_map.yaml" not in names
+    assert "docs/product-spec.md" not in names
+    assert "docs/execution-plan.md" not in names
+    assert not any(name.startswith("docs/architecture-v0.") for name in names)
+    assert not any(name.startswith("docs/golden-target-") for name in names)
+    assert not any(name.startswith("docs/style-benchmark-comparisons/") for name in names)
+    assert not any(name.startswith("docs/decision-packets/") for name in names)
+    assert not any(name.startswith("docs/decision-records/") for name in names)
+    assert not any(name.startswith("docs/experience-log/") for name in names)
     assert not any("/build/" in name or name.startswith("build/") for name in names)
     assert not any("/exports/" in name or name.startswith("exports/") for name in names)
     assert not any(".venv/" in name for name in names)
+
+
+def test_package_cowork_plugin_rejects_personal_absolute_paths(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import package_cowork_plugin
+
+    unsafe_shell = tmp_path / "install.sh"
+    unsafe_shell.write_text("root=/Users/example/private/file\n", encoding="utf-8")
+    unsafe_extensionless = tmp_path / "fig-agent"
+    unsafe_extensionless.write_text(
+        "workspace=/home/example/private/file\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(
+        package_cowork_plugin,
+        "_included_files",
+        lambda: [unsafe_shell, unsafe_extensionless],
+    )
+    monkeypatch.setattr(package_cowork_plugin, "PLUGIN_ROOT", tmp_path)
+    monkeypatch.setattr(package_cowork_plugin, "_version", lambda: "test")
+
+    try:
+        package_cowork_plugin.build_zip(tmp_path / "dist")
+    except ValueError as exc:
+        assert "personal absolute paths" in str(exc)
+        assert "install.sh" in str(exc)
+        assert "fig-agent" in str(exc)
+    else:
+        raise AssertionError("personal absolute path was packaged")
 
 
 def test_package_cowork_plugin_includes_installed_smoke_fixtures(tmp_path: Path) -> None:

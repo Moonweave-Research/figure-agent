@@ -1,5 +1,9 @@
 # Architecture v0.13 — Experience Loop and Reward Integrity
 
+> **Document status: Historical proposal/evidence — non-authoritative and not
+> agent-executable.** Implemented fragments must be verified in code and tests;
+> this document cannot override [`figure-agent.md`](figure-agent.md).
+
 **Date**: 2026-07-04
 **Status**: accepted direction; spec only, no implementation in this pass
 **Supersedes nothing** — amends the slice ordering of

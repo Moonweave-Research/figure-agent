@@ -1,3 +1,7 @@
+> **Document status: Historical evidence — non-authoritative and not
+> agent-executable.** Its paper-map and plan-check descriptions are superseded
+> by current code, tests, and [`docs/figure-agent.md`](../../figure-agent.md).
+
 # 2026-07-02 Total-Review Execution Plan (Waves B1–B3)
 
 Status: COMPLETED / ARCHIVED — this was the agent-team execution contract for

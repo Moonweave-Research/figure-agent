@@ -1,5 +1,9 @@
 # Golden Target 001 Retrospective
 
+> **Document status: Historical N=1 evidence — non-authoritative and not
+> agent-executable.** It records an experiment, not an active golden/publication
+> claim. Current authority is [`figure-agent.md`](figure-agent.md).
+
 ## Outcome
 
 `examples/golden_trap_depth_picture` is landed as N=1 evidence for the v0.2

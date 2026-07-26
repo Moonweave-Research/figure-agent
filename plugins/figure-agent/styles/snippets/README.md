@@ -19,10 +19,10 @@ Plan: `docs/architecture-v0.3-snippet-library.md`.
 | `band_diagram.snippet.tex` | `\BandSnippet{...}` | A3 planned (deferred — see compass diagnosis) | hand-curated TikZ |
 | `dos_lobes.snippet.tex` | `\DOSLobes{...}` | A4 planned (deferred — see compass diagnosis) | PGFPlots fillbetween |
 
-Adjacent preamble primitive: `\PlotCallout` is not a snippet file, but it is
-part of the A2 plot-authoring contract. Use it for plot labels that would
-otherwise sit directly on traces, dashed guides, or arrows. Reference:
-`docs/macros/plot-callout.md`.
+Adjacent preamble primitive: `\PlotCallout` is not a snippet file; it is defined
+and documented beside its implementation in
+`styles/polymer-paper-preamble.sty`. Use it for plot labels that would otherwise
+sit directly on traces, dashed guides, or arrows.
 
 ## Usage contract (all snippets)
 

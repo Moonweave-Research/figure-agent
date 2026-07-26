@@ -1,4 +1,8 @@
 name: fig3_resistance_mechanism
+paper_binding:
+  paper_id: pair001
+  figure_id: fig3
+  role_id: transient_conduction_trapping
 title: "Fig 3 — Trapping during conduction: qualitative transient response and composition-dependent trap-energy landscape"
 style_profile: polymer-paper
 undeclared_geometry_profile: schematic

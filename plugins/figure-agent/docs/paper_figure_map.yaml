@@ -1,28 +1,81 @@
-schema: figure-agent.paper-figure-map.v1
+schema: figure-agent.paper-figure-map.v2
+paper_id: pair001
 plan_doc: docs/superpowers/specs/2026-06-22-sulfur-paper-figure-plan-design.md
+
+# This file is the machine-readable source of truth for paper placement. Human
+# prose may explain these bindings, but must not override them.
 figures:
   fig1:
-    fixtures: [fig1_overview_v2_pair_001_vault]
-    role: "concept structure sulfur polymer charge trapping idea"
+    figure_id: fig1
+    role_id: overview_structure_charge_trapping
+    status: active_candidate
+    fixture: fig1_updated_agent_redraw_v1
+    source_pointer: review/current-candidate.json
   fig2:
-    fixtures: []
-    role: "dielectric polarization response epsilon composition P-E loops"
-    status: missing
+    figure_id: fig2
+    role_id: dielectric_polarization_response
+    status: planned_missing
   fig3:
-    fixtures: [fig3_resistance_mechanism]
-    role: "cell current trapping resistance mechanism schematic"
+    figure_id: fig3
+    role_id: transient_conduction_trapping
+    status: active_candidate
+    fixture: fig3_resistance_mechanism
   fig4:
-    fixtures: [fig4_trap_energy_diagram]
-    role: "trap energy landscape shallow deep retention"
+    figure_id: fig4
+    role_id: trap_energy_distribution
+    status: active_candidate
+    fixture: fig4_trap_energy_diagram
   fig5:
-    fixtures: []
-    role: "cantilever actuation trapped charge bending mechanism"
-    # The existing sandbox is validation evidence only. The next candidate must
-    # be scaffolded from the current experiment handoff, not copied from it.
-    sandbox: [fig5_actuation_mechanism]
+    figure_id: fig5
+    role_id: cantilever_actuation_payoff
+    status: active_candidate
+    fixture: fig5_cantilever_actuation_artifact_v2
+
+# Every tracked real fixture belongs to exactly one main-figure binding above or
+# one explicit non-main class below. Non-main entries remain usable evidence;
+# their presence is advisory and never makes strict plan validation fail.
 non_main:
-  # This SI fixture retains historical grounded-poling assumptions and is not
-  # the current charge/transfer/measurement authority.
-  si: [fig3_floating_clip_protocol]
-  superseded: [fig3_trapping_concept]
-  rescope_pending: [fig2_trap_design_space]
+  regression:
+    - failure_first_label_repair_demo
+    - fig1_failure_first_panel_f_pilot
+    - fig3_trap_schematic_slice3_semantic
+    - fig3_trap_schematic_slice4_illustration_grammar
+    - fig5_actuation_mechanism
+    - smoke_annotation_box_demo
+    - smoke_contrast_demo
+    - smoke_label_overlap_demo
+    - smoke_leader_line_demo
+    - smoke_panel_spacing_demo
+    - smoke_trap_demo
+  pilot:
+    - fig1_composition_comparison_v1
+    - fig1_hybrid_complex_panel_pilot
+  reference:
+    - fig1_overview_v2_pair_001_vault
+    - fig1_overview_v4_pair_001_vault
+    - fig1_overview_v5a_polish_001_vault
+    - fig1_overview_v5b_editorial_001_vault
+    - fig1_overview_v5c_quiet_001_vault
+    - fig1_overview_v5d_redraw_001_vault
+    - fig1_overview_v5e_aggressive_001_vault
+    - fig1_overview_v5f_art_direction_001_vault
+  superseded:
+    - fig2_trap_design_space
+    - fig3_trapping_concept
+    - fig5_cantilever_mechanism_v1
+  si:
+    - fig3_floating_clip_protocol
+
+# These directories are historical experiment/evidence collections rather than
+# runnable Figure Agent fixtures, so inventing a minimal spec would misrepresent
+# their contract. Every non-underscore examples directory without spec.yaml must
+# appear here with a bounded scope and rationale or plan-check fails.
+non_fixture_artifacts:
+  - directory: fig1_direct_svg_cleanroom_baseline
+    classification: experiment_evidence
+    scope: Fig1 direct-SVG cleanroom packets, contracts, reference crop, and review state
+    rationale: This directory records a backend experiment and has no fixture source or compile contract.
+  - directory: fig1_panel_f_svg_backend_pilot
+    classification: artifact_collection
+    scope: Fig1 Panel F SVG/TikZ comparison renders, motif source, receipt, and human review
+    rationale: This directory is a historical paired-render artifact collection, not an executable fixture.

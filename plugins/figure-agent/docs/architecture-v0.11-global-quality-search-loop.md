@@ -1,5 +1,9 @@
 # Architecture v0.11 — Global Quality Search Loop
 
+> **Document status: Historical proposal/evidence — non-authoritative and not
+> agent-executable.** It cannot override the current roadmap in
+> [`figure-agent.md`](figure-agent.md).
+
 **Date**: 2026-07-04
 **Status**: proposed direction after fig1 v5f loop dogfood
 

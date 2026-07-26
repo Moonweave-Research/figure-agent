@@ -238,4 +238,4 @@ def test_single_authority_ships_in_cowork_package(tmp_path: Path) -> None:
 
     assert AUTHORITY_DOC in names
     for relative_path in LEGACY_DOCS:
-        assert relative_path in names
+        assert relative_path not in names

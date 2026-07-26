@@ -53,4 +53,6 @@ Nature schematic minimal style — follow polymer-paper-preamble.sty. No additio
 
 ---
 
-When this briefing is filled, run `/fig_prompt smoke_trap_demo` to generate the normalized prompt for external image generation.
+When this briefing is filled, run `/fig_status smoke_trap_demo` as the canonical
+first check, author the editable source from the declared intent, then run
+`/fig_compile smoke_trap_demo`.
