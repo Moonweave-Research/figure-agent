@@ -112,10 +112,10 @@ def _text_phrases(check: dict[str, Any]) -> list[dict[str, Any]]:
         words = raw_phrase.get("words")
         if (
             not isinstance(words, list)
-            or len(words) < 2
+            or len(words) < 1
             or not all(isinstance(item, str) and item.strip() for item in words)
         ):
-            raise LabelPathProximityError(f"{label}.words must contain at least two strings")
+            raise LabelPathProximityError(f"{label}.words must contain at least one string")
         phrases.append({"id": phrase_id, "words": [item.strip() for item in words]})
     return phrases
 

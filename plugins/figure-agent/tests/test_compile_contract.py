@@ -43,6 +43,7 @@ def test_compile_passes_top_level_fixture_spec_to_all_clearance_detectors() -> N
     for variable in (
         "TEXT_BOUNDARY_SPEC_ARGS",
         "LABEL_PATH_SPEC_ARGS",
+        "PROCESS_STAGE_VISIBILITY_SPEC_ARGS",
         "VECTOR_CLEARANCE_SPEC_ARGS",
     ):
         assert f'{variable}=(--spec "$FIGURE_SPEC")' in script
@@ -68,6 +69,14 @@ def test_compile_runs_opt_in_state_field_geometry_checks_from_the_fixture_spec()
     assert state_field_call in script
     assert '--tex "$FILE"' in script
     assert '--json-output "${BUILD_DIR}/state_field_geometry.json"' in script
+
+
+def test_compile_runs_opt_in_process_stage_visibility_checks_from_the_fixture_spec() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert 'PROCESS_STAGE_VISIBILITY_SPEC_ARGS=(--spec "$FIGURE_SPEC")' in script
+    assert '"$WORKFLOW_DIR/scripts/checks/check_process_stage_visibility.py"' in script
+    assert '--json-output "${BUILD_DIR}/process_stage_visibility.json"' in script
 
 
 def test_compile_uses_known_false_positive_allowlist_in_every_mode() -> None:

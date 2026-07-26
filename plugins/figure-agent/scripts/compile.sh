@@ -57,6 +57,7 @@ STATE_FIELD_GEOMETRY_SPEC_ARGS=()
 SEMANTIC_ASSERTION_SPEC_ARGS=()
 TEXT_BOUNDARY_SPEC_ARGS=()
 LABEL_PATH_SPEC_ARGS=()
+PROCESS_STAGE_VISIBILITY_SPEC_ARGS=()
 VECTOR_CLEARANCE_SPEC_ARGS=()
 LAYOUT_CONTRACT=""
 if [[ -n "$FIXTURE_NAME" ]]; then
@@ -77,6 +78,7 @@ if [[ -n "$FIXTURE_NAME" ]]; then
     SEMANTIC_ASSERTION_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     TEXT_BOUNDARY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     LABEL_PATH_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    PROCESS_STAGE_VISIBILITY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     VECTOR_CLEARANCE_SPEC_ARGS=(--spec "$FIGURE_SPEC")
   fi
 fi
@@ -216,6 +218,11 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_labe
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   ${LABEL_PATH_SPEC_ARGS[@]+"${LABEL_PATH_SPEC_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/label_path_proximity.json" \
+  "$PDF_OUT"
+run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_process_stage_visibility.py" \
+  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${PROCESS_STAGE_VISIBILITY_SPEC_ARGS[@]+"${PROCESS_STAGE_VISIBILITY_SPEC_ARGS[@]}"} \
+  --json-output "${BUILD_DIR}/process_stage_visibility.json" \
   "$PDF_OUT"
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_undeclared_geometry.py" \
   ${UNDECLARED_GEOMETRY_STRICT_ARGS[@]+"${UNDECLARED_GEOMETRY_STRICT_ARGS[@]}"} \

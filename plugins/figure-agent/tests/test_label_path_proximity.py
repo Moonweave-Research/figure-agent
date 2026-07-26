@@ -45,6 +45,26 @@ def test_detects_phrase_stacked_on_horizontal_reference_line() -> None:
     assert candidates[0]["path_pt"]["kind"] == "horizontal_line"
 
 
+def test_detects_single_token_force_label_near_horizontal_reference_line() -> None:
+    checks = [
+        {
+            "id": "coulomb_force_arrow",
+            "kind": "horizontal_line",
+            "role": "force_arrow",
+            "y_pdf_cm": 2.0,
+            "x_range_pdf_cm": [1.0, 4.0],
+            "clearance_pt": 3.0,
+            "text_phrases": [{"id": "coulomb", "words": ["Coulomb"]}],
+        }
+    ]
+    words = [_word("Coulomb", 40.0, 53.5, 70.0, 61.0)]
+
+    candidates = proximity.detect_label_path_proximity(words, (220.0, 140.0), checks)
+
+    assert candidates[0]["text"] == "Coulomb"
+    assert candidates[0]["text_source"] == "text_phrases"
+
+
 def test_ignores_label_beyond_clearance_from_horizontal_line() -> None:
     checks = [
         {

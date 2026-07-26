@@ -26,6 +26,7 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
     assert contract["publication_acceptance"] == "not_claimed"
     assert contract["summary"]["object_role_count"] == 13
     assert contract["summary"]["visible_connector_count"] == 7
+    assert contract["summary"]["label_ownership_count"] == 8
 
 
 def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() -> None:
@@ -40,6 +41,21 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "panel_a.polarization_measurement_instrument" in forbidden
     assert "panel_a.esvm_measurement_head" in forbidden
     assert "panel_a.corona_needle" in forbidden
+
+
+def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> None:
+    spec = _yaml("spec.yaml")
+    checks = {item["id"]: item for item in spec["process_stage_visibility_checks"]}
+
+    assert [stage["id"] for stage in checks["charge-isolation-stage-sequence"]["stages"]] == [
+        "charge",
+        "off-float",
+    ]
+    assert [stage["id"] for stage in checks["qualitative-response-sequence"]["stages"]] == [
+        "precondition",
+        "off-isolate",
+        "reversed-drive",
+    ]
 
 
 def test_fig5_contract_keeps_style_free_and_coordinates_free() -> None:

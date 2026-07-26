@@ -140,6 +140,8 @@ semantic_legibility:
       owner: panel_a.actuation_charge_state
     - label_id: panel_a.attraction_label
       owner: panel_a.attraction_force
+    - label_id: panel_a.off_float_label
+      owner: panel_a.off_float_transition
     - label_id: panel_b.coulomb_label
       owner: panel_b.coulomb_force
     - label_id: panel_b.maxwell_label

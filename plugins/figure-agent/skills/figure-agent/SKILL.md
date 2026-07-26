@@ -533,6 +533,28 @@ declared polarity. If polarity is absent, field traces may be shown only as
 thin, labeled, direction-neutral guides; never invent arrow direction or a
 ground connection to the floating specimen.
 
+For a clamped film, strip, beam, or cantilever, judge the rendered silhouette
+at final reduction rather than trusting its source path. The body must read as
+a finite-width material member visibly owned by its clamp, with two separated
+edge contours and a deliberate free-end termination. If it reduces to a
+hairpin, tube, field line, or paired wires, redraw the silhouette directly;
+do not compensate by adding texture, charges, arrows, or a reusable primitive.
+This is an outcome constraint, not a fixed Bezier recipe.
+
+For a multi-stage mechanism, a declared intermediate state such as source OFF,
+isolation, floating, or manual transfer must be visible as its own reader-facing
+state anchor inside the assigned panel. An arrow plus explanatory prose is not
+enough: declare fixture-local `process_stage_visibility_checks` with rendered
+stage phrases and reading order, then compile in strict mode. This check is a
+meaning/legibility guard, not a prescribed box, primitive, or coordinate recipe.
+
+Keep preparation time distinct from the observed response axis. If a long hold
+or conditioning phase is not part of the recorded response timebase, label it as
+compressed/off-axis preconditioning rather than giving it an apparently linear
+span that competes with the measured or qualitative relaxation interval. A
+schematic trace must not imply a duration ratio that the experiment does not
+support.
+
 Keep apparatus wiring and bias-source housings in a neutral structural tone when
 blue/red already carry shallow/deep or force-result meaning elsewhere in the
 figure. A conventional colored wire is still a palette-role collision if it can

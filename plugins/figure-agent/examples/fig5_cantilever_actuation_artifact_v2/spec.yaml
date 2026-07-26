@@ -9,20 +9,62 @@ visual_clash_cap: 8
 semantic_contract_required: true
 
 tex_assertions:
-  - id: coulomb-force-sign-reverses
+  - id: initial-force-points-toward-drive
     source_name: fig5_cantilever_actuation_artifact_v2.tex
-    anchor_style: coulombArrow
-    axis: x
-    direction: decreasing
-    minimum_matches: 1
-    require_unidirectional_arrow: true
-  - id: coulomb-force-sign-reverses-opposite
-    source_name: fig5_cantilever_actuation_artifact_v2.tex
-    anchor_style: coulombArrowReverse
+    anchor_style: forceToward
     axis: x
     direction: increasing
     minimum_matches: 1
     require_unidirectional_arrow: true
+  - id: reversed-coulomb-force-points-away-from-drive
+    source_name: fig5_cantilever_actuation_artifact_v2.tex
+    anchor_style: forceAway
+    axis: x
+    direction: decreasing
+    minimum_matches: 1
+    require_unidirectional_arrow: true
+
+# A declared intermediate stage must have a visible, ordered reader-facing
+# anchor. This is a semantic/render contract, not a primitive recipe.
+process_stage_visibility_checks:
+  - id: charge-isolation-stage-sequence
+    panel_id: A
+    reading_axis: x
+    minimum_stage_separation_pt: 28.0
+    stages:
+      - id: charge
+        text_phrases:
+          - id: charge-heading
+            words: [CHARGE]
+          - id: grounded-clip
+            words: [clip, GND]
+      - id: off-float
+        text_phrases:
+          - id: off-float-heading
+            words: ["OFF", "/", FLOAT]
+          - id: ground-open
+            words: [GND, open]
+  - id: qualitative-response-sequence
+    panel_id: D
+    reading_axis: x
+    minimum_stage_separation_pt: 12.0
+    stages:
+      - id: precondition
+        text_phrases:
+          - id: precondition-label
+            words: [precondition]
+          - id: compressed-label
+            words: [compressed]
+      - id: off-isolate
+        text_phrases:
+          - id: off-isolate-label
+            words: ["OFF"]
+          - id: isolate-label
+            words: [isolate]
+      - id: reversed-drive
+        text_phrases:
+          - id: reversed-drive-label
+            words: [reversed, drive]
 
 text_boundary_checks:
   - id: panel-separator-a-b
@@ -61,18 +103,21 @@ label_path_proximity_checks:
     x_range_pdf_cm: [8.68, 10.12]
     clearance_pt: 3.0
     text_phrases:
-      - id: polarity_coulomb
-        words: [polarity-dependent, Coulomb]
+      - id: coulomb_force
+        words: [Coulomb]
   - id: trace-switch-line
     kind: vertical_line
     role: polarity_switch
-    x_pdf_cm: 16.03
+    x_pdf_cm: 15.63
     y_range_pdf_cm: [1.08, 3.75]
     clearance_pt: 3.0
+    text_phrases:
+      - id: reversed_drive
+        words: [reversed, drive]
 
 panels:
   - id: A
-    caption: Noncontact actuation charge followed by source-off floating state
+    caption: Same-cantilever actuation charge followed by a visibly distinct source-off floating state
     bbox_pdf_cm: [0.00, 0.00, 4.25, 5.20]
   - id: B
     caption: Polarity reversal changes the sign of the Coulomb contribution
@@ -81,7 +126,7 @@ panels:
     caption: Same cantilever bends in opposite directions under reversed drive
     bbox_pdf_cm: [8.50, 0.00, 12.75, 5.20]
   - id: D
-    caption: Qualitative trace matched to the video-derived response sequence
+    caption: Qualitative response trace with compressed preconditioning outside the observed time scale
     bbox_pdf_cm: [12.75, 0.00, 17.80, 5.20]
 
 notes: |

@@ -22,13 +22,14 @@
   leader/.style={cGray!58!black,line width=0.40pt},
   processArrow/.style={-{Stealth[length=3.8pt,width=2.8pt]},cGray!70!black,
     line width=0.72pt},
-  coulombArrow/.style={-{Stealth[length=4.8pt,width=3.5pt]},cRed!88!black,
+  forceToward/.style={-{Stealth[length=4.8pt,width=3.5pt]},cRed!88!black,
     line width=1.02pt},
-  coulombArrowReverse/.style={-{Stealth[length=4.8pt,width=3.5pt]},cRed!88!black,
+  forceAway/.style={-{Stealth[length=4.8pt,width=3.5pt]},cRed!88!black,
     line width=1.02pt},
   fieldCue/.style={cGray!48!black,dashed,line width=0.45pt,line cap=round},
   baselineArrow/.style={-{Stealth[length=3.6pt,width=2.6pt]},cGray!62!black,
     line width=0.62pt},
+  gapDimension/.style={<->,cGray!55!black,line width=0.48pt},
   qmark/.style={circle,fill=cRed!80!black,draw=cRed!95!black,line width=0.25pt,
     inner sep=0pt,minimum size=1.55mm},
   axis/.style={-{Stealth[length=3.2pt,width=2.4pt]},cGray!72!black,
@@ -42,9 +43,9 @@
 \begin{scope}[shift={(0.00,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {a};
   \node[panelTitle,anchor=west] at (0.44,5.12)
-    {actuation charge \textrightarrow{} OFF / float};
+    {charge \textrightarrow{} isolate};
   \node[labelMute,anchor=west] at (0.44,4.78)
-    {$+5\,\mathrm{kV}$ hold (\textasciitilde20 min)};
+    {$+5\,\mathrm{kV}$, \textasciitilde20 min};
 
   % The charge state is the actuation geometry itself: a cantilever faces a
   % nearby drive electrode across an air gap and bends toward it.
@@ -53,12 +54,14 @@
   \draw[wire] (1.37,4.34)--(1.37,4.68);
   \node[labelMute,anchor=east] at (0.82,4.20) {clip};
   \node[labelMute,anchor=west] at (1.52,4.62) {GND};
-  \fill[polymer,rounded corners=0.45mm]
-    (1.20,4.05) .. controls (1.22,3.48) and (1.42,2.94) .. (2.26,2.25)
-    -- (2.40,2.43) .. controls (1.69,3.13) and (1.55,3.59) .. (1.58,4.05) -- cycle;
+  % A broad, blunt-ended film strip: the two edges deliberately do not read as
+  % a wire or field line at reduced size.
+  \fill[polymer,rounded corners=0.35mm]
+    (1.18,4.05) .. controls (1.17,3.42) and (1.48,2.86) .. (2.20,2.20)
+    -- (2.50,2.50) .. controls (1.86,3.18) and (1.67,3.68) .. (1.64,4.05) -- cycle;
   \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.45mm]
-    (1.20,4.05) .. controls (1.22,3.48) and (1.42,2.94) .. (2.26,2.25)
-    -- (2.40,2.43) .. controls (1.69,3.13) and (1.55,3.59) .. (1.58,4.05);
+    (1.18,4.05) .. controls (1.17,3.42) and (1.48,2.86) .. (2.20,2.20)
+    -- (2.50,2.50) .. controls (1.86,3.18) and (1.67,3.68) .. (1.64,4.05);
   \fill[cGray!28] (3.12,1.78) rectangle (3.42,4.34);
   \draw[apparatus] (3.12,1.78) rectangle (3.42,4.34);
   \node[labelStd,anchor=south,align=center] at (3.27,4.58) {drive electrode};
@@ -68,27 +71,32 @@
   \node[qmark] at (1.55,3.08) {};
   \node[qmark] at (1.88,2.67) {};
   \node[labelStd,text=cRed!80!black,anchor=west] at (0.26,3.04)
-    {trapped charge};
+    {trapped $q_{\mathrm{tr}}$};
   \draw[leader,cRed!58!black] (0.90,3.08)--(1.45,3.30);
 
-  % Short field cues make the air-gap coupling legible without drawing a
-  % capacitor or a measurement instrument as a separate object.
-  \draw[fieldCue] (2.39,2.32) .. controls (2.62,2.23) and (2.86,2.23) .. (3.10,2.32);
-  \draw[fieldCue] (2.37,2.43) .. controls (2.62,2.52) and (2.86,2.52) .. (3.10,2.43);
-  \draw[fieldCue] (2.46,2.12) .. controls (2.66,2.06) and (2.86,2.06) .. (3.10,2.12);
-  \node[labelMute,anchor=east] at (3.02,1.86)
-    {air gap};
-  \draw[coulombArrow] (2.08,3.02)--(2.84,3.02);
+  \draw[gapDimension] (2.45,2.18)--(3.08,2.18);
+  \node[labelMute,anchor=south] at (2.76,2.24) {air gap};
+  \draw[forceToward] (2.08,3.02)--(2.84,3.02);
   \node[labelStd,text=cRed!84!black,anchor=south] at (2.46,3.08)
     {attraction};
 
-  % Explicit OFF / float transition keeps the same specimen in the story;
-  % no second sample or acrylic support is introduced.
-  \draw[processArrow] (2.18,1.58)--(2.18,1.16);
-  \node[labelMute,anchor=west] at (2.42,1.46) {GND disconnected};
-  \node[labelMute,anchor=west] at (2.42,1.10) {floating; ref. potential};
-  \node[labelMute,anchor=west] at (0.84,0.76)
-    {same specimen; charge retained after isolation};
+  % The lower rail is an electrical-state transition for the same mounted
+  % cantilever, not a second specimen or a motion stage.
+  \node[labelStd,anchor=west] at (0.42,1.42) {CHARGE};
+  \node[labelMute,anchor=west] at (0.42,1.07) {clip GND};
+  \draw[wire] (0.58,0.78)--(1.18,0.78);
+  \draw[wire] (0.88,0.78)--(0.88,0.60);
+  \draw[wire] (0.67,0.56)--(1.09,0.56);
+  \draw[wire] (0.73,0.49)--(1.03,0.49);
+  \draw[wire] (0.80,0.42)--(0.96,0.42);
+  \draw[processArrow] (1.34,0.86)--(2.26,0.86);
+  \node[labelStd,anchor=west] at (2.42,1.42) {OFF / FLOAT};
+  \node[labelMute,anchor=west] at (2.42,1.07) {GND open\quad $q_{\mathrm{tr}}$ stays};
+  \draw[wire] (2.58,0.78)--(2.88,0.78);
+  \draw[wire] (3.02,0.78)--(3.52,0.78);
+  \draw[wire] (2.88,0.78)--(3.03,0.95);
+  \fill[white] (2.94,0.78) circle (0.52pt);
+  \draw[cGray!78!black,line width=0.60pt] (2.94,0.78) circle (0.52pt);
 \end{scope}
 
 % ================================================================
@@ -107,28 +115,28 @@
   \draw[apparatus] (0.96,4.12) rectangle (1.98,4.40);
   \draw[wire] (1.47,4.40)--(1.47,4.76);
   \node[labelMute,anchor=west] at (1.72,4.76) {floating clip};
-  \fill[polymer,rounded corners=0.5mm]
-    (1.30,4.12) .. controls (1.30,3.34) and (1.05,2.58) .. (0.82,1.52)
-    -- (1.08,1.42) .. controls (1.56,2.60) and (1.78,3.40) .. (1.72,4.12) -- cycle;
+  \fill[polymer,rounded corners=0.35mm]
+    (1.24,4.12) .. controls (1.22,3.32) and (0.95,2.52) .. (0.72,1.46)
+    -- (1.10,1.38) .. controls (1.54,2.54) and (1.78,3.38) .. (1.70,4.12) -- cycle;
   \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.5mm]
-    (1.30,4.12) .. controls (1.30,3.34) and (1.05,2.58) .. (0.82,1.52)
-    -- (1.08,1.42) .. controls (1.56,2.60) and (1.78,3.40) .. (1.72,4.12);
+    (1.24,4.12) .. controls (1.22,3.32) and (0.95,2.52) .. (0.72,1.46)
+    -- (1.10,1.38) .. controls (1.54,2.54) and (1.78,3.38) .. (1.70,4.12);
   \node[qmark] at (1.35,3.28) {};
   \node[qmark] at (1.17,2.53) {};
   \node[qmark] at (0.97,1.90) {};
-  \node[labelStd,text=cRed!80!black,anchor=west] at (0.20,3.18)
+  \node[labelStd,text=cRed!80!black,anchor=west] at (0.20,3.52)
     {$q_{\mathrm{tr}}$};
-  \draw[leader,cRed!58!black] (0.72,3.12)--(1.18,2.65);
+  \draw[leader,cRed!58!black] (0.72,3.46)--(1.18,2.65);
 
   % At the reversed drive polarity the two force terms are drawn separately
   % from the same specimen position: Maxwell still points toward the driven
   % electrode, while the trapped-charge Coulomb term points away.
   \draw[baselineArrow] (1.74,2.98)--(3.08,2.98);
-  \node[labelStd,anchor=south,text=cGray!74!black] at (2.38,3.04)
+  \node[labelStd,anchor=south east,text=cGray!74!black] at (3.06,3.04)
     {Maxwell attraction};
-  \draw[coulombArrow] (1.10,2.48)--(0.34,2.48);
-  \node[labelStd,text=cRed!84!black,anchor=south west] at (0.18,2.54)
-    {$F_C\propto q_{\mathrm{tr}}E$};
+  \draw[forceAway] (1.10,2.48)--(0.34,2.48);
+  \node[labelStd,text=cRed!84!black,anchor=north west] at (0.02,2.94)
+    {Coulomb};
   \node[labelMute,align=center] at (2.22,0.88)
     {$+V$: both terms attract;\\[-0.5pt]after reversal: Coulomb opposes Maxwell};
 \end{scope}
@@ -139,45 +147,43 @@
 % Panel C
 \begin{scope}[shift={(8.90,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {c};
-  \node[panelTitle,anchor=west] at (0.44,5.12) {opposite bending after reversal};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {same cantilever, opposite bending};
 
-  % Upper state: positive angle.
-  \node[labelStd,anchor=west] at (0.20,4.52) {$+V$ state};
+  % The upper observed state bends toward the driven electrode during the
+  % grounded +5 kV actuation hold.
+  \node[labelStd,anchor=west] at (0.20,4.52) {$+5\,\mathrm{kV}$; clip GND};
   \fill[cGray!28] (3.42,3.34) rectangle (3.66,4.48);
   \draw[apparatus] (3.42,3.34) rectangle (3.66,4.48);
   \fill[cGray!34] (1.08,4.20) rectangle (1.92,4.42);
   \draw[apparatus] (1.08,4.20) rectangle (1.92,4.42);
   \draw[cGray!45!black,dashed,line width=0.62pt]
     (1.50,4.20)--(1.50,3.30);
-  \fill[polymer,rounded corners=0.45mm]
-    (1.36,4.20) .. controls (1.28,3.88) and (1.12,3.62) .. (0.72,3.32)
-    -- (0.86,3.18) .. controls (1.42,3.46) and (1.66,3.84) .. (1.64,4.20) -- cycle;
+  \fill[polymer,rounded corners=0.35mm]
+    (1.26,4.20) .. controls (1.34,3.80) and (1.70,3.50) .. (2.30,3.18)
+    -- (2.58,3.52) .. controls (1.96,3.84) and (1.66,4.10) .. (1.66,4.20) -- cycle;
   \draw[cAmber!72!black,line width=0.92pt]
-    (1.36,4.20) .. controls (1.28,3.88) and (1.12,3.62) .. (0.72,3.32)
-    -- (0.86,3.18) .. controls (1.42,3.46) and (1.66,3.84) .. (1.64,4.20);
-  \draw[coulombArrow] (1.08,3.56)--(0.52,3.56);
-  \node[labelStd,text=cRed!84!black,anchor=west] at (1.88,3.53) {$+\theta$};
-  \node[labelMute,anchor=east] at (3.28,3.90) {video state};
+    (1.26,4.20) .. controls (1.34,3.80) and (1.70,3.50) .. (2.30,3.18)
+    -- (2.58,3.52) .. controls (1.96,3.84) and (1.66,4.10) .. (1.66,4.20);
+  \node[labelStd,text=cBlue!82!black,anchor=west] at (2.30,3.70) {$+\theta$};
 
-  % Lower state: negative angle, mirrored response.
-  \node[labelStd,anchor=west] at (0.20,2.30) {$-V$ after reversal};
+  % After isolation and polarity reversal, the observed cantilever bends away
+  % from the same electrode.
+  \node[labelStd,anchor=west] at (0.20,2.30) {$-5\,\mathrm{kV}$; clip floating};
   \fill[cGray!28] (3.42,1.12) rectangle (3.66,2.26);
   \draw[apparatus] (3.42,1.12) rectangle (3.66,2.26);
   \fill[cGray!34] (1.08,1.98) rectangle (1.92,2.20);
   \draw[apparatus] (1.08,1.98) rectangle (1.92,2.20);
   \draw[cGray!45!black,dashed,line width=0.62pt]
     (1.50,1.98)--(1.50,1.08);
-  \fill[polymer,rounded corners=0.45mm]
-    (1.36,1.98) .. controls (1.48,1.66) and (1.72,1.40) .. (2.30,1.12)
-    -- (2.42,1.28) .. controls (1.86,1.56) and (1.62,1.82) .. (1.64,1.98) -- cycle;
+  \fill[polymer,rounded corners=0.35mm]
+    (1.26,1.98) .. controls (1.16,1.58) and (0.92,1.28) .. (0.56,1.02)
+    -- (0.86,0.72) .. controls (1.46,1.04) and (1.72,1.48) .. (1.66,1.98) -- cycle;
   \draw[cAmber!72!black,line width=0.92pt]
-    (1.36,1.98) .. controls (1.48,1.66) and (1.72,1.40) .. (2.30,1.12)
-    -- (2.42,1.28) .. controls (1.86,1.56) and (1.62,1.82) .. (1.64,1.98);
-  \draw[coulombArrowReverse] (1.96,1.57)--(2.62,1.57);
-  \node[labelStd,text=cRed!84!black,anchor=west] at (1.88,1.86) {$-\theta$};
-  \node[labelMute,anchor=east] at (3.28,1.68) {opposite direction};
-  \node[labelMute,align=center] at (2.14,0.70)
-    {same specimen; only drive polarity is reversed};
+    (1.26,1.98) .. controls (1.16,1.58) and (0.92,1.28) .. (0.56,1.02)
+    -- (0.86,0.72) .. controls (1.46,1.04) and (1.72,1.48) .. (1.66,1.98);
+  \node[labelStd,text=cBlue!82!black,anchor=west] at (0.38,1.48) {$-\theta$};
+  \node[labelMute,anchor=south east,align=right] at (3.92,0.58)
+    {same cantilever; only drive polarity changes};
 \end{scope}
 
 % ================================================================
@@ -196,26 +202,33 @@
   \node[labelMute,anchor=east] at (0.56,3.63) {$+\theta$};
   \node[labelMute,anchor=east] at (0.56,1.46) {$-\theta$};
 
-  % Qualitative trace: the force reverses at the polarity switch, while the
-  % mechanical angle crosses zero continuously, reaches a negative maximum,
-  % and then slowly returns toward the Maxwell-dominated direction.
+  % The 20-minute charge hold is preparation, not a calibrated interval on the
+  % response axis.  The observed motion starts from its preconditioned state.
+  \node[labelMute,anchor=west] at (0.62,4.42)
+    {precondition\quad 20 min\quad compressed};
+  % The charging hold is outside the observed-response timebase.  The short
+  % grey cue and axis break prevent a 20-minute plateau from being compared to
+  % the post-reversal mechanical response.
+  \draw[cGray!58!black,line width=0.72pt] (0.74,3.62)--(0.98,3.62);
   \draw[cBlue!82!black,line width=1.05pt]
-    (0.74,2.55) .. controls (0.79,3.42) and (0.92,3.64) .. (1.20,3.68)
-    .. controls (1.72,3.72) and (2.28,3.70) .. (2.62,3.66)
-    .. controls (2.66,3.52) and (2.68,2.86) .. (2.72,2.52)
-    .. controls (2.88,1.76) and (3.08,1.36) .. (3.30,1.45)
-    .. controls (3.62,1.62) and (3.88,2.34) .. (4.02,2.74);
-  \draw[cGray!42!black,dashed,line width=0.55pt] (2.68,1.04)--(2.68,4.08);
-  \draw[cGray!42!black,dashed,line width=0.45pt] (2.40,1.04)--(2.40,4.08);
-  \fill[cRed!85!black] (2.68,2.52) circle (0.75pt);
-  \node[labelStd,anchor=south west] at (0.84,3.72) {$+5\,\mathrm{kV}$};
-  \node[labelStd,anchor=south] at (1.98,4.50) {OFF};
-  \node[labelStd,anchor=south west] at (2.74,3.72) {$-5\,\mathrm{kV}$};
-  \node[labelStd,text=cRed!84!black,anchor=south west,align=left] at (2.74,3.04)
-    {polarity\\[-0.5pt]reversal};
-  \node[labelMute,anchor=north] at (2.54,0.98) {$\sim20\,\mathrm{s}$ disconnect};
+    (1.30,3.62) .. controls (1.52,3.63) and (1.70,3.62) .. (1.88,3.56)
+    .. controls (2.06,3.36) and (2.24,2.86) .. (2.42,2.52)
+    .. controls (2.60,1.74) and (2.88,1.30) .. (3.16,1.38)
+    .. controls (3.58,1.54) and (3.86,2.22) .. (4.02,2.50);
+  \draw[white,line width=2.1pt] (1.01,2.52)--(1.23,2.52);
+  \draw[cGray!72!black,line width=0.58pt] (1.04,2.42)--(1.12,2.62);
+  \draw[cGray!72!black,line width=0.58pt] (1.14,2.42)--(1.22,2.62);
+  \draw[cGray!42!black,dashed,line width=0.45pt] (1.88,1.04)--(1.88,4.08);
+  \draw[cGray!42!black,dashed,line width=0.55pt] (2.04,1.04)--(2.04,4.08);
+  \fill[cRed!85!black] (2.04,3.40) circle (0.75pt);
+  \node[labelStd,anchor=south east] at (1.82,4.02) {OFF};
+  \node[labelMute,anchor=south east] at (1.82,3.78) {isolate};
+  \node[labelStd,text=cRed!84!black,anchor=south west] at (2.10,3.04)
+    {reversed drive};
+  \draw[gapDimension] (1.88,1.24)--(2.04,1.24);
+  \node[labelMute,anchor=north] at (1.96,1.16) {$\sim20\,\mathrm{s}$};
   \node[labelMute,align=center] at (2.05,0.52)
-    {continuous bend; long-time recovery\\[-0.5pt]toward Maxwell attraction};
+    {continuous bend; slow recovery after reversal};
 \end{scope}
 
 % Process separators: guide the eye without turning the figure into cards.
