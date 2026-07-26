@@ -16,6 +16,7 @@ required_objects:
   - panel_c.maxwell_baseline
   - panel_c.coulomb_force
   - panel_c.reverse_drive
+  - panel_c.conditional_reverse_bend
   - panel_d.time_origin
   - panel_d.response_trace
   - panel_d.polarity_switch
@@ -38,6 +39,7 @@ protected_relations:
   - trapped_charge_remains_on_same_specimen_after_isolation
   - coulomb_term_changes_sign_with_drive_polarity
   - maxwell_baseline_is_polarity_independent
+  - conditional_reverse_bend_is_not_observed_snapshot
   - response_trace_is_qualitative_not_calibrated_data
 
 repair:
@@ -77,6 +79,9 @@ semantic_legibility:
     - object_id: panel_c.reverse_drive
       declared_role: polarity_reversal_perturbation
       forbidden_readings: [observed_force_vector]
+    - object_id: panel_c.conditional_reverse_bend
+      declared_role: conditional_reverse_bend_response
+      forbidden_readings: [independent_second_sample, observed_comparison]
     - object_id: panel_d.response_trace
       declared_role: qualitative_bend_trace
       forbidden_readings: [calibrated_current_waveform]

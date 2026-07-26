@@ -24,7 +24,7 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 13
+    assert contract["summary"]["object_role_count"] == 14
     assert contract["summary"]["visible_connector_count"] == 7
     assert contract["summary"]["label_ownership_count"] == 9
     assert contract["summary"]["panel_story_role_count"] == 4
@@ -68,6 +68,18 @@ def test_fig5_marks_reverse_force_as_conditional_after_isolation() -> None:
         "perturbation",
         "response",
     ]
+
+
+def test_fig5_declares_the_reverse_bend_as_conditional_not_a_second_snapshot() -> None:
+    contract = _yaml("semantic_contract.yaml")
+    roles = {
+        item["object_id"]: item
+        for item in contract["semantic_legibility"]["object_roles"]
+    }
+
+    reverse_bend = roles["panel_c.conditional_reverse_bend"]
+    assert reverse_bend["declared_role"] == "conditional_reverse_bend_response"
+    assert "observed_comparison" in reverse_bend["forbidden_readings"]
 
 
 def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> None:

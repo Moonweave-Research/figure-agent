@@ -553,6 +553,13 @@ hairpin, tube, field line, or paired wires, redraw the silhouette directly;
 do not compensate by adding texture, charges, arrows, or a reusable primitive.
 This is an outcome constraint, not a fixed Bezier recipe.
 
+When a force-competition panel needs to communicate a conditional bend direction,
+make that direction visible in one condition-owned cantilever silhouette. An
+unbent member plus opposing arrows leaves the stated response implicit, while a
+duplicated before/after cartoon can falsely read as two observations. Keep the
+conditional status explicit in the surrounding text/force grammar and do not
+infer an observed video frame from the bent silhouette.
+
 For a multi-stage mechanism, a declared intermediate state such as source OFF,
 isolation, floating, or manual transfer must be visible as its own reader-facing
 state anchor inside the assigned panel. An arrow plus explanatory prose is not
