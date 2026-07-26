@@ -29,3 +29,6 @@ and the actual time ordering in D separate.
 - C must label the force balance as conditional; its one reverse-bent member
   may not imply an observed force vector or a second measured bend snapshot.
 - D remains qualitative until an exact data/video binding is selected.
+- A zero blocking count is not a visually clean result when the clash report
+  still contains report-only candidates; inspect those candidates at full and
+  reduction scale before closing the loop.

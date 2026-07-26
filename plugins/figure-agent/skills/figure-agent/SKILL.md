@@ -553,6 +553,11 @@ hairpin, tube, field line, or paired wires, redraw the silhouette directly;
 do not compensate by adding texture, charges, arrows, or a reusable primitive.
 This is an outcome constraint, not a fixed Bezier recipe.
 
+Treat `blocking_total: 0` as a machine gate result, not as proof of a clean
+render. If the visual-clash report contains report-only or near-miss candidates,
+inspect each candidate in the full figure and at final reduction before closing
+the loop; a report-only label crossing can still be a real publication defect.
+
 When a force-competition panel needs to communicate a conditional bend direction,
 make that direction visible in one condition-owned cantilever silhouette. An
 unbent member plus opposing arrows leaves the stated response implicit, while a
