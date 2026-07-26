@@ -1,6 +1,6 @@
 # Current sulfur-paper figure state and next-session handoff
 
-**Updated:** 2026-07-26
+**Updated:** 2026-07-27
 **Status:** Fig1 development baseline is frozen for now; it is not publication-final.
 
 This document is the session handoff for the sulfur/polymer figure work. It is
@@ -62,7 +62,7 @@ plugins/figure-agent/examples/fig1_updated_agent_redraw_v1/review/current-candid
 It binds the candidate source to:
 
 ```text
-source_sha256: sha256:6f0a40a221da752f0fdefe34238c74f9bfe8513e5f1e026bbac774f7d3670741
+source_sha256: sha256:4a0760481cde0f85893a7a0d1594eafa8685b7b9d96906cc7b563321c92356cf
 promotion_state: candidate_only
 human_gate: pending
 ```
@@ -108,6 +108,7 @@ Evidence below is from the candidate build directory above:
 | Evidence | State |
 |---|---|
 | strict compile | `passed` |
+| physical print-size contract | `passed` (`166.8 x 170.0 mm` target; `4.43 pt` scaled minimum) |
 | physics grounding | `grounded` |
 | text-boundary declarations | `checked=11`, `total=0` |
 | label/path declarations | `checked=9`, `total=0` |

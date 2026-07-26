@@ -180,6 +180,19 @@ trap cleanup_failed_build ERR
 rm -f "$PDF_OUT" "$PNG_OUT"
 "$ENGINE" -interaction=nonstopmode -jobname="$BASE" -output-directory="$BUILD_DIR" "$COMPILE_FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
+# Enforce the fixture's physical print contract in strict mode. Legacy
+# fixtures without a print contract remain reportable in normal dogfood mode,
+# but a strict candidate cannot pass without declared natural geometry,
+# height-limited target, and print-scale font floor.
+PRINT_SIZE_ARGS=()
+if [[ "${FIGURE_AGENT_STRICT:-}" == "1" ]]; then
+  PRINT_SIZE_ARGS=(--require-contract)
+fi
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_print_size_contract.py" \
+  --pdf "$PDF_OUT" \
+  --tex "$FILE" \
+  --json-output "${BUILD_DIR}/print_size_contract.json" \
+  ${PRINT_SIZE_ARGS[@]+"${PRINT_SIZE_ARGS[@]}"}
 # The PDF/PNG now exist and are valid. The remaining checkers are report-only
 # unless FIGURE_AGENT_STRICT=1. In report-only mode, a best-effort checker that
 # exits non-zero (e.g. a poppler decode hiccup on a custom-font PDF) must not

@@ -4,11 +4,12 @@
   "candidate_id": "comparable-v3-repair-c5",
   "candidate_root": "review/failure-first/comparable-v3-repair-c5",
   "source_path": "repaired.tex",
-  "source_sha256": "sha256:6f0a40a221da752f0fdefe34238c74f9bfe8513e5f1e026bbac774f7d3670741",
+  "source_sha256": "sha256:4a0760481cde0f85893a7a0d1594eafa8685b7b9d96906cc7b563321c92356cf",
   "evidence": {
     "render_pdf": "build/repaired.pdf",
     "render_png": "build/repaired.png",
     "strict_status": "build/strict_status.json",
+    "print_size_contract": "build/print_size_contract.json",
     "physics_grounding": "build/physics_grounding.json",
     "text_boundary_clash": "build/text_boundary_clash.json",
     "label_path_proximity": "build/label_path_proximity.json"

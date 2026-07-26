@@ -909,6 +909,11 @@ redirect to matplotlib?"):
 - Style Lock source: `styles/polymer-paper-preamble.sty` (\IsoCharge, \GradSlab, \IsoBlock, \IsoConeTip)
 - Compile chain: `scripts/compile.sh` (lualatex; optional `FIGURE_AGENT_STRICT=1`
   hard gate)
+- Physical print contract: every strict fixture must declare
+  `spec.yaml.final_size_contract` with `natural_size_mm`, `target_width_mm`,
+  `max_height_mm`, and `min_print_font_pt`. The compile gate checks the PDF
+  page geometry and the smallest explicit `\\fontsize` declaration at the
+  height-limited placement scale. A fresh PNG alone is not print-size evidence.
 - Checks: `fig-agent helper check_collisions.py`, `fig-agent helper check_visual_clash.py`
 - Perception pack: `scripts/perception_pack.py` writes
   `build/perception/extract.yaml` and `build/perception/overlay.png`

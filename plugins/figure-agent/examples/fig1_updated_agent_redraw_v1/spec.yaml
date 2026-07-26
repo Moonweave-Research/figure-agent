@@ -8,6 +8,9 @@ final_size_contract:
   natural_size_mm: [150.7, 153.6]
   target_width_mm: 166.8
   max_height_mm: 170.0
+  min_print_font_pt: 4.4
+  scale_basis: height_limited
+  font_floor_scope: explicit_tex_fontsize_declarations
   double_column_reference_mm:
     nature_communications: 180.0
     nature_figure_guide: 183.0
