@@ -41,7 +41,10 @@
 % Panel A
 \begin{scope}[shift={(0.00,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {a};
-  \node[panelTitle,anchor=west] at (0.44,5.12) {charge \textrightarrow{} OFF / float};
+  \node[panelTitle,anchor=west] at (0.44,5.12)
+    {actuation charge \textrightarrow{} OFF / float};
+  \node[labelMute,anchor=west] at (0.44,4.78)
+    {$+5\,\mathrm{kV}$ hold (\textasciitilde20 min)};
 
   % The charge state is the actuation geometry itself: a cantilever faces a
   % nearby drive electrode across an air gap and bends toward it.
@@ -49,6 +52,7 @@
   \draw[apparatus] (0.92,4.05) rectangle (1.82,4.34);
   \draw[wire] (1.37,4.34)--(1.37,4.68);
   \node[labelMute,anchor=east] at (0.82,4.20) {clip};
+  \node[labelMute,anchor=west] at (1.52,4.62) {GND};
   \fill[polymer,rounded corners=0.45mm]
     (1.20,4.05) .. controls (1.22,3.48) and (1.42,2.94) .. (2.26,2.25)
     -- (2.40,2.43) .. controls (1.69,3.13) and (1.55,3.59) .. (1.58,4.05) -- cycle;
@@ -59,7 +63,7 @@
   \draw[apparatus] (3.12,1.78) rectangle (3.42,4.34);
   \node[labelStd,anchor=south,align=center] at (3.27,4.58) {drive electrode};
   \node[labelStd,text=cRed!82!black,anchor=west] at (3.52,4.12)
-    {$V_{\mathrm{drive}}$};
+    {$+5\,\mathrm{kV}$};
   \node[qmark] at (1.38,3.57) {};
   \node[qmark] at (1.55,3.08) {};
   \node[qmark] at (1.88,2.67) {};
@@ -72,26 +76,19 @@
   \draw[fieldCue] (2.39,2.32) .. controls (2.62,2.23) and (2.86,2.23) .. (3.10,2.32);
   \draw[fieldCue] (2.37,2.43) .. controls (2.62,2.52) and (2.86,2.52) .. (3.10,2.43);
   \draw[fieldCue] (2.46,2.12) .. controls (2.66,2.06) and (2.86,2.06) .. (3.10,2.12);
-  \node[labelMute,anchor=east] at (3.02,1.68)
+  \node[labelMute,anchor=east] at (3.02,1.86)
     {air gap};
   \draw[coulombArrow] (2.08,3.02)--(2.84,3.02);
   \node[labelStd,text=cRed!84!black,anchor=south] at (2.46,3.08)
     {attraction};
 
-  % Explicit OFF / float transition keeps the same specimen in the story.
+  % Explicit OFF / float transition keeps the same specimen in the story;
+  % no second sample or acrylic support is introduced.
   \draw[processArrow] (2.18,1.58)--(2.18,1.16);
-  \node[labelMute,anchor=west] at (2.38,1.40) {OFF / float};
-  \fill[cGray!34] (0.82,1.08) rectangle (1.52,1.28);
-  \draw[apparatus] (0.82,1.08) rectangle (1.52,1.28);
-  \draw[wire] (1.17,1.08)--(1.17,0.78);
-  \fill[polymer,rounded corners=0.22mm] (1.10,0.78) rectangle (1.24,0.98);
-  \draw[cAmber!72!black,line width=0.72pt] (1.10,0.78)--(1.10,0.98);
-  \node[qmark] at (1.17,0.88) {};
-  \node[circle,draw=cGray!72!black,fill=white,inner sep=0pt,minimum size=1.5mm]
-    at (1.17,1.47) {};
-  \node[labelStd,anchor=west] at (1.36,1.47) {floating};
-  \node[labelMute,anchor=west] at (1.32,0.66)
-    {charge retained after isolation};
+  \node[labelMute,anchor=west] at (2.42,1.46) {GND disconnected};
+  \node[labelMute,anchor=west] at (2.42,1.10) {floating; ref. potential};
+  \node[labelMute,anchor=west] at (0.84,0.76)
+    {same specimen; charge retained after isolation};
 \end{scope}
 
 % ================================================================
@@ -123,14 +120,17 @@
     {$q_{\mathrm{tr}}$};
   \draw[leader,cRed!58!black] (0.72,3.12)--(1.18,2.65);
 
-  % Polarity-dependent term; the polarity-independent Maxwell baseline is
-  % summarized in the muted footer rather than competing with this arrow.
-  \draw[coulombArrow] (1.10,2.52)--(0.34,2.52);
-  \node[labelStd,text=cRed!84!black,anchor=south west] at (0.18,2.58)
+  % At the reversed drive polarity the two force terms are drawn separately
+  % from the same specimen position: Maxwell still points toward the driven
+  % electrode, while the trapped-charge Coulomb term points away.
+  \draw[baselineArrow] (1.74,2.98)--(3.08,2.98);
+  \node[labelStd,anchor=south,text=cGray!74!black] at (2.38,3.04)
+    {Maxwell attraction};
+  \draw[coulombArrow] (1.10,2.48)--(0.34,2.48);
+  \node[labelStd,text=cRed!84!black,anchor=south west] at (0.18,2.54)
     {$F_C\propto q_{\mathrm{tr}}E$};
-  \draw[processArrow] (2.05,2.05)--(2.05,1.62);
   \node[labelMute,align=center] at (2.22,0.88)
-    {Maxwell $E^2$: polarity-independent;\\[-0.5pt]Coulomb term reverses with $E$};
+    {$+V$: both terms attract;\\[-0.5pt]after reversal: Coulomb opposes Maxwell};
 \end{scope}
 
 % ================================================================
@@ -196,21 +196,26 @@
   \node[labelMute,anchor=east] at (0.56,3.63) {$+\theta$};
   \node[labelMute,anchor=east] at (0.56,1.46) {$-\theta$};
 
-  % Qualitative trace: positive plateau, abrupt switch, negative excursion,
-  % then slow recovery. It is not a quantitative data plot.
+  % Qualitative trace: the force reverses at the polarity switch, while the
+  % mechanical angle crosses zero continuously, reaches a negative maximum,
+  % and then slowly returns toward the Maxwell-dominated direction.
   \draw[cBlue!82!black,line width=1.05pt]
     (0.74,2.55) .. controls (0.79,3.42) and (0.92,3.64) .. (1.20,3.68)
     .. controls (1.72,3.72) and (2.28,3.70) .. (2.62,3.66)
-    .. controls (2.68,3.52) and (2.68,2.85) .. (2.73,2.20)
-    .. controls (2.82,1.56) and (3.12,1.42) .. (3.36,1.58)
-    .. controls (3.65,1.78) and (3.86,2.20) .. (3.98,2.50);
+    .. controls (2.66,3.52) and (2.68,2.86) .. (2.72,2.52)
+    .. controls (2.88,1.76) and (3.08,1.36) .. (3.30,1.45)
+    .. controls (3.62,1.62) and (3.88,2.34) .. (4.02,2.74);
   \draw[cGray!42!black,dashed,line width=0.55pt] (2.68,1.04)--(2.68,4.08);
+  \draw[cGray!42!black,dashed,line width=0.45pt] (2.40,1.04)--(2.40,4.08);
   \fill[cRed!85!black] (2.68,2.52) circle (0.75pt);
-  \node[labelStd,anchor=south west] at (0.84,3.72) {$+V$};
+  \node[labelStd,anchor=south west] at (0.84,3.72) {$+5\,\mathrm{kV}$};
+  \node[labelStd,anchor=south] at (1.98,4.50) {OFF};
+  \node[labelStd,anchor=south west] at (2.74,3.72) {$-5\,\mathrm{kV}$};
   \node[labelStd,text=cRed!84!black,anchor=south west,align=left] at (2.74,3.04)
     {polarity\\[-0.5pt]reversal};
-  \node[labelMute,align=center] at (2.32,0.52)
-    {abrupt sign change\\[-0.5pt]then slower relaxation};
+  \node[labelMute,anchor=north] at (2.54,0.98) {$\sim20\,\mathrm{s}$ disconnect};
+  \node[labelMute,align=center] at (2.05,0.52)
+    {continuous bend; long-time recovery\\[-0.5pt]toward Maxwell attraction};
 \end{scope}
 
 % Process separators: guide the eye without turning the figure into cards.

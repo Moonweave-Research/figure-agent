@@ -24,8 +24,8 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 12
-    assert contract["summary"]["visible_connector_count"] == 6
+    assert contract["summary"]["object_role_count"] == 13
+    assert contract["summary"]["visible_connector_count"] == 7
 
 
 def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() -> None:

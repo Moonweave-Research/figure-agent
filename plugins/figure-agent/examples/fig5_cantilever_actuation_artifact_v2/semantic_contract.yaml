@@ -13,6 +13,7 @@ required_objects:
   - panel_a.attraction_force
   - panel_a.off_float_transition
   - panel_b.trapped_charge
+  - panel_b.maxwell_baseline
   - panel_b.coulomb_force
   - panel_c.forward_bend
   - panel_c.reverse_bend
@@ -71,6 +72,9 @@ semantic_legibility:
     - object_id: panel_b.coulomb_force
       declared_role: polarity_dependent_force
       forbidden_readings: [annotation_leader]
+    - object_id: panel_b.maxwell_baseline
+      declared_role: polarity_independent_attraction
+      forbidden_readings: [decorative_baseline, second_coulomb_force]
     - object_id: panel_c.forward_bend
       declared_role: observed_bend_state
       forbidden_readings: [abstract_direction_arrow]
@@ -104,6 +108,11 @@ semantic_legibility:
       to_object: panel_b.coulomb_force
       declared_role: force_direction
       render_style: force_directional
+    - connector_id: panel_b.maxwell_baseline_is_separate_term
+      from_object: panel_b.maxwell_baseline
+      to_object: panel_b.coulomb_force
+      declared_role: force_decomposition
+      render_style: force_directional
     - connector_id: panel_d.switch_owns_bend_reversal
       from_object: panel_d.polarity_switch
       to_object: panel_c.reverse_bend
@@ -133,6 +142,8 @@ semantic_legibility:
       owner: panel_a.attraction_force
     - label_id: panel_b.coulomb_label
       owner: panel_b.coulomb_force
+    - label_id: panel_b.maxwell_label
+      owner: panel_b.maxwell_baseline
     - label_id: panel_d.polarity_label
       owner: panel_d.polarity_switch
     - label_id: panel_d.trace_label
