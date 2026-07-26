@@ -116,9 +116,30 @@ def test_plan_consistency_resolves_declared_current_candidate_pointer(
 ) -> None:
     examples = tmp_path / "examples"
     _write_fixture(examples, "mapped")
+    candidate_root = examples / "mapped/review/candidate"
+    candidate_root.mkdir(parents=True)
+    (candidate_root / "repaired.tex").write_text("% candidate\n", encoding="utf-8")
     pointer = examples / "mapped/review/current-candidate.json"
-    pointer.parent.mkdir(parents=True)
-    pointer.write_text(json.dumps({"fixture": "mapped"}), encoding="utf-8")
+    pointer.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.current-candidate-pointer.v1",
+                "fixture": "mapped",
+                "candidate_id": "candidate-1",
+                "candidate_root": "review/candidate",
+                "source_path": "repaired.tex",
+                "evidence": {
+                    "render_pdf": "build/repaired.pdf",
+                    "render_png": "build/repaired.png",
+                    "strict_status": "build/strict_status.json",
+                    "physics_grounding": "build/physics_grounding.json",
+                    "text_boundary_clash": "build/text_boundary_clash.json",
+                    "label_path_proximity": "build/label_path_proximity.json",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     plan_map = tmp_path / "paper_figure_map.yaml"
     _write_map(plan_map, include_extra_classification=False)
     payload = yaml.safe_load(plan_map.read_text(encoding="utf-8"))
@@ -128,6 +149,75 @@ def test_plan_consistency_resolves_declared_current_candidate_pointer(
     report = check_plan_consistency.build_report(examples, plan_map)
 
     assert report["blocking_count"] == 0
+
+
+def test_plan_consistency_rejects_invalid_current_candidate_pointer_schema(
+    tmp_path: Path,
+) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    pointer = examples / "mapped/review/current-candidate.json"
+    pointer.parent.mkdir(parents=True)
+    pointer.write_text(json.dumps({"schema": "wrong", "fixture": "mapped"}), encoding="utf-8")
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map, include_extra_classification=False)
+    payload = yaml.safe_load(plan_map.read_text(encoding="utf-8"))
+    payload["figures"]["fig1"]["source_pointer"] = "review/current-candidate.json"
+    plan_map.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+    report = check_plan_consistency.build_report(examples, plan_map)
+
+    assert report["blocking_count"] == 1
+    assert any(
+        finding["code"] == "invalid_source_pointer_schema"
+        and finding["fixture"] == "mapped"
+        for finding in report["findings"]
+    )
+
+
+def test_plan_consistency_rejects_current_candidate_source_hash_mismatch(
+    tmp_path: Path,
+) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    candidate_root = examples / "mapped/review/candidate"
+    candidate_root.mkdir(parents=True)
+    (candidate_root / "repaired.tex").write_text("% candidate\n", encoding="utf-8")
+    pointer = examples / "mapped/review/current-candidate.json"
+    pointer.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.current-candidate-pointer.v1",
+                "fixture": "mapped",
+                "candidate_root": "review/candidate",
+                "source_path": "repaired.tex",
+                "source_sha256": "sha256:" + "0" * 64,
+                "evidence": {
+                    "render_pdf": "build/repaired.pdf",
+                    "render_png": "build/repaired.png",
+                    "strict_status": "build/strict_status.json",
+                    "physics_grounding": "build/physics_grounding.json",
+                    "text_boundary_clash": "build/text_boundary_clash.json",
+                    "label_path_proximity": "build/label_path_proximity.json",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map, include_extra_classification=False)
+    payload = yaml.safe_load(plan_map.read_text(encoding="utf-8"))
+    payload["figures"]["fig1"]["source_pointer"] = "review/current-candidate.json"
+    plan_map.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+    report = check_plan_consistency.build_report(examples, plan_map)
+
+    assert report["blocking_count"] == 1
+    assert any(
+        finding["code"] == "invalid_current_candidate_pointer"
+        and finding["fixture"] == "mapped"
+        for finding in report["findings"]
+    )
 
 
 def test_plan_consistency_blocks_unclassified_spec_less_example(tmp_path: Path) -> None:

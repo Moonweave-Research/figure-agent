@@ -78,6 +78,7 @@ STOP_CLOSED_LOOP_ACTOR = "closed_loop_actor_required"
 STOP_CLOSED_LOOP_INVALID = "closed_loop_invalid"
 STOP_CLOSED_LOOP_AMBIGUOUS = "closed_loop_ambiguous"
 STOP_CLOSED_LOOP_TERMINAL = "closed_loop_terminal"
+STOP_PAPER_PLAN_INVALID = "paper_plan_invalid"
 
 # Operational mutation identifiers used in ``forbidden_actions``. These are
 # stable strings the driver pins so downstream executors can recognise them
@@ -108,6 +109,7 @@ _STATUS_COMPACT_KEYS = (
     "publication_gate_state",
     "publication_gate_failures",
     "critique_lint_summary",
+    "paper_plan",
     "spine_evidence",
     "closed_loop_attempt",
 )
@@ -679,6 +681,18 @@ def _select_action(
         )
 
     closed_loop = status.get("closed_loop_attempt")
+    paper_plan = status.get("paper_plan")
+    if isinstance(paper_plan, dict) and paper_plan.get("state") == "INVALID":
+        return make(
+            ACTION_HUMAN_GATE_STOP,
+            safe_command=None,
+            stop_boundary=STOP_PAPER_PLAN_INVALID,
+            reason=(
+                "paper figure map binding is invalid; resolve the map/current-candidate "
+                "contract before executing any workflow step."
+            ),
+        )
+
     if isinstance(closed_loop, dict):
         resolution = closed_loop.get("resolution")
         lifecycle_state = closed_loop.get("state")

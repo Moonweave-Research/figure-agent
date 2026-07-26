@@ -10,11 +10,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 SCRIPTS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS_DIR))
 sys.path.insert(0, str(SCRIPTS_DIR / "checks"))
 sys.path.insert(0, str(SCRIPTS_DIR / "quality"))
 
+import check_plan_consistency
 import closed_loop_current_state
 import current_candidate
 import current_render_review_scaffold
@@ -513,6 +516,73 @@ def _status_vector(
     )
 
 
+def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
+    """Expose the paper-map binding before a driver can execute a step.
+
+    The paper map is local to the bundled cohort fixtures. External workspaces
+    may have their own figure map and therefore remain outside this check.
+    """
+
+    plugin_root = Path(__file__).resolve().parents[1]
+    examples_dir = plugin_root / "examples"
+    map_path = plugin_root / "docs" / "paper_figure_map.yaml"
+    try:
+        if example_dir.resolve().parent != examples_dir.resolve():
+            return {"schema": "figure-agent.paper-plan-status.v1", "state": "NOT_APPLICABLE"}
+    except OSError:
+        return {
+            "schema": "figure-agent.paper-plan-status.v1",
+            "state": "INVALID",
+            "reason": "fixture_path_unresolvable",
+        }
+    if not map_path.is_file():
+        return {
+            "schema": "figure-agent.paper-plan-status.v1",
+            "state": "INVALID",
+            "reason": "paper_figure_map_missing",
+        }
+    try:
+        report = check_plan_consistency.build_report(examples_dir, map_path)
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        return {
+            "schema": "figure-agent.paper-plan-status.v1",
+            "state": "INVALID",
+            "reason": f"paper_figure_map_invalid:{type(exc).__name__}",
+        }
+    blocking = [
+        finding
+        for finding in report.get("findings", [])
+        if finding.get("severity") == "blocking"
+    ]
+    if blocking:
+        return {
+            "schema": "figure-agent.paper-plan-status.v1",
+            "state": "INVALID",
+            "reason": ";".join(str(item.get("code")) for item in blocking),
+            "blocking_findings": blocking,
+            "map_path": "docs/paper_figure_map.yaml",
+        }
+    plan_map = check_plan_consistency._load_map(map_path)
+    figures = plan_map.get("figures") if isinstance(plan_map, dict) else None
+    if isinstance(figures, dict):
+        for figure, entry in figures.items():
+            if not isinstance(entry, dict) or entry.get("fixture") != name:
+                continue
+            return {
+                "schema": "figure-agent.paper-plan-status.v1",
+                "state": "VALID",
+                "figure_id": entry.get("figure_id", figure),
+                "role_id": entry.get("role_id"),
+                "lifecycle": entry.get("status"),
+                "map_path": "docs/paper_figure_map.yaml",
+            }
+    return {
+        "schema": "figure-agent.paper-plan-status.v1",
+        "state": "NON_MAIN_OR_UNMAPPED",
+        "map_path": "docs/paper_figure_map.yaml",
+    }
+
+
 def _with_status_explanation(result: dict) -> dict:
     result["status_explanation"] = build_status_explanation(result)
     result["next_action_summary"] = status_next_action_summary(result)
@@ -769,6 +839,12 @@ def _promotion_queue_summary(example_dir: Path) -> dict[str, Any]:
 
 
 def _finalize_status(result: dict, example_dir: Path) -> dict:
+    name = result.get("name")
+    if isinstance(name, str) and name:
+        paper_plan = _paper_plan_summary(example_dir, name)
+        result["paper_plan"] = paper_plan
+        if paper_plan.get("state") == "INVALID":
+            result.setdefault("notes", []).append("paper_plan_invalid")
     explicit_candidate = current_candidate.resolve_current_candidate(example_dir)
     if explicit_candidate.get("state") != "NOT_DECLARED" or result.get("current_candidate") is None:
         result["current_candidate"] = explicit_candidate

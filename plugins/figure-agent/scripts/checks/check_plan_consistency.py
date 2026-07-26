@@ -11,6 +11,12 @@ from typing import Any
 
 import yaml
 
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+import current_candidate  # noqa: E402
+
 MAP_SCHEMA = "figure-agent.paper-figure-map.v2"
 REPORT_SCHEMA = "figure-agent.plan-consistency.v2"
 ACTIVE_STATUS = "active_candidate"
@@ -77,12 +83,42 @@ def _validate_source_pointer(
         pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return [_finding("invalid_source_pointer", fixture=fixture)]
-    if not isinstance(pointer, dict) or pointer.get("fixture") != fixture:
+    if not isinstance(pointer, dict):
+        return [_finding("invalid_source_pointer", fixture=fixture)]
+    if pointer.get("schema") != current_candidate.CURRENT_CANDIDATE_SCHEMA:
+        return [
+            _finding(
+                "invalid_source_pointer_schema",
+                fixture=fixture,
+                expected=current_candidate.CURRENT_CANDIDATE_SCHEMA,
+                actual=pointer.get("schema"),
+            )
+        ]
+    if pointer.get("fixture") != fixture:
         return [
             _finding(
                 "source_pointer_fixture_mismatch",
                 fixture=fixture,
-                declared_fixture=pointer.get("fixture") if isinstance(pointer, dict) else None,
+                declared_fixture=pointer.get("fixture"),
+            )
+        ]
+    expected_pointer = current_candidate.POINTER_RELATIVE_PATH.as_posix()
+    if source_pointer != expected_pointer:
+        return [
+            _finding(
+                "invalid_source_pointer_path",
+                fixture=fixture,
+                expected=expected_pointer,
+                actual=source_pointer,
+            )
+        ]
+    resolved = current_candidate.resolve_current_candidate(fixture_dir)
+    if resolved.get("state") != "VALID":
+        return [
+            _finding(
+                "invalid_current_candidate_pointer",
+                fixture=fixture,
+                reason=resolved.get("reason") or resolved.get("state"),
             )
         ]
     return []

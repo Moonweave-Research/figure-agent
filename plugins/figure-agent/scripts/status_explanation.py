@@ -64,6 +64,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     acceptance = status.get("acceptance_state")
     final_artifact = status.get("final_artifact_state")
     adjudication = status.get("adjudication_state")
+    paper_plan = status.get("paper_plan")
     publication_gate = status.get("publication_gate_state")
     stage = status.get("stage")
     release_ready = status.get("release_ready")
@@ -73,6 +74,21 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     plugin_state: list[dict[str, Any]] = []
     fixture_freshness: list[dict[str, Any]] = []
     human_blockers: list[dict[str, Any]] = []
+
+    paper_plan_state = (
+        paper_plan.get("state") if isinstance(paper_plan, Mapping) else None
+    )
+    _append_if(
+        fixture_freshness,
+        paper_plan_state == "INVALID",
+        code="paper_plan_invalid",
+        category=FIXTURE_FRESHNESS,
+        message=(
+            "paper figure map binding is invalid for this fixture; resolve the "
+            "map/current-candidate contract before running workflow steps."
+        ),
+        manual=True,
+    )
 
     _append_if(
         fixture_freshness,
