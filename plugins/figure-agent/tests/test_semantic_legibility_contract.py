@@ -139,6 +139,51 @@ def test_rejects_redundant_panel_story_roles() -> None:
         validate_semantic_legibility_contract(contract)
 
 
+def test_accepts_explicit_four_stage_causal_sequence() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["panel_story"] = {
+        "reading_order": ["A", "B", "C", "D"],
+        "panels": [
+            {"panel_id": "A", "role": "setup", "reader_task": "Prepare the state."},
+            {"panel_id": "B", "role": "workflow", "reader_task": "Isolate the state."},
+            {"panel_id": "C", "role": "mechanism", "reader_task": "Perturb the state."},
+            {"panel_id": "D", "role": "result", "reader_task": "Read the response."},
+        ],
+        "causal_sequence": {
+            "stages": [
+                {"panel_id": "A", "stage": "preparation"},
+                {"panel_id": "B", "stage": "isolation"},
+                {"panel_id": "C", "stage": "perturbation"},
+                {"panel_id": "D", "stage": "response"},
+            ]
+        },
+    }
+    validate_semantic_legibility_contract(contract)
+
+
+def test_rejects_causal_sequence_that_collapses_isolation_after_perturbation() -> None:
+    contract = valid_contract()
+    contract["semantic_legibility"]["panel_story"] = {
+        "reading_order": ["A", "B", "C", "D"],
+        "panels": [
+            {"panel_id": "A", "role": "setup", "reader_task": "Prepare the state."},
+            {"panel_id": "B", "role": "workflow", "reader_task": "Isolate the state."},
+            {"panel_id": "C", "role": "mechanism", "reader_task": "Perturb the state."},
+            {"panel_id": "D", "role": "result", "reader_task": "Read the response."},
+        ],
+        "causal_sequence": {
+            "stages": [
+                {"panel_id": "A", "stage": "preparation"},
+                {"panel_id": "B", "stage": "perturbation"},
+                {"panel_id": "C", "stage": "isolation"},
+                {"panel_id": "D", "stage": "response"},
+            ]
+        },
+    }
+    with pytest.raises(SemanticLegibilityContractError, match="causal_sequence_order_invalid"):
+        validate_semantic_legibility_contract(contract)
+
+
 def test_rejects_required_object_without_declared_role() -> None:
     contract = valid_contract()
     contract["semantic_legibility"]["object_roles"].pop()

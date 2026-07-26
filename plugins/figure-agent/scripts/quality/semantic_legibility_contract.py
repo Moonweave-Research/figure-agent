@@ -46,6 +46,7 @@ PANEL_STORY_ROLES = {
 }
 FORCE_DIRECTION_EPISTEMIC_STATUSES = {"observed", "derived", "conditional"}
 COMPARISON_BASES = {"observed_evidence", "schematic_state", "quantitative_data"}
+CAUSAL_SEQUENCE_STAGES = ("preparation", "isolation", "perturbation", "response")
 
 
 class SemanticLegibilityContractError(ValueError):
@@ -261,7 +262,47 @@ def _panel_story(section: dict[str, Any]) -> list[dict[str, Any]]:
         roles.add(role)
     if set(declared) != set(order):
         raise SemanticLegibilityContractError("panel_story_order_mismatch")
+    _causal_sequence(story, order)
     return [declared[panel_id] for panel_id in order]
+
+
+def _causal_sequence(story: dict[str, Any], order: list[str]) -> None:
+    """Validate an optional causal stage contract without fixing a layout.
+
+    A staged mechanism figure often has a boundary-changing intermediate state
+    (for example source-off isolation) that a first-pass redraw collapses into
+    a decorative arrow or a duplicated result panel.  The contract makes that
+    reader-facing step explicit while leaving the author free to choose any
+    visual composition.
+    """
+    sequence = story.get("causal_sequence")
+    if sequence is None:
+        return
+    if not isinstance(sequence, dict) or not isinstance(sequence.get("stages"), list):
+        raise SemanticLegibilityContractError("causal_sequence_invalid")
+    stages = sequence["stages"]
+    if len(stages) != len(CAUSAL_SEQUENCE_STAGES):
+        raise SemanticLegibilityContractError("causal_sequence_invalid")
+    declared: dict[str, str] = {}
+    for item in stages:
+        if not isinstance(item, dict):
+            raise SemanticLegibilityContractError("causal_sequence_invalid")
+        panel_id = item.get("panel_id")
+        stage = item.get("stage")
+        if (
+            not _nonempty_string(panel_id)
+            or panel_id not in order
+            or panel_id in declared
+            or stage not in CAUSAL_SEQUENCE_STAGES
+            or stage in declared.values()
+        ):
+            raise SemanticLegibilityContractError("causal_sequence_invalid")
+        declared[panel_id] = stage
+    if set(declared) != set(order):
+        raise SemanticLegibilityContractError("causal_sequence_invalid")
+    observed = [declared[panel_id] for panel_id in order]
+    if observed != list(CAUSAL_SEQUENCE_STAGES):
+        raise SemanticLegibilityContractError("causal_sequence_order_invalid")
 
 
 def _electrical_topology(

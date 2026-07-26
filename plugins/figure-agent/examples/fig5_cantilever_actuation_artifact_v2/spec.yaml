@@ -27,21 +27,17 @@ tex_assertions:
 # A declared intermediate stage must have a visible, ordered reader-facing
 # anchor. This is a semantic/render contract, not a primitive recipe.
 process_stage_visibility_checks:
-  - id: charge-isolation-stage-sequence
-    panel_id: A
-    reading_axis: x
-    minimum_stage_separation_pt: 28.0
+  - id: isolation-boundary-state
+    panel_id: B
+    reading_axis: y
+    minimum_stage_separation_pt: 12.0
     stages:
-      - id: charge
+      - id: source-off
         text_phrases:
-          - id: charge-heading
-            words: [CHARGE]
-          - id: grounded-clip
-            words: [clip, GND]
-      - id: off-float
+          - id: source-off-heading
+            words: [source, 'OFF']
+      - id: clip-open
         text_phrases:
-          - id: off-float-heading
-            words: ["OFF", "/", FLOAT]
           - id: ground-open
             words: [GND, open]
   - id: qualitative-response-sequence
@@ -83,11 +79,11 @@ text_boundary_checks:
     x_pdf_cm: 13.38
     y_range_pdf_cm: [0.55, 4.78]
     clearance_pt: 0.5
-  - id: panel-b-coulomb-label-rail
+  - id: panel-c-coulomb-label-rail
     kind: rect
     role: force_label_rail
     mode: contain_text
-    bbox_pdf_cm: [4.95, 4.15, 5.90, 4.42]
+    bbox_pdf_cm: [9.40, 4.15, 10.35, 4.42]
     clearance_pt: 0.0
     text_allowlist: [Coulomb]
 
@@ -101,11 +97,11 @@ label_path_proximity_checks:
     text_phrases:
       - id: off_float
         words: ['OFF', float]
-  - id: panel-b-coulomb-arrow
+  - id: panel-c-coulomb-arrow
     kind: horizontal_line
     role: conditional_force_arrow
     y_pdf_cm: 2.38
-    x_range_pdf_cm: [4.76, 5.50]
+    x_range_pdf_cm: [9.21, 9.95]
     clearance_pt: 3.0
     text_phrases:
       - id: coulomb_label
@@ -122,13 +118,13 @@ label_path_proximity_checks:
 
 panels:
   - id: A
-    caption: Same-cantilever actuation charge followed by a visibly distinct source-off floating state
+    caption: Air-gap actuation charge establishes the retained state on the same cantilever
     bbox_pdf_cm: [0.00, 0.00, 4.25, 5.20]
   - id: B
-    caption: Illustrated conditional force competition after drive reversal
+    caption: Source-off clip-open isolation preserves the retained-charge state
     bbox_pdf_cm: [4.25, 0.00, 8.50, 5.20]
   - id: C
-    caption: Schematic opposite-bend state comparison pending source-traceable video evidence
+    caption: Illustrated conditional force competition after the reversed drive is applied
     bbox_pdf_cm: [8.50, 0.00, 12.75, 5.20]
   - id: D
     caption: Qualitative response trace beginning at actuation onset

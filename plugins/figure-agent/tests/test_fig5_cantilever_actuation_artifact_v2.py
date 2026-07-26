@@ -24,7 +24,7 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 14
+    assert contract["summary"]["object_role_count"] == 13
     assert contract["summary"]["visible_connector_count"] == 7
     assert contract["summary"]["label_ownership_count"] == 9
     assert contract["summary"]["panel_story_role_count"] == 4
@@ -44,7 +44,7 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "panel_a.corona_needle" in forbidden
 
 
-def test_fig5_marks_reverse_force_as_conditional_and_c_state_as_schematic() -> None:
+def test_fig5_marks_reverse_force_as_conditional_after_isolation() -> None:
     contract = _yaml("semantic_contract.yaml")
     connectors = {
         item["connector_id"]: item
@@ -55,20 +55,28 @@ def test_fig5_marks_reverse_force_as_conditional_and_c_state_as_schematic() -> N
         for item in contract["semantic_legibility"]["panel_story"]["panels"]
     }
 
-    coulomb = connectors["panel_b.trapped_charge_drives_coulomb_term"]
+    coulomb = connectors["panel_b.isolation_enables_reversed_force"]
     assert coulomb["epistemic_status"] == "conditional"
     assert coulomb["render_style"] == "force_conditional"
     assert coulomb["condition"]
-    assert panel_story["C"]["comparison_basis"] == "schematic_state"
+    assert panel_story["B"]["role"] == "workflow"
+    assert panel_story["C"]["role"] == "mechanism"
+    sequence = contract["semantic_legibility"]["panel_story"]["causal_sequence"]
+    assert [item["stage"] for item in sequence["stages"]] == [
+        "preparation",
+        "isolation",
+        "perturbation",
+        "response",
+    ]
 
 
 def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> None:
     spec = _yaml("spec.yaml")
     checks = {item["id"]: item for item in spec["process_stage_visibility_checks"]}
 
-    assert [stage["id"] for stage in checks["charge-isolation-stage-sequence"]["stages"]] == [
-        "charge",
-        "off-float",
+    assert [stage["id"] for stage in checks["isolation-boundary-state"]["stages"]] == [
+        "source-off",
+        "clip-open",
     ]
     assert [stage["id"] for stage in checks["qualitative-response-sequence"]["stages"]] == [
         "observation-origin",

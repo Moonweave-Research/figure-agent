@@ -37,13 +37,13 @@
 ]
 
 % ================================================================
-% Panel A — actuation charge, then source-off floating state
+% Panel A — actuation charge establishes the retained state
 % ================================================================
 % Panel A
 \begin{scope}[shift={(0.00,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {a};
   \node[panelTitle,anchor=west] at (0.44,5.12)
-    {charge \textrightarrow{} isolate};
+    {actuation charge};
   \node[labelMute,anchor=west] at (0.44,4.78)
     {$+5\,\mathrm{kV}$, \textasciitilde20 min};
 
@@ -80,35 +80,57 @@
   \node[labelStd,text=cRed!84!black,anchor=south] at (2.46,3.08)
     {attraction};
 
-  % The lower rail is an electrical-state transition for the same mounted
-  % cantilever, not a second specimen or a motion stage.
-  \node[labelStd,anchor=west] at (0.42,1.42) {CHARGE};
-  \node[labelMute,anchor=west] at (0.42,1.07) {clip GND};
-  \draw[wire] (0.58,0.78)--(1.18,0.78);
-  \draw[wire] (0.88,0.78)--(0.88,0.60);
-  \draw[wire] (0.67,0.56)--(1.09,0.56);
-  \draw[wire] (0.73,0.49)--(1.03,0.49);
-  \draw[wire] (0.80,0.42)--(0.96,0.42);
-  \draw[processArrow] (1.34,0.86)--(2.26,0.86);
-  \node[labelStd,anchor=west] at (2.42,1.42) {OFF / FLOAT};
-  \node[labelMute,anchor=west] at (2.42,1.07) {GND open\quad $q_{\mathrm{tr}}$ stays};
-  \draw[wire] (2.58,0.78)--(2.88,0.78);
-  \draw[wire] (3.02,0.78)--(3.52,0.78);
-  \draw[wire] (2.88,0.78)--(3.03,0.95);
-  \fill[white] (2.94,0.78) circle (0.52pt);
-  \draw[cGray!78!black,line width=0.60pt] (2.94,0.78) circle (0.52pt);
+  \node[labelMute,align=left,anchor=west] at (0.42,0.92)
+    {field-on actuation establishes\\[-0.4pt]retained $q_{\mathrm{tr}}$ in the same film};
 \end{scope}
 
 % ================================================================
-% Panel B — force decomposition after polarity reversal
+% Panel B — source-off isolation is its own causal state
 % ================================================================
 % Panel B
 \begin{scope}[shift={(4.45,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {b};
-  \node[panelTitle,anchor=west] at (0.44,5.12) {conditional force competition};
-  \node[labelMute,anchor=west] at (0.44,4.78) {floating film; illustrative condition};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {source-off isolation};
+  \node[labelMute,anchor=west] at (0.44,4.78) {same mounted film; \textasciitilde20 s transfer};
 
-  % This panel is a force ledger, not another competing bend snapshot.
+  % The open clip is the reader-facing causal change; it is not a generic
+  % charger symbol and the film is deliberately shown without a bend claim.
+  \fill[cGray!38] (1.18,3.96) rectangle (2.20,4.24);
+  \draw[apparatus] (1.18,3.96) rectangle (2.20,4.24);
+  \draw[wire] (1.69,4.24)--(1.69,4.54);
+  \node[labelMute,anchor=west] at (2.00,4.54) {clip opens};
+  \fill[polymer,rounded corners=0.25mm]
+    (1.43,3.96) -- (1.87,3.96) -- (1.81,1.52) -- (1.37,1.52) -- cycle;
+  \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.25mm]
+    (1.43,3.96) -- (1.87,3.96) -- (1.81,1.52) -- (1.37,1.52);
+  \node[qmark] at (1.59,3.28) {};
+  \node[qmark] at (1.58,2.57) {};
+  \node[qmark] at (1.56,1.91) {};
+  \node[labelStd,text=cRed!80!black,anchor=east] at (1.10,2.58)
+    {retained $q_{\mathrm{tr}}$};
+  \draw[leader,cRed!58!black] (1.16,2.51)--(1.46,2.51);
+  \fill[cGray!15] (3.42,1.38) rectangle (3.70,4.02);
+  \draw[cGray!58!black,line width=0.72pt] (3.42,1.38) rectangle (3.70,4.02);
+  \node[labelMute,anchor=east] at (3.30,2.20) {drive off};
+  \draw[wire] (0.46,0.96)--(1.04,0.96);
+  \draw[wire] (1.18,0.96)--(1.74,0.96);
+  \draw[wire] (1.04,0.96)--(1.18,1.13);
+  \fill[white] (1.11,0.96) circle (0.58pt);
+  \draw[cGray!78!black,line width=0.62pt] (1.11,0.96) circle (0.58pt);
+  \node[labelStd,anchor=west] at (0.46,1.38) {source OFF};
+  \node[labelMute,align=left,anchor=west] at (0.46,0.56)
+    {clip GND open\\[-0.4pt]reference potential fixed};
+\end{scope}
+
+% ================================================================
+% Panel C — force competition after polarity reversal
+% ================================================================
+% Panel C
+\begin{scope}[shift={(8.90,0.00)}]
+  \node[panelLetter,anchor=west] at (0.10,5.12) {c};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {reversed-drive force balance};
+  \node[labelMute,anchor=west] at (0.44,4.78) {$-5\,\mathrm{kV}$; floating clip; illustrative condition};
+
   \fill[cGray!38] (0.94,3.88) rectangle (1.92,4.15);
   \draw[apparatus] (0.94,3.88) rectangle (1.92,4.15);
   \draw[wire] (1.43,4.15)--(1.43,4.48);
@@ -126,9 +148,7 @@
   \fill[cGray!28] (3.44,1.28) rectangle (3.72,4.04);
   \draw[apparatus] (3.44,1.28) rectangle (3.72,4.04);
   \node[labelStd,anchor=east] at (3.34,2.08) {drive electrode};
-
-  % Separate lanes record an illustrated force condition rather than an
-  % independently observed force vector or a second bend snapshot.
+  \node[labelStd,text=cRed!82!black,anchor=east] at (3.34,3.64) {$-5\,\mathrm{kV}$};
   \draw[baselineArrow] (1.84,3.12)--(3.08,3.12);
   \node[labelStd,anchor=south,text=cGray!74!black] at (2.48,3.18)
     {Maxwell attraction};
@@ -136,47 +156,8 @@
   \node[labelStd,text=cRed!84!black,anchor=south west] at (0.34,1.08)
     {Coulomb};
   \node[labelMute,align=center] at (2.24,0.82)
-    {illustrated reversal: $F_{\mathrm{C}}$ opposes $F_{\mathrm{M}}$;\\[-0.5pt]
-     reverse bend if $|F_{\mathrm{C}}|>|F_{\mathrm{M}}|$};
-\end{scope}
-
-% ================================================================
-% Panel C — paired observed bend directions
-% ================================================================
-% Panel C
-\begin{scope}[shift={(8.90,0.00)}]
-  \node[panelLetter,anchor=west] at (0.10,5.12) {c};
-  \node[panelTitle,anchor=west] at (0.44,5.12) {schematic opposite-bend states};
-
-  % The upper schematic state bends toward the driven electrode during the
-  % grounded +5 kV actuation hold.
-  \node[labelMute,anchor=west] at (0.34,4.56) {$+5\,\mathrm{kV}$; clip GND};
-  \fill[cGray!28] (3.46,3.24) rectangle (3.72,4.20);
-  \draw[apparatus] (3.46,3.24) rectangle (3.72,4.20);
-  \fill[cGray!34] (1.06,3.94) rectangle (1.90,4.16);
-  \draw[apparatus] (1.06,3.94) rectangle (1.90,4.16);
-  \fill[polymer,rounded corners=0.35mm]
-    (1.24,3.94) .. controls (1.30,3.60) and (1.70,3.36) .. (2.45,3.08)
-    -- (2.59,3.30) .. controls (1.91,3.59) and (1.66,3.82) .. (1.66,3.94) -- cycle;
-  \draw[cAmber!72!black,line width=0.92pt]
-    (1.24,3.94) .. controls (1.30,3.60) and (1.70,3.36) .. (2.45,3.08)
-    -- (2.59,3.30) .. controls (1.91,3.59) and (1.66,3.82) .. (1.66,3.94);
-  \node[labelStd,text=cBlue!82!black,anchor=west] at (2.56,3.52) {$+\theta$};
-
-  % After isolation and polarity reversal, the schematic cantilever bends away
-  % from the same electrode.
-  \node[labelMute,anchor=west] at (0.34,2.26) {$-5\,\mathrm{kV}$; clip floating};
-  \fill[cGray!28] (3.46,1.14) rectangle (3.72,2.10);
-  \draw[apparatus] (3.46,1.14) rectangle (3.72,2.10);
-  \fill[cGray!34] (1.06,1.84) rectangle (1.90,2.06);
-  \draw[apparatus] (1.06,1.84) rectangle (1.90,2.06);
-  \fill[polymer,rounded corners=0.35mm]
-    (1.24,1.84) .. controls (1.16,1.52) and (0.78,1.24) .. (0.30,0.96)
-    -- (0.48,0.76) .. controls (1.10,1.10) and (1.58,1.40) .. (1.66,1.84) -- cycle;
-  \draw[cAmber!72!black,line width=0.92pt]
-    (1.24,1.84) .. controls (1.16,1.52) and (0.78,1.24) .. (0.30,0.96)
-    -- (0.48,0.76) .. controls (1.10,1.10) and (1.58,1.40) .. (1.66,1.84);
-  \node[labelStd,text=cBlue!82!black,anchor=west] at (2.08,1.42) {$-\theta$};
+    {$F_{\mathrm{C}}$ opposes $F_{\mathrm{M}}$; reverse bend if\\[-0.5pt]
+     $|F_{\mathrm{C}}|>|F_{\mathrm{M}}|$};
 \end{scope}
 
 % ================================================================
@@ -185,7 +166,7 @@
 % Panel D
 \begin{scope}[shift={(13.35,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {d};
-  \node[panelTitle,anchor=west] at (0.44,5.12) {qualitative video response};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {continuous bend response};
 
   % Axes and zero line.
   \draw[axis] (0.62,1.02)--(0.62,4.08);

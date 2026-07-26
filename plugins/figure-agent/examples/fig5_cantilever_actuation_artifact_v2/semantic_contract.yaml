@@ -11,12 +11,11 @@ required_objects:
   - panel_a.air_gap
   - panel_a.actuation_charge_state
   - panel_a.attraction_force
-  - panel_a.off_float_transition
+  - panel_b.isolation_state
   - panel_b.trapped_charge
-  - panel_b.maxwell_baseline
-  - panel_b.coulomb_force
-  - panel_c.forward_bend
-  - panel_c.reverse_bend
+  - panel_c.maxwell_baseline
+  - panel_c.coulomb_force
+  - panel_c.reverse_drive
   - panel_d.time_origin
   - panel_d.response_trace
   - panel_d.polarity_switch
@@ -35,11 +34,10 @@ protected_relations:
   - charge_phase_is_actuation_state
   - attraction_acts_during_charge
   - air_gap_coupling_is_capacitor_like_schematic_only
-  - off_float_precedes_drive_polarity_reversal
+  - source_off_isolation_precedes_drive_polarity_reversal
   - trapped_charge_remains_on_same_specimen_after_isolation
   - coulomb_term_changes_sign_with_drive_polarity
   - maxwell_baseline_is_polarity_independent
-  - opposite_bend_is_same_specimen_response
   - response_trace_is_qualitative_not_calibrated_data
 
 repair:
@@ -64,24 +62,21 @@ semantic_legibility:
     - object_id: panel_a.attraction_force
       declared_role: charge_phase_attraction
       forbidden_readings: [decorative_arrow]
-    - object_id: panel_a.off_float_transition
+    - object_id: panel_b.isolation_state
       declared_role: isolation_transition
       forbidden_readings: [automated_motion_stage, conveyor_transfer]
     - object_id: panel_b.trapped_charge
       declared_role: retained_trapped_charge
       forbidden_readings: [decorative_bead]
-    - object_id: panel_b.coulomb_force
+    - object_id: panel_c.coulomb_force
       declared_role: polarity_dependent_force
       forbidden_readings: [annotation_leader]
-    - object_id: panel_b.maxwell_baseline
+    - object_id: panel_c.maxwell_baseline
       declared_role: polarity_independent_attraction
       forbidden_readings: [decorative_baseline, second_coulomb_force]
-    - object_id: panel_c.forward_bend
-      declared_role: schematic_bend_state
-      forbidden_readings: [abstract_direction_arrow]
-    - object_id: panel_c.reverse_bend
-      declared_role: schematic_bend_state
-      forbidden_readings: [independent_second_sample]
+    - object_id: panel_c.reverse_drive
+      declared_role: polarity_reversal_perturbation
+      forbidden_readings: [observed_force_vector]
     - object_id: panel_d.response_trace
       declared_role: qualitative_bend_trace
       forbidden_readings: [calibrated_current_waveform]
@@ -105,31 +100,31 @@ semantic_legibility:
       epistemic_status: derived
     - connector_id: panel_a.charge_enters_isolation
       from_object: panel_a.actuation_charge_state
-      to_object: panel_a.off_float_transition
+      to_object: panel_b.isolation_state
       declared_role: process_stage_transition
       render_style: stage_transition
-    - connector_id: panel_b.trapped_charge_drives_coulomb_term
+    - connector_id: panel_b.isolation_retains_charge
       from_object: panel_b.trapped_charge
-      to_object: panel_b.coulomb_force
+      to_object: panel_b.isolation_state
+      declared_role: process_stage_transition
+      render_style: stage_transition
+    - connector_id: panel_b.isolation_enables_reversed_force
+      from_object: panel_b.isolation_state
+      to_object: panel_c.coulomb_force
       declared_role: force_direction
       render_style: force_conditional
       epistemic_status: conditional
       condition: Illustrated reversed-polarity condition; the charge-mediated term opposes the Maxwell baseline.
-    - connector_id: panel_b.maxwell_baseline_is_separate_term
-      from_object: panel_b.maxwell_baseline
-      to_object: panel_b.coulomb_force
+    - connector_id: panel_c.maxwell_baseline_is_separate_term
+      from_object: panel_c.maxwell_baseline
+      to_object: panel_c.coulomb_force
       declared_role: force_decomposition
       render_style: force_directional
     - connector_id: panel_d.switch_owns_bend_reversal
-      from_object: panel_d.polarity_switch
-      to_object: panel_c.reverse_bend
+      from_object: panel_c.reverse_drive
+      to_object: panel_d.response_trace
       declared_role: process_stage_transition
       render_style: stage_transition
-    - connector_id: panel_c.states_share_one_specimen
-      from_object: panel_c.forward_bend
-      to_object: panel_c.reverse_bend
-      declared_role: state_transition
-      render_style: state_transition
   forbidden_connectors:
     - from_object: panel_a.cantilever
       to_object: panel_a.drive_electrode
@@ -147,12 +142,12 @@ semantic_legibility:
       owner: panel_a.actuation_charge_state
     - label_id: panel_a.attraction_label
       owner: panel_a.attraction_force
-    - label_id: panel_a.off_float_label
-      owner: panel_a.off_float_transition
-    - label_id: panel_b.coulomb_label
-      owner: panel_b.coulomb_force
-    - label_id: panel_b.maxwell_label
-      owner: panel_b.maxwell_baseline
+    - label_id: panel_b.isolation_label
+      owner: panel_b.isolation_state
+    - label_id: panel_c.coulomb_label
+      owner: panel_c.coulomb_force
+    - label_id: panel_c.maxwell_label
+      owner: panel_c.maxwell_baseline
     - label_id: panel_d.polarity_label
       owner: panel_d.polarity_switch
     - label_id: panel_d.time_origin_label
@@ -164,16 +159,25 @@ semantic_legibility:
     panels:
       - panel_id: A
         role: setup
-        reader_task: Establish the air-gap actuation and source-off floating transition.
+        reader_task: Establish air-gap actuation while retained charge is formed.
       - panel_id: B
-        role: mechanism
-        reader_task: Separate the polarity-independent Maxwell term from the charge-mediated Coulomb term.
+        role: workflow
+        reader_task: Make the source-off, clip-open isolation boundary explicit.
       - panel_id: C
-        role: comparison
-        reader_task: Keep the two schematic bend states distinct until source-traceable video evidence is selected.
-        comparison_basis: schematic_state
+        role: mechanism
+        reader_task: Separate the conditional charge-mediated term from the Maxwell baseline after reversal.
       - panel_id: D
         role: result
         reader_task: Show the qualitative time ordering from the observation origin through reversal and recovery.
+    causal_sequence:
+      stages:
+        - panel_id: A
+          stage: preparation
+        - panel_id: B
+          stage: isolation
+        - panel_id: C
+          stage: perturbation
+        - panel_id: D
+          stage: response
 
 publication_acceptance: not_claimed

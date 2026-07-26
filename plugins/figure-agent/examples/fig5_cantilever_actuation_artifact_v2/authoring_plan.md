@@ -1,0 +1,29 @@
+# Fig5 authoring plan — four-stage causal actuation story
+
+## Reader route
+
+1. **A — actuation charge:** the field-on air-gap geometry bends the same
+   cantilever while a retained charge state is established.
+2. **B — source-off isolation:** source OFF and the opened clip are a distinct
+   electrical boundary; the figure must not compress this into a transition
+   arrow or another bend-state cartoon.
+3. **C — reversed-drive force balance:** the next drive polarity supplies an
+   illustrative conditional force decomposition, not an observed vector field.
+4. **D — continuous bend response:** the response trace owns the macroscopic
+   reversal and recovery; no other panel redraws those states as evidence.
+
+## Composition rule
+
+The four panels answer four different reader questions: formation, isolation,
+perturbation, and response.  Repeating a bent-film silhouette is forbidden
+unless it conveys a distinct electrical boundary.  Keep the force ledger in C
+and the actual time ordering in D separate.
+
+## Review gates
+
+- A/B/C/D must remain visually distinguishable as apparatus, electrical
+  boundary, conditional mechanism, and response trace.
+- B must visibly show both source OFF and clip GND open.
+- C must label the force balance as conditional; it may not imply an observed
+  force vector or a second measured bend snapshot.
+- D remains qualitative until an exact data/video binding is selected.

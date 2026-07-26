@@ -45,6 +45,11 @@ plausible-but-unverified arrow read as a measured vector. A panel declared as
 an observed comparison must bind a source-traceable evidence asset. Until that
 asset is selected, call the panel a schematic state comparison or remove it;
 do not silently upgrade a redraw into evidence.
+For a staged causal mechanism story, treat a boundary-changing intermediate
+state as its own reader-facing step: preparation -> isolation -> perturbation
+-> response. Do not compress isolation into an arrow caption and then spend a
+panel on a duplicated result-state cartoon. Declare this opt-in causal sequence
+in the semantic contract before authoring the detailed composition.
 Keep superseded rules in catalog provenance, but exclude them from authoring
 context so stale hypotheses cannot compete with later human-confirmed rules.
 Before product-level work, read `docs/figure-agent.md`. It is the sole active
