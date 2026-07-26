@@ -32,16 +32,16 @@ def _fixture_source(
     if fixture.is_symlink():
         raise CandidateTexIndexError("fixture_symlink_forbidden")
     relative_source = source_path or f"{name}.tex"
-    try:
-        source = candidate_contracts.fixture_relative_path(fixture, relative_source)
-    except candidate_contracts.CandidateContractError as exc:
-        raise CandidateTexIndexError("source_path_escape") from exc
     unresolved = fixture / relative_source
     for candidate in (unresolved, *unresolved.parents):
         if candidate == fixture.parent:
             break
         if candidate.is_symlink():
             raise CandidateTexIndexError("source_symlink_forbidden")
+    try:
+        source = candidate_contracts.fixture_relative_path(fixture, relative_source)
+    except candidate_contracts.CandidateContractError as exc:
+        raise CandidateTexIndexError("source_path_escape") from exc
     try:
         source.resolve().relative_to(fixture.resolve())
     except ValueError as exc:
