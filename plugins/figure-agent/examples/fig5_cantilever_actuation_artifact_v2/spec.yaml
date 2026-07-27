@@ -76,8 +76,12 @@ process_stage_visibility_checks:
         text_phrases:
           - id: actuation-onset-label
             words: [t, "=", "0"]
-          - id: off-label
+      - id: source-off-float
+        text_phrases:
+          - id: source-off-label
             words: ["OFF"]
+          - id: floating-label
+            words: [floating]
       - id: reversed-drive
         text_phrases:
           - id: reversed-drive-label

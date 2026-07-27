@@ -644,6 +644,11 @@ Do not add an exact isolation or transfer duration merely to make an event
 interval look quantitative; if that timing is not bound to the selected data,
 show the state transition and its ownership without a numeric seconds label.
 
+For a qualitative response trace with compressed precharge, require a visible
+source-OFF/floating interval between the positive plateau and the polarity
+reversal marker. Do not collapse OFF, floating, and reversal into one coincident
+label, and do not let a precharge duration compete with the response timebase.
+
 Do not solve that problem by omitting the response origin. When a mechanism
 trace starts after a long precondition, show a visible reader-facing `$t=0$`
 anchor and define the event that creates it (for example actuation onset, source

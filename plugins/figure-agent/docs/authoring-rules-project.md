@@ -99,6 +99,14 @@ rules:
       locator: "Fig5 Panel A voltage/ground ownership audit (2026-07-27)"
       quote: "A +5 kV subtitle beside clip/GND was read as voltage applied to ground."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.response-trace-explicit-off-state
+    category: physics_semantics
+    rule: "For a qualitative cantilever response trace with compressed precharge, show a reader-facing source-OFF/floating interval between the positive plateau and the polarity-reversal marker. Keep the precharge note off-axis or explicitly compressed so it cannot imply a duration ratio on the response timebase; do not collapse OFF, floating, and reversal into one coincident label."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig5 Panel D event-order audit (2026-07-27)"
+      quote: "The source-OFF/floating state was visually coincident with reversal and read as missing."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.trap-colour-shallow-blue-deep-red
     category: label_binding
     rule: "Shallow traps and shallow states are blue or teal; deep traps and deep states are red. Keep this colour mapping consistent across every figure."

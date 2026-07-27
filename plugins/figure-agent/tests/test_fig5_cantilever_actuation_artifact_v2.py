@@ -123,14 +123,34 @@ def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> Non
     ]
     assert [stage["id"] for stage in checks["qualitative-response-sequence"]["stages"]] == [
         "observation-origin",
+        "source-off-float",
         "reversed-drive",
         "recovery",
     ]
     origin_phrases = checks["qualitative-response-sequence"]["stages"][0]["text_phrases"]
     assert {tuple(item["words"]) for item in origin_phrases} == {
         ("t", "=", "0"),
-        ("OFF",),
     }
+    off_phrases = checks["qualitative-response-sequence"]["stages"][1]["text_phrases"]
+    assert {tuple(item["words"]) for item in off_phrases} == {
+        ("OFF",),
+        ("floating",),
+    }
+
+
+def test_fig5_response_trace_separates_off_float_from_reversal() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_d = tex.split("% Panel D", 1)[1]
+
+    assert "+5\\,\\mathrm{kV}$ precharge" not in panel_d
+    assert "20 min" not in panel_d
+    assert "(1.38,3.68)--(2.08,3.68)" in panel_d
+    assert "at (1.73,4.30) {source OFF};" in panel_d
+    assert "at (1.73,4.08) {clip floating};" in panel_d
+    assert "(1.82,1.04)--(1.82,3.56)" in panel_d
+    assert "at (2.24,3.04)" in panel_d
 
 
 def test_fig5_declares_deterministic_clamp_axis_geometry_check() -> None:

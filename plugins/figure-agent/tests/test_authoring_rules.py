@@ -169,6 +169,27 @@ def test_project_rule_binds_actuation_voltage_to_the_driven_electrode() -> None:
     )
 
 
+def test_project_rule_requires_an_explicit_off_float_interval_in_response_traces() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-project.md"
+    )
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "polymer_paper_project.response-trace-explicit-off-state"
+    )
+    assert "source-OFF/floating interval" in rule["rule"]
+    assert "polarity-reversal marker" in rule["rule"]
+    assert "duration ratio" in rule["rule"]
+
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized_skill = " ".join(skill.split())
+    assert "require a visible source-OFF/floating interval" in normalized_skill
+    assert "precharge duration compete with the response timebase" in normalized_skill
+
+
 def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"

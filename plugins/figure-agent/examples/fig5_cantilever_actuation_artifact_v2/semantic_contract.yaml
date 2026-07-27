@@ -46,6 +46,7 @@ protected_relations:
   - clamp_axis_aligns_with_cantilever_centerline
   - response_trace_is_qualitative_not_calibrated_data
   - reverse_response_is_faster_than_initial_attraction
+  - source_off_floating_interval_is_explicit
 
 repair:
   family: actuation_geometry_and_mechanism_contract
