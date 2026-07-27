@@ -848,6 +848,23 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
     explicit_candidate = current_candidate.resolve_current_candidate(example_dir)
     if explicit_candidate.get("state") != "NOT_DECLARED" or result.get("current_candidate") is None:
         result["current_candidate"] = explicit_candidate
+    if explicit_candidate.get("state") == "VALID":
+        # A candidate with no declared text/path checks is not equivalent to a
+        # clean inspection. Keep this advisory (the candidate is still
+        # human-gated), but surface the gap in the same status path that
+        # reports its render/strict/physics evidence.
+        for field, label in (
+            ("text_boundary_checked", "text_boundary"),
+            ("label_path_checked", "label_path"),
+        ):
+            checked = explicit_candidate.get(field)
+            if checked is None or checked == 0:
+                result.setdefault("checks", []).append(
+                    (f"current_candidate_{label}_coverage", "gap")
+                )
+                result.setdefault("notes", []).append(
+                    f"current_candidate_{label}_coverage_gap"
+                )
     result["closed_loop_attempt"] = closed_loop_current_state.resolve_current_attempt(
         workspace_root=example_dir.parents[1],
         fixture=example_dir.name,

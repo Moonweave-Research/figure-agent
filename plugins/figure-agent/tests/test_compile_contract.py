@@ -105,6 +105,18 @@ def test_compile_keeps_parent_physics_grounding_for_prospective_candidates() -> 
     assert '--json-output "${BUILD_DIR}/physics_grounding.json" "$PHYSICS_GROUNDING_DIR"' in script
 
 
+def test_compile_keeps_physics_grounding_advisory_for_historical_replays() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    assert "PHYSICS_GROUNDING_STRICT_ARGS=()" in script
+    assert "$LIVE_ASSERTION_TARGET -eq 1" in script
+    assert "semantic_contract_required" in script
+    assert (
+        'PHYSICS_GROUNDING_STRICT_ARGS[@]+"${PHYSICS_GROUNDING_STRICT_ARGS[@]}"'
+        in script
+    )
+
+
 def test_compile_serializes_shared_fixture_reports() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 

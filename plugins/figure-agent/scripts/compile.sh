@@ -271,8 +271,18 @@ PHYSICS_GROUNDING_DIR="$PWD"
 if [[ -n "$FIXTURE_ROOT" && "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/review/"* ]]; then
   PHYSICS_GROUNDING_DIR="$FIXTURE_ROOT"
 fi
+# Physics grounding remains advisory for historical/legacy fixtures.  Only a
+# live fixture that explicitly opts into the semantic-contract requirement may
+# promote a non-grounded status to the strict detector gate.  Passing the
+# global strict flag to this advisory checker made immutable execution-repair
+# replays fail on their intentionally missing briefing files.
+PHYSICS_GROUNDING_STRICT_ARGS=()
+if [[ ${#STRICT_ARGS[@]} -ne 0 && $LIVE_ASSERTION_TARGET -eq 1 && -f "$FIGURE_SPEC" ]] \
+  && grep -Eq '^[[:space:]]*semantic_contract_required:[[:space:]]*true[[:space:]]*(#.*)?$' "$FIGURE_SPEC"; then
+  PHYSICS_GROUNDING_STRICT_ARGS=("${STRICT_ARGS[@]}")
+fi
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_physics_grounding.py" \
-  ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${PHYSICS_GROUNDING_STRICT_ARGS[@]+"${PHYSICS_GROUNDING_STRICT_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/physics_grounding.json" "$PHYSICS_GROUNDING_DIR"
 if [[ -n "$LAYOUT_CONTRACT" && -f "$LAYOUT_CONTRACT" ]]; then
   run_report_check "${UV_RUN[@]}" python3 \
