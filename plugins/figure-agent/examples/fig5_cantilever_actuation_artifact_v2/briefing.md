@@ -23,9 +23,10 @@ charge, not an application demo.
 1. `actuation charge`: the nearby drive electrode is biased across the air gap;
    attraction bends the same cantilever while the charge state is established.
 2. `OFF / float`: the clip ground is visibly opened while the same mounted
-   cantilever remains in place. This intermediate electrical state must be
-   shown as its own reader-facing stage, not compressed into an arrow caption;
-   the trapped-charge cue remains in the specimen.
+   cantilever remains in place. The ground lead is lifted manually; this is not
+   an electrical switch or an automated motion stage. This intermediate
+   electrical state must be shown as its own reader-facing stage, not compressed
+   into an arrow caption; the trapped-charge cue remains in the specimen.
 3. `-V drive`: the nearby driven electrode reverses polarity. The
    polarity-dependent Coulomb term changes sign, while the Maxwell attraction
    is a polarity-independent baseline.

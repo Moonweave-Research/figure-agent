@@ -408,6 +408,11 @@ continuous in-line measurement. When the same specimen moves between adjacent
 stations, use explicit before/after specimen states or another unambiguous
 discrete-transfer encoding.
 
+When source OFF is followed by removal of a clip's ground connection, keep the
+specimen clip visibly mounted and depict the ground lead as a manual separation.
+Do not substitute a generic electrical-switch glyph, automated stage, or opened
+specimen clamp unless the evidence declares that mechanism.
+
 Do not treat an instrument name or capability display such as V/A as proof of
 the variable actually applied, held constant, stepped, or acquired. When the
 response depends on an operating condition, require that condition at the

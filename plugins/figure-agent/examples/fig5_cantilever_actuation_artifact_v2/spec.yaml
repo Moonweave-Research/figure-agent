@@ -152,7 +152,7 @@ panels:
     caption: Air-gap actuation charge establishes the retained state on the same cantilever
     bbox_pdf_cm: [0.00, 0.00, 4.25, 5.20]
   - id: B
-    caption: Source-off clip-open isolation preserves the retained-charge state
+    caption: Source-off ground-lead separation preserves the retained-charge state
     bbox_pdf_cm: [4.25, 0.00, 8.50, 5.20]
   - id: C
     caption: Illustrated conditional force competition after the reversed drive is applied

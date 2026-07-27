@@ -190,6 +190,27 @@ def test_project_rule_requires_an_explicit_off_float_interval_in_response_traces
     assert "precharge duration compete with the response timebase" in normalized_skill
 
 
+def test_project_rule_keeps_manual_ground_separation_distinct_from_a_switch() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-project.md"
+    )
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "polymer_paper_project.manual-ground-lead-separation"
+    )
+    assert "specimen clip visibly mounted" in rule["rule"]
+    assert "manual separation" in rule["rule"]
+    assert "generic switch symbol" in rule["rule"]
+
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized_skill = " ".join(skill.split())
+    assert "depict the ground lead as a manual separation" in normalized_skill
+    assert "generic electrical-switch glyph" in normalized_skill
+
+
 def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"

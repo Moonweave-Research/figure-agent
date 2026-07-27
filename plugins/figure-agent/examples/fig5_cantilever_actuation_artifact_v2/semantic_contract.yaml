@@ -14,6 +14,7 @@ required_objects:
   - panel_a.attraction_force
   - panel_b.isolation_state
   - panel_b.trapped_charge
+  - panel_b.manual_clip_separation
   - panel_c.maxwell_baseline
   - panel_c.coulomb_force
   - panel_c.reverse_drive
@@ -24,6 +25,7 @@ required_objects:
 
 forbidden_implications:
   - panel_a.standalone_two_terminal_charger
+  - panel_b.automated_switch
   - panel_a.polarization_measurement_instrument
   - panel_a.esvm_measurement_head
   - panel_a.corona_needle
@@ -47,6 +49,8 @@ protected_relations:
   - response_trace_is_qualitative_not_calibrated_data
   - reverse_response_is_faster_than_initial_attraction
   - source_off_floating_interval_is_explicit
+  - clip_separation_is_manual
+  - cantilever_remains_clamped_during_ground_open
 
 repair:
   family: actuation_geometry_and_mechanism_contract
@@ -79,6 +83,9 @@ semantic_legibility:
     - object_id: panel_b.trapped_charge
       declared_role: retained_trapped_charge
       forbidden_readings: [decorative_bead]
+    - object_id: panel_b.manual_clip_separation
+      declared_role: manual_ground_lead_separation
+      forbidden_readings: [automated_switch, automated_motion_stage]
     - object_id: panel_c.coulomb_force
       declared_role: polarity_dependent_force
       forbidden_readings: [annotation_leader]
@@ -162,6 +169,8 @@ semantic_legibility:
       owner: panel_a.attraction_force
     - label_id: panel_b.isolation_label
       owner: panel_b.isolation_state
+    - label_id: panel_b.manual_clip_label
+      owner: panel_b.manual_clip_separation
     - label_id: panel_c.coulomb_label
       owner: panel_c.coulomb_force
     - label_id: panel_c.maxwell_label

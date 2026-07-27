@@ -107,6 +107,14 @@ rules:
       locator: "Fig5 Panel D event-order audit (2026-07-27)"
       quote: "The source-OFF/floating state was visually coincident with reversal and read as missing."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.manual-ground-lead-separation
+    category: instrument_standard
+    rule: "When source OFF is followed by removal of a clip's ground connection, keep the specimen clip visibly mounted and show the ground lead as a manual separation. Do not use a generic switch symbol, automated stage, or opened specimen clamp unless the evidence explicitly declares that mechanism."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig5 Panel B manual ground-lead audit (2026-07-27)"
+      quote: "The lower switch glyph made manual clip-to-ground separation read as an automatic electrical switch."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.trap-colour-shallow-blue-deep-red
     category: label_binding
     rule: "Shallow traps and shallow states are blue or teal; deep traps and deep states are red. Keep this colour mapping consistent across every figure."

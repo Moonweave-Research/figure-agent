@@ -25,9 +25,9 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 15
+    assert contract["summary"]["object_role_count"] == 16
     assert contract["summary"]["visible_connector_count"] == 7
-    assert contract["summary"]["label_ownership_count"] == 11
+    assert contract["summary"]["label_ownership_count"] == 12
     assert contract["summary"]["panel_story_role_count"] == 4
 
 
@@ -43,7 +43,10 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "clamp_axis_aligns_with_cantilever_centerline" in protected
     assert "same_mounted_film_scale_across_panels" in protected
     assert "reverse_response_is_faster_than_initial_attraction" in protected
+    assert "clip_separation_is_manual" in protected
+    assert "cantilever_remains_clamped_during_ground_open" in protected
     assert "panel_a.standalone_two_terminal_charger" in forbidden
+    assert "panel_b.automated_switch" in forbidden
     assert "panel_a.polarization_measurement_instrument" in forbidden
     assert "panel_a.esvm_measurement_head" in forbidden
     assert "panel_a.corona_needle" in forbidden
@@ -121,6 +124,10 @@ def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> Non
         "source-off",
         "clip-open",
     ]
+    clip_open_phrases = checks["isolation-boundary-state"]["stages"][1]["text_phrases"]
+    assert {tuple(item["words"]) for item in clip_open_phrases} == {
+        ("GND", "open"),
+    }
     assert [stage["id"] for stage in checks["qualitative-response-sequence"]["stages"]] == [
         "observation-origin",
         "source-off-float",
@@ -151,6 +158,18 @@ def test_fig5_response_trace_separates_off_float_from_reversal() -> None:
     assert "at (1.73,4.08) {clip floating};" in panel_d
     assert "(1.82,1.04)--(1.82,3.56)" in panel_d
     assert "at (2.24,3.04)" in panel_d
+
+
+def test_fig5_panel_b_keeps_the_specimen_mounted_and_separates_ground_manually() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
+
+    assert "clip remains mounted" in panel_b
+    assert "manual clip lift" in panel_b
+    assert "circle (0.58pt)" in panel_b
+    assert "switch" not in panel_b.lower()
 
 
 def test_fig5_declares_deterministic_clamp_axis_geometry_check() -> None:
@@ -215,20 +234,20 @@ def test_fig5_response_trace_has_no_erased_gap_shortcut() -> None:
     assert "\\mathrm{s}" not in tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
 
-def test_fig5_source_off_label_uses_the_switch_lane() -> None:
+def test_fig5_source_off_label_uses_the_manual_isolation_lane() -> None:
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
     )
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     match = re.search(
-        r"\\node\[labelStd,anchor=east\] at \((\d+\.\d+),(\d+\.\d+)\)"
+        r"\\node\[labelStd,anchor=west\] at \((\d+\.\d+),(\d+\.\d+)\)"
         r" \{source OFF\};",
         panel_b,
     )
     assert match is not None
-    assert 1.05 < float(match.group(1)) < 1.25
+    assert 1.90 < float(match.group(1)) < 2.20
     y = float(match.group(2))
-    assert 1.05 < y < 1.30
+    assert 1.20 < y < 1.50
 
 
 def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None:
