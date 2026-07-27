@@ -27,6 +27,9 @@ and the actual time ordering in D separate.
 
 - A/B/C/D must remain visually distinguishable as apparatus, electrical
   boundary, conditional mechanism, and response trace.
+- A's trapped-charge label must use a dedicated left annotation lane; its
+  leader starts outside the label glyphs and terminates on the representative
+  charge marker.
 - B must visibly show both source OFF and the ground lead separated from GND;
   it must not imply that the specimen clip itself opens.
 - B's source OFF label belongs to the switch lane below the specimen tip; it

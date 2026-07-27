@@ -11,6 +11,7 @@ required_objects:
   - panel_a.clip_ground
   - panel_a.air_gap
   - panel_a.actuation_charge_state
+  - panel_a.trapped_charge
   - panel_a.attraction_force
   - panel_b.isolation_state
   - panel_b.trapped_charge
@@ -38,6 +39,7 @@ protected_relations:
   - cantilever_faces_drive_electrode_across_air_gap
   - charge_phase_is_actuation_state
   - attraction_acts_during_charge
+  - trap_label_leader_clears_glyphs
   - air_gap_coupling_is_capacitor_like_schematic_only
   - source_off_isolation_precedes_drive_polarity_reversal
   - trapped_charge_remains_on_same_specimen_after_isolation
@@ -76,6 +78,9 @@ semantic_legibility:
     - object_id: panel_a.actuation_charge_state
       declared_role: electromechanical_charge_phase
       forbidden_readings: [standalone_hv_charger, polarization_measurement]
+    - object_id: panel_a.trapped_charge
+      declared_role: representative_trapped_charge_marker
+      forbidden_readings: [decorative_bead, detached_annotation]
     - object_id: panel_a.attraction_force
       declared_role: charge_phase_attraction
       forbidden_readings: [decorative_arrow]
@@ -166,6 +171,8 @@ semantic_legibility:
       owner: panel_a.air_gap
     - label_id: panel_a.charge_phase_label
       owner: panel_a.actuation_charge_state
+    - label_id: panel_a.trapped_charge_label
+      owner: panel_a.trapped_charge
     - label_id: panel_a.drive_bias_label
       owner: panel_a.drive_electrode
     - label_id: panel_a.clip_ground_label

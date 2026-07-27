@@ -690,6 +690,11 @@ centered over the source body, trapped charge, or competing result arrow. If a
 force name is too long for that lane, line-break or shorten it before reducing
 the font; preserve the visual binding to the arrow.
 
+For a representative marker such as trapped charge, anchor the label from the
+free edge of its text box and begin the leader outside the glyphs. A leader that
+starts inside or behind the label is a label-ownership defect even when it ends
+on the correct marker; keep the marker label in its own annotation lane.
+
 Do not retain a polarity-neutral field trace merely to fill the mechanism scene.
 When a named Maxwell baseline arrow already communicates the field-mediated
 attraction, remove redundant pale curves and a floating $\mathbf{E}$ label unless

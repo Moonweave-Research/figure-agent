@@ -25,9 +25,9 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 17
+    assert contract["summary"]["object_role_count"] == 18
     assert contract["summary"]["visible_connector_count"] == 7
-    assert contract["summary"]["label_ownership_count"] == 12
+    assert contract["summary"]["label_ownership_count"] == 13
     assert contract["summary"]["panel_story_role_count"] == 4
 
 
@@ -44,6 +44,7 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "same_mounted_film_scale_across_panels" in protected
     assert "reverse_response_is_faster_than_initial_attraction" in protected
     assert "positive_plateau_is_explicit" in protected
+    assert "trap_label_leader_clears_glyphs" in protected
     assert "clip_separation_is_manual" in protected
     assert "cantilever_remains_clamped_during_ground_open" in protected
     assert "panel_a.standalone_two_terminal_charger" in forbidden
@@ -69,7 +70,7 @@ def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> Non
 
     assert "at (1.52,4.62) {clip: GND};" in panel_a
     voltage_nodes = re.findall(
-        r"\\node\[labelStd,text=cRed!82!black,anchor=west\].*?\{\$\+5\\,\\mathrm\{kV\}\$\};",
+        r"\\node\[labelStd,text=cRed!82!black,anchor=(?:west|east)\].*?\{\$\+5\\,\\mathrm\{kV\}\$\};",
         panel_a,
         re.DOTALL,
     )
@@ -77,6 +78,17 @@ def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> Non
     drive_label = panel_a.index("{drive electrode}")
     voltage_label = panel_a.index("{$+5\\,\\mathrm{kV}$}")
     assert voltage_label > drive_label
+
+
+def test_fig5_trapped_charge_label_leader_starts_outside_its_glyphs() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+
+    assert "anchor=east] at (1.06,3.04)" in panel_a
+    assert "(1.13,3.08)--(1.41,3.56)" in panel_a
+    assert "anchor=west] at (0.26,3.04)" not in panel_a
 
 
 def test_fig5_marks_reverse_force_as_conditional_after_isolation() -> None:
