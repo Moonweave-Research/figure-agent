@@ -25,9 +25,9 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 14
+    assert contract["summary"]["object_role_count"] == 15
     assert contract["summary"]["visible_connector_count"] == 7
-    assert contract["summary"]["label_ownership_count"] == 9
+    assert contract["summary"]["label_ownership_count"] == 11
     assert contract["summary"]["panel_story_role_count"] == 4
 
 
@@ -47,6 +47,32 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "panel_a.polarization_measurement_instrument" in forbidden
     assert "panel_a.esvm_measurement_head" in forbidden
     assert "panel_a.corona_needle" in forbidden
+
+
+def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+
+    charge_subtitle = re.search(
+        r"\\node\[labelMute,anchor=west\] at \(0\.44,4\.78\)\s*\{([^}]*)\};",
+        panel_a,
+    )
+    assert charge_subtitle is not None
+    assert "kV" not in charge_subtitle.group(1)
+    assert "field-on charge" in charge_subtitle.group(1)
+
+    assert "at (1.52,4.62) {clip: GND};" in panel_a
+    voltage_nodes = re.findall(
+        r"\\node\[labelStd,text=cRed!82!black,anchor=west\].*?\{\$\+5\\,\\mathrm\{kV\}\$\};",
+        panel_a,
+        re.DOTALL,
+    )
+    assert len(voltage_nodes) == 1
+    drive_label = panel_a.index("{drive electrode}")
+    voltage_label = panel_a.index("{$+5\\,\\mathrm{kV}$}")
+    assert voltage_label > drive_label
 
 
 def test_fig5_marks_reverse_force_as_conditional_after_isolation() -> None:

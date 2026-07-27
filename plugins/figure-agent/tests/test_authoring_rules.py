@@ -145,6 +145,30 @@ def test_project_rule_preserves_reversed_cantilever_morphology() -> None:
     assert "one-state taper, angular cap" in normalized_skill
 
 
+def test_project_rule_binds_actuation_voltage_to_the_driven_electrode() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-project.md"
+    )
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "polymer_paper_project.voltage-label-owns-driven-electrode"
+    )
+    assert "numeric high-voltage label" in rule["rule"]
+    assert "drive-electrode annotation lane" in rule["rule"]
+    assert "voltage-free" in rule["rule"]
+
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized_skill = " ".join(skill.split())
+    assert "give the numeric high-voltage label to the drive-electrode lane" in normalized_skill
+    assert (
+        "repeating the voltage beside a ground symbol is a semantic ownership defect"
+        in normalized_skill
+    )
+
+
 def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"

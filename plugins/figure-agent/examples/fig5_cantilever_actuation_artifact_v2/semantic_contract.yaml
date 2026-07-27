@@ -8,6 +8,7 @@ selector_id: fig5.actuation_mechanism
 required_objects:
   - panel_a.cantilever
   - panel_a.drive_electrode
+  - panel_a.clip_ground
   - panel_a.air_gap
   - panel_a.actuation_charge_state
   - panel_a.attraction_force
@@ -59,6 +60,9 @@ semantic_legibility:
     - object_id: panel_a.drive_electrode
       declared_role: active_actuation_electrode
       forbidden_readings: [measurement_probe, polarization_meter_head]
+    - object_id: panel_a.clip_ground
+      declared_role: charging_phase_ground_reference_at_clip
+      forbidden_readings: [high_voltage_terminal, driven_electrode]
     - object_id: panel_a.air_gap
       declared_role: noncontact_air_gap
       forbidden_readings: [electrical_wire, solid_contact]
@@ -149,6 +153,10 @@ semantic_legibility:
       owner: panel_a.air_gap
     - label_id: panel_a.charge_phase_label
       owner: panel_a.actuation_charge_state
+    - label_id: panel_a.drive_bias_label
+      owner: panel_a.drive_electrode
+    - label_id: panel_a.clip_ground_label
+      owner: panel_a.clip_ground
     - label_id: panel_a.attraction_label
       owner: panel_a.attraction_force
     - label_id: panel_b.isolation_label

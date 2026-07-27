@@ -450,6 +450,12 @@ the high-voltage source belongs to the driven-electrode return circuit; it must
 not silently connect to the cantilever, trapped-charge path, or air-gap force
 arrow unless the source explicitly declares that electrical boundary.
 
+When a charging-stage schematic has a grounded clip and a biased drive
+electrode, give the numeric high-voltage label to the drive-electrode lane and
+bind the ground label explicitly to the clip. Keep duration or state text
+voltage-free when it sits near the ground lane; repeating the voltage beside a
+ground symbol is a semantic ownership defect even when no glyphs collide.
+
 Preserve the declared evidence granularity for instrument identity. Family-level
 authority supports the family name and topology, not unverified model-specific
 features, controls, or dimensions; keep those schematic unless a model is declared.

@@ -45,7 +45,7 @@
   \node[panelTitle,anchor=west] at (0.44,5.12)
     {actuation charge};
   \node[labelMute,anchor=west] at (0.44,4.78)
-    {$+5\,\mathrm{kV}$, \textasciitilde20 min};
+    {field-on charge; \textasciitilde20 min};
 
   % The charge state is the actuation geometry itself: a cantilever faces a
   % nearby drive electrode across an air gap and bends toward it.
@@ -59,7 +59,7 @@
   \coordinate (panel-a-cantilever-right) at (1.47,4.05);
   \draw[wire] (panel-a-clamp-axis)--(1.37,4.68);
   \node[labelMute,anchor=east] at (0.82,4.20) {clip};
-  \node[labelMute,anchor=west] at (1.52,4.62) {GND};
+  \node[labelMute,anchor=west] at (1.52,4.62) {clip: GND};
   \fill[polymer,rounded corners=0.35mm]
     (panel-a-cantilever-left)
       .. controls (1.27,3.50) and (1.35,2.85) .. (1.65,2.30)

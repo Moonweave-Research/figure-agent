@@ -91,6 +91,14 @@ rules:
       locator: "Fig1 Panel F topology audit against semantic_contract.yaml and the maintained floating-clip fixture (2026-07-20)"
       quote: "grounded voltage-source return; sample and cantilever remain floating"
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.voltage-label-owns-driven-electrode
+    category: label_binding
+    rule: "In an actuation schematic with a grounded clip and a biased drive electrode, place the numeric high-voltage label in the drive-electrode annotation lane and bind the ground label explicitly to the clip. Keep a shared charge-duration subtitle voltage-free. Do not repeat the voltage near the ground symbol, because proximity can make the reader assign the high voltage to ground."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig5 Panel A voltage/ground ownership audit (2026-07-27)"
+      quote: "A +5 kV subtitle beside clip/GND was read as voltage applied to ground."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.trap-colour-shallow-blue-deep-red
     category: label_binding
     rule: "Shallow traps and shallow states are blue or teal; deep traps and deep states are red. Keep this colour mapping consistent across every figure."
