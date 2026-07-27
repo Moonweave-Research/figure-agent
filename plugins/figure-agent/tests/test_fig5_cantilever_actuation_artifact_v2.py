@@ -25,7 +25,7 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 16
+    assert contract["summary"]["object_role_count"] == 17
     assert contract["summary"]["visible_connector_count"] == 7
     assert contract["summary"]["label_ownership_count"] == 12
     assert contract["summary"]["panel_story_role_count"] == 4
@@ -43,6 +43,7 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "clamp_axis_aligns_with_cantilever_centerline" in protected
     assert "same_mounted_film_scale_across_panels" in protected
     assert "reverse_response_is_faster_than_initial_attraction" in protected
+    assert "positive_plateau_is_explicit" in protected
     assert "clip_separation_is_manual" in protected
     assert "cantilever_remains_clamped_during_ground_open" in protected
     assert "panel_a.standalone_two_terminal_charger" in forbidden
@@ -158,6 +159,17 @@ def test_fig5_response_trace_separates_off_float_from_reversal() -> None:
     assert "at (1.73,4.08) {clip floating};" in panel_d
     assert "(1.82,1.04)--(1.82,3.56)" in panel_d
     assert "at (2.24,3.04)" in panel_d
+
+
+def test_fig5_response_trace_has_a_visible_sustained_positive_plateau() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_d = tex.split("% Panel D", 1)[1]
+
+    assert "sustained positive plateau" in panel_d
+    assert "-- (1.68,3.58)" in panel_d
+    assert "rounded summit" not in panel_d
 
 
 def test_fig5_panel_b_keeps_the_specimen_mounted_and_separates_ground_manually() -> None:

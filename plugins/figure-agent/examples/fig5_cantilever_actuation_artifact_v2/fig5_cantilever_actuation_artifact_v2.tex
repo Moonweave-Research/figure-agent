@@ -223,14 +223,15 @@
   \node[labelMute,anchor=east] at (0.56,1.46) {$-\theta$};
 
   % The plot begins at the actuation onset: the cantilever angle is neutral at
-  % t=0, then reaches the positive charged state over the compressed precharge
-  % interval before source OFF and polarity reversal.
+  % t=0, then reaches a visibly sustained positive plateau after the compressed
+  % precharge interval, before source OFF and polarity reversal.
   % The 20-minute precharge is documented in Panel A and omitted from this
   % response timebase; t=0 is the actuation-onset origin shown below.
   \draw[cBlue!82!black,line width=1.05pt]
     (0.74,2.52) .. controls (0.78,2.70) and (0.93,3.20) .. (1.08,3.48)
-    .. controls (1.18,3.61) and (1.40,3.62) .. (1.64,3.59)
-    .. controls (1.70,3.59) and (1.77,3.58) .. (1.82,3.56)
+    .. controls (1.12,3.55) and (1.16,3.58) .. (1.20,3.58)
+    -- (1.68,3.58)
+    .. controls (1.74,3.58) and (1.79,3.57) .. (1.82,3.56)
     .. controls (1.88,3.38) and (1.94,2.80) .. (2.02,2.52)
     .. controls (2.10,2.06) and (2.16,1.55) .. (2.36,1.35)
     .. controls (2.46,1.17) and (2.84,1.35) .. (3.22,1.78)

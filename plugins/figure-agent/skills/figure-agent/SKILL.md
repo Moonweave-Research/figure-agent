@@ -653,6 +653,11 @@ For a qualitative response trace with compressed precharge, require a visible
 source-OFF/floating interval between the positive plateau and the polarity
 reversal marker. Do not collapse OFF, floating, and reversal into one coincident
 label, and do not let a precharge duration compete with the response timebase.
+If the charged state is described as saturated or held before that transition,
+make the positive plateau an explicitly horizontal segment after the rise. A
+rounded summit that immediately descends is a waveform-morphology defect, not a
+stylistic alternative; keep the segment schematic and do not assign it the
+20-minute precharge duration.
 
 Do not solve that problem by omitting the response origin. When a mechanism
 trace starts after a long precondition, show a visible reader-facing `$t=0$`

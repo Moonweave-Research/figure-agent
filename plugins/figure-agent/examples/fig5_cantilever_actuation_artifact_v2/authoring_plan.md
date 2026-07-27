@@ -11,7 +11,9 @@
    illustrative conditional force decomposition on one visibly reverse-bent
    cantilever, not an observed vector field or a separate video frame.
 4. **D — continuous bend response:** the response trace owns the macroscopic
-   reversal and recovery; no other panel redraws those states as evidence.
+   reversal and recovery; no other panel redraws those states as evidence. Its
+   positive charged state must include a visibly horizontal hold before the
+   source-OFF/reversal transition.
 
 ## Composition rule
 

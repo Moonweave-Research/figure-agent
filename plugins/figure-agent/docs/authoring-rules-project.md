@@ -107,6 +107,14 @@ rules:
       locator: "Fig5 Panel D event-order audit (2026-07-27)"
       quote: "The source-OFF/floating state was visually coincident with reversal and read as missing."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.response-trace-explicit-positive-plateau
+    category: physics_semantics
+    rule: "When the qualitative response reaches its charged bend state before source OFF and reversal, draw a visibly horizontal hold segment after the rise. A rounded peak or immediately descending hump does not communicate saturation; keep the plateau schematic and do not encode the 20-minute precharge as its duration."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig5 Panel D waveform morphology audit (2026-07-27)"
+      quote: "The response reached a peak but had no straight maintained saturation segment."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.manual-ground-lead-separation
     category: instrument_standard
     rule: "When source OFF is followed by removal of a clip's ground connection, keep the specimen clip visibly mounted and show the ground lead as a manual separation. Do not use a generic switch symbol, automated stage, or opened specimen clamp unless the evidence explicitly declares that mechanism."

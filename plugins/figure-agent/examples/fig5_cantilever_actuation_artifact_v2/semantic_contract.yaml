@@ -15,6 +15,7 @@ required_objects:
   - panel_b.isolation_state
   - panel_b.trapped_charge
   - panel_b.manual_clip_separation
+  - panel_d.positive_plateau
   - panel_c.maxwell_baseline
   - panel_c.coulomb_force
   - panel_c.reverse_drive
@@ -47,6 +48,7 @@ protected_relations:
   - conditional_reverse_bend_owns_force_hierarchy
   - clamp_axis_aligns_with_cantilever_centerline
   - response_trace_is_qualitative_not_calibrated_data
+  - positive_plateau_is_explicit
   - reverse_response_is_faster_than_initial_attraction
   - source_off_floating_interval_is_explicit
   - clip_separation_is_manual
@@ -101,6 +103,9 @@ semantic_legibility:
     - object_id: panel_d.response_trace
       declared_role: qualitative_bend_trace
       forbidden_readings: [calibrated_current_waveform]
+    - object_id: panel_d.positive_plateau
+      declared_role: sustained_positive_bend_state
+      forbidden_readings: [rounded_hump_without_hold, twenty_minute_time_ratio]
     - object_id: panel_d.time_origin
       declared_role: actuation_onset_time_origin
       forbidden_readings: [missing_time_origin, twenty_minute_trace_plateau]
