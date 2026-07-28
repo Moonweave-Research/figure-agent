@@ -155,7 +155,7 @@ def test_quality_next_experiment_selects_highest_uncertainty_fixture_family(
     assert payload["recommendation"]["arm_uncertainty"] == 1.0
     assert payload["recommendation"]["reason_codes"] == [
         "highest_fixture_family_arm_uncertainty",
-        "read_only_quality_search_preview",
+        "read_only_candidate_generator_preview",
     ]
 
 

@@ -1154,14 +1154,96 @@ def _render_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
 
 
 def _rank_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
-    name = str(arguments.get("name") or "")
-    candidate_set = str(arguments.get("candidate_set") or "build/candidates/candidate_set.json")
-    return _run_json_fig_agent_tool(
-        arguments=arguments,
-        schema="figure-agent.mcp.rank-candidates.v1",
-        command=["rank-candidates", name, "--candidate-set", candidate_set, "--json"],
-        payload_key="rank_result",
-        failure_message="fig-agent rank-candidates failed",
+    """Rank rendered candidates without routing MCP through a retired CLI command."""
+    started = time.monotonic()
+    schema = "figure-agent.mcp.rank-candidates.v1"
+    resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
+    if isinstance(resolved, dict):
+        return resolved
+    workspace_root, name = resolved
+    try:
+        import candidate_contracts
+        import candidate_rank
+        import fixture_identity
+        import quality_memory_index
+
+        candidate_set_path = candidate_contracts.candidate_set_input_path(
+            workspace_root,
+            name,
+            str(arguments.get("candidate_set") or "build/candidates/candidate_set.json"),
+        )
+        if candidate_set_path.is_symlink() or not candidate_set_path.is_file():
+            raise ValueError("candidate_set_missing_or_unsafe")
+        candidate_set = json.loads(candidate_set_path.read_text(encoding="utf-8"))
+        candidates = candidate_set.get("candidates") if isinstance(candidate_set, dict) else None
+        if not isinstance(candidates, list):
+            raise ValueError("candidate_set_candidates_invalid")
+        memory_path = candidate_contracts.fixture_local_output_path(
+            workspace_root,
+            name,
+            "build/memory/quality_memory_index.json",
+        )
+        if memory_path.is_symlink():
+            raise ValueError("memory_index_unsafe")
+        if memory_path.is_file():
+            memory = json.loads(memory_path.read_text(encoding="utf-8"))
+            if not isinstance(memory, dict):
+                raise ValueError("memory_index_invalid")
+        else:
+            memory = quality_memory_index.build_fixture_index(
+                name,
+                write=False,
+                plugin_root=_plugin_root(),
+                workspace_root=workspace_root,
+            )
+        scores = []
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                continue
+            candidate_id = str(candidate.get("id") or "")
+            fixture_identity.validate_fixture_name(candidate_id)
+            sandbox = candidate_contracts.fixture_local_output_path(
+                workspace_root,
+                name,
+                f"build/candidates/{candidate_id}",
+            )
+            manifest_path = sandbox / "candidate_manifest.json"
+            render_path = sandbox / "render_manifest.json"
+            if manifest_path.is_symlink() or not manifest_path.is_file():
+                raise ValueError("candidate_manifest_missing_or_unsafe")
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if not isinstance(manifest, dict):
+                raise ValueError("candidate_manifest_invalid")
+            render_manifest = None
+            if render_path.is_file() and not render_path.is_symlink():
+                render_manifest = json.loads(render_path.read_text(encoding="utf-8"))
+            scores.append(
+                candidate_rank.score_manifest(
+                    manifest,
+                    candidate=candidate,
+                    render_manifest=render_manifest if isinstance(render_manifest, dict) else None,
+                    memory_index=memory,
+                )
+            )
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=name,
+            error=_error("invalid_request", f"candidate ranking failed: {exc}"),
+        )
+    scores.sort(key=lambda score: (-float(score["rank_score"]), str(score["candidate_id"])))
+    return _tool_envelope(
+        schema,
+        success=True,
+        started=started,
+        name=name,
+        rank_result={
+            "schema": "figure-agent.candidate-rank-result.v1",
+            "fixture": name,
+            "scores": scores,
+        },
     )
 
 

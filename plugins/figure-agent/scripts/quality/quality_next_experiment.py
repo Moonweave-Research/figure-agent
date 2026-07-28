@@ -38,14 +38,7 @@ def _safe_command(command: str) -> bool:
         return False
     if parts == ["fig-agent", "benchmark-run", "--suite", "smoke", "--json"]:
         return True
-    if len(parts) < 8 or parts[:2] != ["fig-agent", "quality-search"]:
-        return False
-    if "--json" not in parts or "--execute" not in parts:
-        return False
-    if "--max-iterations" not in parts:
-        return False
-    max_index = parts.index("--max-iterations")
-    return max_index + 1 < len(parts) and parts[max_index + 1] == "1"
+    return len(parts) == 4 and parts[:2] == ["fig-agent", "candidates"] and parts[-1] == "--json"
 
 
 def _bounded_int(value: Any) -> int:
@@ -128,21 +121,8 @@ def _experiment_candidates(
     )
 
 
-def _quality_search_command(fixture: str, family: str) -> str:
-    goal = f"probe {family} arm uncertainty"
-    return " ".join(
-        [
-            "fig-agent",
-            "quality-search",
-            fixture,
-            "--goal",
-            shlex.quote(goal),
-            "--execute",
-            "--max-iterations",
-            "1",
-            "--json",
-        ]
-    )
+def _candidate_generator_command(fixture: str) -> str:
+    return f"fig-agent candidates {shlex.quote(fixture)} --json"
 
 
 def _contract_backed_fixture(fixture: str, *, paths: runtime_paths.RuntimePaths) -> bool:
@@ -192,18 +172,18 @@ def build_next_experiment(
             "contract_backed_fixture_uses_benchmark_run",
         ]
     elif isinstance(selected, dict):
-        command = _quality_search_command(str(selected["fixture"]), str(selected["family"]))
+        command = _candidate_generator_command(str(selected["fixture"]))
         kind = "fixture_family_uncertainty_probe"
         reason_codes = [
             "highest_fixture_family_arm_uncertainty",
-            "read_only_quality_search_preview",
+            "read_only_candidate_generator_preview",
         ]
     else:
         command = "fig-agent benchmark-run --suite smoke --json"
         kind = "benchmark_preview"
         reason_codes = [
             "highest_fixture_family_arm_uncertainty",
-            "read_only_quality_search_preview",
+            "read_only_candidate_generator_preview",
         ]
     return {
         "schema": SCHEMA,

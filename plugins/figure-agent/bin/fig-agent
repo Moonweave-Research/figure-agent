@@ -1603,6 +1603,7 @@ def _rank_candidates(argv: list[str]) -> int:
 
 def _load_memory_index(name: str) -> dict | None:
     import candidate_contracts
+    import quality_memory_index
 
     paths = _paths()
     example_dir = paths.examples_dir / name
@@ -1619,7 +1620,12 @@ def _load_memory_index(name: str) -> dict | None:
     if path.is_symlink():
         raise RuntimeError("memory_index_symlink_forbidden: output")
     if not path.is_file():
-        return None
+        return quality_memory_index.build_fixture_index(
+            name,
+            write=False,
+            plugin_root=paths.plugin_root,
+            workspace_root=paths.workspace_root,
+        )
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise RuntimeError("memory_index_invalid")
