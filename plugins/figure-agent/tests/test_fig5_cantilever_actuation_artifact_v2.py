@@ -41,9 +41,9 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 20
-    assert contract["summary"]["visible_connector_count"] == 8
-    assert contract["summary"]["label_ownership_count"] == 16
+    assert contract["summary"]["object_role_count"] == 21
+    assert contract["summary"]["visible_connector_count"] == 9
+    assert contract["summary"]["label_ownership_count"] == 17
     assert contract["summary"]["panel_story_role_count"] == 4
 
 
@@ -141,6 +141,25 @@ def test_fig5_declares_the_reverse_bend_as_conditional_not_a_second_snapshot() -
     reverse_bend = roles["panel_c.conditional_reverse_bend"]
     assert reverse_bend["declared_role"] == "conditional_reverse_bend_response"
     assert "observed_comparison" in reverse_bend["forbidden_readings"]
+
+
+def test_fig5_binds_conditional_coulomb_force_to_a_visible_trapped_charge() -> None:
+    contract = _yaml("semantic_contract.yaml")
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
+    connectors = {
+        item["connector_id"]: item
+        for item in contract["semantic_legibility"]["visible_connectors"]
+    }
+
+    force_origin = connectors["panel_c.coulomb_originates_at_trapped_charge"]
+    assert force_origin["from_object"] == "panel_c.trapped_charge"
+    assert force_origin["to_object"] == "panel_c.coulomb_force"
+    assert force_origin["epistemic_status"] == "conditional"
+    assert "\\node[qmark] at (1.14,2.38) {};" in panel_c
+    assert "\\draw[forceAway] (1.14,2.38)--(0.18,2.38);" in panel_c
 
 
 def test_fig5_panel_c_reserves_copy_for_the_reverse_bend_threshold() -> None:
@@ -421,8 +440,8 @@ def test_fig5_reverse_bend_keeps_the_same_rounded_member_extent() -> None:
     assert "rounded corners=0.45mm" in panel_a
     assert "rounded corners=0.35mm" in panel_c
     assert "rounded corners=0.45mm" in panel_c
-    assert "(2.67,1.48)" in panel_a
-    assert "(0.13,1.48)" in panel_c
+    assert "(2.61,1.50)" in panel_a
+    assert "(0.19,1.50)" in panel_c
 
 
 def test_fig5_source_off_residual_bend_is_visibly_smaller_than_drive_bends() -> None:
@@ -433,6 +452,6 @@ def test_fig5_source_off_residual_bend_is_visibly_smaller_than_drive_bends() -> 
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
-    assert "(2.67,1.48)" in panel_a
+    assert "(2.61,1.50)" in panel_a
     assert "(2.57,1.58)" in panel_b
-    assert "(0.13,1.48)" in panel_c
+    assert "(0.19,1.50)" in panel_c
