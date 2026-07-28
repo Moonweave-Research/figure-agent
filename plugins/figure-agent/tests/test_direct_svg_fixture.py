@@ -8,7 +8,10 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
+import pytest
 import yaml
+
+pytestmark = pytest.mark.quarantine
 from direct_svg_candidate import (
     begin_ledger,
     record_iteration,

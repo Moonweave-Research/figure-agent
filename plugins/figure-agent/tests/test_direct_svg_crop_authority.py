@@ -9,6 +9,8 @@ import yaml
 from direct_svg_crop_authority import CropAuthorityError, create_authority_crops
 from PIL import Image
 
+pytestmark = pytest.mark.quarantine
+
 
 def _sha256(path: Path) -> str:
     return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"

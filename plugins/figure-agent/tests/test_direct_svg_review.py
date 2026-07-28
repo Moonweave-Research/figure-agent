@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 import yaml
+
+pytestmark = pytest.mark.quarantine
 from direct_svg_review import (
     DirectSvgReviewError,
     build_review_packet,

@@ -6,6 +6,8 @@ import pytest
 from direct_svg_candidate import DirectSvgCandidateError
 from direct_svg_render import render_with_receipt
 
+pytestmark = pytest.mark.quarantine
+
 
 @pytest.mark.parametrize(
     ("field", "value", "error"),
