@@ -391,6 +391,13 @@ normal to the curve until it owns a clear annotation lane; shifting only vertica
 can trade a curve collision for an axis or tick collision. Do not mask a measured
 data stroke merely to make an inline label fit.
 
+Apply the same clearance rule to rotated axis labels: declare the shaft as a
+`label_path_proximity_checks` vertical path, keep the full glyph box visibly
+separated from the shaft, and recheck the non-separator side at print reduction.
+Moving a label away from its axis but into a panel separator is a regression,
+not a repair; preserve the interior annotation lane and record the clearance
+constraint in the fixture contract.
+
 For a schematic log--log power-law comparison, verify that the axes are explicitly
 logarithmic, the visible slope ordering matches the stated low/high exponent, and
 any common start point is either declared or left unmarked. A neutral shared anchor

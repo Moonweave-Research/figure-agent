@@ -177,6 +177,16 @@ label_path_proximity_checks:
     text_phrases:
       - id: reversed_drive
         words: [reversed, drive]
+  - id: panel-d-bend-angle-axis
+    kind: vertical_line
+    role: axis_label_lane
+    x_pdf_cm: 13.97
+    y_range_pdf_cm: [1.02, 4.08]
+    clearance_pt: 2.5
+    defect_kind: label_path_near_miss
+    text_phrases:
+      - id: bend_angle_label
+        words: [bend, angle]
 
 panels:
   - id: A

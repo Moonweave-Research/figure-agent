@@ -206,7 +206,9 @@
   % Axes and zero line.
   \draw[axis] (0.62,1.02)--(0.62,4.08);
   \draw[axis] (0.62,2.52)--(4.02,2.52);
-  \node[labelMute,rotate=90,anchor=south] at (0.30,2.56) {bend angle};
+  % Keep the rotated axis label visibly clear of the shaft at print reduction;
+  % the label still owns the y-axis without sitting on its stroke.
+  \node[labelMute,rotate=90,anchor=south] at (0.24,2.56) {bend angle};
   \node[labelMute,anchor=north east] at (4.00,0.92) {time from actuation onset};
   \node[labelMute,anchor=east] at (0.56,3.63) {$+\theta$};
   \node[labelMute,anchor=east] at (0.56,1.46) {$-\theta$};
