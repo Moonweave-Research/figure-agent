@@ -75,6 +75,18 @@ def _cubic_arc_length(points: list[tuple[float, float]], samples: int = 2000) ->
     return total
 
 
+def _cubic_max_x(points: list[tuple[float, float]], samples: int = 2000) -> float:
+    p0, p1, p2, p3 = points
+    return max(
+        (1.0 - t) ** 3 * p0[0]
+        + 3 * (1.0 - t) ** 2 * t * p1[0]
+        + 3 * (1.0 - t) * t**2 * p2[0]
+        + t**3 * p3[0]
+        for index in range(samples + 1)
+        for t in (index / samples,)
+    )
+
+
 def test_fig5_declares_a_width_limited_physical_print_contract() -> None:
     contract = _yaml("spec.yaml")["final_size_contract"]
 
@@ -431,6 +443,20 @@ def test_fig5_repeated_cantilevers_preserve_specimen_arc_length() -> None:
     # small schematic tolerance allows hand-authored curvature without letting
     # an independently redrawn path become a visibly shorter member.
     assert relative_deviation <= 0.03, lengths
+
+
+def test_fig5_drive_electrodes_keep_clearance_from_the_maximum_bend() -> None:
+    electrode_left = {"A": 3.42, "B": 3.42, "C": 3.44}
+    centerline_clearances = {
+        panel_id: electrode_left[panel_id]
+        - _cubic_max_x(_cantilever_centerline(panel_id))
+        for panel_id in electrode_left
+    }
+
+    # The limiting state is Panel A.  Keep enough centerline clearance for the
+    # finite-width member and print-scale anti-touch perception; a dimension
+    # arrow alone is not evidence that the bent specimen remains separated.
+    assert min(centerline_clearances.values()) >= 0.80, centerline_clearances
 
 
 def test_fig5_panel_b_keeps_source_off_state_floating_with_residual_attraction() -> None:

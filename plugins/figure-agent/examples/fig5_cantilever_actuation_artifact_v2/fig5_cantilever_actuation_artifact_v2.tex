@@ -72,12 +72,14 @@
   \draw[beamInner]
     (panel-a-beam-origin)
       .. controls (1.37,3.40) and (1.83,2.10) .. (2.48,1.62);
-  \fill[cGray!28] (3.12,1.40) rectangle (3.42,4.34);
-  \draw[apparatus] (3.12,1.40) rectangle (3.42,4.34);
+  % Keep a print-visible safety margin beyond the fully bent free end; the
+  % electrode is not allowed to read as touching the specimen.
+  \fill[cGray!28] (3.42,1.40) rectangle (3.72,4.34);
+  \draw[apparatus] (3.42,1.40) rectangle (3.72,4.34);
   % An explicit terminal rail makes the applied bias belong to the electrode,
   % rather than to the film/clip in the air-gap annotation lane.
-  \draw[driveBiasLeader] (3.27,4.34)--(3.27,4.62);
-  \node[labelStd,text=cRed!82!black,anchor=south] at (3.27,4.62)
+  \draw[driveBiasLeader] (3.57,4.34)--(3.57,4.62);
+  \node[labelStd,text=cRed!82!black,anchor=south] at (3.57,4.62)
     {$+5\,\mathrm{kV}$};
   \node[qmark] at (1.41,3.56) {};
   \node[qmark] at (1.50,2.88) {};
@@ -90,10 +92,10 @@
 
   % A true dimension arrow with witness ticks keeps the air gap distinct from
   % the force arrow and avoids the hooked legacy dimension glyphs at print scale.
-  \draw[gapWitness] (2.34,1.69)--(2.34,1.98);
-  \draw[gapWitness] (3.07,1.69)--(3.07,1.98);
-  \draw[gapDimension] (2.38,1.83)--(3.03,1.83);
-  \node[labelMute,anchor=south] at (2.70,1.95) {air gap};
+  \draw[gapWitness] (2.46,1.69)--(2.46,1.98);
+  \draw[gapWitness] (3.37,1.69)--(3.37,1.98);
+  \draw[gapDimension] (2.50,1.83)--(3.33,1.83);
+  \node[labelMute,anchor=south] at (2.92,1.95) {air gap};
   \draw[forceToward] (1.44,3.02)--(2.84,3.02);
   \node[labelStd,text=cRed!84!black,anchor=south] at (2.34,3.08)
     {attraction};

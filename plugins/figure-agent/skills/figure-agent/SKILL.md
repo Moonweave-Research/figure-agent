@@ -375,7 +375,12 @@ For air gaps or other measured intervals, use a conventional two-headed dimensio
 arrow with short witness ticks or equivalent endpoint projections. Do not reuse a
 legacy hooked/bracket-like `<->` glyph when it can read as a brace, force vector,
 or stray curve at print reduction; the measurement must visibly terminate on the
-two named boundaries and remain distinct from nearby mechanism arrows.
+two named boundaries and remain distinct from nearby mechanism arrows. For a
+bent member near an electrode, the shown interval must also leave a print-visible
+safety margin at the maximum-bend state: verify the member's outer extent against
+the electrode boundary, not just the centerline endpoint or the dimension label.
+If that clearance is not declared or tested, treat a plausible-looking gap as an
+authoring/detector coverage gap and do not infer non-contact from the schematic.
 
 When a caliper crosses category-colored regions, reserve a neutral measurement
 lane or otherwise isolate its shaft and label from those fills. Treat placement
