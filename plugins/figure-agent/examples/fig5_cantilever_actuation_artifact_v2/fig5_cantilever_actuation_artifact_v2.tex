@@ -58,8 +58,7 @@
   \coordinate (panel-a-cantilever-left) at (1.27,4.05);
   \coordinate (panel-a-cantilever-right) at (1.47,4.05);
   \draw[wire] (panel-a-clamp-axis)--(1.37,4.68);
-  \node[labelMute,anchor=east] at (0.82,4.20) {clip};
-  \node[labelMute,anchor=west] at (1.52,4.62) {clip: GND};
+  \node[labelMute,anchor=east] at (0.82,4.20) {clip: GND};
   \fill[polymer,rounded corners=0.35mm]
     (panel-a-cantilever-left)
       .. controls (1.27,3.50) and (1.35,2.85) .. (1.65,2.30)
@@ -203,7 +202,7 @@
   \node[labelStd,anchor=south,text=cGray!74!black] at (2.48,3.18)
     {Maxwell attraction};
   \draw[forceAway] (1.14,2.38)--(0.18,2.38);
-  \node[labelStd,text=cRed!84!black,anchor=south east] at (0.76,2.50)
+  \node[labelStd,text=cRed!84!black,anchor=south east] at (0.92,2.50)
     {Coulomb};
   \node[labelMute,align=center] at (2.24,0.82)
     {$F_{\mathrm{C}}$ opposes $F_{\mathrm{M}}$; reverse bend if\\[-0.5pt]

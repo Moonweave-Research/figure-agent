@@ -69,7 +69,8 @@ def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> Non
     assert "kV" not in charge_subtitle.group(1)
     assert "field-on charge" in charge_subtitle.group(1)
 
-    assert "at (1.52,4.62) {clip: GND};" in panel_a
+    assert "at (0.82,4.20) {clip: GND};" in panel_a
+    assert "at (1.52,4.62) {clip: GND};" not in panel_a
     voltage_nodes = re.findall(
         r"\\node\[labelStd,text=cRed!82!black,anchor=(?:west|east)\].*?\{\$\+5\\,\\mathrm\{kV\}\$\};",
         panel_a,

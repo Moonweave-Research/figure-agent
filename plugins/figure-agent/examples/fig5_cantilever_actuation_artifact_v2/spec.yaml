@@ -116,7 +116,7 @@ text_boundary_checks:
     kind: rect
     role: force_label_rail
     mode: contain_text
-    bbox_pdf_cm: [9.05, 2.70, 10.00, 3.00]
+    bbox_pdf_cm: [9.05, 2.70, 10.20, 3.00]
     clearance_pt: 0.0
     text_allowlist: [Coulomb]
 
