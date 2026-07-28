@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -9,6 +10,7 @@ from typing import Any
 import yaml
 
 SCHEMA = "figure-agent.failure-first-semantic-contract.v1"
+EVIDENCE_SCHEMA = "figure-agent.semantic-contract-evidence.v1"
 ELECTRICAL_STATES = {
     "source",
     "driven",
@@ -66,6 +68,22 @@ def _required_objects(payload: dict[str, Any]) -> list[str]:
         or len(set(values)) != len(values)
     ):
         raise SemanticLegibilityContractError("required_objects_invalid")
+    return values
+
+
+def _relation_list(
+    payload: dict[str, Any], key: str, *, required: bool
+) -> list[str]:
+    values = payload.get(key)
+    if values is None and not required:
+        return []
+    if (
+        not isinstance(values, list)
+        or not all(_nonempty_string(value) for value in values)
+        or len(set(values)) != len(values)
+        or not values
+    ):
+        raise SemanticLegibilityContractError(f"{key}_invalid")
     return values
 
 
@@ -395,13 +413,27 @@ def _electrical_topology(
     return nodes, connections
 
 
-def validate_semantic_legibility_contract(payload: object) -> dict[str, Any]:
+def validate_semantic_legibility_contract(
+    payload: object,
+    *,
+    require_transfer_relations: bool = False,
+) -> dict[str, Any]:
     if not isinstance(payload, dict) or payload.get("schema") != SCHEMA:
         raise SemanticLegibilityContractError("schema_invalid")
     if payload.get("publication_acceptance") != "not_claimed":
         raise SemanticLegibilityContractError("publication_acceptance_invalid")
 
     required = set(_required_objects(payload))
+    forbidden_implications = _relation_list(
+        payload,
+        "forbidden_implications",
+        required=require_transfer_relations,
+    )
+    protected_relations = _relation_list(
+        payload,
+        "protected_relations",
+        required=require_transfer_relations,
+    )
     section = payload.get("semantic_legibility")
     if not isinstance(section, dict):
         raise SemanticLegibilityContractError("semantic_legibility_missing")
@@ -429,16 +461,45 @@ def validate_semantic_legibility_contract(payload: object) -> dict[str, Any]:
                 item["declared_state"] == "floating" for item in electrical_nodes
             ),
             "visual_review_required": True,
+            "forbidden_implication_count": len(forbidden_implications),
+            "protected_relation_count": len(protected_relations),
+            "transfer_relations_required": require_transfer_relations,
         },
     }
 
 
-def load_semantic_legibility_contract(path: Path) -> dict[str, Any]:
+def load_semantic_legibility_contract(
+    path: Path,
+    *,
+    require_transfer_relations: bool = False,
+) -> dict[str, Any]:
     try:
         payload = yaml.safe_load(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, yaml.YAMLError) as exc:
         raise SemanticLegibilityContractError("contract_file_invalid") from exc
-    return validate_semantic_legibility_contract(payload)
+    return validate_semantic_legibility_contract(
+        payload,
+        require_transfer_relations=require_transfer_relations,
+    )
+
+
+def semantic_contract_evidence(path: Path, payload: dict[str, Any]) -> dict[str, Any]:
+    """Return build-local proof that this exact contract was validated.
+
+    The source contract remains the authority.  This small receipt lets status
+    distinguish a validated contract from a stale or absent build report
+    without copying the contract into generated state.
+    """
+    source_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+    return {
+        "schema": EVIDENCE_SCHEMA,
+        "contract_schema": payload["schema"],
+        "source": path.as_posix(),
+        "source_sha256": source_sha256,
+        "validated": True,
+        "publication_acceptance": payload["publication_acceptance"],
+        "summary": payload["summary"],
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -447,12 +508,32 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("contract", type=Path)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--json-output", type=Path)
+    parser.add_argument("--require-transfer-relations", action="store_true")
     args = parser.parse_args(argv)
     try:
-        payload = load_semantic_legibility_contract(args.contract)
+        payload = load_semantic_legibility_contract(
+            args.contract,
+            require_transfer_relations=args.require_transfer_relations,
+        )
     except SemanticLegibilityContractError as exc:
         print(f"ERROR semantic_legibility_contract: {exc}", file=sys.stderr)
         return 1
+    if args.json_output is not None:
+        try:
+            evidence = semantic_contract_evidence(args.contract, payload)
+            args.json_output.parent.mkdir(parents=True, exist_ok=True)
+            args.json_output.write_text(
+                json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        except (OSError, UnicodeError) as exc:
+            print(
+                "ERROR semantic_legibility_contract: "
+                f"evidence_write_failed:{exc}",
+                file=sys.stderr,
+            )
+            return 1
     if args.json:
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:

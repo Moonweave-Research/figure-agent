@@ -97,6 +97,9 @@ def test_accepts_declared_object_connector_and_label_roles() -> None:
         "electrical_connection_count": 0,
         "floating_object_count": 1,
         "visual_review_required": True,
+        "forbidden_implication_count": 0,
+        "protected_relation_count": 0,
+        "transfer_relations_required": False,
     }
     assert result["publication_acceptance"] == "not_claimed"
 
@@ -396,12 +399,52 @@ def test_contract_cli_fails_closed_on_missing_role(tmp_path: Path) -> None:
     assert "required_object_role_missing" in result.stderr
 
 
+def test_contract_cli_writes_hash_bound_validation_evidence(tmp_path: Path) -> None:
+    contract_path = tmp_path / "semantic_contract.yaml"
+    evidence_path = tmp_path / "build" / "semantic_contract.json"
+    contract_path.write_text(yaml.safe_dump(valid_contract(), sort_keys=False), encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            str(contract_path),
+            "--json-output",
+            str(evidence_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    evidence = yaml.safe_load(evidence_path.read_text(encoding="utf-8"))
+    assert evidence["schema"] == "figure-agent.semantic-contract-evidence.v1"
+    assert evidence["validated"] is True
+    assert len(evidence["source_sha256"]) == 64
+    assert evidence["publication_acceptance"] == "not_claimed"
+
+
+def test_required_transfer_relations_reject_missing_lists(tmp_path: Path) -> None:
+    path = tmp_path / "semantic_contract.yaml"
+    path.write_text(yaml.safe_dump(valid_contract(), sort_keys=False), encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(path), "--require-transfer-relations"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    assert "forbidden_implications_invalid" in result.stderr
+
+
 def test_compile_pipeline_runs_opt_in_contract_gate_before_tex_lint() -> None:
     script = COMPILE_SCRIPT.read_text(encoding="utf-8")
     contract_gate = script.index("semantic_legibility_contract.py")
     tex_lint = script.index("scripts/lint_tex.py")
     assert contract_gate < tex_lint
     assert 'if [[ -f "$SEMANTIC_CONTRACT" ]]' in script
+    assert '--json-output "${BUILD_DIR}/semantic_contract.json"' in script
 
 
 def test_compile_pipeline_falls_back_to_fixture_semantic_contract_for_nested_repairs() -> None:

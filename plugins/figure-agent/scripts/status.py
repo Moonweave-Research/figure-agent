@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -73,6 +74,7 @@ _SPEC_PARSE_ERROR_KEY = "__spec_parse_error__"
 SPINE_EVIDENCE_SCHEMA = "figure-agent.spine-evidence-summary.v1"
 PROMOTION_QUEUE_SCHEMA = "figure-agent.promotion-queue.v1"
 STRICT_STATUS_SCHEMA = "figure-agent.strict-status.v1"
+SEMANTIC_CONTRACT_EVIDENCE_SCHEMA = "figure-agent.semantic-contract-evidence.v1"
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -702,6 +704,50 @@ def _physics_grounding_summary(path: Path, example_dir: Path | None = None) -> d
     return {key: value for key, value in summary.items() if value is not None}
 
 
+def _semantic_contract_summary(
+    path: Path,
+    example_dir: Path | None = None,
+) -> dict[str, Any]:
+    display_path = _json_report_display_path(path, example_dir)
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {"state": error, "path": display_path}
+    assert payload is not None
+    if (
+        payload.get("schema") != SEMANTIC_CONTRACT_EVIDENCE_SCHEMA
+        or payload.get("contract_schema") != "figure-agent.failure-first-semantic-contract.v1"
+        or payload.get("validated") is not True
+        or payload.get("publication_acceptance") != "not_claimed"
+    ):
+        return {"state": "invalid", "path": display_path}
+
+    source = example_dir / "semantic_contract.yaml" if example_dir is not None else None
+    if source is None or not source.is_file():
+        candidate_source = path.parent / "semantic_contract.yaml"
+        source = candidate_source if candidate_source.is_file() else None
+    if source is not None:
+        try:
+            source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+        except (OSError, UnicodeError):
+            return {"state": "invalid", "path": display_path}
+        if payload.get("source_sha256") != source_hash:
+            return {
+                "state": "stale",
+                "path": display_path,
+                "source_sha256": source_hash,
+                "validated_sha256": payload.get("source_sha256"),
+            }
+    summary = payload.get("summary")
+    return {
+        "state": "validated",
+        "path": display_path,
+        "schema": payload.get("schema"),
+        "contract_schema": payload.get("contract_schema"),
+        "source_sha256": payload.get("source_sha256"),
+        "summary": summary if isinstance(summary, dict) else {},
+    }
+
+
 def _strict_status_summary(path: Path, example_dir: Path | None = None) -> dict[str, Any]:
     display_path = _json_report_display_path(path, example_dir)
     payload, error = _load_build_json_mapping(path)
@@ -791,6 +837,10 @@ def _spine_evidence_summary(example_dir: Path, build_dir: Path | None = None) ->
             build_dir / "semantic_assertions.json",
             example_dir,
         ),
+        "semantic_contract": _semantic_contract_summary(
+            build_dir / "semantic_contract.json",
+            example_dir,
+        ),
         "convention_receipt": _convention_receipt_summary(
             convention_path,
             example_dir,
@@ -800,11 +850,24 @@ def _spine_evidence_summary(example_dir: Path, build_dir: Path | None = None) ->
             example_dir,
         ),
     }
+    semantic_contract = sources["semantic_contract"]
+    semantic_assertions = sources["semantic_assertions"]
+    if semantic_contract.get("state") == "validated":
+        total = semantic_assertions.get("total")
+        checked = semantic_assertions.get("checked")
+        if total == 0 and checked == 0:
+            semantic_assertions["state"] = "incomplete"
+            semantic_assertions["coverage_state"] = "incomplete"
+            semantic_assertions["coverage_reason"] = (
+                "validated semantic contract has no executable semantic assertions"
+            )
+        else:
+            semantic_assertions["coverage_state"] = "complete"
     states = [str(item.get("state")) for item in sources.values()]
-    present_states = {"passed", "present", "needs_action"}
+    present_states = {"passed", "present", "validated", "needs_action", "incomplete"}
     if "invalid" in states:
         state = "invalid"
-    elif "needs_action" in states:
+    elif any(item in states for item in {"needs_action", "incomplete", "stale"}):
         state = "needs_action"
     elif any(item in present_states for item in states):
         state = "present"
@@ -1500,6 +1563,8 @@ def _print_single(result: dict) -> None:
     spine_evidence = result.get("spine_evidence")
     if isinstance(spine_evidence, dict):
         tex_assertions = spine_evidence.get("tex_assertions")
+        semantic_assertions = spine_evidence.get("semantic_assertions")
+        semantic_contract = spine_evidence.get("semantic_contract")
         conventions = spine_evidence.get("convention_receipt")
         physics = spine_evidence.get("physics_grounding")
         tex_state = (
@@ -1514,10 +1579,22 @@ def _print_single(result: dict) -> None:
             conventions.get("total") if isinstance(conventions, dict) else "?"
         )
         physics_status = physics.get("status") if isinstance(physics, dict) else "?"
+        semantic_assertion_state = (
+            semantic_assertions.get("state")
+            if isinstance(semantic_assertions, dict)
+            else "?"
+        )
+        semantic_contract_state = (
+            semantic_contract.get("state")
+            if isinstance(semantic_contract, dict)
+            else "?"
+        )
         print(
             "  Spine evidence: "
             f"{spine_evidence.get('state', '?')} "
             f"tex={tex_state} "
+            f"semantic_contract={semantic_contract_state} "
+            f"semantic_assertions={semantic_assertion_state} "
             f"conventions={convention_state}/{convention_total} "
             f"physics={physics_status}"
         )

@@ -59,6 +59,7 @@ TEXT_BOUNDARY_SPEC_ARGS=()
 LABEL_PATH_SPEC_ARGS=()
 PROCESS_STAGE_VISIBILITY_SPEC_ARGS=()
 VECTOR_CLEARANCE_SPEC_ARGS=()
+SEMANTIC_RELATION_ARGS=()
 LAYOUT_CONTRACT=""
 if [[ -n "$FIXTURE_NAME" ]]; then
   COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")
@@ -88,15 +89,8 @@ if [[ ! -f "$SEMANTIC_CONTRACT" && -n "$FIXTURE_ROOT" && -f "$FIXTURE_ROOT/seman
   SEMANTIC_CONTRACT="$FIXTURE_ROOT/semantic_contract.yaml"
 fi
 if [[ -f "$SEMANTIC_CONTRACT" ]]; then
-  echo 'Gate: Semantic role, connector, and label contract...' >&2
-  "${UV_RUN[@]}" python3 \
-    "$WORKFLOW_DIR/scripts/quality/semantic_legibility_contract.py" \
-    "$SEMANTIC_CONTRACT"
+  SEMANTIC_CONTRACT="$(cd "$(dirname "$SEMANTIC_CONTRACT")" && pwd)/$(basename "$SEMANTIC_CONTRACT")"
 fi
-
-echo 'Lint: Style Lock check (BLOCKER fails, WARN reports)...' >&2
-"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/lint_tex.py" "$TEX_INPUT"
-
 # Opt-in strict mode: when FIGURE_AGENT_STRICT=1, propagate --strict to the
 # collision/clash checkers so non-zero findings fail the compile (default
 # behavior is report-only with exit 0 to preserve dogfood ergonomics).
@@ -117,12 +111,28 @@ ENGINE="${LATEX_ENGINE:-lualatex}"
 
 cd "$(dirname "$TEX_INPUT")"
 FILE="$(basename "$TEX_INPUT")"
+TEX_INPUT="$FILE"
 BASE="${FILE%.tex}"
 BUILD_DIR="build"
 WRAPPED_FILE="${BUILD_DIR}/.${BASE}.figure-agent-wrapper.tex"
 COMPILE_FILE="$FILE"
 
 mkdir -p "$BUILD_DIR"
+
+if [[ -f "$SEMANTIC_CONTRACT" ]]; then
+  echo 'Gate: Semantic role, connector, and label contract...' >&2
+  if [[ -n "${FIGURE_SPEC:-}" ]] && grep -Eq '^[[:space:]]*semantic_contract_required:[[:space:]]*true[[:space:]]*(#.*)?$' "$FIGURE_SPEC"; then
+    SEMANTIC_RELATION_ARGS=(--require-transfer-relations)
+  fi
+  "${UV_RUN[@]}" python3 \
+    "$WORKFLOW_DIR/scripts/quality/semantic_legibility_contract.py" \
+    "$SEMANTIC_CONTRACT" \
+    "${SEMANTIC_RELATION_ARGS[@]}" \
+    --json-output "${BUILD_DIR}/semantic_contract.json"
+fi
+
+echo 'Lint: Style Lock check (BLOCKER fails, WARN reports)...' >&2
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/lint_tex.py" "$TEX_INPUT"
 
 # All detector reports and review artifacts below are fixture-scoped rather
 # than BASE-scoped. Serialize compiles in the same fixture so two variants

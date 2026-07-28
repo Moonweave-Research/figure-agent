@@ -998,6 +998,35 @@ def test_reference_free_thin_briefing_with_detector_signal_does_not_require_crit
     assert compute_critique_state(fig_dir, "thin_fig") == status_mod.CRITIQUE_NOT_REQUIRED
 
 
+def test_reference_free_named_briefing_with_detector_signal_requires_critique(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "named_briefed_fig"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "briefing.md").write_text(
+        """## Claim to test
+
+This is a detailed mechanism claim that is long enough to ground review.
+
+## Physics invariants
+
+- Must preserve the declared force direction.
+""",
+        encoding="utf-8",
+    )
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "visual_clash.json").write_text(
+        '{"fixture":"named_briefed_fig","candidates":[{"id":"VC001"}],"total":1}\n',
+        encoding="utf-8",
+    )
+
+    assert compute_critique_state(fig_dir, "named_briefed_fig") == (
+        status_mod.CRITIQUE_BRIEFING_REQUIRED
+    )
+
+
 def test_stage_1_spec_only_empty_previews(tmp_path: Path) -> None:
     fig_dir = tmp_path / "myfig"
     fig_dir.mkdir()
@@ -1239,6 +1268,71 @@ def test_status_surfaces_spine_evidence_from_build_reports(tmp_path: Path) -> No
     assert result["spine_evidence"]["convention_receipt"]["total"] == 3
     assert result["spine_evidence"]["physics_grounding"]["status"] == "grounded"
     assert result["spine_evidence"]["semantic_assertions"]["state"] == "missing"
+    assert result["spine_evidence"]["semantic_contract"]["state"] == "missing"
+
+
+def test_status_surfaces_hash_bound_semantic_contract_validation(tmp_path: Path) -> None:
+    contract = tmp_path / "semantic_contract.yaml"
+    contract.write_text(
+        "schema: figure-agent.failure-first-semantic-contract.v1\n",
+        encoding="utf-8",
+    )
+    evidence = tmp_path / "semantic_contract.json"
+    evidence.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.semantic-contract-evidence.v1",
+                "contract_schema": "figure-agent.failure-first-semantic-contract.v1",
+                "source_sha256": hashlib.sha256(contract.read_bytes()).hexdigest(),
+                "validated": True,
+                "publication_acceptance": "not_claimed",
+                "summary": {"object_role_count": 21},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    summary = status_mod._semantic_contract_summary(evidence, tmp_path)
+
+    assert summary["state"] == "validated"
+    assert summary["summary"]["object_role_count"] == 21
+
+
+def test_spine_marks_zero_semantic_assertion_coverage_incomplete(tmp_path: Path) -> None:
+    contract = tmp_path / "semantic_contract.yaml"
+    contract.write_text("contract\n", encoding="utf-8")
+    build = tmp_path / "build"
+    build.mkdir()
+    (build / "semantic_contract.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.semantic-contract-evidence.v1",
+                "contract_schema": "figure-agent.failure-first-semantic-contract.v1",
+                "source_sha256": hashlib.sha256(contract.read_bytes()).hexdigest(),
+                "validated": True,
+                "publication_acceptance": "not_claimed",
+                "summary": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (build / "semantic_assertions.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.semantic-assertions.v1",
+                "total": 0,
+                "checked": 0,
+                "issues": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    spine = status_mod._spine_evidence_summary(tmp_path, build)
+
+    assert spine["semantic_assertions"]["state"] == "incomplete"
+    assert spine["semantic_assertions"]["coverage_state"] == "incomplete"
+    assert spine["state"] == "needs_action"
 
 
 def test_stage_3_missing_briefing_does_not_suggest_export(tmp_path: Path) -> None:

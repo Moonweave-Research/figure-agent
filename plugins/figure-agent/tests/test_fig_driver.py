@@ -1427,6 +1427,23 @@ def test_review_mode_completes_after_latest_clean_loop_checkpoint(
     assert "final" in summary["operator_guidance"]["next_step"]
 
 
+def test_review_mode_does_not_close_with_unresolved_audit_evidence() -> None:
+    blocker = fig_driver._audit_evidence_review_blocker(
+        {
+            "audit_evidence": {
+                "evaluation_state": "needs_action",
+                "reason": "visual candidates are unadjudicated",
+            }
+        },
+        "driver_demo",
+    )
+
+    assert blocker is not None
+    assert blocker["action"] == fig_driver.ACTION_RUN_CRITIQUE
+    assert blocker["stop_boundary"] == fig_driver.STOP_HOST_LLM_CRITIQUE
+    assert blocker["safe_command"] == "/fig_critique driver_demo"
+
+
 def test_review_mode_surfaces_uncertain_crop_audit_from_latest_loop(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

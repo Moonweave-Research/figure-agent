@@ -248,6 +248,10 @@ def resolve_semantic_selector(
             semantic_contract
         )
     except SemanticLegibilityContractError as exc:
+        if str(exc) == "protected_relations_invalid":
+            raise SourceAttributionError(
+                "semantic contract protected_relations are invalid"
+            ) from exc
         raise SourceAttributionError(f"semantic contract is invalid: {exc}") from exc
     required_objects = set(validated_contract["required_objects"])
     protected_relations = validated_contract.get("protected_relations")

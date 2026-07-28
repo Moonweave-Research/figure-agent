@@ -22,9 +22,16 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 
 import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "quality"))
+from semantic_legibility_contract import (  # noqa: E402
+    SemanticLegibilityContractError,
+    load_semantic_legibility_contract,
+)
 
 _PHYSICS_HEADER = re.compile(r"^#{1,6}\s.*physics invariant", re.IGNORECASE | re.MULTILINE)
 
@@ -54,6 +61,7 @@ def classify_grounding(
     spec: dict,
     *,
     semantic_contract_present: bool | None = None,
+    semantic_contract_valid: bool | None = None,
 ) -> str:
     # ``grounded`` historically meant only that prose intent had one directional
     # or relational assertion.  Mechanism figures may opt into the stronger,
@@ -61,6 +69,8 @@ def classify_grounding(
     # invent one retroactively.
     if semantic_contract_required(spec) and semantic_contract_present is False:
         return "semantic_contract_missing"
+    if semantic_contract_required(spec) and semantic_contract_valid is False:
+        return "semantic_contract_invalid"
     # A figure is enforced by EITHER assertion family: tex_assertions for directional
     # facts (force/bend direction), semantic_assertions for label-relational ones
     # (shallow above deep). Counting only tex_assertions false-WARNs the latter.
@@ -82,17 +92,28 @@ def grounding_status(figure_dir) -> dict:
         # must not collapse into the benign "undeclared" (no-invariants) bucket.
         return {"figure": figure_dir.name, "status": "briefing_missing"}
     briefing_text = briefing.read_text(encoding="utf-8")
-    semantic_contract_present = (
-        (figure_dir / "semantic_contract.yaml").is_file()
-        if semantic_contract_required(spec or {})
-        else None
-    )
+    semantic_contract_path = figure_dir / "semantic_contract.yaml"
+    semantic_contract_present = None
+    semantic_contract_valid = None
+    if semantic_contract_required(spec or {}):
+        semantic_contract_present = semantic_contract_path.is_file()
+        if semantic_contract_present:
+            try:
+                load_semantic_legibility_contract(
+                    semantic_contract_path,
+                    require_transfer_relations=True,
+                )
+            except (SemanticLegibilityContractError, OSError, UnicodeError):
+                semantic_contract_valid = False
+            else:
+                semantic_contract_valid = True
     return {
         "figure": figure_dir.name,
         "status": classify_grounding(
             briefing_text,
             spec or {},
             semantic_contract_present=semantic_contract_present,
+            semantic_contract_valid=semantic_contract_valid,
         ),
     }
 
@@ -122,12 +143,18 @@ def main() -> int:
     non_benign = {
         "declared_unenforced",
         "semantic_contract_missing",
+        "semantic_contract_invalid",
         "briefing_missing",
     }
     if result["status"] == "semantic_contract_missing":
         print(
             f"WARN physics_grounding: {result['figure']} opts into a semantic contract "
             "but semantic_contract.yaml is missing (domain meaning is unbound)"
+        )
+    elif result["status"] == "semantic_contract_invalid":
+        print(
+            f"WARN physics_grounding: {result['figure']} has an invalid semantic "
+            "contract (domain meaning is unbound)"
         )
     elif result["status"] == "declared_unenforced":
         print(

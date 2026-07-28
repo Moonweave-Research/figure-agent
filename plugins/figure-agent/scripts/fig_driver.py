@@ -530,6 +530,33 @@ def _loop_checkpoint_review_blocker(
     return None
 
 
+def _audit_evidence_review_blocker(
+    status: dict[str, Any], name: str
+) -> dict[str, Any] | None:
+    """Keep unresolved detector evidence from being reported as review-complete."""
+    audit_evidence = status.get("audit_evidence")
+    if not isinstance(audit_evidence, dict):
+        return None
+    evaluation_state = audit_evidence.get("evaluation_state")
+    if evaluation_state not in {"needs_action", "missing_input", "stale_or_mismatched"}:
+        return None
+    # A fresh host critique can account for detector candidates and hand the
+    # remaining work to the loop.  Missing/stale critique is the specific
+    # boundary that must never be mistaken for review completion.
+    if status.get("critique_state") == "FRESH":
+        return None
+    reason = audit_evidence.get("reason") or "audit evidence requires fresh host review"
+    return {
+        "action": ACTION_RUN_CRITIQUE,
+        "safe_command": command_mod.critique_command(name),
+        "stop_boundary": STOP_HOST_LLM_CRITIQUE,
+        "reason": (
+            f"audit evidence is {evaluation_state}; refresh host critique before "
+            f"review closure: {reason}."
+        ),
+    }
+
+
 def _svg_polish_route_hint(example_dir: Path, name: str, *, prefix: str) -> dict[str, str | None]:
     return {
         "safe_command": None,
@@ -842,10 +869,18 @@ def _select_action(
                 ACTION_RUN_ADJUDICATE,
                 safe_command=command_mod.adjudicate_command(name),
                 stop_boundary=None,
-                reason=(
-                    "critique.md is fresh but critique_adjudication.yaml is "
-                    "missing or stale; scaffold adjudication next."
-                ),
+                    reason=(
+                        "critique.md is fresh but critique_adjudication.yaml is "
+                        "missing or stale; scaffold adjudication next."
+                    ),
+                )
+        audit_blocker = _audit_evidence_review_blocker(status, name)
+        if audit_blocker is not None:
+            return make(
+                audit_blocker["action"],
+                safe_command=audit_blocker["safe_command"],
+                stop_boundary=audit_blocker["stop_boundary"],
+                reason=audit_blocker["reason"],
             )
         if _first_status_blocker_code(status) == _SELECTED_VISUAL_DIRECTION_BLOCKER:
             return make(

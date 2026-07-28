@@ -99,7 +99,18 @@ def test_required_contract_present_keeps_directional_grounding(tmp_path):
         "tex_assertions:\n  - id: force\n",
     )
     (fixture / "semantic_contract.yaml").write_text("schema: placeholder\n", encoding="utf-8")
-    assert cpg.grounding_status(fixture)["status"] == "grounded"
+    assert cpg.grounding_status(fixture)["status"] == "semantic_contract_invalid"
+
+
+def test_required_contract_malformed_is_not_grounded(tmp_path):
+    fixture = _figure(
+        tmp_path,
+        BRIEFING_WITH,
+        "name: demo\nsemantic_contract_required: true\n"
+        "tex_assertions:\n  - id: force\n",
+    )
+    (fixture / "semantic_contract.yaml").write_text("[unclosed\n", encoding="utf-8")
+    assert cpg.grounding_status(fixture)["status"] == "semantic_contract_invalid"
 
 
 def test_classify_undeclared():
