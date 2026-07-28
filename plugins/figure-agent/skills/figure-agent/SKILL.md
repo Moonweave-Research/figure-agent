@@ -668,7 +668,12 @@ The same rule applies to the member scale: repeated views of one mounted film
 must share its apparent width and free-end datum within the schematic tolerance;
 do not let a bent state become a shorter or thinner specimen merely because its
 path was redrawn freehand. Local centerline and collision checks do not establish
-this cross-panel size contract, so declare and test it at the fixture level.
+this cross-panel size contract, so declare and test it at the fixture level. For
+curved centerlines, compare the fitted path's arc length (or an equivalent
+rendered-length measurement), not only endpoint displacement: a smaller bend
+angle must not silently become a shorter cantilever. If the repeated member's
+arc-length check is absent, treat the result as an authoring/detector gap rather
+than accepting a clean local render as evidence of equal specimen scale.
 
 For a qualitative time-response trace, preserve one continuous event-owned
 path from the declared observation origin. Show a hold or isolation interval as

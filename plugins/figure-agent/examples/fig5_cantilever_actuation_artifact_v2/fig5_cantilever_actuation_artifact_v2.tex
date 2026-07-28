@@ -60,17 +60,18 @@
   \draw[apparatus] (0.92,4.05) rectangle (1.82,4.34);
   % A finite-width film member with one shared mechanical centerline.  The
   % named fixed-end anchors are also consumed by the rendered path so the
-  % clamp cannot drift off the beam during a later redraw.
+  % clamp cannot drift off the beam during a later redraw.  The A/B/C paths
+  % keep the same specimen arc length; only the deflection state changes.
   \coordinate (panel-a-clamp-axis) at (1.37,4.05);
   \coordinate (panel-a-beam-origin) at (1.37,4.05);
   \draw[wire] (panel-a-clamp-axis)--(1.37,4.68);
   \node[labelMute,anchor=west] at (1.68,4.52) {clip: GND};
   \draw[beamOuter]
     (panel-a-beam-origin)
-      .. controls (1.37,3.40) and (1.83,2.10) .. (2.48,1.45);
+      .. controls (1.37,3.40) and (1.83,2.10) .. (2.48,1.62);
   \draw[beamInner]
     (panel-a-beam-origin)
-      .. controls (1.37,3.40) and (1.83,2.10) .. (2.48,1.45);
+      .. controls (1.37,3.40) and (1.83,2.10) .. (2.48,1.62);
   \fill[cGray!28] (3.12,1.40) rectangle (3.42,4.34);
   \draw[apparatus] (3.12,1.40) rectangle (3.42,4.34);
   % An explicit terminal rail makes the applied bias belong to the electrode,
@@ -122,13 +123,14 @@
   \node[labelMute,anchor=west] at (2.00,4.52) {clip remains mounted};
   \draw[beamOuter]
     (panel-b-beam-origin)
-      .. controls (1.69,3.44) and (1.76,2.72) .. (2.08,1.96);
+      .. controls (1.69,3.40) and (1.82,2.10) .. (2.30,1.45);
   \draw[beamInner]
     (panel-b-beam-origin)
-      .. controls (1.69,3.44) and (1.76,2.72) .. (2.08,1.96);
+      .. controls (1.69,3.40) and (1.82,2.10) .. (2.30,1.45);
   \node[qmark] at (1.72,3.43) {};
   \node[qmark] at (1.87,2.80) {};
-  \node[qmark] at (1.97,2.33) {};
+  \node[qmark] at (2.10,2.25) {};
+  \node[qmark] at (2.25,1.76) {};
   \node[labelStd,text=cRed!80!black,anchor=east] at (1.10,2.80)
     {retained $q_{\mathrm{tr}}$};
   \draw[leader,cRed!58!black] (1.16,2.73)--(1.87,2.80);
@@ -176,15 +178,15 @@
   % sees one mounted film under reversed forcing, not a second sample.
   \draw[beamOuter]
     (panel-c-beam-origin)
-      .. controls (1.43,3.42) and (1.28,2.42) .. (0.72,1.70);
+      .. controls (1.43,3.40) and (1.22,2.10) .. (0.72,1.45);
   \draw[beamInner]
     (panel-c-beam-origin)
-      .. controls (1.43,3.42) and (1.28,2.42) .. (0.72,1.70);
+      .. controls (1.43,3.40) and (1.22,2.10) .. (0.72,1.45);
   \node[qmark] at (1.39,3.30) {};
   % The force vector must originate at a visible representative charge, rather
   % than visually cutting through the cantilever as a detached annotation.
   \node[qmark] at (1.24,2.38) {};
-  \node[qmark] at (0.70,1.92) {};
+  \node[qmark] at (0.70,1.72) {};
   \node[labelStd,text=cRed!80!black,anchor=east] at (0.82,3.30)
     {$q_{\mathrm{tr}}$};
   \draw[leader,cRed!58!black] (0.88,3.24)--(1.39,3.30);

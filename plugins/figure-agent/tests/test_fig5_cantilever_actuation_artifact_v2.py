@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import sys
+from math import hypot
 from pathlib import Path
 
 import yaml
@@ -17,6 +18,61 @@ from semantic_legibility_contract import (  # noqa: E402
 
 def _yaml(name: str) -> dict:
     return yaml.safe_load((FIXTURE / name).read_text(encoding="utf-8"))
+
+
+def _panel_source(panel_id: str) -> str:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    start = tex.split(f"% Panel {panel_id}", 1)[1]
+    following = chr(ord(panel_id) + 1)
+    return start.split(f"% Panel {following}", 1)[0]
+
+
+def _cantilever_centerline(panel_id: str) -> list[tuple[float, float]]:
+    panel = _panel_source(panel_id)
+    origin = re.search(
+        rf"coordinate \(panel-{panel_id.lower()}-beam-origin\) at "
+        r"\(([-+0-9.]+),([-+0-9.]+)\)",
+        panel,
+    )
+    path = re.search(
+        r"\\draw\[beamOuter\]\s*\([^)]*\)\s*\.\. controls "
+        r"\(([-+0-9.]+),([-+0-9.]+)\) and "
+        r"\(([-+0-9.]+),([-+0-9.]+)\) \.\. "
+        r"\(([-+0-9.]+),([-+0-9.]+)\);",
+        panel,
+    )
+    assert origin is not None
+    assert path is not None
+    return [
+        (float(origin.group(1)), float(origin.group(2))),
+        (float(path.group(1)), float(path.group(2))),
+        (float(path.group(3)), float(path.group(4))),
+        (float(path.group(5)), float(path.group(6))),
+    ]
+
+
+def _cubic_arc_length(points: list[tuple[float, float]], samples: int = 2000) -> float:
+    p0, p1, p2, p3 = points
+    previous = p0
+    total = 0.0
+    for index in range(1, samples + 1):
+        t = index / samples
+        u = 1.0 - t
+        point = (
+            u**3 * p0[0]
+            + 3 * u**2 * t * p1[0]
+            + 3 * u * t**2 * p2[0]
+            + t**3 * p3[0],
+            u**3 * p0[1]
+            + 3 * u**2 * t * p1[1]
+            + 3 * u * t**2 * p2[1]
+            + t**3 * p3[1],
+        )
+        total += hypot(point[0] - previous[0], point[1] - previous[1])
+        previous = point
+    return total
 
 
 def test_fig5_declares_a_width_limited_physical_print_contract() -> None:
@@ -351,8 +407,30 @@ def test_fig5_drive_on_and_residual_bends_have_visible_amplitude_contrast() -> N
     b_endpoint = re.search(endpoint_pattern, panel_b)
     assert a_endpoint is not None
     assert b_endpoint is not None
-    assert float(a_endpoint.group(1)) - float(b_endpoint.group(1)) >= 0.30
-    assert float(b_endpoint.group(1)) <= 2.15
+    a_origin = re.search(r"coordinate \(panel-a-beam-origin\) at \(([^,]+),", panel_a)
+    b_origin = re.search(r"coordinate \(panel-b-beam-origin\) at \(([^,]+),", panel_b)
+    assert a_origin is not None
+    assert b_origin is not None
+    a_deflection = float(a_endpoint.group(1)) - float(a_origin.group(1))
+    b_deflection = float(b_endpoint.group(1)) - float(b_origin.group(1))
+    assert a_deflection - b_deflection >= 0.30
+    assert b_deflection <= 0.70
+
+
+def test_fig5_repeated_cantilevers_preserve_specimen_arc_length() -> None:
+    lengths = {
+        panel_id: _cubic_arc_length(_cantilever_centerline(panel_id))
+        for panel_id in ("A", "B", "C")
+    }
+    mean_length = sum(lengths.values()) / len(lengths)
+    relative_deviation = max(
+        abs(length - mean_length) / mean_length for length in lengths.values()
+    )
+
+    # Deflection amplitude belongs to the state; specimen length does not.  A
+    # small schematic tolerance allows hand-authored curvature without letting
+    # an independently redrawn path become a visibly shorter member.
+    assert relative_deviation <= 0.03, lengths
 
 
 def test_fig5_panel_b_keeps_source_off_state_floating_with_residual_attraction() -> None:
