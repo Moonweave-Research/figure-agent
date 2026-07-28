@@ -16,6 +16,7 @@ required_objects:
   - panel_b.isolation_state
   - panel_b.trapped_charge
   - panel_b.manual_clip_separation
+  - panel_b.fixed_support_reference
   - panel_d.positive_plateau
   - panel_c.maxwell_baseline
   - panel_c.coulomb_force
@@ -55,6 +56,7 @@ protected_relations:
   - source_off_floating_interval_is_explicit
   - clip_separation_is_manual
   - cantilever_remains_clamped_during_ground_open
+  - fixed_support_reference_is_distinct_from_film_clip
 
 repair:
   family: actuation_geometry_and_mechanism_contract
@@ -93,6 +95,9 @@ semantic_legibility:
     - object_id: panel_b.manual_clip_separation
       declared_role: manual_ground_lead_separation
       forbidden_readings: [automated_switch, automated_motion_stage]
+    - object_id: panel_b.fixed_support_reference
+      declared_role: fixed_support_boundary_reference_at_ground
+      forbidden_readings: [floating_film_clip, automated_switch]
     - object_id: panel_c.coulomb_force
       declared_role: polarity_dependent_force
       forbidden_readings: [annotation_leader]
@@ -183,6 +188,8 @@ semantic_legibility:
       owner: panel_b.isolation_state
     - label_id: panel_b.manual_clip_label
       owner: panel_b.manual_clip_separation
+    - label_id: panel_b.support_reference_label
+      owner: panel_b.fixed_support_reference
     - label_id: panel_c.coulomb_label
       owner: panel_c.coulomb_force
     - label_id: panel_c.maxwell_label

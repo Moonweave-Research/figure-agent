@@ -131,6 +131,14 @@ rules:
       locator: "Fig5 Panel B manual ground-lead audit (2026-07-27)"
       quote: "The lower switch glyph made manual clip-to-ground separation read as an automatic electrical switch."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.fixed-reference-ownership-at-isolation
+    category: physics_semantics
+    rule: "When a film clip is opened but a support-side electrical reference remains fixed, name both owners in the isolation state: identify the film clip as open/floating and identify the support reference as held at ground. Do not leave an unowned phrase such as reference potential fixed, because the reader can assign the fixed potential to the disconnected specimen clip."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig5 Panel B reference-boundary audit (2026-07-28)"
+      quote: "GND open and reference potential fixed were both present, but the fixed reference owner was not drawn or named."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.trap-colour-shallow-blue-deep-red
     category: label_binding
     rule: "Shallow traps and shallow states are blue or teal; deep traps and deep states are red. Keep this colour mapping consistent across every figure."

@@ -211,6 +211,28 @@ def test_project_rule_keeps_manual_ground_separation_distinct_from_a_switch() ->
     assert "generic electrical-switch glyph" in normalized_skill
 
 
+def test_project_rule_names_both_owners_when_isolation_keeps_support_reference_fixed() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-project.md"
+    )
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"]
+        == "polymer_paper_project.fixed-reference-ownership-at-isolation"
+    )
+    assert "name both owners" in rule["rule"]
+    assert "held at ground" in rule["rule"]
+    assert "reference potential fixed" in rule["rule"]
+
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized_skill = " ".join(skill.split())
+    assert "name both electrical owners" in normalized_skill
+    assert "unowned phrase such as “reference potential fixed”" in normalized_skill
+
+
 def test_project_rule_requires_a_straight_positive_response_plateau() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-project.md"

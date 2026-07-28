@@ -413,6 +413,12 @@ specimen clip visibly mounted and depict the ground lead as a manual separation.
 Do not substitute a generic electrical-switch glyph, automated stage, or opened
 specimen clamp unless the evidence declares that mechanism.
 
+When that isolation leaves a support-side reference fixed while the film clip
+floats, name both electrical owners in the rendered state: label the film clip
+as open/floating and label the support reference as held at ground. An unowned
+phrase such as “reference potential fixed” is a semantic defect because readers
+can assign the fixed potential to the disconnected specimen clip.
+
 Do not treat an instrument name or capability display such as V/A as proof of
 the variable actually applied, held constant, stepped, or acquired. When the
 response depends on an operating condition, require that condition at the

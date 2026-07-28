@@ -26,7 +26,9 @@ charge, not an application demo.
    cantilever remains in place. The ground lead is lifted manually; this is not
    an electrical switch or an automated motion stage. This intermediate
    electrical state must be shown as its own reader-facing stage, not compressed
-   into an arrow caption; the trapped-charge cue remains in the specimen.
+   into an arrow caption; the trapped-charge cue remains in the specimen. The
+   support-side reference remains held at ground, distinct from the now-floating
+   film clip.
 3. `-V drive`: the nearby driven electrode reverses polarity. The
    polarity-dependent Coulomb term changes sign, while the Maxwell attraction
    is a polarity-independent baseline.
@@ -45,6 +47,9 @@ charge, not an application demo.
   no contact or measurement lead is implied by the capacitor-like cue.
 - The source is switched off before the charged specimen is treated as
   floating.
+- The fixed support reference remains at ground while the film clip is opened;
+  “floating” applies to the film/cantilever electrical path, not to the support
+  boundary.
 - The Coulomb contribution is proportional to the sign of $q_{tr}E$ and can
   reverse when the drive polarity reverses.
 - The Maxwell attraction baseline is proportional to $E^2$ and is therefore

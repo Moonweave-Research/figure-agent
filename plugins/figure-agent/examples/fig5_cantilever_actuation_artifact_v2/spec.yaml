@@ -67,6 +67,8 @@ process_stage_visibility_checks:
         text_phrases:
           - id: ground-open
             words: [GND, open]
+          - id: fixed-support-reference
+            words: [support, reference]
   - id: qualitative-response-sequence
     panel_id: D
     reading_axis: x
