@@ -371,6 +371,12 @@ rendered encoding and calculate it from source geometry when practical. Do not
 accept a verbally correct claim whose visible ratio says something weaker or
 different.
 
+For air gaps or other measured intervals, use a conventional two-headed dimension
+arrow with short witness ticks or equivalent endpoint projections. Do not reuse a
+legacy hooked/bracket-like `<->` glyph when it can read as a brace, force vector,
+or stray curve at print reduction; the measurement must visibly terminate on the
+two named boundaries and remain distinct from nearby mechanism arrows.
+
 When a caliper crosses category-colored regions, reserve a neutral measurement
 lane or otherwise isolate its shaft and label from those fills. Treat placement
 that makes the measured interval inherit the wrong category as a normal finding.
@@ -418,7 +424,10 @@ discrete-transfer encoding.
 When source OFF is followed by removal of a clip's ground connection, keep the
 specimen clip visibly mounted and depict the ground lead as a manual separation.
 Do not substitute a generic electrical-switch glyph, automated stage, or opened
-specimen clamp unless the evidence declares that mechanism.
+specimen clamp unless the evidence declares that mechanism. A manual separation
+must show two visibly disconnected lead terminals (or an equally explicit
+before/after lead geometry) and a directional lift cue; two anonymous horizontal
+bars plus prose are not sufficient for a reader to recover the operation.
 
 When that isolation leaves a support-side reference fixed while the film clip
 floats, name both electrical owners in the rendered state: label the film clip

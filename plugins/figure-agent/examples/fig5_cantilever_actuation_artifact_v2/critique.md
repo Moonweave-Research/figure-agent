@@ -5,7 +5,7 @@ generated_at: '2026-07-28T16:05:52Z'
 generator: critique_brief.py
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:618ec071ebead5285ae95ba6ad38dd7b67ee917a2c9707d95a8ffa92ba2f4859
+critique_input_hash: sha256:7aca3e5760589bce94e47226ea05c78ebdd54e34239970035c1dd41d7e237997
 verdict: ready
 findings: []
 panels: []
@@ -315,7 +315,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:618ec071ebead5285ae95ba6ad38dd7b67ee917a2c9707d95a8ffa92ba2f4859
+  assessed_artifact_hash: sha256:7aca3e5760589bce94e47226ea05c78ebdd54e34239970035c1dd41d7e237997
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
@@ -500,10 +500,10 @@ micro_defects:
     accept_simplification_reason: false_positive
     accept_simplification_rationale: "VC003 reports q math-glyph proximity near the Panel C charge leader; the glyph is not crossed by a path and the direct crop is clear."
   - id: M004
-    crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC004_crop.png
+    crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC004_lifted.png
     kind: label_path_near_miss
     severity: NIT
-    observation: VC004 flags the equality glyph in the force-condition statement; it is isolated and legible.
+    observation: VC004 flags the word lifted in the manual lead annotation; the glyphs remain legible and no lead geometry crosses them.
     linked_finding_id: ''
     visual_clash_ref: VC004
     text_boundary_ref: ''
@@ -511,12 +511,12 @@ micro_defects:
     undeclared_geometry_ref: ''
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC004 reports one-sided proximity around the equality glyph in the force condition; the equation remains separated and readable."
+    accept_simplification_rationale: "VC004 is a report-only near-miss around the word lifted; it is not a visible collision because the annotation has clear white space from the disconnected terminals and remains legible at print scale."
   - id: M005
-    crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC005_q.png
+    crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC005_crop.png
     kind: label_path_near_miss
     severity: NIT
-    observation: VC005 flags the q glyph in the Panel A trapped-charge label; the label remains readable and outside the cantilever stroke.
+    observation: VC005 flags the equality glyph in the force-condition statement; it is isolated and legible.
     linked_finding_id: ''
     visual_clash_ref: VC005
     text_boundary_ref: ''
@@ -524,12 +524,12 @@ micro_defects:
     undeclared_geometry_ref: ''
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC005 is a report-only one-sided proximity flag for the Panel A q glyph beside the trapped-charge leader; it is not a visible glyph/path crossing."
+    accept_simplification_rationale: "VC005 reports one-sided proximity around the equality glyph in the force condition; the equation remains separated and readable."
   - id: M006
     crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC006_q.png
     kind: label_path_near_miss
     severity: NIT
-    observation: VC006 flags the q glyph in the Panel C charge label; it remains clear at both full and print scale.
+    observation: VC006 flags the q glyph in the Panel A trapped-charge label; the label remains readable and outside the cantilever stroke.
     linked_finding_id: ''
     visual_clash_ref: VC006
     text_boundary_ref: ''
@@ -537,12 +537,12 @@ micro_defects:
     undeclared_geometry_ref: ''
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC006 flags the Panel C q glyph beside the charge leader; one-sided proximity does not produce a visible collision."
+    accept_simplification_rationale: "VC006 is a report-only one-sided proximity flag for the Panel A q glyph beside the trapped-charge leader; it is not a visible glyph/path crossing."
   - id: M007
-    crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC007_F.png
+    crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC007_q.png
     kind: label_path_near_miss
     severity: NIT
-    observation: VC007 flags the force-symbol glyph in the bottom condition; the full expression remains legible and separated.
+    observation: VC007 flags the q glyph in the Panel C charge label; it remains clear at both full and print scale.
     linked_finding_id: ''
     visual_clash_ref: VC007
     text_boundary_ref: ''
@@ -550,12 +550,12 @@ micro_defects:
     undeclared_geometry_ref: ''
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC007 is a report-only proximity flag for the first force-symbol glyph in the bottom condition; it is not a visible path crossing and the compact expression is legible."
+    accept_simplification_rationale: "VC007 flags the Panel C q glyph beside the charge leader; one-sided proximity does not produce a visible collision."
   - id: M008
     crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC008_F.png
     kind: label_path_near_miss
     severity: NIT
-    observation: VC008 flags the second force-symbol glyph in the same condition; it is legible and not crossed by a path.
+    observation: VC008 flags the first force-symbol glyph in the bottom condition; the full expression remains legible and separated.
     linked_finding_id: ''
     visual_clash_ref: VC008
     text_boundary_ref: ''
@@ -563,7 +563,20 @@ micro_defects:
     undeclared_geometry_ref: ''
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC008 is a report-only proximity flag for the second force-symbol glyph in the bottom condition; it is not a visible path crossing and the math expression is legible."
+    accept_simplification_rationale: "VC008 is a report-only proximity flag for the first force-symbol glyph in the bottom condition; it is not a visible path crossing and the compact expression is legible."
+  - id: M009
+    crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC009_F.png
+    kind: label_path_near_miss
+    severity: NIT
+    observation: VC009 flags the second force-symbol glyph in the same condition; it is legible and not crossed by a path.
+    linked_finding_id: ''
+    visual_clash_ref: VC009
+    text_boundary_ref: ''
+    label_path_ref: ''
+    undeclared_geometry_ref: ''
+    status: accept_simplification
+    accept_simplification_reason: false_positive
+    accept_simplification_rationale: "VC009 is a report-only proximity flag for the second force-symbol glyph in the bottom condition; it is not a visible path crossing and the math expression is legible."
 crop_audit_log:
   - crop_id: VC001_residual
     path: build/audit_crops/visual_clash/VC001_residual.png
@@ -604,9 +617,22 @@ crop_audit_log:
     observed_objects: [q glyph, charge label]
     local_relationship: Glyph remains outside the cantilever stroke.
     candidate_refs: [VC003]
-  - crop_id: VC004_crop
-    path: build/audit_crops/visual_clash/VC004_crop.png
+  - crop_id: VC004_lifted
+    path: build/audit_crops/visual_clash/VC004_lifted.png
     source: visual_clash:VC004
+    inspected: true
+    verdict: no_defect
+    linked_micro_defect_id: ''
+    rationale: The lifted label is legible and clear of the disconnected lead terminals.
+    unintended_visible_anomaly: none
+    anomaly_rationale: No unintended mark is present.
+    anomaly_link: ''
+    observed_objects: [lifted label, lead terminals]
+    local_relationship: The label sits above the manual separation cue without crossing it.
+    candidate_refs: [VC004]
+  - crop_id: VC005_crop
+    path: build/audit_crops/visual_clash/VC005_crop.png
+    source: visual_clash:VC005
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
@@ -616,10 +642,10 @@ crop_audit_log:
     anomaly_link: ''
     observed_objects: [equality glyph, force condition]
     local_relationship: The equation remains readable as one expression.
-    candidate_refs: [VC004]
-  - crop_id: VC005_q
-    path: build/audit_crops/visual_clash/VC005_q.png
-    source: visual_clash:VC005
+    candidate_refs: [VC005]
+  - crop_id: VC006_q
+    path: build/audit_crops/visual_clash/VC006_q.png
+    source: visual_clash:VC006
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
@@ -629,10 +655,10 @@ crop_audit_log:
     anomaly_link: ''
     observed_objects: [q glyph, trapped charge label]
     local_relationship: Label stays outside the cantilever stroke.
-    candidate_refs: [VC005]
-  - crop_id: VC006_q
-    path: build/audit_crops/visual_clash/VC006_q.png
-    source: visual_clash:VC006
+    candidate_refs: [VC006]
+  - crop_id: VC007_q
+    path: build/audit_crops/visual_clash/VC007_q.png
+    source: visual_clash:VC007
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
@@ -642,10 +668,10 @@ crop_audit_log:
     anomaly_link: ''
     observed_objects: [q glyph, charge label]
     local_relationship: Glyph is adjacent but not crossed.
-    candidate_refs: [VC006]
-  - crop_id: VC007_F
-    path: build/audit_crops/visual_clash/VC007_F.png
-    source: visual_clash:VC007
+    candidate_refs: [VC007]
+  - crop_id: VC008_F
+    path: build/audit_crops/visual_clash/VC008_F.png
+    source: visual_clash:VC008
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
@@ -655,10 +681,10 @@ crop_audit_log:
     anomaly_link: ''
     observed_objects: [force-symbol glyph, equation]
     local_relationship: The glyph remains part of a readable equation.
-    candidate_refs: [VC007]
-  - crop_id: VC008_F
-    path: build/audit_crops/visual_clash/VC008_F.png
-    source: visual_clash:VC008
+    candidate_refs: [VC008]
+  - crop_id: VC009_F
+    path: build/audit_crops/visual_clash/VC009_F.png
+    source: visual_clash:VC009
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
@@ -668,7 +694,7 @@ crop_audit_log:
     anomaly_link: ''
     observed_objects: [force-symbol glyph, equation]
     local_relationship: The glyph remains part of a readable equation.
-    candidate_refs: [VC008]
+    candidate_refs: [VC009]
   - crop_id: full_q1
     path: build/audit_crops/full_q1.png
     source: full_render

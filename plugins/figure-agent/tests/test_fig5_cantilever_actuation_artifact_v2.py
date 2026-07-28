@@ -248,7 +248,8 @@ def test_fig5_panel_b_keeps_the_specimen_mounted_and_lifts_the_lead_manually() -
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
     assert "clip remains mounted" in panel_b
-    assert "manual lead lift" in panel_b
+    assert "lead lifted manually" in panel_b
+    assert panel_b.count("leadTerminal") == 2
     assert "clip floating" in panel_b
     assert "switch" not in panel_b.lower()
 
@@ -321,6 +322,37 @@ def test_fig5_force_and_gap_endpoints_bind_to_rendered_beam_geometry() -> None:
         r"\\draw\[forceToward,opacity=0\.62\] \([^)]*\)--\([^)]*\);",
         panel_b,
     )
+
+
+def test_fig5_air_gap_uses_explicit_dimension_heads_and_witness_ticks() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+
+    assert "gapDimension/.style={Stealth-Stealth" in tex
+    assert "gapWitness" in panel_a
+    assert panel_a.count("\\draw[gapWitness]") == 2
+    assert "gapDimension/.style={<->" not in tex
+
+
+def test_fig5_drive_on_and_residual_bends_have_visible_amplitude_contrast() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+    panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
+
+    endpoint_pattern = (
+        r"\.\. controls \([^)]*\) and \([^)]*\) "
+        r"\.\. \(([^,]+),([^)]+)\);"
+    )
+    a_endpoint = re.search(endpoint_pattern, panel_a)
+    b_endpoint = re.search(endpoint_pattern, panel_b)
+    assert a_endpoint is not None
+    assert b_endpoint is not None
+    assert float(a_endpoint.group(1)) - float(b_endpoint.group(1)) >= 0.30
+    assert float(b_endpoint.group(1)) <= 2.15
 
 
 def test_fig5_panel_b_keeps_source_off_state_floating_with_residual_attraction() -> None:
