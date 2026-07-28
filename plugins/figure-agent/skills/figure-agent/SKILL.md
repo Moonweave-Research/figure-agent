@@ -608,6 +608,12 @@ be carried by labels or line treatment rather than an unexplained plate-color
 change. A local shift that creates a different mounting height or a different
 electrode color role is a cross-panel consistency defect even when every panel
 passes its own collision check.
+
+Use the same relative annotation lane and baseline for repeated clamp or
+electrode labels across that row whenever the geometry allows it. Do not move a
+shared apparatus label from left to above to right merely for local convenience;
+make the exception explicit when a collision or a distinct semantic owner
+requires the alternate lane.
 The same rule applies to the member scale: repeated views of one mounted film
 must share its apparent width and free-end datum within the schematic tolerance;
 do not let a bent state become a shorter or thinner specimen merely because its

@@ -69,8 +69,8 @@ def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> Non
     assert "kV" not in charge_subtitle.group(1)
     assert "field-on charge" in charge_subtitle.group(1)
 
-    assert "at (0.82,4.20) {clip: GND};" in panel_a
-    assert "at (1.52,4.62) {clip: GND};" not in panel_a
+    assert "at (1.68,4.52) {clip: GND};" in panel_a
+    assert "at (0.82,4.20) {clip: GND};" not in panel_a
     voltage_nodes = re.findall(
         r"\\node\[labelStd,text=cRed!82!black,anchor=(?:west|east)\].*?\{\$\+5\\,\\mathrm\{kV\}\$\};",
         panel_a,
@@ -197,6 +197,19 @@ def test_fig5_panel_b_keeps_the_specimen_mounted_and_separates_ground_manually()
     assert "manual clip lift" in panel_b
     assert "circle (0.58pt)" in panel_b
     assert "switch" not in panel_b.lower()
+
+
+def test_fig5_repeats_clamp_state_labels_in_a_shared_top_right_lane() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+    panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
+    panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
+
+    assert "at (1.68,4.52) {clip: GND};" in panel_a
+    assert "at (2.00,4.52) {clip remains mounted};" in panel_b
+    assert "at (1.67,4.52) {floating clip};" in panel_c
 
 
 def test_fig5_panel_b_names_the_open_film_clip_and_fixed_support_reference() -> None:

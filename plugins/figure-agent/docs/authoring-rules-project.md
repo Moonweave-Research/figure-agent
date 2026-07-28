@@ -163,6 +163,14 @@ rules:
       locator: "Fig1 178 mm title-hierarchy audit (2026-07-20)"
       quote: "Localized trap model was broader and more theoretical than the real-space plus energy-landscape content shown."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.cross-panel-apparatus-label-lane
+    category: panel_layout
+    rule: "When one apparatus is repeated across a causal panel row, keep state labels for the shared clamp or electrode in the same relative annotation lane and baseline wherever space permits. Do not alternate left, above, and right placement without a documented collision or semantic reason; repeated hardware should acquire a stable visual grammar before panel-specific state text changes."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig5 cross-panel apparatus-label alignment audit (2026-07-28)"
+      quote: "The same clamp was labeled left in Panel A but above-right in Panels B/C, weakening repeated-apparatus ownership."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.ispd-keyence-manual-transfer
     category: instrument_standard
     rule: "For ISPD panels, depict a Keyence SK series induction-type, non-contact electrostatic voltmeter. Corona-charge the specimen first, then manually transfer the same specimen to the adjacent measurement station. Show the family-level sensing topology as an elongated bar-shaped sensor head with its short end face directed toward the specimen, a visible non-contact standoff, and a cable to a separate amplifier or meter. Do not invent an automated motion stage, continuous scan, conveyor, oscillating Kelvin probe, or model-specific controls and dimensions. Preserve the confirmed series-level topology without inventing an exact model."

@@ -776,6 +776,18 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "object- or phenomenon-level panel titles" in titles["rule"]
     assert "generic process labels such as model or schematic" in titles["rule"]
 
+    lanes = rules["polymer_paper_project.cross-panel-apparatus-label-lane"]
+    assert lanes["category"] == "panel_layout"
+    assert "same relative annotation lane and baseline" in lanes["rule"]
+    assert "collision or semantic reason" in lanes["rule"]
+
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized_skill = " ".join(skill.split())
+    assert "same relative annotation lane and baseline" in normalized_skill
+    assert "shared apparatus label from left to above to right" in normalized_skill
+
 
 def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
     path = tmp_path / "badid.md"
