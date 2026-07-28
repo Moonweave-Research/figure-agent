@@ -275,6 +275,30 @@ def test_project_rule_names_both_owners_when_isolation_keeps_support_reference_f
     assert "unowned phrase such as “reference potential fixed”" in normalized_skill
 
 
+def test_project_rule_prevents_ground_topology_from_leaking_into_floating_state() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-project.md"
+    )
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"]
+        == "polymer_paper_project.source-off-floating-residual-bend"
+    )
+
+    assert "support-GND terminal" in rule["rule"]
+    assert "electrically floating" in rule["rule"]
+    assert "smaller continuous bend" in rule["rule"]
+    assert "unbent isolation cartoon" in rule["rule"]
+
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized_skill = " ".join(skill.split())
+    assert "entire mounted specimen electrically floating" in normalized_skill
+    assert "residual attraction bend after source OFF" in normalized_skill
+
+
 def test_project_rule_requires_a_straight_positive_response_plateau() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-project.md"

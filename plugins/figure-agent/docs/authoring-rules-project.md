@@ -147,6 +147,14 @@ rules:
       locator: "Fig5 Panel B reference-boundary audit (2026-07-28)"
       quote: "GND open and reference potential fixed were both present, but the fixed reference owner was not drawn or named."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.source-off-floating-residual-bend
+    category: physics_semantics
+    rule: "Do not import a support-GND terminal into a source-OFF state unless the experiment explicitly retains that boundary. When the mounted specimen is electrically floating after manual lead lift, label the floating state directly and remove residual ground symbols or fixed-reference prose. If retained charge preserves attraction after source OFF, retain a smaller continuous bend of the same clamped member and name the residual attraction; an unbent isolation cartoon falsely implies that the stored state and its mechanical consequence vanished together."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig5 Panel B floating-state correction (2026-07-28)"
+      quote: "The state is floating; residual charge leaves attraction bending after source OFF."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.trap-colour-shallow-blue-deep-red
     category: label_binding
     rule: "Shallow traps and shallow states are blue or teal; deep traps and deep states are red. Keep this colour mapping consistent across every figure."

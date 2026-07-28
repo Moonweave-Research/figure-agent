@@ -22,13 +22,12 @@ charge, not an application demo.
 
 1. `actuation charge`: the nearby drive electrode is biased across the air gap;
    attraction bends the same cantilever while the charge state is established.
-2. `OFF / float`: the clip ground is visibly opened while the same mounted
-   cantilever remains in place. The ground lead is lifted manually; this is not
-   an electrical switch or an automated motion stage. This intermediate
-   electrical state must be shown as its own reader-facing stage, not compressed
-   into an arrow caption; the trapped-charge cue remains in the specimen. The
-   support-side reference remains held at ground, distinct from the now-floating
-   film clip.
+2. `OFF / float`: after the source is switched off, the manually lifted lead
+   leaves the same mounted cantilever electrically floating. This is not an
+   electrical switch or an automated motion stage. The retained trapped charge
+   leaves a smaller attraction bend even in this source-off state; show that
+   reader-facing state explicitly rather than replacing it with an unbent film
+   or a grounded-support cartoon.
 3. `-V drive`: the nearby driven electrode reverses polarity. The
    polarity-dependent Coulomb term changes sign, while the Maxwell attraction
    is a polarity-independent baseline.
@@ -47,9 +46,9 @@ charge, not an application demo.
   no contact or measurement lead is implied by the capacitor-like cue.
 - The source is switched off before the charged specimen is treated as
   floating.
-- The fixed support reference remains at ground while the film clip is opened;
-  “floating” applies to the film/cantilever electrical path, not to the support
-  boundary.
+- After source OFF and manual lead lift, the mounted film/cantilever is
+  electrically floating; do not retain a ground symbol or a fixed-support
+  reference in that state.
 - The Coulomb contribution is proportional to the sign of $q_{tr}E$ and can
   reverse when the drive polarity reverses.
 - The Maxwell attraction baseline is proportional to $E^2$ and is therefore
@@ -63,8 +62,9 @@ charge, not an application demo.
 - The C-panel arrows are an explicitly labelled, illustrated force condition:
   they show the charge-mediated term opposing the Maxwell baseline, not a
   directly measured force vector or a geometry-independent sign assignment.
-- B owns the source-off isolation state; it must not be compressed into A or
-  replaced by a second bend-state cartoon.
+- B owns the source-off floating state and its residual attraction bend; it
+  must not be compressed into A, replaced by an unbent film, or drawn as a
+  grounded-support state.
 - It intentionally omits ESVM; ESVM belongs to the charge-state measurement
   story, not the center of this actuation evidence panel.
 - The trace is a qualitative redraw of the observed waveform shape, not a

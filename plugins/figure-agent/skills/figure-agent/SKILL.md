@@ -424,6 +424,13 @@ assign the fixed potential to the disconnected specimen clip.
 In the subsequent reverse-drive state, add an explicit electrical qualifier such
 as “electrically floating” to the specimen clip; a bare “floating clip” can be
 mistaken for a mechanical motion cue.
+When the declared source-OFF state instead leaves the entire mounted specimen
+electrically floating, remove the support-GND symbol and fixed-reference prose
+rather than carrying over topology from a different apparatus.  Label the
+floating specimen directly.  If retained charge leaves a residual attraction
+bend after source OFF, show the same mounted member with a smaller, physically
+continuous bend and name that residual state; an unbent isolation cartoon
+silently erases the claimed persistence.
 
 Do not treat an instrument name or capability display such as V/A as proof of
 the variable actually applied, held constant, stepped, or acquired. When the

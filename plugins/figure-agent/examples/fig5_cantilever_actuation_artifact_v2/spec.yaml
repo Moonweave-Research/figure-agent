@@ -73,19 +73,17 @@ tex_assertions:
 process_stage_visibility_checks:
   - id: isolation-boundary-state
     panel_id: B
-    reading_axis: y
+    reading_axis: x
     minimum_stage_separation_pt: 12.0
     stages:
       - id: source-off
         text_phrases:
           - id: source-off-heading
             words: [source, 'OFF']
-      - id: clip-open
+      - id: floating-state
         text_phrases:
-          - id: ground-open
-            words: [GND, lead, open]
-    # The fixed support reference is a separately anchored semantic relation,
-    # not an ordered process-stage phrase: it stays in the apparatus geometry.
+          - id: floating-clip
+            words: [floating]
   - id: qualitative-response-sequence
     panel_id: D
     reading_axis: x

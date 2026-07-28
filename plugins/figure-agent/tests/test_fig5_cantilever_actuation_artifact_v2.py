@@ -41,9 +41,9 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 19
+    assert contract["summary"]["object_role_count"] == 20
     assert contract["summary"]["visible_connector_count"] == 8
-    assert contract["summary"]["label_ownership_count"] == 15
+    assert contract["summary"]["label_ownership_count"] == 16
     assert contract["summary"]["panel_story_role_count"] == 4
 
 
@@ -61,9 +61,10 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "reverse_response_is_faster_than_initial_attraction" in protected
     assert "positive_plateau_is_explicit" in protected
     assert "trap_label_leader_clears_glyphs" in protected
-    assert "clip_separation_is_manual" in protected
-    assert "cantilever_remains_clamped_during_ground_open" in protected
-    assert "fixed_support_reference_is_distinct_from_film_clip" in protected
+    assert "lead_separation_is_manual" in protected
+    assert "cantilever_remains_clamped_after_manual_lead_lift" in protected
+    assert "panel_b_floats_after_source_off" in protected
+    assert "residual_attraction_bend_persists_after_source_off" in protected
     assert "panel_a.standalone_two_terminal_charger" in forbidden
     assert "panel_b.automated_switch" in forbidden
     assert "panel_a.polarization_measurement_instrument" in forbidden
@@ -158,12 +159,10 @@ def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> Non
 
     assert [stage["id"] for stage in checks["isolation-boundary-state"]["stages"]] == [
         "source-off",
-        "clip-open",
+        "floating-state",
     ]
-    clip_open_phrases = checks["isolation-boundary-state"]["stages"][1]["text_phrases"]
-    assert {tuple(item["words"]) for item in clip_open_phrases} == {
-        ("GND", "lead", "open"),
-    }
+    floating_phrases = checks["isolation-boundary-state"]["stages"][1]["text_phrases"]
+    assert {tuple(item["words"]) for item in floating_phrases} == {("floating",)}
     assert [stage["id"] for stage in checks["qualitative-response-sequence"]["stages"]] == [
         "observation-origin",
         "source-off-float",
@@ -207,15 +206,15 @@ def test_fig5_response_trace_has_a_visible_sustained_positive_plateau() -> None:
     assert "rounded summit" not in panel_d
 
 
-def test_fig5_panel_b_keeps_the_specimen_mounted_and_separates_ground_manually() -> None:
+def test_fig5_panel_b_keeps_the_specimen_mounted_and_lifts_the_lead_manually() -> None:
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
     )
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
     assert "clip remains mounted" in panel_b
-    assert "manual lift" in panel_b
-    assert "circle (0.58pt)" in panel_b
+    assert "manual lead lift" in panel_b
+    assert "clip floating" in panel_b
     assert "switch" not in panel_b.lower()
 
 
@@ -228,7 +227,8 @@ def test_fig5_keeps_clamp_state_labels_clear_of_the_drive_terminal() -> None:
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
     assert "at (1.68,4.52) {clip: GND};" in panel_a
-    assert "at (2.00,4.52) {clip remains mounted};" in panel_b
+    assert "clip remains mounted" in panel_b
+    assert "clip floating" in panel_b
     assert "align=right,anchor=east] at (3.18,4.00)" in panel_c
     assert "electrically floating" in panel_c
 
@@ -251,20 +251,24 @@ def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
     assert "{drive electrode}" not in panel_c
 
 
-def test_fig5_panel_b_names_the_open_film_clip_and_fixed_support_reference() -> None:
+def test_fig5_panel_b_keeps_source_off_state_floating_with_residual_attraction() -> None:
     contract = _yaml("semantic_contract.yaml")
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
     )
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
-    assert "film clip: GND lead open" in panel_b
-    assert "support GND" in panel_b
+    assert "clip floating" in panel_b
+    assert "residual attraction" in panel_b
+    assert "support GND" not in panel_b
+    assert "GND" not in panel_b
     assert any(
-        connector["connector_id"] == "panel_b.support_reference_remains_grounded"
+        connector["connector_id"]
+        == "panel_b.floating_state_retains_residual_attraction"
         for connector in contract["semantic_legibility"]["visible_connectors"]
     )
-    assert "reference potential fixed" not in panel_b
+    assert "fixed support reference" not in panel_b
+    assert "(1.79,1.42) -- (1.59,1.42)" not in panel_b
 
 
 def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
@@ -278,10 +282,12 @@ def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
     assert "clip: GND" in panel_a
     assert "(3.27,4.34)--(3.27,4.62)" in panel_a
     assert "(3.58,4.34)--(3.58,4.62)" in panel_c
-    assert "film clip: GND lead open" in panel_b
-    assert "support GND" in panel_b
-    assert "drive OFF" in panel_b
-    assert "after GND separation" in panel_c
+    assert "clip floating" in panel_b
+    assert "clip floating" in panel_b
+    assert "residual attraction" in panel_b
+    assert "GND" not in panel_b
+    assert "drive inactive" not in panel_b
+    assert "after floating isolation" in panel_c
     assert "electrically floating" in panel_c
 
 
@@ -358,9 +364,9 @@ def test_fig5_source_off_label_uses_the_manual_isolation_lane() -> None:
         panel_b,
     )
     assert match is not None
-    assert 1.90 < float(match.group(1)) < 2.20
+    assert 0.40 < float(match.group(1)) < 0.60
     y = float(match.group(2))
-    assert 1.20 < y < 1.50
+    assert 0.45 < y < 0.70
 
 
 def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None:

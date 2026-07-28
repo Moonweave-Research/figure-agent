@@ -15,8 +15,9 @@ required_objects:
   - panel_a.attraction_force
   - panel_b.isolation_state
   - panel_b.trapped_charge
-  - panel_b.manual_clip_separation
-  - panel_b.fixed_support_reference
+  - panel_b.manual_lead_separation
+  - panel_b.floating_state
+  - panel_b.residual_attraction
   - panel_d.positive_plateau
   - panel_c.maxwell_baseline
   - panel_c.coulomb_force
@@ -34,6 +35,7 @@ forbidden_implications:
   - panel_a.corona_needle
   - panel_a.charging_grid
   - panel_a.sample_outside_actuation_geometry
+  - panel_b.grounded_support_boundary_after_isolation
   - panel_d.quantitative_measured_waveform
 
 protected_relations:
@@ -54,9 +56,10 @@ protected_relations:
   - positive_plateau_is_explicit
   - reverse_response_is_faster_than_initial_attraction
   - source_off_floating_interval_is_explicit
-  - clip_separation_is_manual
-  - cantilever_remains_clamped_during_ground_open
-  - fixed_support_reference_is_distinct_from_film_clip
+  - lead_separation_is_manual
+  - cantilever_remains_clamped_after_manual_lead_lift
+  - panel_b_floats_after_source_off
+  - residual_attraction_bend_persists_after_source_off
 
 repair:
   family: actuation_geometry_and_mechanism_contract
@@ -92,12 +95,15 @@ semantic_legibility:
     - object_id: panel_b.trapped_charge
       declared_role: retained_trapped_charge
       forbidden_readings: [decorative_bead]
-    - object_id: panel_b.manual_clip_separation
-      declared_role: manual_ground_lead_separation
+    - object_id: panel_b.manual_lead_separation
+      declared_role: manual_lead_lift_to_floating_state
       forbidden_readings: [automated_switch, automated_motion_stage]
-    - object_id: panel_b.fixed_support_reference
-      declared_role: fixed_support_boundary_reference_at_ground
-      forbidden_readings: [floating_film_clip, automated_switch]
+    - object_id: panel_b.floating_state
+      declared_role: source_off_electrically_floating_mounted_film
+      forbidden_readings: [grounded_support_boundary, automated_switch]
+    - object_id: panel_b.residual_attraction
+      declared_role: retained_charge_residual_attraction_bend
+      forbidden_readings: [drive_on_force, unbent_isolation_state]
     - object_id: panel_c.coulomb_force
       declared_role: polarity_dependent_force
       forbidden_readings: [annotation_leader]
@@ -144,11 +150,12 @@ semantic_legibility:
       to_object: panel_b.isolation_state
       declared_role: process_stage_transition
       render_style: stage_transition
-    - connector_id: panel_b.support_reference_remains_grounded
-      from_object: panel_b.fixed_support_reference
-      to_object: panel_b.isolation_state
-      declared_role: fixed_ground_boundary
-      render_style: grounded_support_terminal
+    - connector_id: panel_b.floating_state_retains_residual_attraction
+      from_object: panel_b.floating_state
+      to_object: panel_b.residual_attraction
+      declared_role: source_off_residual_force_state
+      render_style: force_residual
+      epistemic_status: observed
     - connector_id: panel_b.isolation_enables_reversed_force
       from_object: panel_b.isolation_state
       to_object: panel_c.coulomb_force
@@ -191,10 +198,12 @@ semantic_legibility:
       owner: panel_a.attraction_force
     - label_id: panel_b.isolation_label
       owner: panel_b.isolation_state
-    - label_id: panel_b.manual_clip_label
-      owner: panel_b.manual_clip_separation
-    - label_id: panel_b.support_reference_label
-      owner: panel_b.fixed_support_reference
+    - label_id: panel_b.manual_lead_label
+      owner: panel_b.manual_lead_separation
+    - label_id: panel_b.floating_state_label
+      owner: panel_b.floating_state
+    - label_id: panel_b.residual_attraction_label
+      owner: panel_b.residual_attraction
     - label_id: panel_c.coulomb_label
       owner: panel_c.coulomb_force
     - label_id: panel_c.maxwell_label
@@ -215,7 +224,7 @@ semantic_legibility:
         reader_task: Establish air-gap actuation while retained charge is formed.
       - panel_id: B
         role: workflow
-        reader_task: Make the source-off, clip-open isolation boundary explicit.
+        reader_task: Show the electrically floating source-off state and its residual attraction bend.
       - panel_id: C
         role: mechanism
         reader_task: Separate the conditional charge-mediated term from the Maxwell baseline after reversal.
