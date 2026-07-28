@@ -63,10 +63,10 @@
   \node[labelMute,anchor=west] at (1.68,4.52) {clip: GND};
   \draw[beamOuter]
     (panel-a-beam-origin)
-      .. controls (1.37,3.42) and (1.52,2.42) .. (2.08,1.70);
+      .. controls (1.37,3.40) and (1.68,2.26) .. (2.30,1.60);
   \draw[beamInner]
     (panel-a-beam-origin)
-      .. controls (1.37,3.42) and (1.52,2.42) .. (2.08,1.70);
+      .. controls (1.37,3.40) and (1.68,2.26) .. (2.30,1.60);
   \fill[cGray!28] (3.12,1.40) rectangle (3.42,4.34);
   \draw[apparatus] (3.12,1.40) rectangle (3.42,4.34);
   % An explicit terminal rail makes the applied bias belong to the electrode,
@@ -83,8 +83,8 @@
     {trapped $q_{\mathrm{tr}}$};
   \draw[leader,cRed!58!black] (1.13,3.08)--(1.41,3.56);
 
-  \draw[gapDimension] (1.92,1.88)--(3.08,1.88);
-  \node[labelMute,anchor=south] at (2.50,1.94) {air gap};
+  \draw[gapDimension] (2.04,1.88)--(3.08,1.88);
+  \node[labelMute,anchor=south] at (2.56,1.94) {air gap};
   \draw[forceToward] (1.44,3.02)--(2.84,3.02);
   \node[labelStd,text=cRed!84!black,anchor=south] at (2.34,3.08)
     {attraction};

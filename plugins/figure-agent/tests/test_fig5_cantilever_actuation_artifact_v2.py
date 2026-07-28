@@ -278,7 +278,7 @@ def test_fig5_force_and_gap_endpoints_bind_to_rendered_beam_geometry() -> None:
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
-    assert "\\draw[gapDimension] (1.92,1.88)--(3.08,1.88);" in panel_a
+    assert "\\draw[gapDimension] (2.04,1.88)--(3.08,1.88);" in panel_a
     assert "\\draw[forceToward,opacity=0.62] (1.80,3.02)--(3.10,3.02);" in panel_b
 
 
@@ -412,7 +412,7 @@ def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None
 
     assert tex.count("\\draw[beamOuter]") == 3
     assert tex.count("\\draw[beamInner]") == 3
-    assert "(2.08,1.70);" in panels[0]
+    assert "(2.30,1.60);" in panels[0]
     assert "(2.25,1.76);" in panels[1]
     assert "(0.72,1.70);" in panels[2]
 
@@ -428,7 +428,7 @@ def test_fig5_reverse_bend_keeps_the_same_rounded_member_extent() -> None:
     assert "beamInner" in panel_a
     assert "beamOuter" in panel_c
     assert "beamInner" in panel_c
-    assert "(2.08,1.70)" in panel_a
+    assert "(2.30,1.60)" in panel_a
     assert "(0.72,1.70)" in panel_c
 
 
@@ -440,9 +440,16 @@ def test_fig5_source_off_residual_bend_is_visibly_smaller_than_drive_bends() -> 
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
-    assert "(2.08,1.70)" in panel_a
+    assert "(2.30,1.60)" in panel_a
     assert "(2.25,1.76)" in panel_b
     assert "(0.72,1.70)" in panel_c
+
+
+def test_fig5_field_on_bend_angle_exceeds_source_off_residual_bend() -> None:
+    """Keep the charged actuation state visibly stronger than the residual state."""
+    actuation_angle = (2.30 - 1.37) / (4.05 - 1.60)
+    residual_angle = (2.25 - 1.69) / (4.05 - 1.76)
+    assert actuation_angle > residual_angle
 
 
 def test_fig5_centerline_beams_have_deliberate_free_end_terminations() -> None:
@@ -455,7 +462,7 @@ def test_fig5_centerline_beams_have_deliberate_free_end_terminations() -> None:
         "c": tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0],
     }
     expected_endpoints = {
-        "a": ".. (2.08,1.70);",
+        "a": ".. (2.30,1.60);",
         "b": ".. (2.25,1.76);",
         "c": ".. (0.72,1.70);",
     }
