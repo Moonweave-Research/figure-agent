@@ -27,7 +27,7 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
     assert contract["publication_acceptance"] == "not_claimed"
     assert contract["summary"]["object_role_count"] == 19
     assert contract["summary"]["visible_connector_count"] == 7
-    assert contract["summary"]["label_ownership_count"] == 14
+    assert contract["summary"]["label_ownership_count"] == 15
     assert contract["summary"]["panel_story_role_count"] == 4
 
 
@@ -71,14 +71,14 @@ def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> Non
 
     assert "at (1.68,4.52) {clip: GND};" in panel_a
     assert "at (0.82,4.20) {clip: GND};" not in panel_a
-    voltage_nodes = re.findall(
-        r"\\node\[labelStd,text=cRed!82!black,anchor=(?:west|east)\].*?\{\$\+5\\,\\mathrm\{kV\}\$\};",
-        panel_a,
-        re.DOTALL,
+    voltage_pattern = (
+        r"\\node\[labelStd,text=cRed!82!black,anchor=(?:west|east)\]"
+        r".*?\{drive: \$\+5\\,\\mathrm\{kV\}\$\};"
     )
+    voltage_nodes = re.findall(voltage_pattern, panel_a, re.DOTALL)
     assert len(voltage_nodes) == 1
     drive_label = panel_a.index("{drive electrode}")
-    voltage_label = panel_a.index("{$+5\\,\\mathrm{kV}$}")
+    voltage_label = panel_a.index("{drive: $+5\\,\\mathrm{kV}$}")
     assert voltage_label > drive_label
 
 
@@ -141,7 +141,7 @@ def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> Non
     ]
     clip_open_phrases = checks["isolation-boundary-state"]["stages"][1]["text_phrases"]
     assert {tuple(item["words"]) for item in clip_open_phrases} == {
-        ("GND", "open"),
+        ("GND", "lead", "open"),
         ("support", "reference"),
     }
     assert [stage["id"] for stage in checks["qualitative-response-sequence"]["stages"]] == [
@@ -209,7 +209,7 @@ def test_fig5_repeats_clamp_state_labels_in_a_shared_top_right_lane() -> None:
 
     assert "at (1.68,4.52) {clip: GND};" in panel_a
     assert "at (2.00,4.52) {clip remains mounted};" in panel_b
-    assert "at (1.67,4.52) {floating clip};" in panel_c
+    assert "at (1.67,4.52) {clip: electrically floating};" in panel_c
 
 
 def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
@@ -220,9 +220,9 @@ def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
     assert "at (3.04,4.12)" in panel_a
-    assert "{$+5\\,\\mathrm{kV}$}" in panel_a
+    assert "{drive: $+5\\,\\mathrm{kV}$};" in panel_a
     assert "at (3.34,4.12)" in panel_c
-    assert "{$-5\\,\\mathrm{kV}$}" in panel_c
+    assert "{drive: $-5\\,\\mathrm{kV}$};" in panel_c
     assert "drive electrode" in panel_a
     assert "drive electrode" in panel_c
 
@@ -233,9 +233,25 @@ def test_fig5_panel_b_names_the_open_film_clip_and_fixed_support_reference() -> 
     )
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
-    assert "film clip GND open" in panel_b
+    assert "film clip: GND lead open" in panel_b
     assert "support reference held at GND" in panel_b
     assert "reference potential fixed" not in panel_b
+
+
+def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+    panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
+    panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
+
+    assert "clip: GND" in panel_a
+    assert "film clip: GND lead open" in panel_b
+    assert "support reference held at GND" in panel_b
+    assert "drive OFF" in panel_b
+    assert "after GND separation" in panel_c
+    assert "clip: electrically floating" in panel_c
 
 
 def test_fig5_declares_deterministic_clamp_axis_geometry_check() -> None:

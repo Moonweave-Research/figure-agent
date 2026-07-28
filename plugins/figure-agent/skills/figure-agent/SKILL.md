@@ -418,6 +418,9 @@ floats, name both electrical owners in the rendered state: label the film clip
 as open/floating and label the support reference as held at ground. An unowned
 phrase such as “reference potential fixed” is a semantic defect because readers
 can assign the fixed potential to the disconnected specimen clip.
+In the subsequent reverse-drive state, add an explicit electrical qualifier such
+as “electrically floating” to the specimen clip; a bare “floating clip” can be
+mistaken for a mechanical motion cue.
 
 Do not treat an instrument name or capability display such as V/A as proof of
 the variable actually applied, held constant, stepped, or acquired. When the

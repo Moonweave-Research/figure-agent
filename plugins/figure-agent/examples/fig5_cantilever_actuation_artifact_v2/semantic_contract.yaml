@@ -194,6 +194,8 @@ semantic_legibility:
       owner: panel_c.coulomb_force
     - label_id: panel_c.maxwell_label
       owner: panel_c.maxwell_baseline
+    - label_id: panel_c.reverse_drive_label
+      owner: panel_c.reverse_drive
     - label_id: panel_d.polarity_label
       owner: panel_d.polarity_switch
     - label_id: panel_d.time_origin_label

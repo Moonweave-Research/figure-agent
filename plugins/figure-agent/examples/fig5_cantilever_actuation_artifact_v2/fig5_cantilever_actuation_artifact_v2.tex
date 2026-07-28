@@ -80,7 +80,7 @@
   % Keep the voltage in the drive-electrode lane without pushing its glyphs
   % across the A/B separator; the label sits just left of the electrode.
   \node[labelStd,text=cRed!82!black,anchor=east] at (3.04,4.12)
-    {$+5\,\mathrm{kV}$};
+    {drive: $+5\,\mathrm{kV}$};
   \node[qmark] at (1.41,3.56) {};
   \node[qmark] at (1.62,2.88) {};
   \node[qmark] at (1.98,2.18) {};
@@ -133,7 +133,7 @@
   \draw[leader,cRed!58!black] (1.16,2.51)--(1.65,2.57);
   \fill[cGray!28] (3.42,1.40) rectangle (3.70,4.34);
   \draw[apparatus] (3.42,1.40) rectangle (3.70,4.34);
-  \node[labelMute,anchor=east] at (3.30,2.20) {drive off};
+  \node[labelMute,anchor=east] at (3.30,2.20) {drive OFF};
   % The ground lead is manually lifted after source OFF.  Two detached
   % terminals and the lift cue replace a generic contact symbol.
   \draw[wire] (0.46,0.96)--(0.98,0.96);
@@ -145,7 +145,7 @@
   \node[labelStd,anchor=west] at (2.05,1.34) {source OFF};
   \node[labelMute,anchor=west] at (2.05,1.02) {manual clip lift};
   \node[labelMute,align=left,anchor=west] at (0.46,0.56)
-    {film clip GND open\\[-0.4pt]support reference held at GND};
+    {film clip: GND lead open\\[-0.4pt]support reference held at GND};
 \end{scope}
 
 % ================================================================
@@ -155,7 +155,7 @@
 \begin{scope}[shift={(8.90,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {c};
   \node[panelTitle,anchor=west] at (0.44,5.12) {reversed-drive force balance};
-  \node[labelMute,anchor=west] at (0.44,4.78) {floating clip; illustrative condition};
+  \node[labelMute,anchor=west] at (0.44,4.78) {after GND separation};
 
   % Keep the fixed-end and electrode tops on the same datum as Panels A/B;
   % the reverse-bend silhouette changes direction, not its mounting height.
@@ -168,7 +168,7 @@
   \coordinate (panel-c-cantilever-left) at (1.33,4.05);
   \coordinate (panel-c-cantilever-right) at (1.53,4.05);
   \draw[wire] (panel-c-clamp-axis)--(panel-c-clamp-top);
-  \node[labelMute,anchor=west] at (1.67,4.52) {floating clip};
+  \node[labelMute,anchor=west] at (1.67,4.52) {clip: electrically floating};
   % One conditional response silhouette makes the competing-arrow result
   % legible without introducing a second, supposedly observed bend snapshot.
   % Its free-end curvature and effective length mirror Panel A so the reader
@@ -196,8 +196,9 @@
   \draw[leader,cRed!58!black] (0.88,3.24)--(1.39,3.30);
   \fill[cGray!28] (3.44,1.40) rectangle (3.72,4.34);
   \draw[apparatus] (3.44,1.40) rectangle (3.72,4.34);
-  \node[labelStd,anchor=east] at (3.34,2.08) {drive electrode};
-  \node[labelStd,text=cRed!82!black,anchor=east] at (3.34,4.12) {$-5\,\mathrm{kV}$};
+  \node[labelStd,anchor=south east] at (4.00,4.58) {drive electrode};
+  \node[labelStd,text=cRed!82!black,anchor=east] at (3.34,4.12)
+    {drive: $-5\,\mathrm{kV}$};
   \draw[baselineArrow] (1.49,3.12)--(2.30,3.12);
   \node[labelStd,anchor=south,text=cGray!74!black] at (2.48,3.18)
     {Maxwell attraction};

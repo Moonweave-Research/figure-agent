@@ -246,6 +246,7 @@ def test_project_rule_names_both_owners_when_isolation_keeps_support_reference_f
     )
     assert "name both owners" in rule["rule"]
     assert "held at ground" in rule["rule"]
+    assert "electrically floating" in rule["rule"]
     assert "reference potential fixed" in rule["rule"]
 
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
@@ -253,6 +254,7 @@ def test_project_rule_names_both_owners_when_isolation_keeps_support_reference_f
     )
     normalized_skill = " ".join(skill.split())
     assert "name both electrical owners" in normalized_skill
+    assert "explicit electrical qualifier" in normalized_skill
     assert "unowned phrase such as “reference potential fixed”" in normalized_skill
 
 
