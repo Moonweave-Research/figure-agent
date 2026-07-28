@@ -180,6 +180,37 @@ trap cleanup_failed_build ERR
 rm -f "$PDF_OUT" "$PNG_OUT"
 "$ENGINE" -interaction=nonstopmode -jobname="$BASE" -output-directory="$BUILD_DIR" "$COMPILE_FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
+# Enforce physical print evidence for the active candidate only. A strict
+# regression fixture remains meaningful without borrowing a manuscript's
+# placement contract; an explicitly selected current candidate must carry its
+# own natural geometry, height-limited target, and print-scale font floor.
+PRINT_SIZE_ARGS=()
+if [[ "${FIGURE_AGENT_STRICT:-}" == "1" && -n "$FIXTURE_ROOT" && -n "${TEX_INPUT_ABS:-}" ]]; then
+  CURRENT_CANDIDATE_POINTER="$FIXTURE_ROOT/review/current-candidate.json"
+  if [[ -f "$CURRENT_CANDIDATE_POINTER" ]]; then
+    ACTIVE_CANDIDATE_TEX="$("${UV_RUN[@]}" python3 - "$CURRENT_CANDIDATE_POINTER" "$FIXTURE_ROOT" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+pointer = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+root = Path(sys.argv[2]).resolve()
+candidate_root = pointer.get("candidate_root")
+source_path = pointer.get("source_path")
+if isinstance(candidate_root, str) and isinstance(source_path, str):
+    print((root / candidate_root / source_path).resolve())
+PY
+)"
+    if [[ "$TEX_INPUT_ABS" == "$ACTIVE_CANDIDATE_TEX" ]]; then
+      PRINT_SIZE_ARGS=(--require-contract)
+    fi
+  fi
+fi
+"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_print_size_contract.py" \
+  --pdf "$PDF_OUT" \
+  --tex "$FILE" \
+  --json-output "${BUILD_DIR}/print_size_contract.json" \
+  ${PRINT_SIZE_ARGS[@]+"${PRINT_SIZE_ARGS[@]}"}
 # The PDF/PNG now exist and are valid. The remaining checkers are report-only
 # unless FIGURE_AGENT_STRICT=1. In report-only mode, a best-effort checker that
 # exits non-zero (e.g. a poppler decode hiccup on a custom-font PDF) must not
