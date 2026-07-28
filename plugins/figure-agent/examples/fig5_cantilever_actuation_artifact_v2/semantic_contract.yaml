@@ -144,6 +144,11 @@ semantic_legibility:
       to_object: panel_b.isolation_state
       declared_role: process_stage_transition
       render_style: stage_transition
+    - connector_id: panel_b.support_reference_remains_grounded
+      from_object: panel_b.fixed_support_reference
+      to_object: panel_b.isolation_state
+      declared_role: fixed_ground_boundary
+      render_style: grounded_support_terminal
     - connector_id: panel_b.isolation_enables_reversed_force
       from_object: panel_b.isolation_state
       to_object: panel_c.coulomb_force

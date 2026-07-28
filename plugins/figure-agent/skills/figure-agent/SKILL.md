@@ -415,9 +415,12 @@ specimen clamp unless the evidence declares that mechanism.
 
 When that isolation leaves a support-side reference fixed while the film clip
 floats, name both electrical owners in the rendered state: label the film clip
-as open/floating and label the support reference as held at ground. An unowned
-phrase such as “reference potential fixed” is a semantic defect because readers
-can assign the fixed potential to the disconnected specimen clip.
+as open/floating and label the support reference as held at ground, or use a
+direct support-GND terminal. Give each owner a separate visual anchor, such as
+an opened lead for the film clip and a grounded support terminal; remote prose
+lines alone do not establish the boundary at final reduction. An unowned phrase
+such as “reference potential fixed” is a semantic defect because readers can
+assign the fixed potential to the disconnected specimen clip.
 In the subsequent reverse-drive state, add an explicit electrical qualifier such
 as “electrically floating” to the specimen clip; a bare “floating clip” can be
 mistaken for a mechanical motion cue.

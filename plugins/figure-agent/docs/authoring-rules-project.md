@@ -133,7 +133,7 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.fixed-reference-ownership-at-isolation
     category: physics_semantics
-    rule: "When a film clip is opened but a support-side electrical reference remains fixed, name both owners in the isolation state: identify the film clip as open/floating and identify the support reference as held at ground. In the subsequent reverse-drive state, use an explicit electrical qualifier such as electrically floating for the specimen clip; a bare floating clip can be mistaken for a mechanical motion cue. Do not leave an unowned phrase such as reference potential fixed, because the reader can assign the fixed potential to the disconnected specimen clip."
+    rule: "When a film clip is opened but a support-side electrical reference remains fixed, name both owners in the isolation state: identify the film clip as open/floating and identify the support reference as held at ground, or use a direct support-GND terminal. Give the two owners separate visual anchors (for example, an opened lead for the clip and a grounded support terminal); remote prose lines alone do not establish the boundary at final reduction. In the subsequent reverse-drive state, use an explicit electrical qualifier such as electrically floating for the specimen clip; a bare floating clip can be mistaken for a mechanical motion cue. Do not leave an unowned phrase such as reference potential fixed, because the reader can assign the fixed potential to the disconnected specimen clip."
     source:
       kind: hand_patch_commit
       locator: "Fig5 Panel B reference-boundary audit (2026-07-28)"

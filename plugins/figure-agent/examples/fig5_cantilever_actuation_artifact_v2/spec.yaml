@@ -67,8 +67,8 @@ process_stage_visibility_checks:
         text_phrases:
           - id: ground-open
             words: [GND, lead, open]
-          - id: fixed-support-reference
-            words: [support, reference]
+    # The fixed support reference is a separately anchored semantic relation,
+    # not an ordered process-stage phrase: it stays in the apparatus geometry.
   - id: qualitative-response-sequence
     panel_id: D
     reading_axis: x

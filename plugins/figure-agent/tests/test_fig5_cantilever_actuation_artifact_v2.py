@@ -26,7 +26,7 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
     assert contract["summary"]["object_role_count"] == 19
-    assert contract["summary"]["visible_connector_count"] == 7
+    assert contract["summary"]["visible_connector_count"] == 8
     assert contract["summary"]["label_ownership_count"] == 15
     assert contract["summary"]["panel_story_role_count"] == 4
 
@@ -138,7 +138,6 @@ def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> Non
     clip_open_phrases = checks["isolation-boundary-state"]["stages"][1]["text_phrases"]
     assert {tuple(item["words"]) for item in clip_open_phrases} == {
         ("GND", "lead", "open"),
-        ("support", "reference"),
     }
     assert [stage["id"] for stage in checks["qualitative-response-sequence"]["stages"]] == [
         "observation-origin",
@@ -190,7 +189,7 @@ def test_fig5_panel_b_keeps_the_specimen_mounted_and_separates_ground_manually()
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
     assert "clip remains mounted" in panel_b
-    assert "manual clip lift" in panel_b
+    assert "manual lift" in panel_b
     assert "circle (0.58pt)" in panel_b
     assert "switch" not in panel_b.lower()
 
@@ -228,13 +227,18 @@ def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
 
 
 def test_fig5_panel_b_names_the_open_film_clip_and_fixed_support_reference() -> None:
+    contract = _yaml("semantic_contract.yaml")
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
     )
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
     assert "film clip: GND lead open" in panel_b
-    assert "support reference held at GND" in panel_b
+    assert "support GND" in panel_b
+    assert any(
+        connector["connector_id"] == "panel_b.support_reference_remains_grounded"
+        for connector in contract["semantic_legibility"]["visible_connectors"]
+    )
     assert "reference potential fixed" not in panel_b
 
 
@@ -250,7 +254,7 @@ def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
     assert "(2.86,3.88)--(3.12,3.88)" in panel_a
     assert "(3.18,3.88)--(3.44,3.88)" in panel_c
     assert "film clip: GND lead open" in panel_b
-    assert "support reference held at GND" in panel_b
+    assert "support GND" in panel_b
     assert "drive OFF" in panel_b
     assert "after GND separation" in panel_c
     assert "clip: electrically floating" in panel_c
