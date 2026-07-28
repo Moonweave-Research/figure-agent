@@ -126,6 +126,16 @@ def test_fig5_declares_the_reverse_bend_as_conditional_not_a_second_snapshot() -
     assert "observed_comparison" in reverse_bend["forbidden_readings"]
 
 
+def test_fig5_panel_c_reserves_copy_for_the_reverse_bend_threshold() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
+
+    assert "reverse bend if $|F_{\\mathrm{C}}|>|F_{\\mathrm{M}}|$" in panel_c
+    assert "opposes $F_{\\mathrm{M}}$" not in panel_c
+
+
 def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> None:
     spec = _yaml("spec.yaml")
     checks = {item["id"]: item for item in spec["process_stage_visibility_checks"]}

@@ -588,6 +588,10 @@ the local beam direction. Force-vector tails must touch that same member. In a
 conditional force balance, the supporting baseline must not be longer or heavier
 than the result-owning conditional vector when the declared inequality says the
 conditional term dominates.
+When opposing arrows already make the force relationship visible, use nearby
+copy for the governing condition or dominance threshold rather than restating
+that the arrows oppose. Keep that condition as one readable line at final
+reduction; duplicate prose makes the actual decision criterion subordinate.
 
 Also check the support-axis ownership: the clamp lead, wire, or mounting stem
 must bisect the fixed end of the cantilever. A visible off-axis stem makes the

@@ -99,6 +99,14 @@ rules:
       locator: "Fig5 Panel A voltage/ground ownership audit (2026-07-27)"
       quote: "A +5 kV subtitle beside clip/GND was read as voltage applied to ground."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.force-competition-condition-copy
+    category: physics_semantics
+    rule: "When opposing force arrows already visibly encode the force relationship, reserve the accompanying copy for the conditional decision threshold (for example, the dominance inequality) rather than restating that the arrows oppose. Keep the condition as one readable line at final reduction; duplicated explanatory prose makes the governing criterion visually subordinate."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig5 Panel C force-condition reduction audit (2026-07-28)"
+      quote: "The arrow directions already showed opposition; the two-line caption hid the reverse-bend criterion."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.response-trace-explicit-off-state
     category: physics_semantics
     rule: "For a qualitative cantilever response trace with compressed precharge, show a reader-facing source-OFF/floating interval between the positive plateau and the polarity-reversal marker. Keep the precharge note off-axis or explicitly compressed so it cannot imply a duration ratio on the response timebase; do not collapse OFF, floating, and reversal into one coincident label."

@@ -185,6 +185,19 @@ def test_project_rule_binds_actuation_voltage_to_the_driven_electrode() -> None:
     assert "direct terminal lead" in rule["rule"]
     assert "voltage-free" in rule["rule"]
 
+
+def test_project_rule_preserves_force_competition_decision_threshold() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-project.md"
+    )
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "polymer_paper_project.force-competition-condition-copy"
+    )
+    assert "conditional decision threshold" in rule["rule"]
+    assert "one readable line" in rule["rule"]
+
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
         encoding="utf-8"
     )
