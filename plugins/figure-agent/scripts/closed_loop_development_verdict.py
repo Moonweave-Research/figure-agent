@@ -10,6 +10,7 @@ from typing import Any
 import closed_loop_attempt_state
 import closed_loop_current_state
 import closed_loop_post_review_authority as authority
+import experience_log
 import human_decision_record
 import repair_transaction
 
@@ -237,6 +238,7 @@ def run_development_verdict(
     verdict_path: Path,
     execute: bool,
     workspace_root: Path,
+    plugin_root: Path | None = None,
     expected_state_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Validate or publish one explicit terminal development verdict."""
@@ -303,6 +305,13 @@ def run_development_verdict(
                 next_state,
                 workspace_root=root,
             )
+            if plugin_root is not None:
+                experience_log.append_closed_loop_terminal_record(
+                    next_state,
+                    state_path=next_state_path,
+                    workspace_root=root,
+                    plugin_root=plugin_root,
+                )
         return {
             "action": ACTION,
             "stop_boundary": "none",

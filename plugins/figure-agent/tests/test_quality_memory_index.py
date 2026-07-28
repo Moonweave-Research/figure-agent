@@ -243,6 +243,25 @@ def test_build_fixture_index_reads_experience_log_not_build_artifacts(tmp_path: 
     }
 
 
+def test_terminal_closed_loop_records_are_visible_without_candidate_prior() -> None:
+    terminal = {
+        "schema": "figure-agent.closed-loop-terminal-experience.v1",
+        "record_id": "closed-loop-terminal:attempt-demo:sha256:" + "f" * 64,
+        "fixture": "candidate_demo",
+        "attempt_id": "attempt-demo",
+        "created_at": "2026-07-28T00:00:00Z",
+        "terminal": {"state": "development_accepted"},
+    }
+
+    summary = quality_memory_index._closed_loop_terminal_summary([terminal])  # type: ignore[attr-defined]
+
+    assert summary == {
+        "count": 1,
+        "by_state": {"development_accepted": 1},
+        "ranking_effect": "none",
+    }
+
+
 def test_recommendation_experience_records_are_candidate_recommended_attempts() -> None:
     record = _experience_record(
         "CAND001",

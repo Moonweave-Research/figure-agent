@@ -15,6 +15,7 @@ import fixture_identity
 import runtime_paths
 
 SCHEMA = "figure-agent.experience-record.v1"
+CLOSED_LOOP_TERMINAL_SCHEMA = "figure-agent.closed-loop-terminal-experience.v1"
 
 
 class ExperienceLogError(ValueError):
@@ -936,6 +937,100 @@ def _experience_log_path(name: str, plugin_root: Path) -> Path:
     if path.is_symlink():
         raise ExperienceLogError("experience_log_symlink")
     return path
+
+
+def build_closed_loop_terminal_record(
+    state: dict[str, Any],
+    *,
+    state_path: Path,
+    workspace_root: Path,
+) -> dict[str, Any]:
+    """Build one non-ranking learning record for a terminal closed-loop state.
+
+    A closed-loop verdict has no candidate/edit-family identity, so treating it
+    as a candidate reward would manufacture a prior.  Preserve it separately:
+    downstream learning can see whether real attempts converged while candidate
+    ranking remains evidence-bound to actual candidate artifacts.
+    """
+    # Keep this dependency local: candidate logging must remain usable without
+    # loading the closed-loop state machine, while terminal observations may
+    # only be emitted from its canonical schema.
+    import closed_loop_attempt_state
+
+    closed_loop_attempt_state.validate_state(state, workspace_root=workspace_root)
+    fixture = state.get("fixture")
+    attempt_id = state.get("attempt_id")
+    state_name = state.get("state")
+    state_hash = state.get("state_sha256")
+    if not (
+        isinstance(fixture, str)
+        and isinstance(attempt_id, str)
+        and isinstance(state_name, str)
+        and isinstance(state_hash, str)
+        and state.get("terminal") is True
+    ):
+        raise ExperienceLogError("closed_loop_terminal_state_invalid")
+    fixture_identity.validate_fixture_name(fixture)
+    root = workspace_root.resolve()
+    published = state_path.resolve()
+    try:
+        published.relative_to(root)
+    except ValueError as exc:
+        raise ExperienceLogError("closed_loop_terminal_state_escape") from exc
+    if not published.is_file():
+        raise ExperienceLogError("closed_loop_terminal_state_unverified")
+    published_payload = _load_json(published, "closed_loop_terminal_state")
+    if published_payload != state or published_payload.get("state_sha256") != state_hash:
+        raise ExperienceLogError("closed_loop_terminal_state_unverified")
+    evidence = state.get("evidence") if isinstance(state.get("evidence"), list) else []
+    evidence_paths = [
+        item["path"]
+        for item in evidence
+        if isinstance(item, dict) and isinstance(item.get("path"), str)
+    ]
+    return {
+        "schema": CLOSED_LOOP_TERMINAL_SCHEMA,
+        "record_id": f"closed-loop-terminal:{attempt_id}:{state_hash}",
+        "fixture": fixture,
+        "attempt_id": attempt_id,
+        "created_at": _artifact_time(published),
+        "terminal": {
+            "state": state_name,
+            "disposition": state.get("disposition"),
+            "state_sha256": state_hash,
+            "state_path": published.relative_to(root).as_posix(),
+            "evidence_paths": evidence_paths,
+            "publication_acceptance": state.get("publication_acceptance"),
+        },
+    }
+
+
+def append_closed_loop_terminal_record(
+    state: dict[str, Any],
+    *,
+    state_path: Path,
+    workspace_root: Path,
+    plugin_root: Path,
+) -> dict[str, Any] | None:
+    """Append one idempotent terminal-attempt learning observation."""
+    record = build_closed_loop_terminal_record(
+        state,
+        state_path=state_path,
+        workspace_root=workspace_root,
+    )
+    fixture = str(record["fixture"])
+    for existing in load_experience_records(plugin_root, fixture):
+        if existing.get("record_id") == record["record_id"]:
+            return None
+    output = _experience_log_path(fixture, plugin_root)
+    with output.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, sort_keys=True) + "\n")
+    return {
+        "schema": "figure-agent.experience-log-write.v1",
+        "fixture": fixture,
+        "record": record,
+        "writes": [f"docs/experience-log/{fixture}.jsonl"],
+    }
 
 
 def append_apply_record(

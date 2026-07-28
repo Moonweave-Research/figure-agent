@@ -167,6 +167,22 @@ def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _closed_loop_terminal_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Expose terminal loop outcomes without inventing candidate priors."""
+    counts: dict[str, int] = defaultdict(int)
+    for record in records:
+        if record.get("schema") != experience_log.CLOSED_LOOP_TERMINAL_SCHEMA:
+            continue
+        terminal = record.get("terminal")
+        if isinstance(terminal, dict) and isinstance(terminal.get("state"), str):
+            counts[terminal["state"]] += 1
+    return {
+        "count": sum(counts.values()),
+        "by_state": dict(sorted(counts.items())),
+        "ranking_effect": "none",
+    }
+
+
 def _is_unknown(value: str) -> bool:
     return value.strip() == "" or value == "unknown"
 
@@ -514,7 +530,11 @@ def build_fixture_index(
         plugin_root=plugin_root,
     )
     records = _load_experience_records(paths.plugin_root, name)
-    events = [_event_from_experience_record(record) for record in records]
+    events = [
+        _event_from_experience_record(record)
+        for record in records
+        if record.get("schema") == experience_log.SCHEMA
+    ]
     if write:
         return write_fixture_index(
             name,
@@ -523,6 +543,7 @@ def build_fixture_index(
             plugin_root=paths.plugin_root,
         )
     index = build_memory_index(events, scope={"kind": "fixture", "fixture": name})
+    index["closed_loop_terminal_experience"] = _closed_loop_terminal_summary(records)
     index["writes"] = []
     return index
 
@@ -554,7 +575,11 @@ def build_suite_index(
                 {"fixture": fixture, "status": "skipped", "reason": "missing_fixture"}
             )
             continue
-        events.extend(_event_from_experience_record(record) for record in records)
+        events.extend(
+            _event_from_experience_record(record)
+            for record in records
+            if record.get("schema") == experience_log.SCHEMA
+        )
         reason = ""
         if fixture not in suite_fixtures:
             reason = "out_of_suite_experience_log"

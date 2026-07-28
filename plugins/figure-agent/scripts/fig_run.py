@@ -1490,6 +1490,7 @@ def run_workflow(
                 verdict_path=closed_loop_development_verdict,
                 execute=execute,
                 workspace_root=repo_root,
+                plugin_root=REPO_ROOT,
                 expected_state_sha256=automatic_state_sha256,
             )
         except development_verdict_adapter.ClosedLoopDevelopmentVerdictError as exc:

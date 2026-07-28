@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import closed_loop_attempt_state
+import experience_log
 import pytest
 
 _STATE_EVIDENCE_ROLES = {
@@ -221,6 +222,45 @@ def test_start_attempt_has_deterministic_identity_and_canonical_state_hash(
     assert first["state_sha256"] == (closed_loop_attempt_state.canonical_state_sha256(first))
     assert first["publication_acceptance"] == "not_claimed"
     assert closed_loop_attempt_state.validate_state(first, workspace_root=workspace) == first
+
+
+def test_terminal_state_records_one_nonranking_learning_observation(tmp_path: Path) -> None:
+    workspace, render = _workspace(tmp_path)
+    initial = closed_loop_attempt_state.start_attempt(
+        workspace_root=workspace,
+        fixture="demo",
+        actor="authoring_agent",
+        actor_role="authoring_agent",
+        evidence=_root_evidence(render),
+    )
+    initial_path = closed_loop_attempt_state.publish_state(initial, workspace_root=workspace)
+    terminal = closed_loop_attempt_state.transition_state(
+        initial,
+        next_state="aborted",
+        actor="workflow_agent-identity",
+        actor_role="workflow_agent",
+        evidence=_state_evidence(render, "aborted", 1),
+        workspace_root=workspace,
+        previous_state_path=initial_path,
+    )
+    terminal_path = closed_loop_attempt_state.publish_state(terminal, workspace_root=workspace)
+
+    first = experience_log.append_closed_loop_terminal_record(
+        terminal,
+        state_path=terminal_path,
+        workspace_root=workspace,
+        plugin_root=tmp_path / "plugin",
+    )
+    second = experience_log.append_closed_loop_terminal_record(
+        terminal,
+        state_path=terminal_path,
+        workspace_root=workspace,
+        plugin_root=tmp_path / "plugin",
+    )
+
+    assert first is not None
+    assert first["record"]["terminal"]["state"] == "aborted"
+    assert second is None
 
 
 def test_unadjudicated_and_unbound_states_stop_for_the_derived_human_actor(
