@@ -1,5 +1,9 @@
 # Figure Design Philosophy — poly(S-r-DIB) manuscript
 
+**Status:** Normative design companion, incorporated by reference from
+`docs/figure-agent.md`. It guides active manuscript convention work but does
+not override the product workflow, release, or human-acceptance authority.
+
 The cross-figure **기준점** (reference point) for the 4-5 remaining figures.
 Extracted from fig1's proven conventions + figure-agent's codified anti-patterns +
 the published canon. **Lean by design — grow it per-figure, do not front-load.**
@@ -95,6 +99,9 @@ Run these as a checklist; the critique rubric already audits them per figure.
   (diminishing returns); not every element has a "better" state.
 - **Element-iteration is the loop**: name a concrete sub-region defect → 1-line patch → recompile →
   confirm. User-as-master. (Sub-region, not whole panel, is the iteration unit.)
+- **Bank only demonstrated reuse**: keep an element local until a second,
+  independently authored figure reuses it and a rendered review verifies that
+  the abstraction preserved rather than constrained the intended meaning.
 
 ## 7. Published canon (pointers, not gospel)
 Design-principle pointers with verified primary sources. **Pointers, not a spec** — the mechanical numbers (mm, pt, weights) live in §2/§3/§4, not here. Filter every line by the fence: *would this have changed a call we actually made?* (Wong's "know your audience" / "message trumps beauty", banking-to-45, and the Lie-Factor formula are deliberately omitted — taste/irrelevant for a static schematic.)

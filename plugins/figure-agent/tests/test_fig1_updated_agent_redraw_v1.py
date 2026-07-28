@@ -397,6 +397,13 @@ def test_repaired_declares_height_limited_final_print_size_contract() -> None:
     assert natural_height * 183.0 / natural_width > max_height
 
 
+def test_repaired_declares_text_boundary_coverage_for_all_six_panels() -> None:
+    spec = _yaml("spec.yaml")
+    check_ids = {item["id"] for item in spec["text_boundary_checks"]}
+    for panel in "ABCDEF":
+        assert any(check_id.startswith(f"panel-{panel.lower()}-") for check_id in check_ids)
+
+
 def test_repaired_declares_compile_visible_physics_grounding() -> None:
     briefing = (FIXTURE / "briefing.md").read_text(encoding="utf-8")
     spec = _yaml("spec.yaml")

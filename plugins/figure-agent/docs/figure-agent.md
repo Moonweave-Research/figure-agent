@@ -32,9 +32,9 @@ reliably weak:
 The operating rule is: **Let the LLM propose freely.** Make Figure Agent constrain,
 observe, localize, repair, reproduce, and prove.
 
-Figure production is not Figure Agent product development. A hand-tuned fixture
-becomes a product capability only when the same declared mechanism transfers
-across different figure families without fixture coordinates or hidden human edits.
+Figure production is Figure Agent's primary dogfood and learning surface: a hand-tuned fixture exposes an LLM gap, visual contract, or detector need. Promote it only after the declared mechanism transfers across figure families without fixture coordinates or hidden human edits; preserve free LLM redraw rather than imposing a primitive, template, or coordinate recipe.
+`docs/figure-design-philosophy.md` is the normative companion for manuscript conventions and recorded human lessons; this contract remains the sole authority for workflow, release, and product direction.
+Each slice must produce or inspect one real figure artifact (or a defensible no-artifact diagnosis) and use its render to promote only transferable mechanisms. A component bank stays disabled until one component is reused and visually verified in a second independent figure.
 
 ## 2. Product boundaries
 ### 2.1 Representation roles

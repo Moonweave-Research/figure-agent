@@ -145,7 +145,10 @@ def test_authority_defines_product_identity_and_renderer_boundaries() -> None:
 
     for required in (
         "Let the LLM propose freely",
-        "Figure production is not Figure Agent product development.",
+        "Figure production is Figure Agent's primary dogfood and learning surface:",
+        "docs/figure-design-philosophy.md",
+        "Each slice must produce or inspect one real figure artifact",
+        "component bank stays disabled until one component is reused",
         "TikZ/TeX",
         "SVG is a derived export",
         "Python is the control plane",
