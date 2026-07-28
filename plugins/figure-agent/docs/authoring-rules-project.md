@@ -173,7 +173,7 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.cross-panel-polarity-label-rail
     category: label_binding
-    rule: "When a causal panel row shows opposite drive polarities for the same electrode, place the numeric polarity labels on a shared body rail and baseline, anchored to the driven-electrode lane rather than the clamp or ground lane. Keep the polarity labels visually distinct from ground/state labels so the sign change is read as an electrode condition, not as a voltage applied to the grounded specimen clip."
+    rule: "When a causal panel row shows opposite drive polarities for the same electrode, place the numeric polarity labels on a shared body rail and baseline, anchored to the driven-electrode lane rather than the clamp or ground lane. If a bare sign-and-value label could be read as a condition on the specimen, connect it to the driven electrode with a short annotation leader or use an explicit V_drive token. Keep the polarity labels visually distinct from ground/state labels so the sign change is read as an electrode condition, not as a voltage applied to the grounded specimen clip."
     source:
       kind: hand_patch_commit
       locator: "Fig5 cross-panel polarity-label alignment audit (2026-07-28)"

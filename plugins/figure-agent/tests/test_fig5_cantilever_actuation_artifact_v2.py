@@ -71,14 +71,10 @@ def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> Non
 
     assert "at (1.68,4.52) {clip: GND};" in panel_a
     assert "at (0.82,4.20) {clip: GND};" not in panel_a
-    voltage_pattern = (
-        r"\\node\[labelStd,text=cRed!82!black,anchor=(?:west|east)\]"
-        r".*?\{drive: \$\+5\\,\\mathrm\{kV\}\$\};"
-    )
-    voltage_nodes = re.findall(voltage_pattern, panel_a, re.DOTALL)
-    assert len(voltage_nodes) == 1
+    assert "text=cRed!82!black,anchor=east" in panel_a
+    assert "{$V_{\\mathrm{drive}}=+5\\,\\mathrm{kV}$};" in panel_a
     drive_label = panel_a.index("{drive electrode}")
-    voltage_label = panel_a.index("{drive: $+5\\,\\mathrm{kV}$}")
+    voltage_label = panel_a.index("{$V_{\\mathrm{drive}}=+5\\,\\mathrm{kV}$}")
     assert voltage_label > drive_label
 
 
@@ -219,10 +215,12 @@ def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
-    assert "at (3.04,4.12)" in panel_a
-    assert "{drive: $+5\\,\\mathrm{kV}$};" in panel_a
-    assert "at (3.34,4.12)" in panel_c
-    assert "{drive: $-5\\,\\mathrm{kV}$};" in panel_c
+    assert "(2.98,3.88)--(3.12,3.88)" in panel_a
+    assert "at (2.96,3.88)" in panel_a
+    assert "{$V_{\\mathrm{drive}}=+5\\,\\mathrm{kV}$};" in panel_a
+    assert "(3.24,3.88)--(3.44,3.88)" in panel_c
+    assert "at (3.22,3.88)" in panel_c
+    assert "{$V_{\\mathrm{drive}}=-5\\,\\mathrm{kV}$};" in panel_c
     assert "drive electrode" in panel_a
     assert "drive electrode" in panel_c
 
@@ -247,6 +245,8 @@ def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
     assert "clip: GND" in panel_a
+    assert "(2.98,3.88)--(3.12,3.88)" in panel_a
+    assert "(3.24,3.88)--(3.44,3.88)" in panel_c
     assert "film clip: GND lead open" in panel_b
     assert "support reference held at GND" in panel_b
     assert "drive OFF" in panel_b
