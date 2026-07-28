@@ -459,6 +459,24 @@ def test_fig5_drive_electrodes_keep_clearance_from_the_maximum_bend() -> None:
     assert min(centerline_clearances.values()) >= 0.80, centerline_clearances
 
 
+def test_fig5_bend_states_have_a_reader_visible_stage_order() -> None:
+    origins = {panel_id: _cantilever_centerline(panel_id)[0][0] for panel_id in "ABC"}
+    tips = {panel_id: _cantilever_centerline(panel_id)[-1][0] for panel_id in "ABC"}
+    lateral_deflection = {
+        panel_id: tips[panel_id] - origins[panel_id] for panel_id in "ABC"
+    }
+
+    # A is the strong drive-on attraction, B is the smaller retained residual,
+    # and C reverses direction.  The ordering must survive print reduction,
+    # while the arc-length contract above keeps these states one specimen.
+    assert lateral_deflection["A"] > 0.90
+    assert 0.30 < lateral_deflection["B"] < 0.55
+    assert lateral_deflection["C"] < -0.60
+    assert abs(lateral_deflection["B"]) < 0.65 * min(
+        abs(lateral_deflection["A"]), abs(lateral_deflection["C"])
+    )
+
+
 def test_fig5_panel_b_keeps_source_off_state_floating_with_residual_attraction() -> None:
     contract = _yaml("semantic_contract.yaml")
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(

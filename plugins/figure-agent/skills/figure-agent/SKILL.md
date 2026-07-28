@@ -644,6 +644,13 @@ free-end closure; encode the changed direction with force vectors, state labels,
 or polarity rather than changing the member into a shorter or sharply pointed
 specimen. A one-state taper, angular cap, or materially different extent is a
 cross-panel morphology defect even when each local outline is collision-free.
+When a causal row intentionally shows staged bend states, make the stage order
+visible at print reduction: the drive-on state, retained residual, and reversed
+state must not collapse into near-equal lateral deflections. Compare normalized
+free-end displacement or tangent angle after confirming the shared arc length;
+do not rely on panel captions to create a difference that the silhouettes do not
+show. If the row has no declared stage-order check, treat indistinguishable
+bends as an authoring/detector coverage gap.
 
 When repeated apparatus panels form one causal row, align their shared visual
 datums before judging local spacing: clamp/fixed-end height and driven-electrode

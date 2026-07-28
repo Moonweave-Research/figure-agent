@@ -61,17 +61,19 @@
   % A finite-width film member with one shared mechanical centerline.  The
   % named fixed-end anchors are also consumed by the rendered path so the
   % clamp cannot drift off the beam during a later redraw.  The A/B/C paths
-  % keep the same specimen arc length; only the deflection state changes.
+  % keep one slightly shortened specimen arc length; only the deflection state
+  % changes.  The three free-end angles are deliberately stepped rather than
+  % being near-duplicates.
   \coordinate (panel-a-clamp-axis) at (1.37,4.05);
   \coordinate (panel-a-beam-origin) at (1.37,4.05);
   \draw[wire] (panel-a-clamp-axis)--(1.37,4.68);
   \node[labelMute,anchor=west] at (1.68,4.52) {clip: GND};
   \draw[beamOuter]
     (panel-a-beam-origin)
-      .. controls (1.37,3.40) and (1.83,2.10) .. (2.48,1.62);
+      .. controls (1.37,3.45) and (1.78,2.25) .. (2.40,1.82);
   \draw[beamInner]
     (panel-a-beam-origin)
-      .. controls (1.37,3.40) and (1.83,2.10) .. (2.48,1.62);
+      .. controls (1.37,3.45) and (1.78,2.25) .. (2.40,1.82);
   % Keep a print-visible safety margin beyond the fully bent free end; the
   % electrode is not allowed to read as touching the specimen.
   \fill[cGray!28] (3.42,1.40) rectangle (3.72,4.34);
@@ -92,10 +94,10 @@
 
   % A true dimension arrow with witness ticks keeps the air gap distinct from
   % the force arrow and avoids the hooked legacy dimension glyphs at print scale.
-  \draw[gapWitness] (2.46,1.69)--(2.46,1.98);
-  \draw[gapWitness] (3.37,1.69)--(3.37,1.98);
-  \draw[gapDimension] (2.50,1.83)--(3.33,1.83);
-  \node[labelMute,anchor=south] at (2.92,1.95) {air gap};
+  \draw[gapWitness] (2.52,1.88)--(2.52,2.17);
+  \draw[gapWitness] (3.37,1.88)--(3.37,2.17);
+  \draw[gapDimension] (2.56,2.02)--(3.33,2.02);
+  \node[labelMute,anchor=south] at (2.94,2.14) {air gap};
   \draw[forceToward] (1.44,3.02)--(2.84,3.02);
   \node[labelStd,text=cRed!84!black,anchor=south] at (2.34,3.08)
     {attraction};
@@ -125,14 +127,14 @@
   \node[labelMute,anchor=west] at (2.00,4.52) {clip remains mounted};
   \draw[beamOuter]
     (panel-b-beam-origin)
-      .. controls (1.69,3.40) and (1.82,2.10) .. (2.30,1.45);
+      .. controls (1.69,3.45) and (1.75,2.30) .. (2.10,1.65);
   \draw[beamInner]
     (panel-b-beam-origin)
-      .. controls (1.69,3.40) and (1.82,2.10) .. (2.30,1.45);
+      .. controls (1.69,3.45) and (1.75,2.30) .. (2.10,1.65);
   \node[qmark] at (1.72,3.43) {};
   \node[qmark] at (1.87,2.80) {};
-  \node[qmark] at (2.10,2.25) {};
-  \node[qmark] at (2.25,1.76) {};
+  \node[qmark] at (1.98,2.15) {};
+  \node[qmark] at (2.06,1.78) {};
   \node[labelStd,text=cRed!80!black,anchor=east] at (1.10,2.80)
     {retained $q_{\mathrm{tr}}$};
   \draw[leader,cRed!58!black] (1.16,2.73)--(1.87,2.80);
@@ -180,10 +182,10 @@
   % sees one mounted film under reversed forcing, not a second sample.
   \draw[beamOuter]
     (panel-c-beam-origin)
-      .. controls (1.43,3.40) and (1.22,2.10) .. (0.72,1.45);
+      .. controls (1.43,3.45) and (1.00,2.25) .. (0.68,1.65);
   \draw[beamInner]
     (panel-c-beam-origin)
-      .. controls (1.43,3.40) and (1.22,2.10) .. (0.72,1.45);
+      .. controls (1.43,3.45) and (1.00,2.25) .. (0.68,1.65);
   \node[qmark] at (1.39,3.30) {};
   % The force vector must originate at a visible representative charge, rather
   % than visually cutting through the cantilever as a detached annotation.
