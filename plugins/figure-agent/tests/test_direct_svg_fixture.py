@@ -10,8 +10,6 @@ from typing import Any
 
 import pytest
 import yaml
-
-pytestmark = pytest.mark.quarantine
 from direct_svg_candidate import (
     begin_ledger,
     record_iteration,
@@ -19,6 +17,8 @@ from direct_svg_candidate import (
     validate_candidate_from_semantic_packet,
 )
 from direct_svg_packet import validate_packet
+
+pytestmark = pytest.mark.quarantine
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = PLUGIN_ROOT / "examples" / "fig1_direct_svg_cleanroom_baseline"

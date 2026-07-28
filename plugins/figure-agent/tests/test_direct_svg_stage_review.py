@@ -8,8 +8,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-
-pytestmark = pytest.mark.quarantine
 from direct_svg_review import DirectSvgReviewError
 from direct_svg_stage_review import (
     _resolve_path,
@@ -21,6 +19,8 @@ from direct_svg_stage_review import (
     stage_review,
 )
 from PIL import Image
+
+pytestmark = pytest.mark.quarantine
 
 FIXTURE = Path(__file__).parents[1] / "examples" / "fig1_direct_svg_cleanroom_baseline"
 PLUGIN_ROOT = FIXTURE.parents[1]

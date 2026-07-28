@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks"))
 
-from check_print_size_contract import evaluate_contract  # noqa: E402
+from check_print_size_contract import evaluate_contract  # noqa: E402, I001
 
 
 CONTRACT = {

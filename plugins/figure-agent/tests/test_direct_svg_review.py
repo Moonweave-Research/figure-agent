@@ -6,8 +6,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-
-pytestmark = pytest.mark.quarantine
 from direct_svg_review import (
     DirectSvgReviewError,
     build_review_packet,
@@ -17,6 +15,8 @@ from direct_svg_review import (
     validate_review_verdict,
 )
 from PIL import Image
+
+pytestmark = pytest.mark.quarantine
 
 
 def _write_png(path: Path, color: tuple[int, int, int]) -> Path:

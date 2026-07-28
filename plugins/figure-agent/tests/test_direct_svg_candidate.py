@@ -6,8 +6,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-
-pytestmark = pytest.mark.quarantine
 from direct_svg_candidate import (
     DirectSvgCandidateError,
     begin_ledger,
@@ -18,6 +16,8 @@ from direct_svg_candidate import (
     validate_candidate_from_semantic_packet,
 )
 from PIL import Image
+
+pytestmark = pytest.mark.quarantine
 
 
 def _write_svg(

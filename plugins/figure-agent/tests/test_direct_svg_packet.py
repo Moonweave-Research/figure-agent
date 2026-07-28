@@ -6,9 +6,9 @@ from typing import Any
 
 import pytest
 import yaml
+from direct_svg_packet import DirectSvgPacketError, validate_packet
 
 pytestmark = pytest.mark.quarantine
-from direct_svg_packet import DirectSvgPacketError, validate_packet
 
 DENIED_SOURCE_FAMILIES = [
     "tex",

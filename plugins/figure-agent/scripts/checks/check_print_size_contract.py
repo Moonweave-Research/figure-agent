@@ -158,7 +158,9 @@ def validate(
 ) -> dict[str, Any]:
     if authority_path is None:
         if require_contract:
-            raise PrintSizeContractError("authority.yaml or spec.yaml with final_size_contract is required")
+            raise PrintSizeContractError(
+                "authority.yaml or spec.yaml with final_size_contract is required"
+            )
         return {"status": "skipped", "reason": "authority.yaml/spec.yaml not found"}
 
     payload = yaml.safe_load(authority_path.read_text(encoding="utf-8")) or {}
