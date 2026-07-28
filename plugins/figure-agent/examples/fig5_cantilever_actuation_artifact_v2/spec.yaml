@@ -47,24 +47,24 @@ tex_assertions:
   # Coordinate-bound source geometry: the fixed-end edges must be bisected by
   # the clamp lead so a future redraw cannot silently paste the support off-axis.
   - id: clamp-axis-bisects-cantilever-fixed-end
-    kind: centerline_aligned
+    kind: path_origin_aligned
     source_name: fig5_cantilever_actuation_artifact_v2.tex
     axis: x
-    edge_coordinates: [panel-c-cantilever-left, panel-c-cantilever-right]
+    origin_coordinate: panel-c-beam-origin
     reference_coordinate: panel-c-clamp-axis
     tolerance_cm: 0.02
   - id: actuation-clamp-axis-bisects-cantilever-fixed-end
-    kind: centerline_aligned
+    kind: path_origin_aligned
     source_name: fig5_cantilever_actuation_artifact_v2.tex
     axis: x
-    edge_coordinates: [panel-a-cantilever-left, panel-a-cantilever-right]
+    origin_coordinate: panel-a-beam-origin
     reference_coordinate: panel-a-clamp-axis
     tolerance_cm: 0.02
   - id: isolation-clamp-axis-bisects-cantilever-fixed-end
-    kind: centerline_aligned
+    kind: path_origin_aligned
     source_name: fig5_cantilever_actuation_artifact_v2.tex
     axis: x
-    edge_coordinates: [panel-b-cantilever-left, panel-b-cantilever-right]
+    origin_coordinate: panel-b-beam-origin
     reference_coordinate: panel-b-clamp-axis
     tolerance_cm: 0.02
 

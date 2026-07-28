@@ -159,8 +159,8 @@ def test_fig5_binds_conditional_coulomb_force_to_a_visible_trapped_charge() -> N
     assert force_origin["from_object"] == "panel_c.trapped_charge"
     assert force_origin["to_object"] == "panel_c.coulomb_force"
     assert force_origin["epistemic_status"] == "conditional"
-    assert "\\node[qmark] at (1.14,2.38) {};" in panel_c
-    assert "\\draw[forceAway] (1.14,2.38)--(0.18,2.38);" in panel_c
+    assert "\\node[qmark] at (1.24,2.38) {};" in panel_c
+    assert "\\draw[forceAway] (1.24,2.38)--(0.18,2.38);" in panel_c
 
 
 def test_fig5_panel_c_reserves_copy_for_the_reverse_bend_threshold() -> None:
@@ -271,6 +271,17 @@ def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
     assert "{drive electrode}" not in panel_c
 
 
+def test_fig5_force_and_gap_endpoints_bind_to_rendered_beam_geometry() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+    panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
+
+    assert "\\draw[gapDimension] (1.92,1.88)--(3.08,1.88);" in panel_a
+    assert "\\draw[forceToward,opacity=0.62] (1.80,3.02)--(3.10,3.02);" in panel_b
+
+
 def test_fig5_panel_b_keeps_source_off_state_floating_with_residual_attraction() -> None:
     contract = _yaml("semantic_contract.yaml")
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
@@ -315,27 +326,18 @@ def test_fig5_declares_deterministic_clamp_axis_geometry_check() -> None:
     spec = _yaml("spec.yaml")
     assertions = {item["id"]: item for item in spec["tex_assertions"]}
     alignment = assertions["clamp-axis-bisects-cantilever-fixed-end"]
-    assert alignment["kind"] == "centerline_aligned"
-    assert alignment["edge_coordinates"] == [
-        "panel-c-cantilever-left",
-        "panel-c-cantilever-right",
-    ]
+    assert alignment["kind"] == "path_origin_aligned"
+    assert alignment["origin_coordinate"] == "panel-c-beam-origin"
     assert alignment["reference_coordinate"] == "panel-c-clamp-axis"
 
     actuation_alignment = assertions["actuation-clamp-axis-bisects-cantilever-fixed-end"]
-    assert actuation_alignment["kind"] == "centerline_aligned"
-    assert actuation_alignment["edge_coordinates"] == [
-        "panel-a-cantilever-left",
-        "panel-a-cantilever-right",
-    ]
+    assert actuation_alignment["kind"] == "path_origin_aligned"
+    assert actuation_alignment["origin_coordinate"] == "panel-a-beam-origin"
     assert actuation_alignment["reference_coordinate"] == "panel-a-clamp-axis"
 
     isolation_alignment = assertions["isolation-clamp-axis-bisects-cantilever-fixed-end"]
-    assert isolation_alignment["kind"] == "centerline_aligned"
-    assert isolation_alignment["edge_coordinates"] == [
-        "panel-b-cantilever-left",
-        "panel-b-cantilever-right",
-    ]
+    assert isolation_alignment["kind"] == "path_origin_aligned"
+    assert isolation_alignment["origin_coordinate"] == "panel-b-beam-origin"
     assert isolation_alignment["reference_coordinate"] == "panel-b-clamp-axis"
 
 
@@ -408,26 +410,11 @@ def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None
     assert all(electrode_pattern.search(panel) for panel in panels)
     assert all("\\draw[apparatus]" in panel for panel in panels)
 
-    coordinate_pattern = re.compile(
-        r"\\coordinate \(panel-([abc])-cantilever-(left|right)\)"
-        r"\s+at \((\d+\.\d+),4\.05\)"
-    )
-    widths: dict[str, dict[str, float]] = {}
-    for panel_id, edge, x in coordinate_pattern.findall(tex):
-        widths.setdefault(panel_id, {})[edge] = float(x)
-    assert set(widths) == {"a", "b", "c"}
-    member_widths = [edges["right"] - edges["left"] for edges in widths.values()]
-    assert max(member_widths) - min(member_widths) <= 0.01
-
-    polymer_blocks = [
-        panel.split("\\fill[polymer", 1)[1].split("-- cycle;", 1)[0]
-        for panel in panels
-    ]
-    free_end_levels = [
-        min(float(value) for value in re.findall(r",\s*(\d+\.\d+)\)", block))
-        for block in polymer_blocks
-    ]
-    assert max(free_end_levels) - min(free_end_levels) <= 0.08
+    assert tex.count("\\draw[beamOuter]") == 3
+    assert tex.count("\\draw[beamInner]") == 3
+    assert "(2.08,1.70);" in panels[0]
+    assert "(2.25,1.76);" in panels[1]
+    assert "(0.72,1.70);" in panels[2]
 
 
 def test_fig5_reverse_bend_keeps_the_same_rounded_member_extent() -> None:
@@ -437,12 +424,12 @@ def test_fig5_reverse_bend_keeps_the_same_rounded_member_extent() -> None:
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
-    assert "rounded corners=0.35mm" in panel_a
-    assert "rounded corners=0.45mm" in panel_a
-    assert "rounded corners=0.35mm" in panel_c
-    assert "rounded corners=0.45mm" in panel_c
-    assert "(2.37,1.64)" in panel_a
-    assert "(0.43,1.64)" in panel_c
+    assert "beamOuter" in panel_a
+    assert "beamInner" in panel_a
+    assert "beamOuter" in panel_c
+    assert "beamInner" in panel_c
+    assert "(2.08,1.70)" in panel_a
+    assert "(0.72,1.70)" in panel_c
 
 
 def test_fig5_source_off_residual_bend_is_visibly_smaller_than_drive_bends() -> None:
@@ -453,12 +440,12 @@ def test_fig5_source_off_residual_bend_is_visibly_smaller_than_drive_bends() -> 
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
-    assert "(2.37,1.64)" in panel_a
-    assert "(2.48,1.62)" in panel_b
-    assert "(0.43,1.64)" in panel_c
+    assert "(2.08,1.70)" in panel_a
+    assert "(2.25,1.76)" in panel_b
+    assert "(0.72,1.70)" in panel_c
 
 
-def test_fig5_free_end_caps_follow_the_member_tangent() -> None:
+def test_fig5_centerline_beams_have_deliberate_free_end_terminations() -> None:
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
     )
@@ -467,10 +454,10 @@ def test_fig5_free_end_caps_follow_the_member_tangent() -> None:
         "b": tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0],
         "c": tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0],
     }
-    expected_caps = {
-        "a": ".. controls (2.25,1.49) and (2.33,1.52) .. (2.37,1.64)",
-        "b": ".. controls (2.38,1.47) and (2.45,1.50) .. (2.48,1.62)",
-        "c": ".. controls (0.55,1.49) and (0.47,1.52) .. (0.43,1.64)",
+    expected_endpoints = {
+        "a": ".. (2.08,1.70);",
+        "b": ".. (2.25,1.76);",
+        "c": ".. (0.72,1.70);",
     }
-    for panel_id, cap in expected_caps.items():
-        assert panels[panel_id].count(cap) == 2
+    for panel_id, endpoint in expected_endpoints.items():
+        assert panels[panel_id].count(endpoint) == 2

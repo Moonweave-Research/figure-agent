@@ -19,6 +19,8 @@
   wire/.style={cGray!78!black,line width=0.82pt,line cap=round,line join=round},
   apparatus/.style={cGray!18,draw=cGray!78!black,line width=0.82pt},
   polymer/.style={cAmber!10,draw=cAmber!72!black,line width=0.95pt},
+  beamOuter/.style={cAmber!72!black,line width=2.35mm,line cap=round},
+  beamInner/.style={cAmber!10,line width=1.55mm,line cap=round},
   leader/.style={cGray!58!black,line width=0.40pt},
   driveBiasLeader/.style={cGray!72!black,line width=0.56pt,line cap=round},
   processArrow/.style={-{Stealth[length=3.8pt,width=2.8pt]},cGray!70!black,
@@ -56,25 +58,15 @@
   % named fixed-end anchors are also consumed by the rendered path so the
   % clamp cannot drift off the beam during a later redraw.
   \coordinate (panel-a-clamp-axis) at (1.37,4.05);
-  \coordinate (panel-a-cantilever-left) at (1.27,4.05);
-  \coordinate (panel-a-cantilever-right) at (1.47,4.05);
+  \coordinate (panel-a-beam-origin) at (1.37,4.05);
   \draw[wire] (panel-a-clamp-axis)--(1.37,4.68);
   \node[labelMute,anchor=west] at (1.68,4.52) {clip: GND};
-  \fill[polymer,rounded corners=0.35mm]
-    (panel-a-cantilever-left)
-      .. controls (1.25,3.48) and (1.36,2.88) .. (1.54,2.38)
-      .. controls (1.70,2.00) and (1.94,1.72) .. (2.18,1.54)
-      .. controls (2.25,1.49) and (2.33,1.52) .. (2.37,1.64)
-      .. controls (2.10,1.82) and (1.85,2.12) .. (1.72,2.55)
-      .. controls (1.56,3.05) and (1.50,3.60) .. (panel-a-cantilever-right)
-      -- cycle;
-  \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.45mm]
-    (panel-a-cantilever-left)
-      .. controls (1.25,3.48) and (1.36,2.88) .. (1.54,2.38)
-      .. controls (1.70,2.00) and (1.94,1.72) .. (2.18,1.54)
-      .. controls (2.25,1.49) and (2.33,1.52) .. (2.37,1.64)
-      .. controls (2.10,1.82) and (1.85,2.12) .. (1.72,2.55)
-      .. controls (1.56,3.05) and (1.50,3.60) .. (panel-a-cantilever-right);
+  \draw[beamOuter]
+    (panel-a-beam-origin)
+      .. controls (1.37,3.42) and (1.52,2.42) .. (2.08,1.70);
+  \draw[beamInner]
+    (panel-a-beam-origin)
+      .. controls (1.37,3.42) and (1.52,2.42) .. (2.08,1.70);
   \fill[cGray!28] (3.12,1.40) rectangle (3.42,4.34);
   \draw[apparatus] (3.12,1.40) rectangle (3.42,4.34);
   % An explicit terminal rail makes the applied bias belong to the electrode,
@@ -83,17 +75,17 @@
   \node[labelStd,text=cRed!82!black,anchor=south] at (3.27,4.62)
     {$+5\,\mathrm{kV}$};
   \node[qmark] at (1.41,3.56) {};
-  \node[qmark] at (1.75,2.88) {};
-  \node[qmark] at (2.22,2.18) {};
+  \node[qmark] at (1.50,2.88) {};
+  \node[qmark] at (1.82,2.20) {};
   % Anchor the trap label from its right edge so the leader starts outside the
   % glyph box instead of running through the trailing charge subscript.
   \node[labelStd,text=cRed!80!black,anchor=east] at (1.06,3.04)
     {trapped $q_{\mathrm{tr}}$};
   \draw[leader,cRed!58!black] (1.13,3.08)--(1.41,3.56);
 
-  \draw[gapDimension] (2.33,1.88)--(3.08,1.88);
-  \node[labelMute,anchor=south] at (2.71,1.94) {air gap};
-  \draw[forceToward] (1.72,3.02)--(2.84,3.02);
+  \draw[gapDimension] (1.92,1.88)--(3.08,1.88);
+  \node[labelMute,anchor=south] at (2.50,1.94) {air gap};
+  \draw[forceToward] (1.44,3.02)--(2.84,3.02);
   \node[labelStd,text=cRed!84!black,anchor=south] at (2.34,3.08)
     {attraction};
 
@@ -117,34 +109,24 @@
   \fill[cGray!38] (1.18,4.05) rectangle (2.20,4.34);
   \draw[apparatus] (1.18,4.05) rectangle (2.20,4.34);
   \coordinate (panel-b-clamp-axis) at (1.69,4.05);
-  \coordinate (panel-b-cantilever-left) at (1.59,4.05);
-  \coordinate (panel-b-cantilever-right) at (1.79,4.05);
+  \coordinate (panel-b-beam-origin) at (1.69,4.05);
   \draw[wire] (panel-b-clamp-axis)--(1.69,4.52);
   \node[labelMute,anchor=west] at (2.00,4.52) {clip remains mounted};
-  \fill[polymer,rounded corners=0.25mm]
-    (panel-b-cantilever-left)
-      .. controls (1.58,3.50) and (1.65,2.95) .. (1.84,2.46)
-      .. controls (1.99,2.05) and (2.18,1.78) .. (2.30,1.56)
-      .. controls (2.38,1.47) and (2.45,1.50) .. (2.48,1.62)
-      .. controls (2.23,1.90) and (2.05,2.18) .. (1.92,2.62)
-      .. controls (1.76,3.10) and (1.72,3.62) .. (panel-b-cantilever-right)
-      -- cycle;
-  \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.25mm]
-    (panel-b-cantilever-left)
-      .. controls (1.58,3.50) and (1.65,2.95) .. (1.84,2.46)
-      .. controls (1.99,2.05) and (2.18,1.78) .. (2.30,1.56)
-      .. controls (2.38,1.47) and (2.45,1.50) .. (2.48,1.62)
-      .. controls (2.23,1.90) and (2.05,2.18) .. (1.92,2.62)
-      .. controls (1.76,3.10) and (1.72,3.62) .. (panel-b-cantilever-right);
+  \draw[beamOuter]
+    (panel-b-beam-origin)
+      .. controls (1.69,3.44) and (1.82,2.55) .. (2.25,1.76);
+  \draw[beamInner]
+    (panel-b-beam-origin)
+      .. controls (1.69,3.44) and (1.82,2.55) .. (2.25,1.76);
   \node[qmark] at (1.72,3.43) {};
   \node[qmark] at (1.87,2.80) {};
-  \node[qmark] at (2.17,2.13) {};
+  \node[qmark] at (2.00,2.13) {};
   \node[labelStd,text=cRed!80!black,anchor=east] at (1.10,2.80)
     {retained $q_{\mathrm{tr}}$};
   \draw[leader,cRed!58!black] (1.16,2.73)--(1.87,2.80);
   \fill[cGray!28] (3.42,1.40) rectangle (3.70,4.34);
   \draw[apparatus] (3.42,1.40) rectangle (3.70,4.34);
-  \draw[forceToward,opacity=0.62] (1.86,3.02)--(3.10,3.02);
+  \draw[forceToward,opacity=0.62] (1.80,3.02)--(3.10,3.02);
   \node[labelStd,text=cRed!72!black,anchor=south] at (2.60,3.08)
     {residual attraction};
   % The manually lifted lead records the transition without leaving a ground
@@ -173,9 +155,8 @@
   % Named source anchors let the geometry gate measure the fixed-end center,
   % rather than trusting a prose rule or a visual coincidence.
   \coordinate (panel-c-clamp-axis) at (1.43,4.05);
+  \coordinate (panel-c-beam-origin) at (1.43,4.05);
   \coordinate (panel-c-clamp-top) at (1.43,4.52);
-  \coordinate (panel-c-cantilever-left) at (1.33,4.05);
-  \coordinate (panel-c-cantilever-right) at (1.53,4.05);
   \draw[wire] (panel-c-clamp-axis)--(panel-c-clamp-top);
   \node[labelMute,align=right,anchor=east] at (3.18,4.00)
     {clip:\\[-0.4pt]electrically floating};
@@ -183,25 +164,16 @@
   % legible without introducing a second, supposedly observed bend snapshot.
   % Its free-end curvature and effective length mirror Panel A so the reader
   % sees one mounted film under reversed forcing, not a second sample.
-  \fill[polymer,rounded corners=0.35mm]
-    (panel-c-cantilever-right)
-      .. controls (1.55,3.48) and (1.44,2.88) .. (1.26,2.38)
-      .. controls (1.10,2.00) and (0.86,1.72) .. (0.62,1.54)
-      .. controls (0.55,1.49) and (0.47,1.52) .. (0.43,1.64)
-      .. controls (0.70,1.82) and (0.95,2.12) .. (1.08,2.55)
-      .. controls (1.24,3.05) and (1.30,3.60) .. (panel-c-cantilever-left)
-      -- cycle;
-  \draw[cAmber!72!black,line width=1.0pt,rounded corners=0.45mm]
-    (panel-c-cantilever-right)
-      .. controls (1.55,3.48) and (1.44,2.88) .. (1.26,2.38)
-      .. controls (1.10,2.00) and (0.86,1.72) .. (0.62,1.54)
-      .. controls (0.55,1.49) and (0.47,1.52) .. (0.43,1.64)
-      .. controls (0.70,1.82) and (0.95,2.12) .. (1.08,2.55)
-      .. controls (1.24,3.05) and (1.30,3.60) .. (panel-c-cantilever-left);
+  \draw[beamOuter]
+    (panel-c-beam-origin)
+      .. controls (1.43,3.42) and (1.28,2.42) .. (0.72,1.70);
+  \draw[beamInner]
+    (panel-c-beam-origin)
+      .. controls (1.43,3.42) and (1.28,2.42) .. (0.72,1.70);
   \node[qmark] at (1.39,3.30) {};
   % The force vector must originate at a visible representative charge, rather
   % than visually cutting through the cantilever as a detached annotation.
-  \node[qmark] at (1.14,2.38) {};
+  \node[qmark] at (1.24,2.38) {};
   \node[qmark] at (0.70,1.92) {};
   \node[labelStd,text=cRed!80!black,anchor=east] at (0.82,3.30)
     {$q_{\mathrm{tr}}$};
@@ -216,7 +188,7 @@
   \draw[baselineArrow] (1.49,3.12)--(2.30,3.12);
   \node[labelStd,anchor=south,text=cGray!74!black] at (2.48,3.18)
     {Maxwell attraction};
-  \draw[forceAway] (1.14,2.38)--(0.18,2.38);
+  \draw[forceAway] (1.24,2.38)--(0.18,2.38);
   \node[labelStd,text=cRed!84!black,anchor=south east] at (0.92,2.50)
     {Coulomb};
   \node[labelStd,anchor=north] at (2.24,0.82)

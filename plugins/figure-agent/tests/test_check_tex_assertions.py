@@ -95,6 +95,56 @@ def test_parse_centerline_alignment_assertion():
     assert cta.parse_tex_assertions({"tex_assertions": [assertion]}) == [assertion]
 
 
+def test_parse_path_origin_alignment_assertion():
+    assertion = {
+        "id": "beam-origin",
+        "kind": "path_origin_aligned",
+        "axis": "x",
+        "origin_coordinate": "beam-origin",
+        "reference_coordinate": "axis",
+        "tolerance_cm": 0.02,
+    }
+    assert cta.parse_tex_assertions({"tex_assertions": [assertion]}) == [assertion]
+
+
+def test_path_origin_alignment_passes_for_a_centerline_stroke():
+    tex = """
+    \\coordinate (beam-origin) at (1.43,3.88);
+    \\coordinate (axis) at (1.43,3.88);
+    \\draw (axis) -- (1.43,4.4);
+    \\draw (beam-origin) .. controls (1.43,3.2) and (1.8,2.2) .. (2.1,1.8);
+    """
+    assertion = {
+        "id": "beam-origin",
+        "kind": "path_origin_aligned",
+        "axis": "x",
+        "origin_coordinate": "beam-origin",
+        "reference_coordinate": "axis",
+        "tolerance_cm": 0.02,
+    }
+    assert cta.check_tex_assertions(tex, [assertion]) == []
+
+
+def test_path_origin_alignment_flags_an_off_axis_centerline():
+    tex = """
+    \\coordinate (beam-origin) at (1.52,3.88);
+    \\coordinate (axis) at (1.43,3.88);
+    \\draw (axis) -- (1.43,4.4);
+    \\draw (beam-origin) .. controls (1.52,3.2) and (1.8,2.2) .. (2.1,1.8);
+    """
+    assertion = {
+        "id": "beam-origin",
+        "kind": "path_origin_aligned",
+        "axis": "x",
+        "origin_coordinate": "beam-origin",
+        "reference_coordinate": "axis",
+        "tolerance_cm": 0.02,
+    }
+    issues = cta.check_tex_assertions(tex, [assertion])
+    assert issues[0]["status"] == "violated"
+    assert issues[0]["measured_delta_cm"] == pytest.approx(0.09)
+
+
 def test_centerline_alignment_passes_when_support_bisects_fixed_end():
     tex = """
     \\coordinate (left) at (1.35,3.88);

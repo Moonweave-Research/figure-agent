@@ -24,7 +24,10 @@ mechanical. Report-only by default; --strict exits non-zero on any violation.
 Source geometry can also be checked with a `centerline_aligned` assertion. It
 names two fixed-end edge coordinates and one support-axis coordinate declared by
 TikZ `\\coordinate` statements; the checker compares their midpoint on the
-declared axis and fails closed when an anchor is missing or duplicated.
+declared axis and fails closed when an anchor is missing or duplicated. A beam
+authored as a single finite-width centerline stroke can instead use
+`path_origin_aligned` with one rendered path-origin coordinate and one support
+axis coordinate; this prevents the contract from forcing an artificial edge cap.
 """
 
 from __future__ import annotations
@@ -87,6 +90,7 @@ _NAMED_COORD_DECL_RE = re.compile(
 )
 
 CENTERLINE_ALIGNMENT_KIND = "centerline_aligned"
+PATH_ORIGIN_ALIGNMENT_KIND = "path_origin_aligned"
 
 _RAW_DRAW_PATTERN = tuple[re.Pattern[str], tuple[int, int, int, int], int | None]
 
@@ -384,9 +388,10 @@ def parse_tex_assertions(
 
         kind = item.get("kind")
         if kind is not None:
-            if kind != CENTERLINE_ALIGNMENT_KIND:
+            if kind not in {CENTERLINE_ALIGNMENT_KIND, PATH_ORIGIN_ALIGNMENT_KIND}:
                 raise TexAssertionError(
-                    f"tex_assertions[{index}].kind must be {CENTERLINE_ALIGNMENT_KIND!r}"
+                    f"tex_assertions[{index}].kind must be one of "
+                    f"{CENTERLINE_ALIGNMENT_KIND!r}, {PATH_ORIGIN_ALIGNMENT_KIND!r}"
                 )
             out: dict = {"kind": kind}
             for field in ("id", "axis", "reference_coordinate"):
@@ -394,19 +399,27 @@ def parse_tex_assertions(
                 if not isinstance(value, str) or not value.strip():
                     raise TexAssertionError(f"tex_assertions[{index}].{field} is required")
                 out[field] = value.strip()
-            edge_coordinates = item.get("edge_coordinates")
-            if (
-                not isinstance(edge_coordinates, list)
-                or len(edge_coordinates) != 2
-                or any(
-                    not isinstance(value, str) or not value.strip()
-                    for value in edge_coordinates
-                )
-            ):
-                raise TexAssertionError(
-                    f"tex_assertions[{index}].edge_coordinates must be two named coordinates"
-                )
-            out["edge_coordinates"] = [value.strip() for value in edge_coordinates]
+            if kind == CENTERLINE_ALIGNMENT_KIND:
+                edge_coordinates = item.get("edge_coordinates")
+                if (
+                    not isinstance(edge_coordinates, list)
+                    or len(edge_coordinates) != 2
+                    or any(
+                        not isinstance(value, str) or not value.strip()
+                        for value in edge_coordinates
+                    )
+                ):
+                    raise TexAssertionError(
+                        f"tex_assertions[{index}].edge_coordinates must be two named coordinates"
+                    )
+                out["edge_coordinates"] = [value.strip() for value in edge_coordinates]
+            else:
+                origin_coordinate = item.get("origin_coordinate")
+                if not isinstance(origin_coordinate, str) or not origin_coordinate.strip():
+                    raise TexAssertionError(
+                        f"tex_assertions[{index}].origin_coordinate is required"
+                    )
+                out["origin_coordinate"] = origin_coordinate.strip()
             if out["axis"] not in AXES:
                 raise TexAssertionError(f"tex_assertions[{index}].axis must be one of {AXES}")
             if "tolerance_cm" in item:
@@ -711,6 +724,61 @@ def _check_centerline_alignment(tex_text: str, assertion: dict) -> dict | None:
     }
 
 
+def _check_path_origin_alignment(tex_text: str, assertion: dict) -> dict | None:
+    """Check that a single rendered path begins on its declared support axis."""
+    coordinates = _named_coordinate_matches(tex_text)
+    names = [assertion["origin_coordinate"], assertion["reference_coordinate"]]
+    for name in names:
+        matches = coordinates.get(name, [])
+        if not matches:
+            return {
+                "id": assertion["id"],
+                "status": "coordinate_missing",
+                "message": f"assertion {assertion['id']!r}: coordinate {name!r} is absent",
+                "coordinate": name,
+            }
+        if len(matches) != 1:
+            return {
+                "id": assertion["id"],
+                "status": "coordinate_ambiguous",
+                "message": (
+                    f"assertion {assertion['id']!r}: coordinate {name!r} has "
+                    f"{len(matches)} declarations"
+                ),
+                "coordinate": name,
+            }
+        if not _named_coordinate_usage(tex_text, name):
+            return {
+                "id": assertion["id"],
+                "status": "coordinate_unbound",
+                "message": (
+                    f"assertion {assertion['id']!r}: coordinate {name!r} is declared "
+                    "but not used by a rendered path"
+                ),
+                "coordinate": name,
+            }
+    axis_index = 0 if assertion["axis"] == "x" else 1
+    origin = coordinates[assertion["origin_coordinate"]][0]
+    reference = coordinates[assertion["reference_coordinate"]][0]
+    delta = origin[axis_index] - reference[axis_index]
+    tolerance = assertion.get("tolerance_cm", DEFAULT_TOLERANCE_CM)
+    if abs(delta) <= tolerance:
+        return None
+    return {
+        "id": assertion["id"],
+        "status": "violated",
+        "message": (
+            f"assertion {assertion['id']!r} violated: path origin is "
+            f"{abs(delta):.4f} cm off the support axis"
+        ),
+        "axis": assertion["axis"],
+        "origin_coordinate": assertion["origin_coordinate"],
+        "reference_coordinate": assertion["reference_coordinate"],
+        "measured_delta_cm": abs(delta),
+        "tolerance_cm": tolerance,
+    }
+
+
 def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
     """One issue per assertion that is violated, indeterminate, or whose anchor is
     missing/ambiguous. A passing assertion produces no issue."""
@@ -718,6 +786,11 @@ def check_tex_assertions(tex_text: str, assertions: list[dict]) -> list[dict]:
     for assertion in assertions:
         if assertion.get("kind") == CENTERLINE_ALIGNMENT_KIND:
             issue = _check_centerline_alignment(tex_text, assertion)
+            if issue is not None:
+                issues.append(issue)
+            continue
+        if assertion.get("kind") == PATH_ORIGIN_ALIGNMENT_KIND:
+            issue = _check_path_origin_alignment(tex_text, assertion)
             if issue is not None:
                 issues.append(issue)
             continue
