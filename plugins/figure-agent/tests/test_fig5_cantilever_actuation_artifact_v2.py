@@ -421,5 +421,18 @@ def test_fig5_reverse_bend_keeps_the_same_rounded_member_extent() -> None:
     assert "rounded corners=0.45mm" in panel_a
     assert "rounded corners=0.35mm" in panel_c
     assert "rounded corners=0.45mm" in panel_c
-    assert "(2.45,1.50)" in panel_a
-    assert "(0.35,1.50)" in panel_c
+    assert "(2.67,1.48)" in panel_a
+    assert "(0.13,1.48)" in panel_c
+
+
+def test_fig5_source_off_residual_bend_is_visibly_smaller_than_drive_bends() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+    panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
+    panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
+
+    assert "(2.67,1.48)" in panel_a
+    assert "(2.57,1.58)" in panel_b
+    assert "(0.13,1.48)" in panel_c

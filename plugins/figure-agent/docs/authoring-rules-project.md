@@ -149,7 +149,7 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.source-off-floating-residual-bend
     category: physics_semantics
-    rule: "Do not import a support-GND terminal into a source-OFF state unless the experiment explicitly retains that boundary. When the mounted specimen is electrically floating after manual lead lift, label the floating state directly and remove residual ground symbols or fixed-reference prose. If retained charge preserves attraction after source OFF, retain a smaller continuous bend of the same clamped member and name the residual attraction; an unbent isolation cartoon falsely implies that the stored state and its mechanical consequence vanished together."
+    rule: "Do not import a support-GND terminal into a source-OFF state unless the experiment explicitly retains that boundary. When the mounted specimen is electrically floating after manual lead lift, label the floating state directly and remove residual ground symbols or fixed-reference prose. If retained charge preserves attraction after source OFF, retain a smaller continuous bend of the same clamped member and name the residual attraction; the reduction-scale deflection difference from the drive-on and reverse-bend states must be visibly clear. An unbent isolation cartoon falsely implies that the stored state and its mechanical consequence vanished together."
     source:
       kind: hand_patch_commit
       locator: "Fig5 Panel B floating-state correction (2026-07-28)"

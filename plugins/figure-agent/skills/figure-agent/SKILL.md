@@ -429,7 +429,9 @@ electrically floating, remove the support-GND symbol and fixed-reference prose
 rather than carrying over topology from a different apparatus.  Label the
 floating specimen directly.  If retained charge leaves a residual attraction
 bend after source OFF, show the same mounted member with a smaller, physically
-continuous bend and name that residual state; an unbent isolation cartoon
+continuous bend and name that residual state.  Require the smaller deflection
+to remain visibly distinct from drive-on and reverse-bend states at final
+reduction; an unbent isolation cartoon
 silently erases the claimed persistence.
 
 Do not treat an instrument name or capability display such as V/A as proof of

@@ -289,6 +289,7 @@ def test_project_rule_prevents_ground_topology_from_leaking_into_floating_state(
     assert "support-GND terminal" in rule["rule"]
     assert "electrically floating" in rule["rule"]
     assert "smaller continuous bend" in rule["rule"]
+    assert "deflection difference" in rule["rule"]
     assert "unbent isolation cartoon" in rule["rule"]
 
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
@@ -297,6 +298,7 @@ def test_project_rule_prevents_ground_topology_from_leaking_into_floating_state(
     normalized_skill = " ".join(skill.split())
     assert "entire mounted specimen electrically floating" in normalized_skill
     assert "residual attraction bend after source OFF" in normalized_skill
+    assert "visibly distinct from drive-on and reverse-bend states" in normalized_skill
 
 
 def test_project_rule_requires_a_straight_positive_response_plateau() -> None:
