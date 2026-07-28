@@ -466,9 +466,13 @@ arrow unless the source explicitly declares that electrical boundary.
 
 When a charging-stage schematic has a grounded clip and a biased drive
 electrode, give the numeric high-voltage label to the drive-electrode lane and
-bind the ground label explicitly to the clip. Keep duration or state text
-voltage-free when it sits near the ground lane; repeating the voltage beside a
-ground symbol is a semantic ownership defect even when no glyphs collide.
+bind the ground label explicitly to the clip. At print reduction, require a
+visibly legible neutral leader that terminates at the driven-electrode
+silhouette when a bare sign-and-value label could otherwise read as a specimen
+condition; a short category-coloured hairline is not sufficient ownership
+evidence. Keep duration or state text voltage-free when it sits near the ground
+lane; repeating the voltage beside a ground symbol is a semantic ownership
+defect even when no glyphs collide.
 
 Preserve the declared evidence granularity for instrument identity. Family-level
 authority supports the family name and topology, not unverified model-specific

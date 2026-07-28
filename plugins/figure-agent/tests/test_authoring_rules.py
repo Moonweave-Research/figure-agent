@@ -158,7 +158,8 @@ def test_project_rule_aligns_cross_panel_polarity_labels_with_the_drive_rail() -
     assert "opposite drive polarities" in rule["rule"]
     assert "shared body rail and baseline" in rule["rule"]
     assert "driven-electrode lane" in rule["rule"]
-    assert "short annotation leader" in rule["rule"]
+    assert "visibly legible neutral annotation leader" in rule["rule"]
+    assert "red hairline is insufficient" in rule["rule"]
     assert "grounded specimen clip" in rule["rule"]
 
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
@@ -166,7 +167,8 @@ def test_project_rule_aligns_cross_panel_polarity_labels_with_the_drive_rail() -
     )
     normalized_skill = " ".join(skill.split())
     assert "shared body rail and baseline" in normalized_skill
-    assert "short annotation leader" in normalized_skill
+    assert "visibly legible neutral leader" in normalized_skill
+    assert "short category-coloured hairline" in normalized_skill
     assert "voltage applied to the grounded specimen clip" in normalized_skill
 
 

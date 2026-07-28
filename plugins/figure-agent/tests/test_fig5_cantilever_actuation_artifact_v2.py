@@ -215,11 +215,13 @@ def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
-    assert "(2.98,3.88)--(3.12,3.88)" in panel_a
-    assert "at (2.96,3.88)" in panel_a
+    assert "driveBiasLeader" in panel_a
+    assert "(2.86,3.88)--(3.12,3.88)" in panel_a
+    assert "at (2.82,3.88)" in panel_a
     assert "{$V_{\\mathrm{drive}}=+5\\,\\mathrm{kV}$};" in panel_a
-    assert "(3.24,3.88)--(3.44,3.88)" in panel_c
-    assert "at (3.22,3.88)" in panel_c
+    assert "at (3.72,4.58) {drive electrode};" in panel_c
+    assert "(3.18,3.88)--(3.44,3.88)" in panel_c
+    assert "at (3.14,3.88)" in panel_c
     assert "{$V_{\\mathrm{drive}}=-5\\,\\mathrm{kV}$};" in panel_c
     assert "drive electrode" in panel_a
     assert "drive electrode" in panel_c
@@ -245,8 +247,8 @@ def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
     assert "clip: GND" in panel_a
-    assert "(2.98,3.88)--(3.12,3.88)" in panel_a
-    assert "(3.24,3.88)--(3.44,3.88)" in panel_c
+    assert "(2.86,3.88)--(3.12,3.88)" in panel_a
+    assert "(3.18,3.88)--(3.44,3.88)" in panel_c
     assert "film clip: GND lead open" in panel_b
     assert "support reference held at GND" in panel_b
     assert "drive OFF" in panel_b
