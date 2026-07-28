@@ -29,6 +29,20 @@ final_size_contract:
 # can be treated as grounded.  This is style-independent and coordinate-free.
 semantic_contract_required: true
 
+# Reader-facing stage order that can be verified against the rendered text
+# without encoding fixture coordinates.  The source-off state precedes the
+# reversed drive, which precedes the observed recovery in the qualitative
+# response trace.
+semantic_assertions:
+  - id: source-off-before-reversed-drive
+    relation: left_of
+    subject: source-off
+    reference: reversed-drive
+  - id: reversed-drive-before-recovery
+    relation: left_of
+    subject: reversed-drive
+    reference: recovery
+
 tex_assertions:
   - id: initial-force-points-toward-drive
     source_name: fig5_cantilever_actuation_artifact_v2.tex

@@ -47,6 +47,19 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
     assert contract["summary"]["panel_story_role_count"] == 4
 
 
+def test_fig5_declares_reader_facing_stage_order_assertions() -> None:
+    assertions = _yaml("spec.yaml")["semantic_assertions"]
+
+    assert [item["id"] for item in assertions] == [
+        "source-off-before-reversed-drive",
+        "reversed-drive-before-recovery",
+    ]
+    assert {(item["relation"], item["subject"], item["reference"]) for item in assertions} == {
+        ("left_of", "source-off", "reversed-drive"),
+        ("left_of", "reversed-drive", "recovery"),
+    }
+
+
 def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() -> None:
     contract = _yaml("semantic_contract.yaml")
     protected = set(contract["protected_relations"])
