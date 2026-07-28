@@ -234,6 +234,7 @@ def build_memory_index(
     unknown_event_count = 0
     counterfactual_unchosen_count = 0
     duplicate_experience_attempt_count = 0
+    source_fixtures: set[str] = set()
     seen_reward_attempt_keys: set[tuple[str, str, str, str, str, str, str]] = set()
     seen_experience_attempt_keys: set[tuple[str, str, str, str, str, str, str]] = set()
 
@@ -256,6 +257,8 @@ def build_memory_index(
         template_known = not _is_unknown(template_id)
         family_template_key = f"{family}::{template_id}"
         fixture = str(event.get("fixture") or "")
+        if fixture:
+            source_fixtures.add(fixture)
         stable_experience_key = (
             fixture,
             str(event.get("candidate_id") or ""),
@@ -351,6 +354,22 @@ def build_memory_index(
         if template_rank_scores[key]:
             bucket["median_rank_delta"] = round(median(template_rank_scores[key]), 4)
 
+    scope_fixture = scope.get("fixture") if isinstance(scope, dict) else None
+    if isinstance(scope_fixture, str) and scope_fixture:
+        source_fixtures.add(scope_fixture)
+    learning_evidence = {
+        "source_fixture_count": len(source_fixtures),
+        "source_fixtures": sorted(source_fixtures),
+        "cross_fixture_state": (
+            "blocked_single_fixture" if len(source_fixtures) < 2 else "review_required"
+        ),
+        "promotion_claim_allowed": False,
+        "reason": (
+            "cross-fixture evidence is required before any transferable learning "
+            "or final promotion claim"
+        ),
+    }
+
     return {
         "schema": SCHEMA,
         "generated_at": _utc_now(),
@@ -373,6 +392,7 @@ def build_memory_index(
             eligible_attempt_count=eligible_prior_count,
             counterfactual_count=counterfactual_unchosen_count,
         ),
+        "learning_evidence": learning_evidence,
         "families": dict(sorted(families.items())),
         "family_templates": dict(sorted(family_templates.items())),
         "panel_patterns": dict(sorted(panel_patterns.items())),

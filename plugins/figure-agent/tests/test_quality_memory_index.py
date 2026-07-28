@@ -58,6 +58,28 @@ def test_fewer_than_three_eligible_events_yields_no_prior() -> None:
 
     assert index["schema"] == "figure-agent.quality-memory-index.v1"
     assert index["event_count"] == 1
+    assert index["learning_evidence"] == {
+        "source_fixture_count": 1,
+        "source_fixtures": ["candidate_demo"],
+        "cross_fixture_state": "blocked_single_fixture",
+        "promotion_claim_allowed": False,
+        "reason": (
+            "cross-fixture evidence is required before any transferable learning "
+            "or final promotion claim"
+        ),
+    }
+
+
+def test_learning_evidence_keeps_cross_fixture_review_explicit() -> None:
+    first = _event("candidate_applied", "label_offset", "improved", "CAND001")
+    second = {**_event("candidate_applied", "label_offset", "neutral", "CAND002")}
+    second["fixture"] = "other_fixture"
+
+    index = quality_memory_index.build_memory_index([first, second])
+
+    assert index["learning_evidence"]["source_fixture_count"] == 2
+    assert index["learning_evidence"]["cross_fixture_state"] == "review_required"
+    assert index["learning_evidence"]["promotion_claim_allowed"] is False
 
 
 def test_human_verdict_rewards_once_when_detector_outcome_also_exists() -> None:

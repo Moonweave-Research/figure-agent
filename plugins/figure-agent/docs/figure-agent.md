@@ -7,7 +7,6 @@
 This is the sole product specification and forward execution authority for Figure Agent. Other specifications, plans, roadmaps, milestone notes, fixture reviews,
 and generated packets are implementation references or historical evidence. They
 cannot change product direction or the next implementation step.
-
 The baseline names a reproducible starting commit, not a release, quality, or
 publication verdict. A clean worktree at this commit passed 235 targeted baseline
 tests. Future claims require fresh evidence from the slice that makes the claim.
@@ -163,6 +162,8 @@ Promotion requires two materially different figure families, prospectively recor
 Reports require passing `correction_time_gate` and `lineage_gate`: A/B share task/model/budget/start; C is B's hash-bound repair child, not an independent generation.
 Rejected and neutral attempts remain failure evidence.
 
+Figure Agent learning is currently evidence-backed rule and contract promotion, not model-weight training; promotion requires prospective evidence from at least two materially different figure families. A single-fixture log is `blocked_single_fixture`, and cross-fixture review plus existing human/semantic gates remain required.
+
 ## 5. Executable roadmap
 
 Execute one slice at a time with the smallest failing test first. Keep it
@@ -309,7 +310,6 @@ plan before each subprocess. Execution evidence uses content hashes rather than
 mtime, never follows symlinks, and cannot turn a failed command into success.
 Candidate promotion remains explicitly human-gated; unsupported edit families
 fail loudly.
-
 Detailed dated R4/R5 implementation chronology, schema inventory, and Fig1
 repair measurements are non-authoritative evidence in
 `docs/evidence/r4-r5-implementation-history.md`. They must not be copied back
