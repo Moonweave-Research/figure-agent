@@ -65,6 +65,7 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
     assert "cantilever_remains_clamped_after_manual_lead_lift" in protected
     assert "panel_b_floats_after_source_off" in protected
     assert "residual_attraction_bend_persists_after_source_off" in protected
+    assert "cantilever_free_end_follows_local_tangent" in protected
     assert "panel_a.standalone_two_terminal_charger" in forbidden
     assert "panel_b.automated_switch" in forbidden
     assert "panel_a.polarization_measurement_instrument" in forbidden
@@ -419,7 +420,7 @@ def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None
     assert max(member_widths) - min(member_widths) <= 0.01
 
     polymer_blocks = [
-        panel.split("\\fill[polymer", 1)[1].split("\\node[qmark]", 1)[0]
+        panel.split("\\fill[polymer", 1)[1].split("-- cycle;", 1)[0]
         for panel in panels
     ]
     free_end_levels = [
@@ -440,8 +441,8 @@ def test_fig5_reverse_bend_keeps_the_same_rounded_member_extent() -> None:
     assert "rounded corners=0.45mm" in panel_a
     assert "rounded corners=0.35mm" in panel_c
     assert "rounded corners=0.45mm" in panel_c
-    assert "(2.61,1.50)" in panel_a
-    assert "(0.19,1.50)" in panel_c
+    assert "(2.37,1.64)" in panel_a
+    assert "(0.43,1.64)" in panel_c
 
 
 def test_fig5_source_off_residual_bend_is_visibly_smaller_than_drive_bends() -> None:
@@ -452,6 +453,24 @@ def test_fig5_source_off_residual_bend_is_visibly_smaller_than_drive_bends() -> 
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
-    assert "(2.61,1.50)" in panel_a
-    assert "(2.57,1.58)" in panel_b
-    assert "(0.19,1.50)" in panel_c
+    assert "(2.37,1.64)" in panel_a
+    assert "(2.48,1.62)" in panel_b
+    assert "(0.43,1.64)" in panel_c
+
+
+def test_fig5_free_end_caps_follow_the_member_tangent() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panels = {
+        "a": tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0],
+        "b": tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0],
+        "c": tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0],
+    }
+    expected_caps = {
+        "a": ".. controls (2.25,1.49) and (2.33,1.52) .. (2.37,1.64)",
+        "b": ".. controls (2.38,1.47) and (2.45,1.50) .. (2.48,1.62)",
+        "c": ".. controls (0.55,1.49) and (0.47,1.52) .. (0.43,1.64)",
+    }
+    for panel_id, cap in expected_caps.items():
+        assert panels[panel_id].count(cap) == 2

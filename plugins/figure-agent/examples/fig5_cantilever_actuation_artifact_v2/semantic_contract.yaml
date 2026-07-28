@@ -62,6 +62,7 @@ protected_relations:
   - panel_b_floats_after_source_off
   - residual_attraction_bend_persists_after_source_off
   - conditional_coulomb_force_originates_at_trapped_charge
+  - cantilever_free_end_follows_local_tangent
 
 repair:
   family: actuation_geometry_and_mechanism_contract
