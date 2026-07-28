@@ -215,7 +215,8 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "OK print_size_contract: "
             f"natural={result['natural_size_mm'][0]:.2f}x{result['natural_size_mm'][1]:.2f} mm, "
-            f"placement={result['placement_size_mm'][0]:.2f}x{result['placement_size_mm'][1]:.2f} mm, "
+            f"placement={result['placement_size_mm'][0]:.2f}x"
+            f"{result['placement_size_mm'][1]:.2f} mm, "
             f"min_print_font={result['print_min_font_pt']:.2f} pt"
         )
     return 0

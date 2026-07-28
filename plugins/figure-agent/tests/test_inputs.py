@@ -96,6 +96,29 @@ This is the composition body.
     )
 
 
+def test_parse_briefing_accepts_named_semantic_headings():
+    text = """# Briefing
+
+## Claim to test
+
+This is a sufficiently detailed author intent statement for review.
+
+## Physics invariants
+
+- Must preserve the force direction.
+"""
+    sections = parse_briefing(text)
+
+    assert sections["claim to test"] == (
+        "Claim to test",
+        "This is a sufficiently detailed author intent statement for review.",
+    )
+    assert sections["physics invariants"] == (
+        "Physics invariants",
+        "- Must preserve the force direction.",
+    )
+
+
 def test_parse_briefing_strips_html_comments():
     text = """# Title
 

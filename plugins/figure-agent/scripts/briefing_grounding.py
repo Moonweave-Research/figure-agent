@@ -13,6 +13,21 @@ AUDIT_SIGNAL_RELATIVE_PATHS: Final = (
     Path("build") / "audit_crops" / "manifest.json",
 )
 RULE_SECTION_NUMBERS: Final = (3, 6, 7)
+RULE_SECTION_TITLES: Final = (
+    "correctness",
+    "constraints",
+    "physics invariants",
+    "semantic constraints",
+    "scope",
+    "must",
+    "must avoid",
+)
+INTENT_SECTION_TITLES: Final = (
+    "claim to test",
+    "topic",
+    "figure identity",
+    "purpose",
+)
 _RULE_TITLE_MARKERS: Final = (
     "correct",
     "invariant",
@@ -59,13 +74,24 @@ def _has_rule_list_item(body: str) -> bool:
     return False
 
 
-def explicit_briefing_rule_text(sections: dict[int, tuple[str, str]]) -> str:
+def explicit_briefing_rule_text(sections: dict[int | str, tuple[str, str]]) -> str:
     blocks: list[str] = []
-    for section_number in RULE_SECTION_NUMBERS:
-        title, body = sections.get(section_number, ("", ""))
+    candidates: list[tuple[str, tuple[str, str]]] = [
+        (f"§{section_number}", sections.get(section_number, ("", "")))
+        for section_number in RULE_SECTION_NUMBERS
+    ]
+    candidates.extend(
+        (title, sections.get(title, ("", ""))) for title in RULE_SECTION_TITLES
+    )
+    seen_titles: set[str] = set()
+    for section_label, (title, body) in candidates:
         rule_body = body.strip()
         if rule_body and _has_rule_marker(title, rule_body) and _has_rule_list_item(rule_body):
-            blocks.append(f"### Briefing §{section_number}: {title}\n{rule_body}")
+            normalized_title = title.casefold()
+            if normalized_title in seen_titles:
+                continue
+            seen_titles.add(normalized_title)
+            blocks.append(f"### Briefing {section_label}: {title}\n{rule_body}")
     return "\n\n".join(blocks)
 
 
@@ -74,5 +100,11 @@ def has_reference_free_grounding_context(example_dir: Path) -> bool:
     if not briefing_path.is_file() or not _has_audit_signal(example_dir):
         return False
     sections = parse_briefing(briefing_path.read_text(encoding="utf-8"))
-    intent = sections.get(1, ("", ""))[1].strip()
+    intent = ""
+    for title in INTENT_SECTION_TITLES:
+        intent = sections.get(title, ("", ""))[1].strip()
+        if intent:
+            break
+    if not intent:
+        intent = sections.get(1, ("", ""))[1].strip()
     return len(intent) >= _MIN_INTENT_CHARS and bool(explicit_briefing_rule_text(sections))

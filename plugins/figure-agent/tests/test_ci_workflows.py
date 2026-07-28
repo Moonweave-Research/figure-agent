@@ -10,7 +10,8 @@ def test_pr_workflow_is_fast_and_skips_render_marked_tests() -> None:
     workflow = (REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
 
     assert "pull_request:" in workflow
-    assert "uv run pytest -q -m \"not render\"" in workflow
+    assert 'uv run pytest -q -m "not render and not quarantine"' in workflow
+    assert "uv run pytest -q -m quarantine" in workflow
     assert "uv run ruff check ." in workflow
     assert "Install system dependencies" not in workflow
     assert "texlive-luatex" not in workflow

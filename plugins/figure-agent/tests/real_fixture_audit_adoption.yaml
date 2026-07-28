@@ -74,6 +74,8 @@ fixtures:
   - fixture: fig1_updated_agent_redraw_v1
     reference_image: false
     text_boundary_check_ids:
+      - panel-a-title-band
+      - panel-b-title-band
       - panel-c-energy-labels
       - panel-c-real-space-labels
       - panel-c-energy-split
