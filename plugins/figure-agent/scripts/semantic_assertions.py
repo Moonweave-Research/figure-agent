@@ -389,7 +389,17 @@ def main(argv: list[str] | None = None) -> int:
     except (SemanticAssertionError, yaml.YAMLError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
+    output = args.json_output or pdf_path.parent / "semantic_assertions.json"
     if not assertions:
+        output.write_text(
+            json.dumps(
+                semantic_assertions_payload(pdf_path, [], 0),
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         return 0
     try:
         words, _ = extract_pdf_words_and_page(pdf_path)
@@ -398,7 +408,6 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     issues = check_semantic_assertions(words, assertions)
-    output = args.json_output or pdf_path.parent / "semantic_assertions.json"
     output.write_text(
         json.dumps(
             semantic_assertions_payload(pdf_path, issues, len(assertions)),

@@ -33,6 +33,7 @@ class VisualIssue:
 
 
 KNOWN_FALSE_POSITIVES_PATH = Path(__file__).resolve().parents[2] / "_known_false_positives.yaml"
+SCHEMA = "figure-agent.visual-clash.v1"
 
 
 def extract_pdf_words_and_page(pdf_path: Path) -> tuple[list[dict], tuple[float, float]]:
@@ -653,6 +654,7 @@ def visual_clash_payload(
             )
         candidates.append(candidate)
     payload = {
+        "schema": SCHEMA,
         "fixture": fixture or _fixture_name(pdf_path),
         "render_pdf": _render_pdf_field(pdf_path),
         "candidates": candidates,

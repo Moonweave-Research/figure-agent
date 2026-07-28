@@ -15,6 +15,11 @@ import yaml
 
 BLOCKING_VISUAL_KINDS = frozenset({"clipping", "text_on_fill", "text_on_path"})
 BLOCKING_GEOMETRY_KINDS = frozenset({"label_crosses_semantic_path"})
+REPORT_CONTRACTS = {
+    "collisions": "figure-agent.text-collisions.v1",
+    "visual_clash": "figure-agent.visual-clash.v1",
+    "undeclared_geometry": "figure-agent.undeclared-geometry.v1",
+}
 
 
 def _text_collision_signatures(report: dict[str, Any]) -> Counter[str]:
@@ -158,6 +163,21 @@ def _load_json(path: Path) -> dict[str, Any]:
     return payload
 
 
+def _validate_report_contracts(reports: dict[str, dict[str, Any]]) -> None:
+    """Reject detector reports that are not evidence for the same rendered PDF."""
+    render_pdfs: set[str] = set()
+    for name, expected_schema in REPORT_CONTRACTS.items():
+        report = reports[name]
+        if report.get("schema") != expected_schema:
+            raise ValueError(f"{name}: schema must be {expected_schema}")
+        render_pdf = report.get("render_pdf")
+        if not isinstance(render_pdf, str) or not render_pdf:
+            raise ValueError(f"{name}: render_pdf is required")
+        render_pdfs.add(render_pdf)
+    if len(render_pdfs) != 1:
+        raise ValueError("detector reports must bind the same render_pdf")
+
+
 def _artifact(path: Path) -> dict[str, str]:
     return {
         "path": path.as_posix(),
@@ -192,6 +212,13 @@ def main() -> int:
         collisions = _load_json(args.collisions)
         visual_clash = _load_json(args.visual_clash)
         undeclared_geometry = _load_json(args.undeclared_geometry)
+        _validate_report_contracts(
+            {
+                "collisions": collisions,
+                "visual_clash": visual_clash,
+                "undeclared_geometry": undeclared_geometry,
+            }
+        )
         summary = summarize_reports(
             collisions=collisions,
             visual_clash=visual_clash,

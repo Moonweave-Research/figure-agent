@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -432,8 +433,12 @@ def test_main_passes_when_spec_missing(tmp_path: Path) -> None:
     pdf = build / "fig.pdf"
     pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")
 
-    # No spec.yaml -> nothing declared -> pass without touching the PDF.
+    # No spec.yaml -> no assertion is declared, but emit a fresh zero-check
+    # report so an old nonzero report cannot survive as current evidence.
     assert main([str(pdf)]) == 0
+    payload = json.loads((build / "semantic_assertions.json").read_text(encoding="utf-8"))
+    assert payload["checked"] == 0
+    assert payload["total"] == 0
 
 
 def test_main_uses_explicit_fixture_spec_for_nested_repair_pdf(

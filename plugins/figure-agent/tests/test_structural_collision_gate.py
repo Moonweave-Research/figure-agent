@@ -164,15 +164,35 @@ def test_cli_marks_candidate_regressed_against_bound_baseline(
 ) -> None:
     reports = {
         "before-collisions.json": {
+            "schema": "figure-agent.text-collisions.v1",
+            "render_pdf": "build/before.pdf",
             "collisions": [{"texts": ["capture", "release"]}]
         },
         "after-collisions.json": {
+            "schema": "figure-agent.text-collisions.v1",
+            "render_pdf": "build/after.pdf",
             "collisions": [{"texts": ["broad", "magnitude"]}]
         },
-        "before-visual.json": {"candidates": []},
-        "after-visual.json": {"candidates": []},
-        "before-geometry.json": {"candidates": []},
-        "after-geometry.json": {"candidates": []},
+        "before-visual.json": {
+            "schema": "figure-agent.visual-clash.v1",
+            "render_pdf": "build/before.pdf",
+            "candidates": [],
+        },
+        "after-visual.json": {
+            "schema": "figure-agent.visual-clash.v1",
+            "render_pdf": "build/after.pdf",
+            "candidates": [],
+        },
+        "before-geometry.json": {
+            "schema": "figure-agent.undeclared-geometry.v1",
+            "render_pdf": "build/before.pdf",
+            "candidates": [],
+        },
+        "after-geometry.json": {
+            "schema": "figure-agent.undeclared-geometry.v1",
+            "render_pdf": "build/after.pdf",
+            "candidates": [],
+        },
     }
     for name, payload in reports.items():
         (tmp_path / name).write_text(json.dumps(payload), encoding="utf-8")
@@ -205,3 +225,41 @@ def test_cli_marks_candidate_regressed_against_bound_baseline(
     assert payload["regression"]["new_blockers"][0]["signature"] == (
         "text_text:broad|magnitude"
     )
+
+
+def test_cli_rejects_mixed_detector_render_evidence(tmp_path: Path, monkeypatch) -> None:
+    reports = {
+        "collisions.json": {
+            "schema": "figure-agent.text-collisions.v1",
+            "render_pdf": "build/a.pdf",
+            "collisions": [],
+        },
+        "visual.json": {
+            "schema": "figure-agent.visual-clash.v1",
+            "render_pdf": "build/b.pdf",
+            "candidates": [],
+        },
+        "geometry.json": {
+            "schema": "figure-agent.undeclared-geometry.v1",
+            "render_pdf": "build/a.pdf",
+            "candidates": [],
+        },
+    }
+    for name, payload in reports.items():
+        (tmp_path / name).write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "structural_collision_gate.py",
+            "--collisions",
+            str(tmp_path / "collisions.json"),
+            "--visual-clash",
+            str(tmp_path / "visual.json"),
+            "--undeclared-geometry",
+            str(tmp_path / "geometry.json"),
+            "--json-output",
+            str(tmp_path / "gate.json"),
+        ],
+    )
+    assert gate.main() == 2

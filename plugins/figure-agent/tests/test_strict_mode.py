@@ -420,10 +420,10 @@ def test_check_visual_clash_json_payload_uses_machine_readable_metrics(tmp_path:
 
     payload = check_visual_clash.visual_clash_payload(pdf, [issue])
 
-    # Legacy schema is preserved when no tiers are supplied (report mode / any
-    # caller without a rendered image). Tier fields appear only once tiering is
-    # applied — see test_visual_clash_payload_labels_tiers_and_counts.
+    # The detector identity is present in every report. Tier fields still appear
+    # only once tiering is applied — see test_visual_clash_payload_labels_tiers_and_counts.
     assert payload == {
+        "schema": "figure-agent.visual-clash.v1",
         "fixture": "demo_fixture",
         "render_pdf": "build/demo_fixture.pdf",
         "candidates": [

@@ -14,7 +14,15 @@ from audit_evidence_summary import summarize_audit_evidence
 from quality_manifest import yaml_frontmatter
 
 SCHEMA = "figure-agent.detector-feedback-ledger.v1"
-DETECTOR_KEYS = ("visual_clash", "text_boundary", "label_path", "undeclared_geometry")
+DETECTOR_KEYS = (
+    "visual_clash",
+    "text_boundary",
+    "label_path",
+    "undeclared_geometry",
+    "semantic_assertions",
+    "process_stage_visibility",
+    "tex_assertions",
+)
 DETECTOR_COUNT_KEYS = (
     "candidate_count",
     "accounted_count",

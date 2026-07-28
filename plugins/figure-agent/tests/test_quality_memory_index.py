@@ -97,6 +97,32 @@ def test_human_reject_is_negative_reward_without_detector_outcome() -> None:
     }
 
 
+def test_rollback_cannot_be_relabelled_as_improved_by_human_accept() -> None:
+    rolled_back = _event(
+        "candidate_applied", "density_reduce", "regressed", "CAND001", quality_movement="regressed"
+    )
+    rolled_back["outcome"]["human_label"] = "accept"
+    rolled_back["outcome"]["reason"] = "rolled_back"
+    index = quality_memory_index.build_memory_index([rolled_back])
+    assert index["families"]["density_reduce"]["regressed"] == 1
+
+
+def test_neutral_events_do_not_supply_positive_prior_weight() -> None:
+    index = quality_memory_index.build_memory_index(
+        [
+            _event(
+                "candidate_applied",
+                "label_offset",
+                "neutral",
+                f"CAND{index:03d}",
+                quality_movement="neutral",
+            )
+            for index in range(1, 4)
+        ]
+    )
+    assert index["families"]["label_offset"]["recommended_prior"] == 0.0
+
+
 def test_sparse_reward_state_surfaces_counterfactual_mitigation() -> None:
     index = quality_memory_index.build_memory_index(
         [
@@ -433,7 +459,7 @@ def test_quality_movement_overrides_legacy_outcome_state_for_reward() -> None:
     assert family["improved"] == 0
     assert family["neutral"] == 2
     assert family["regressed"] == 1
-    assert family["recommended_prior"] == 0.0
+    assert family["recommended_prior"] == -0.0833
 
 
 def test_three_improved_family_outcomes_produce_bounded_positive_prior() -> None:

@@ -64,12 +64,17 @@ def _reward_state(event: dict[str, Any]) -> str:
     outcome = event.get("outcome")
     if not isinstance(outcome, dict):
         return "unknown"
+    quality_movement = outcome.get("quality_movement")
+    if quality_movement == "regressed" or outcome.get("reason") in {
+        "rolled_back",
+        "applied_with_failed_verification",
+    }:
+        return "regressed"
     human_label = outcome.get("human_label")
     if human_label == "accept":
         return "improved"
     if human_label == "reject":
         return "regressed"
-    quality_movement = outcome.get("quality_movement")
     if quality_movement in ELIGIBLE_OUTCOMES:
         return str(quality_movement)
     return "unknown"
@@ -170,9 +175,7 @@ def _recommended_prior(bucket: dict[str, Any]) -> float:
     attempts = int(bucket["improved"]) + int(bucket["neutral"]) + int(bucket["regressed"])
     if attempts < 3:
         return 0.0
-    raw = (
-        int(bucket["improved"]) + 0.5 * int(bucket["neutral"]) - int(bucket["regressed"])
-    ) / attempts
+    raw = (int(bucket["improved"]) - int(bucket["regressed"])) / attempts
     return round(_clamp(raw * 0.25, -0.25, 0.25), 4)
 
 
