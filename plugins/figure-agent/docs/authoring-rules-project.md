@@ -93,7 +93,7 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.voltage-label-owns-driven-electrode
     category: label_binding
-    rule: "In an actuation schematic with a grounded clip and a biased drive electrode, place the numeric high-voltage label in the drive-electrode annotation lane and bind the ground label explicitly to the clip. Keep a shared charge-duration subtitle voltage-free. Do not repeat the voltage near the ground symbol, because proximity can make the reader assign the high voltage to ground."
+    rule: "In an actuation schematic with a grounded clip and a biased drive electrode, bind the numeric high-voltage label or source badge to the driven electrode through a direct terminal lead when the upper rail is available; otherwise use a visibly terminating annotation leader. Bind the ground label explicitly to the clip. Keep a shared charge-duration subtitle voltage-free. Do not repeat the voltage near the ground symbol, because proximity can make the reader assign the high voltage to ground."
     source:
       kind: hand_patch_commit
       locator: "Fig5 Panel A voltage/ground ownership audit (2026-07-27)"

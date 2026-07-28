@@ -630,9 +630,11 @@ to the driven-electrode lane rather than the clamp or ground lane. Separate the
 polarity labels from ground/state labels so the sign change cannot read as a
 voltage applied to the grounded specimen clip.
 If a bare sign-and-value label could be read as a condition on the specimen,
-connect it to the driven electrode with a short annotation leader or use an
-explicit $V_{\mathrm{drive}}$ token; do not leave the voltage floating in the
-gap between the clip and electrode.
+connect it to the driven electrode with a direct terminal lead and compact
+numeric high-voltage label or source badge when the upper rail is available, or
+otherwise use a short annotation leader and an explicit $V_{\mathrm{drive}}$
+token; do not leave the voltage floating in the gap between the clip and
+electrode.
 The same rule applies to the member scale: repeated views of one mounted film
 must share its apparent width and free-end datum within the schematic tolerance;
 do not let a bent state become a shorter or thinner specimen merely because its

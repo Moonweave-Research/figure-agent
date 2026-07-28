@@ -182,7 +182,7 @@ def test_project_rule_binds_actuation_voltage_to_the_driven_electrode() -> None:
         if rule["id"] == "polymer_paper_project.voltage-label-owns-driven-electrode"
     )
     assert "numeric high-voltage label" in rule["rule"]
-    assert "drive-electrode annotation lane" in rule["rule"]
+    assert "direct terminal lead" in rule["rule"]
     assert "voltage-free" in rule["rule"]
 
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(

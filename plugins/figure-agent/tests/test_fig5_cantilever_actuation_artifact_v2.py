@@ -71,11 +71,10 @@ def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> Non
 
     assert "at (1.68,4.52) {clip: GND};" in panel_a
     assert "at (0.82,4.20) {clip: GND};" not in panel_a
-    assert "text=cRed!82!black,anchor=east" in panel_a
-    assert "{$V_{\\mathrm{drive}}=+5\\,\\mathrm{kV}$};" in panel_a
-    drive_label = panel_a.index("{drive electrode}")
-    voltage_label = panel_a.index("{$V_{\\mathrm{drive}}=+5\\,\\mathrm{kV}$}")
-    assert voltage_label > drive_label
+    assert "text=cRed!82!black,anchor=south" in panel_a
+    assert "{$+5\\,\\mathrm{kV}$};" in panel_a
+    assert "(3.27,4.34)--(3.27,4.62)" in panel_a
+    assert "at (3.27,4.62)" in panel_a
 
 
 def test_fig5_trapped_charge_label_leader_starts_outside_its_glyphs() -> None:
@@ -194,7 +193,7 @@ def test_fig5_panel_b_keeps_the_specimen_mounted_and_separates_ground_manually()
     assert "switch" not in panel_b.lower()
 
 
-def test_fig5_repeats_clamp_state_labels_in_a_shared_top_right_lane() -> None:
+def test_fig5_keeps_clamp_state_labels_clear_of_the_drive_terminal() -> None:
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
     )
@@ -204,7 +203,8 @@ def test_fig5_repeats_clamp_state_labels_in_a_shared_top_right_lane() -> None:
 
     assert "at (1.68,4.52) {clip: GND};" in panel_a
     assert "at (2.00,4.52) {clip remains mounted};" in panel_b
-    assert "at (1.67,4.52) {clip: electrically floating};" in panel_c
+    assert "align=right,anchor=east] at (3.18,4.00)" in panel_c
+    assert "electrically floating" in panel_c
 
 
 def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
@@ -215,15 +215,14 @@ def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
     assert "driveBiasLeader" in panel_a
-    assert "(2.86,3.88)--(3.12,3.88)" in panel_a
-    assert "at (2.82,3.88)" in panel_a
-    assert "{$V_{\\mathrm{drive}}=+5\\,\\mathrm{kV}$};" in panel_a
-    assert "at (3.72,4.58) {drive electrode};" in panel_c
-    assert "(3.18,3.88)--(3.44,3.88)" in panel_c
-    assert "at (3.14,3.88)" in panel_c
-    assert "{$V_{\\mathrm{drive}}=-5\\,\\mathrm{kV}$};" in panel_c
-    assert "drive electrode" in panel_a
-    assert "drive electrode" in panel_c
+    assert "(3.27,4.34)--(3.27,4.62)" in panel_a
+    assert "at (3.27,4.62)" in panel_a
+    assert "{$+5\\,\\mathrm{kV}$};" in panel_a
+    assert "(3.58,4.34)--(3.58,4.62)" in panel_c
+    assert "at (3.58,4.62)" in panel_c
+    assert "{$-5\\,\\mathrm{kV}$};" in panel_c
+    assert "{drive electrode}" not in panel_a
+    assert "{drive electrode}" not in panel_c
 
 
 def test_fig5_panel_b_names_the_open_film_clip_and_fixed_support_reference() -> None:
@@ -251,13 +250,13 @@ def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
     assert "clip: GND" in panel_a
-    assert "(2.86,3.88)--(3.12,3.88)" in panel_a
-    assert "(3.18,3.88)--(3.44,3.88)" in panel_c
+    assert "(3.27,4.34)--(3.27,4.62)" in panel_a
+    assert "(3.58,4.34)--(3.58,4.62)" in panel_c
     assert "film clip: GND lead open" in panel_b
     assert "support GND" in panel_b
     assert "drive OFF" in panel_b
     assert "after GND separation" in panel_c
-    assert "clip: electrically floating" in panel_c
+    assert "electrically floating" in panel_c
 
 
 def test_fig5_declares_deterministic_clamp_axis_geometry_check() -> None:

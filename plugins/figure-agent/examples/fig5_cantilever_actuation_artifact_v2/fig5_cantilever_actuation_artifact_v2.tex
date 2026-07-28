@@ -77,12 +77,11 @@
       .. controls (1.55,3.05) and (1.49,3.60) .. (panel-a-cantilever-right);
   \fill[cGray!28] (3.12,1.40) rectangle (3.42,4.34);
   \draw[apparatus] (3.12,1.40) rectangle (3.42,4.34);
-  \node[labelStd,anchor=south,align=center] at (3.27,4.58) {drive electrode};
-  % The neutral leader physically terminates at the driven-electrode silhouette:
-  % the red numeric token alone must not read as a film or clip condition.
-  \draw[driveBiasLeader] (2.86,3.88)--(3.12,3.88);
-  \node[labelStd,text=cRed!82!black,anchor=east] at (2.82,3.88)
-    {$V_{\mathrm{drive}}=+5\,\mathrm{kV}$};
+  % An explicit terminal rail makes the applied bias belong to the electrode,
+  % rather than to the film/clip in the air-gap annotation lane.
+  \draw[driveBiasLeader] (3.27,4.34)--(3.27,4.62);
+  \node[labelStd,text=cRed!82!black,anchor=south] at (3.27,4.62)
+    {$+5\,\mathrm{kV}$};
   \node[qmark] at (1.41,3.56) {};
   \node[qmark] at (1.62,2.88) {};
   \node[qmark] at (1.98,2.18) {};
@@ -179,7 +178,8 @@
   \coordinate (panel-c-cantilever-left) at (1.33,4.05);
   \coordinate (panel-c-cantilever-right) at (1.53,4.05);
   \draw[wire] (panel-c-clamp-axis)--(panel-c-clamp-top);
-  \node[labelMute,anchor=west] at (1.67,4.52) {clip: electrically floating};
+  \node[labelMute,align=right,anchor=east] at (3.18,4.00)
+    {clip:\\[-0.4pt]electrically floating};
   % One conditional response silhouette makes the competing-arrow result
   % legible without introducing a second, supposedly observed bend snapshot.
   % Its free-end curvature and effective length mirror Panel A so the reader
@@ -207,10 +207,11 @@
   \draw[leader,cRed!58!black] (0.88,3.24)--(1.39,3.30);
   \fill[cGray!28] (3.44,1.40) rectangle (3.72,4.34);
   \draw[apparatus] (3.44,1.40) rectangle (3.72,4.34);
-  \node[labelStd,anchor=south east] at (3.72,4.58) {drive electrode};
-  \draw[driveBiasLeader] (3.18,3.88)--(3.44,3.88);
-  \node[labelStd,text=cRed!82!black,anchor=east] at (3.14,3.88)
-    {$V_{\mathrm{drive}}=-5\,\mathrm{kV}$};
+  % The reversed source uses the same terminal rail so polarity ownership is
+  % legible without turning the subtitle into a circuit label.
+  \draw[driveBiasLeader] (3.58,4.34)--(3.58,4.62);
+  \node[labelStd,text=cRed!82!black,anchor=south] at (3.58,4.62)
+    {$-5\,\mathrm{kV}$};
   \draw[baselineArrow] (1.49,3.12)--(2.30,3.12);
   \node[labelStd,anchor=south,text=cGray!74!black] at (2.48,3.18)
     {Maxwell attraction};
