@@ -26,7 +26,25 @@ def test_height_limited_contract_passes_for_fig1_geometry() -> None:
     )
     assert result["status"] == "passed"
     assert result["width_at_max_height_mm"] == pytest.approx(166.8, abs=0.1)
+    assert result["placement_size_mm"] == pytest.approx([166.8, 170.0], abs=0.1)
     assert result["print_min_font_pt"] >= 4.4
+
+
+def test_contract_reports_actual_width_limited_placement_not_height_capacity() -> None:
+    result = evaluate_contract(
+        page_size_pt=(512.548, 151.769),
+        source_font_sizes_pt=[5.1, 5.5, 6.6],
+        contract={
+            "natural_size_mm": [180.8, 53.5],
+            "target_width_mm": 180.0,
+            "max_height_mm": 170.0,
+            "min_print_font_pt": 5.0,
+        },
+    )
+
+    assert result["status"] == "passed"
+    assert result["placement_size_mm"] == pytest.approx([180.0, 53.3], abs=0.1)
+    assert result["width_at_max_height_mm"] > 500.0
 
 
 def test_contract_rejects_full_double_column_width_when_too_tall() -> None:

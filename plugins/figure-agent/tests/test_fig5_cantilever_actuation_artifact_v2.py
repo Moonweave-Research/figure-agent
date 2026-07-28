@@ -19,6 +19,22 @@ def _yaml(name: str) -> dict:
     return yaml.safe_load((FIXTURE / name).read_text(encoding="utf-8"))
 
 
+def test_fig5_declares_a_width_limited_physical_print_contract() -> None:
+    contract = _yaml("spec.yaml")["final_size_contract"]
+
+    assert contract["basis"] == "width_limited_nature_family_main_figure"
+    assert contract["natural_size_mm"] == [180.8, 53.5]
+    assert contract["target_width_mm"] == 180.0
+    assert contract["max_height_mm"] == 170.0
+    assert contract["min_print_font_pt"] == 5.0
+    assert contract["scale_basis"] == "width_limited"
+    assert contract["double_column_reference_mm"] == {
+        "nature_communications": 180.0,
+        "nature_figure_guide": 183.0,
+    }
+    assert contract["natural_size_mm"][1] < contract["max_height_mm"]
+
+
 def test_fig5_requires_a_transferable_mechanism_contract() -> None:
     spec = _yaml("spec.yaml")
     assert spec["semantic_contract_required"] is True

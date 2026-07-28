@@ -113,6 +113,8 @@ def evaluate_contract(
     scale_width = target_width / natural_width
     scale_height = max_height / natural_height
     placement_scale = min(scale_width, scale_height)
+    placement_width = natural_width * placement_scale
+    placement_height = natural_height * placement_scale
     height_at_target_width = natural_height * scale_width
     width_at_max_height = natural_width * scale_height
     if height_at_target_width > max_height + MM_TOLERANCE:
@@ -140,6 +142,7 @@ def evaluate_contract(
         "max_height_mm": max_height,
         "width_at_max_height_mm": width_at_max_height,
         "height_at_target_width_mm": height_at_target_width,
+        "placement_size_mm": [placement_width, placement_height],
         "placement_scale": placement_scale,
         "source_min_font_pt": source_min_font,
         "print_min_font_pt": print_min_font,
@@ -212,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "OK print_size_contract: "
             f"natural={result['natural_size_mm'][0]:.2f}x{result['natural_size_mm'][1]:.2f} mm, "
-            f"target={result['width_at_max_height_mm']:.2f}x{result['max_height_mm']:.2f} mm, "
+            f"placement={result['placement_size_mm'][0]:.2f}x{result['placement_size_mm'][1]:.2f} mm, "
             f"min_print_font={result['print_min_font_pt']:.2f} pt"
         )
     return 0
