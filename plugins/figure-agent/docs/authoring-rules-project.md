@@ -171,6 +171,14 @@ rules:
       locator: "Fig5 cross-panel apparatus-label alignment audit (2026-07-28)"
       quote: "The same clamp was labeled left in Panel A but above-right in Panels B/C, weakening repeated-apparatus ownership."
     transfer_policy: use_as_constraint
+  - id: polymer_paper_project.cross-panel-polarity-label-rail
+    category: label_binding
+    rule: "When a causal panel row shows opposite drive polarities for the same electrode, place the numeric polarity labels on a shared body rail and baseline, anchored to the driven-electrode lane rather than the clamp or ground lane. Keep the polarity labels visually distinct from ground/state labels so the sign change is read as an electrode condition, not as a voltage applied to the grounded specimen clip."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig5 cross-panel polarity-label alignment audit (2026-07-28)"
+      quote: "The A/C +5 kV and -5 kV labels drifted vertically and weakened the shared drive-electrode reading."
+    transfer_policy: use_as_constraint
   - id: polymer_paper_project.ispd-keyence-manual-transfer
     category: instrument_standard
     rule: "For ISPD panels, depict a Keyence SK series induction-type, non-contact electrostatic voltmeter. Corona-charge the specimen first, then manually transfer the same specimen to the adjacent measurement station. Show the family-level sensing topology as an elongated bar-shaped sensor head with its short end face directed toward the specimen, a visible non-contact standoff, and a cable to a separate amplifier or meter. Do not invent an automated motion stage, continuous scan, conveyor, oscillating Kelvin probe, or model-specific controls and dimensions. Preserve the confirmed series-level topology without inventing an exact model."

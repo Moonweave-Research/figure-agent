@@ -145,6 +145,29 @@ def test_project_rule_preserves_reversed_cantilever_morphology() -> None:
     assert "one-state taper, angular cap" in normalized_skill
 
 
+def test_project_rule_aligns_cross_panel_polarity_labels_with_the_drive_rail() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-project.md"
+    )
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "polymer_paper_project.cross-panel-polarity-label-rail"
+    )
+    assert rule["category"] == "label_binding"
+    assert "opposite drive polarities" in rule["rule"]
+    assert "shared body rail and baseline" in rule["rule"]
+    assert "driven-electrode lane" in rule["rule"]
+    assert "grounded specimen clip" in rule["rule"]
+
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized_skill = " ".join(skill.split())
+    assert "shared body rail and baseline" in normalized_skill
+    assert "voltage applied to the grounded specimen clip" in normalized_skill
+
+
 def test_project_rule_binds_actuation_voltage_to_the_driven_electrode() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-project.md"

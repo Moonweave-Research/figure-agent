@@ -614,6 +614,11 @@ electrode labels across that row whenever the geometry allows it. Do not move a
 shared apparatus label from left to above to right merely for local convenience;
 make the exception explicit when a collision or a distinct semantic owner
 requires the alternate lane.
+When opposite drive polarities are shown for the same electrode across that row,
+keep their numeric polarity labels on a shared body rail and baseline, anchored
+to the driven-electrode lane rather than the clamp or ground lane. Separate the
+polarity labels from ground/state labels so the sign change cannot read as a
+voltage applied to the grounded specimen clip.
 The same rule applies to the member scale: repeated views of one mounted film
 must share its apparent width and free-end datum within the schematic tolerance;
 do not let a bent state become a shorter or thinner specimen merely because its

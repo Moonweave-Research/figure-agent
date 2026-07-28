@@ -212,6 +212,21 @@ def test_fig5_repeats_clamp_state_labels_in_a_shared_top_right_lane() -> None:
     assert "at (1.67,4.52) {floating clip};" in panel_c
 
 
+def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
+    panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
+
+    assert "at (3.04,4.12)" in panel_a
+    assert "{$+5\\,\\mathrm{kV}$}" in panel_a
+    assert "at (3.34,4.12)" in panel_c
+    assert "{$-5\\,\\mathrm{kV}$}" in panel_c
+    assert "drive electrode" in panel_a
+    assert "drive electrode" in panel_c
+
+
 def test_fig5_panel_b_names_the_open_film_clip_and_fixed_support_reference() -> None:
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
