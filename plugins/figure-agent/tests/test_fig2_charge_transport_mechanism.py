@@ -74,3 +74,21 @@ def test_fig2_binds_the_comparison_arrow_to_the_readout_boundary() -> None:
     assertion = spec["named_endpoint_assertions"][0]
     assert assertion["anchor_style"] == "storyArrow"
     assert assertion["required_anchors"] == ["comparison_out", "readout_entry"]
+
+
+def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
+    intent = yaml.safe_load((FIXTURE / "aesthetic_intent.yaml").read_text(encoding="utf-8"))
+    source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
+
+    assert intent["reference_style"] == "mechanism_schematic"
+    assert {
+        lever["id"] for lever in intent["aesthetic_levers"]
+    } >= {
+        "causal_hierarchy",
+        "material_texture_authorship",
+        "color_and_stroke_economy",
+        "print_scale_typography",
+    }
+    assert "localizedState/.style={circle,fill=cRed!72!black,draw=none" in source
+    assert "stateCore" not in source
+    assert "sulfurTrace] (4.34,2.26) .. controls" in source

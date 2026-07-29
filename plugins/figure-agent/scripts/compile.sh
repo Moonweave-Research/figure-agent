@@ -314,12 +314,12 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_tex_
 # fixtures that explicitly require a semantic contract).  The contract gate
 # prevents a mechanism figure from claiming grounded meaning when only a
 # directional arrow assertion is present.
-# A prospective candidate under a fixture's review tree is deliberately a
-# separate source artifact. Its physics grounding must still resolve against
-# the parent fixture's briefing/spec rather than report a false missing-briefing
+# A prospective source under a fixture's review or previews tree is deliberately
+# a separate artifact. Its physics grounding must still resolve against the
+# parent fixture's briefing/spec rather than report a false missing-briefing
 # warning for the candidate-only directory.
 PHYSICS_GROUNDING_DIR="$PWD"
-if [[ -n "$FIXTURE_ROOT" && "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/review/"* ]]; then
+if [[ -n "$FIXTURE_ROOT" && ( "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/review/"* || "$TEX_INPUT_ABS" == "$FIXTURE_ROOT/previews/"* ) ]]; then
   PHYSICS_GROUNDING_DIR="$FIXTURE_ROOT"
 fi
 # Physics grounding remains advisory for historical/legacy fixtures.  Only a

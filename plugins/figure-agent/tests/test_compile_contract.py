@@ -100,6 +100,7 @@ def test_compile_keeps_parent_physics_grounding_for_prospective_candidates() -> 
 
     assert 'PHYSICS_GROUNDING_DIR="$PWD"' in script
     assert '"$TEX_INPUT_ABS" == "$FIXTURE_ROOT/review/"*' in script
+    assert '"$TEX_INPUT_ABS" == "$FIXTURE_ROOT/previews/"*' in script
     assert 'PHYSICS_GROUNDING_DIR="$FIXTURE_ROOT"' in script
     assert 'check_physics_grounding.py" \\' in script
     assert '--json-output "${BUILD_DIR}/physics_grounding.json" "$PHYSICS_GROUNDING_DIR"' in script

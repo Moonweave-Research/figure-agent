@@ -1,0 +1,112 @@
+schema: figure-agent.aesthetic-intent.v2
+fixture: fig2_charge_transport_mechanism
+target_journal: Nature Communications
+visual_maturity: restrained
+density: balanced
+reference_style: mechanism_schematic
+design_principles:
+  - id: readout_led_comparison
+    instruction: "Make the material comparison visibly lead into the transient-current readout, with the readout receiving the strongest claim-bearing lane."
+  - id: material_not_card
+    instruction: "Use a quiet common MIM cross-section grammar; material identity must come from the internal physical cue, not heavy card outlines."
+  - id: restrained_analytic_index
+    instruction: "Keep the transient curve as a clear qualitative analytic index, never a faux measured plot or a generic decorative zig-zag."
+must_avoid:
+  - id: slide_banner_grammar
+    pattern: "A large title, long condition banner, and equal-weight columns dominate the mechanism or make the strip read as a presentation slide."
+    severity: MAJOR
+  - id: toy_material_icons
+    pattern: "Bullseye localized-state markers, repeated geometric zig-zags, or heavy boxed cells make the material state read as a preset icon rather than a scientific schematic."
+    severity: MAJOR
+  - id: accent_role_collision
+    pattern: "One accent color is reused for unrelated condition, material, and response roles without a stated semantic distinction."
+    severity: MAJOR
+polish_triggers:
+  - id: source_geometry_refinement
+    condition: "Composition, material texture, label hierarchy, or color-role repair remains necessary."
+    recommended_path: continue_tikz
+  - id: optical_finish_only
+    condition: "Source semantics and current render geometry are locked, with only sub-pixel stroke or spacing finish remaining."
+    recommended_path: ready_for_svg_polish
+aesthetic_levers:
+  - id: causal_hierarchy
+    dimension: hero_hierarchy
+    intent: "The eye should travel from matched material states to the sulfur-owned transient-current readout without treating the readout as a detached third card."
+    priority: required
+    positive_signals:
+      - "the shared condition is a quiet header, not a visual rail competing with the mechanism"
+      - "the sulfur working state has enough visual occupancy to own the interpretation"
+      - "the readout is the clear destination of the comparison and has a dedicated open lane"
+    anti_patterns:
+      - "equal-width illustrated cards and a visually orphaned mini-plot"
+      - "a handoff arrow that terminates in whitespace rather than the readout boundary"
+      - "a text banner receives the first fixation"
+    allowed_adjustments:
+      - "rebalance material and readout lane widths"
+      - "reduce condition or title prominence"
+      - "redraw the qualitative trace while preserving its early-before-late semantics"
+    forbidden_adjustments:
+      - "convert the ideal baseline into a measured material control"
+      - "assign charge sign, trap depth, or a microscopic hopping pathway"
+      - "replace the qualitative readout with synthetic data"
+    default_route: tikz_patch
+  - id: material_texture_authorship
+    dimension: component_fidelity
+    intent: "Make ideal polarization and sulfur localized states visually distinct through restrained material cues rather than repeated icon primitives."
+    priority: required
+    positive_signals:
+      - "ideal polarization remains sparse and quiet"
+      - "sulfur host traces read as a bounded amorphous matrix"
+      - "localized-state marks are compact and directly embedded in host traces"
+    anti_patterns:
+      - "bullseye or winged-dot trap icons"
+      - "long periodic or sawtooth host paths"
+      - "heavy apparatus borders doing the work of material identity"
+    allowed_adjustments:
+      - "redraw host paths and local state marks"
+      - "thin or remove non-semantic frame edges"
+      - "vary bounded trace curvature and contrast"
+    forbidden_adjustments:
+      - "invent charge polarity, trap magnitude, or phase segregation"
+      - "add a covalent network or a specific microscopic transport route"
+    default_route: semantic_backport
+  - id: color_and_stroke_economy
+    dimension: color_harmony
+    intent: "Reserve blue for the ideal baseline, amber for sulfur host identity, and red for localized-state/current-response emphasis while gray carries apparatus and context."
+    priority: required
+    positive_signals:
+      - "the held-field condition is neutral rather than a competing red claim"
+      - "red appears only on the localized-state/result family"
+      - "support rules and axes stay lighter than the readout trace"
+    anti_patterns:
+      - "red reused for the condition rail, field guide, and result curve"
+      - "all outlines share one heavy weight"
+      - "axes or separators dominate material marks"
+    allowed_adjustments:
+      - "desaturate or gray out context"
+      - "rebalance stroke hierarchy"
+      - "remove redundant support rules"
+    forbidden_adjustments:
+      - "change the declared material-color ownership"
+      - "hide the required field-on condition"
+    default_route: tikz_patch
+  - id: print_scale_typography
+    dimension: typography_authority
+    intent: "Keep the title, conditions, material names, and two readout-window labels in a controlled hierarchy at the final full-width reduction."
+    priority: required
+    positive_signals:
+      - "panel letter is navigational rather than dominant"
+      - "condition text is subordinate to the material/readout story"
+      - "support labels retain their own lanes at 50 and 33 percent review"
+    anti_patterns:
+      - "title/banner competes with the material panels"
+      - "italic support prose fills the gutters"
+      - "labels rely on zoom to separate from axes or state marks"
+    allowed_adjustments:
+      - "tighten copy and local spacing"
+      - "adjust text weight and lane placement"
+      - "reallocate whitespace between the comparison and readout"
+    forbidden_adjustments:
+      - "remove field, humidity, or readout-window meaning"
+      - "change variable names or time-window claims"
+    default_route: tikz_patch

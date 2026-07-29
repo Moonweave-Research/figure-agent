@@ -8,6 +8,8 @@ style_profile: polymer-paper
 undeclared_geometry_profile: schematic
 visual_clash_cap: 8
 review_scale_previews: required
+paper_aesthetic_context: nc-main-text-series
+aesthetic_intent: aesthetic_intent.yaml
 
 final_size_contract:
   basis: width_limited_nature_family_main_figure
