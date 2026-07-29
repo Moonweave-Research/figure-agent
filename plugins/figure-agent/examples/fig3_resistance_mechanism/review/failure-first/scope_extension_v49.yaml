@@ -1,0 +1,15 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v48.yaml
+extends_sha256: sha256:f6c7bc7c90a5dc21f0e9c2180175588849154244a55dea3da89eb45c804414df
+reason: require v2 authoring ablations to bind repaired outputs to one exact authorized repair lineage while preserving legacy receipt evidence
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v49.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/bin/fig-agent
+  - plugins/figure-agent/docs/figure-agent.md
+  - plugins/figure-agent/docs/superpowers/issues/2026-06-01-issue-100hi-schema-module-map.md
+  - plugins/figure-agent/scripts/quality/failure_ablation.py
+  - plugins/figure-agent/tests/test_failure_ablation.py
+publication_acceptance: not_claimed

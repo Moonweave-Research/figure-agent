@@ -2248,6 +2248,11 @@ def _failure_ablation(argv: list[str]) -> int:
     parser.add_argument("--raw", type=Path, required=True)
     parser.add_argument("--verified", type=Path, required=True)
     parser.add_argument("--repaired", type=Path, required=True)
+    parser.add_argument(
+        "--workspace-root",
+        type=Path,
+        help="optional root for nested repair-lineage artifacts",
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     payload = failure_ablation.evaluate_ablation(
@@ -2255,7 +2260,8 @@ def _failure_ablation(argv: list[str]) -> int:
             "raw": args.raw,
             "verified": args.verified,
             "repaired": args.repaired,
-        }
+        },
+        workspace_root=args.workspace_root or _paths().plugin_root,
     )
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0

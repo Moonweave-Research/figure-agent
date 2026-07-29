@@ -12,6 +12,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "quality"))
 
+import authoring_repair_packet
 from failure_ablation import FailureAblationError, evaluate_ablation
 from generation_receipt import record_generation_receipt
 
@@ -135,7 +136,18 @@ def add_v2_generation_receipt(path: Path, *, model_id: str = "test-model") -> No
     starting_path = path.with_name("starting-v2.tex")
     generated_path = path.with_name(f"{path.stem}.generated-v2.tex")
     starting_path.write_text("starting artifact\n", encoding="utf-8")
-    generated_path.write_text(f"generated {path.stem} artifact\n", encoding="utf-8")
+    generated_path.write_text(
+        "\n".join(
+            [
+                f"generated {path.stem} artifact",
+                "% repair:start",
+                "old bounded content",
+                "% repair:end",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
     payload["input_packet_hash"] = _sha256(packet_path)
     payload["budget_contract_hash"] = _sha256(budget_path)
     payload["shared_task_hash"] = (
@@ -151,6 +163,214 @@ def add_v2_generation_receipt(path: Path, *, model_id: str = "test-model") -> No
         starting_artifact=starting_path,
         generated_artifact=generated_path,
     )
+
+
+def add_repair_lineage(
+    paths: dict[str, Path],
+    *,
+    contract_source_hash: str | None = None,
+    selector_start: str = "% repair:start",
+    duplicate_finding: bool = False,
+    editable_repair_family: str = "label_reflow",
+) -> None:
+    verified = yaml.safe_load(paths["verified"].read_text(encoding="utf-8"))
+    repaired = yaml.safe_load(paths["repaired"].read_text(encoding="utf-8"))
+    verified_hash = verified["generation_receipt"]["generated_artifact_sha256"]
+    repaired["shared_task_hash"] = verified["shared_task_hash"]
+    repaired["budget_contract_hash"] = verified["budget_contract_hash"]
+
+    repaired_artifact = paths["repaired"].with_name("repaired.generated.tex")
+    repaired_artifact.write_text("bounded repaired artifact\n", encoding="utf-8")
+    repaired_hash = _sha256(repaired_artifact)
+
+    repair_packet = paths["repaired"].with_name("repair_packet.json")
+    finding_report = paths["repaired"].with_name("human_findings.json")
+    finding = {
+        "id": "F1",
+        "failure_class": "typography",
+        "review_outcome": "confirmed_defect",
+    }
+    finding_report_payload = {
+        "schema": "figure-agent.human-correction-findings.v1",
+        "bound_source_sha256": verified_hash,
+        "findings": [finding, dict(finding)] if duplicate_finding else [finding],
+    }
+    finding_report.write_text(
+        json.dumps(finding_report_payload, sort_keys=True), encoding="utf-8"
+    )
+    target_contract = paths["repaired"].with_name("target.json")
+    selector = {
+        "kind": "semantic_anchor",
+        "selector_id": "bounded-content",
+        "anchor_start": selector_start,
+        "anchor_end": "% repair:end",
+    }
+    target_payload = {
+        "schema": "figure-agent.repair-target-contract.v1",
+        "source_path": verified["generation_receipt"]["generated_artifact_path"],
+        "source_sha256": contract_source_hash or verified_hash,
+        "targets": [
+            {
+                "finding": {"report_path": finding_report.name, "id": "F1"},
+                "attribution": {"state": "exact"},
+                "selector": selector,
+                "repair_family": "label_reflow",
+                "protected_invariants": ["old bounded content"],
+            }
+        ],
+    }
+    target_contract.write_text(
+        json.dumps(target_payload, sort_keys=True), encoding="utf-8"
+    )
+    prompt = "bounded repair prompt\n"
+    packet_payload: dict[str, object] = {
+        "schema": "figure-agent.repair-execution-packet.v3",
+        "fixture": "synthetic-ablation",
+        "model_id": verified["generation_receipt"]["model_id"],
+        "source": {
+            "path": verified["generation_receipt"]["generated_artifact_path"],
+            "sha256": verified_hash,
+        },
+        "target_contract": {
+            "path": target_contract.name,
+            "sha256": _sha256(target_contract),
+        },
+        "finding_reports": [
+            {
+                "path": finding_report.name,
+                "schema": finding_report_payload["schema"],
+                "sha256": _sha256(finding_report),
+            }
+        ],
+        "editable_target": {
+            "finding_id": "F1",
+            "finding": finding,
+            "report_path": finding_report.name,
+            "repair_family": editable_repair_family,
+            "selector": {**selector, "source_hash": verified_hash},
+            "protected_invariants": ["old bounded content"],
+        },
+        "review_only_findings": [],
+        "output_path": repaired_artifact.name,
+        "repository_output_path": repaired_artifact.name,
+        "execution_cwd": ".",
+        "change_budget": {
+            "max_attempts": 1,
+            "max_source_blocks": 1,
+            "max_changed_lines": 6,
+        },
+        "author_may_compile": False,
+        "author_may_write_files": False,
+        "verification": "external_sequential_compile_required",
+        "publication_acceptance": "not_claimed",
+        "response_schema": {"type": "object"},
+        "prompt": {
+            "utf8": prompt,
+            "sha256": "sha256:" + hashlib.sha256(prompt.encode()).hexdigest(),
+        },
+    }
+    packet_payload["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet_payload
+    )
+    repair_packet.write_text(
+        json.dumps(packet_payload, sort_keys=True), encoding="utf-8"
+    )
+
+    authorization = paths["repaired"].with_name("materialization_authorization.json")
+    preview = {
+        "schema": "figure-agent.repair-materialization-preview.v1",
+        "fixture": "synthetic-ablation",
+        "packet_sha256": packet_payload["packet_sha256"],
+        "source_sha256": verified_hash,
+        "output_path": repaired_artifact.name,
+        "output_sha256": repaired_hash,
+        "changed_source_blocks": 1,
+        "changed_lines": 2,
+        "preserved_boundary_blank_lines": 0,
+        "change_summary": "bounded repair",
+        "publication_acceptance": "not_claimed",
+    }
+    preview_sha256 = authoring_repair_packet.canonical_materialization_preview_sha256(
+        preview
+    )
+    authorization_payload = {
+        "schema": "figure-agent.human-decision-record.v1",
+        "fixture": "synthetic-ablation",
+        "packet_schema": "figure-agent.repair-execution-packet.v3",
+        "packet_path": repair_packet.name,
+        "packet_recommendation": "materialize_authoring_repair_candidate",
+        "queue_run_id": "synthetic-run",
+        "decision_kind": "materialize_authoring_repair_candidate",
+        "agent_recommendation": "materialize_authoring_repair_candidate",
+        "reviewer": "moon",
+        "human_decision": "approve this exact additive repair candidate",
+        "human_note": "test authorization",
+        "follow_up": {"command": "verify repaired candidate"},
+        "mutation_boundary": "additive_artifact_materialization_allowed",
+        "authorized_packet_sha256": packet_payload["packet_sha256"],
+        "authorized_output_path": repaired_artifact.name,
+        "authorized_output_sha256": repaired_hash,
+        "authorized_preview_sha256": preview_sha256,
+    }
+    authorization.write_text(
+        json.dumps(authorization_payload, sort_keys=True), encoding="utf-8"
+    )
+    receipt = paths["repaired"].with_name("materialization_receipt.json")
+    authorization_record_sha = "sha256:" + hashlib.sha256(
+        json.dumps(
+            authorization_payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+    ).hexdigest()
+    receipt_payload = {
+        "schema": "figure-agent.repair-materialization-receipt.v2",
+        "decision": "materialized_machine_verified_human_review_pending",
+        **{key: value for key, value in preview.items() if key != "schema"},
+        "preview_sha256": preview_sha256,
+        "authorization": {
+            "reviewer": "moon",
+            "record_sha256": authorization_record_sha,
+            "authorized_packet_sha256": packet_payload["packet_sha256"],
+            "authorized_output_path": repaired_artifact.name,
+            "authorized_output_sha256": repaired_hash,
+            "authorized_preview_sha256": preview_sha256,
+        },
+        "post_render_verification": "passed",
+        "external_compile": {"returncode": 0, "strict_status": {"state": "passed"}},
+        "human_review": "pending",
+        "publication_acceptance": "not_claimed",
+        "recovery_required": False,
+    }
+    receipt.write_text(json.dumps(receipt_payload, sort_keys=True), encoding="utf-8")
+
+    repaired["repair_lineage"] = {
+        "schema": "figure-agent.bounded-repair-lineage.v1",
+        "parent_variant": "verified",
+        "parent_generated_artifact_sha256": verified_hash,
+        "repaired_artifact_path": repaired_artifact.name,
+        "repaired_artifact_sha256": repaired_hash,
+        "repair_packet_path": repair_packet.name,
+        "repair_packet_sha256": _sha256(repair_packet),
+        "human_authorization_path": authorization.name,
+        "human_authorization_sha256": _sha256(authorization),
+        "finalized_materialization_receipt_path": receipt.name,
+        "finalized_materialization_receipt_sha256": _sha256(receipt),
+        "authorized_reviewer": "moon",
+    }
+    repaired.pop("generation_receipt", None)
+    paths["repaired"].write_text(
+        yaml.safe_dump(repaired, sort_keys=False), encoding="utf-8"
+    )
+
+
+def _bound_repair_paths(tmp_path: Path, **lineage_options: object) -> dict[str, Path]:
+    paths = write_comparable_runs(tmp_path)
+    add_v2_generation_receipt(paths["raw"])
+    add_v2_generation_receipt(paths["verified"])
+    add_repair_lineage(paths, **lineage_options)
+    return paths
 
 
 def test_ablation_requires_exactly_raw_verified_repaired(tmp_path: Path) -> None:
@@ -382,7 +602,72 @@ def test_ablation_accepts_packet_bound_v2_generation_receipts(
 
     report = evaluate_ablation(paths)
 
-    assert report["comparison_evidence"] == "transcript_bound"
+    assert report["comparison_evidence"] == "authoring_transcript_bound_only"
+
+
+def test_v2_ablation_requires_repaired_output_to_be_a_bound_child(
+    tmp_path: Path,
+) -> None:
+    paths = _bound_repair_paths(tmp_path)
+    for path in paths.values():
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload["human_correction_minutes"] = 1.0
+        payload["human_verdict"] = {
+            "state": "recorded",
+            "reviewer": "moon",
+            "decision": "accepted",
+        }
+        path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "transcript_and_repair_bound"
+    assert report["repair_lineage_evidence"] == "bound"
+    assert report["lineage_gate"] == "passed"
+    assert report["product_claim"] == "review_eligible"
+
+
+def test_v2_ablation_does_not_treat_independent_repaired_generation_as_lineage(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    add_v2_generation_receipt(paths["raw"])
+    add_v2_generation_receipt(paths["verified"])
+    add_v2_generation_receipt(paths["repaired"])
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "authoring_transcript_bound_only"
+    assert report["repair_lineage_evidence"] == "missing_or_invalid"
+    assert report["lineage_gate"] == "failed"
+    assert report["product_claim"] == "not_authorized"
+
+
+def test_v2_repair_lineage_rejects_parent_selector_drift(tmp_path: Path) -> None:
+    paths = _bound_repair_paths(tmp_path, selector_start="% not present")
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "authoring_transcript_bound_only"
+    assert report["repair_lineage_evidence"] == "missing_or_invalid"
+
+
+def test_v2_repair_lineage_rejects_packet_hash_drift(tmp_path: Path) -> None:
+    paths = _bound_repair_paths(tmp_path)
+    packet_path = tmp_path / "repair_packet.json"
+    packet = json.loads(packet_path.read_text(encoding="utf-8"))
+    packet["packet_sha256"] = "sha256:" + "6" * 64
+    packet_path.write_text(json.dumps(packet, sort_keys=True), encoding="utf-8")
+    repaired = yaml.safe_load(paths["repaired"].read_text(encoding="utf-8"))
+    repaired["repair_lineage"]["repair_packet_sha256"] = _sha256(packet_path)
+    paths["repaired"].write_text(
+        yaml.safe_dump(repaired, sort_keys=False), encoding="utf-8"
+    )
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "authoring_transcript_bound_only"
+    assert report["repair_lineage_evidence"] == "missing_or_invalid"
 
 
 def test_ablation_rejects_generation_receipts_from_different_models(tmp_path: Path) -> None:
