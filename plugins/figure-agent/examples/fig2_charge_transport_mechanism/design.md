@@ -8,8 +8,9 @@ comparison, and one common readout. The two material states are siblings, not
 two serial UI cards:
 
 1. Measurement context and MIM stack.
-2. Conventional dielectric: finite sites and drain cues.
-3. Sulfur-rich copolymer: distributed sites and retained-charge cue.
+2. Ideal dielectric: bound-dipole alignment and rapid pre-window polarization.
+3. Sulfur-rich copolymer: sign-neutral localized-state cues and long-lived
+   relaxation, explicitly framed as a working picture.
 4. Readout icon with the early and late time windows.
 
 The header lane carries the panel letter and compact role labels. A shared rail
@@ -19,13 +20,16 @@ carries only short explanatory labels.
 
 ## Visual decisions
 
-- Use cGray for apparatus, cAmber for the sulfur-rich film, cBlue for the
-  conventional population, and cRed only for charge/field emphasis.
+- Use cGray for apparatus, cAmber for the sulfur-rich film, cBlue for the ideal
+  dielectric polarization, and cRed only for a field condition or sign-neutral
+  localized-state outline.
 - Keep line weights above the reduction threshold and avoid gradients, 3-D
   substrate blocks, or decorative halos.
-- Make the comparison visible with object geometry: outward drain cues for the
-  conventional state; sulfur-host traces with distinct red retained-charge cues
-  and no outward drain cues for the sulfur-rich state.
+- Make the comparison visible with object geometry: bound dipoles and a rapid
+  pre-window polarization for the ideal baseline; sulfur-host traces with
+  sign-neutral localized-state cues for the sulfur-rich working picture.
+- Draw one continuous held-field rail above the readout. A source-OFF or drain
+  arrow is a semantic failure because the transient is acquired under applied DC.
 - Do not use a large circular halo, repeated amber/red bead population, or a
   decorative polymer wave; those cues make a localized population read as
   ornament or a second material phase.

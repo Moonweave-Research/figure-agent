@@ -220,6 +220,14 @@ rules:
       locator: examples/fig1_overview_v2_pair_001_vault/critique_adjudication.yaml P003
       quote: "actuator framing transfer forbidden by TG-G-001"
     transfer_policy: use_as_constraint
+  - id: pair001.field-on-transient-sign-neutrality
+    category: physics_semantics
+    rule: "For a DC transient acquired while the applied field remains on, show the field as continuously held throughout the readout and never import a source-OFF, discharge, or outward-drain storyline. When the experiment has not resolved carrier polarity, injection asymmetry, or carrier type, encode any localized or retained charge with a sign-neutral glyph and forbid plus/minus marks, directional carrier arrows, or cathode/anode-specific trapping claims. An ideal-dielectric baseline may show bound polarization and a rapid pre-analysis response, but it must not be conflated with an actual material control."
+    source:
+      kind: iteration_comment
+      locator: "Fig2 field-on transient and polarity review (2026-07-29)"
+      quote: "트랜지언트를 읽는 동안 계속 필드가 걸려 있어 / 부호 중립이 낫지 않아?"
+    transfer_policy: use_as_constraint
 ---
 
 # Pair 001 Authoring Rules

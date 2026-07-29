@@ -22,14 +22,14 @@
   wire/.style={cGray!72!black,line width=0.65pt,line cap=round,line join=round},
   electrode/.style={fill=cGray!20,draw=cGray!74!black,line width=0.65pt},
   film/.style={fill=cAmber!10,draw=cAmber!72!black,line width=0.75pt},
-  conventionalFilm/.style={fill=cBlue!6,draw=cBlue!58!black,line width=0.75pt},
-  trapBlue/.style={circle,fill=cBlue!72,draw=cBlue!60!black,line width=0.3pt,
-    inner sep=0pt,minimum size=1.7mm},
-  retainedCharge/.style={circle,fill=cRed!78,draw=cRed!60!black,line width=0.3pt,
-    inner sep=0pt,minimum size=1.75mm},
+  idealFilm/.style={fill=cBlue!5,draw=cBlue!58!black,line width=0.75pt},
+  dipole/.style={cBlue!60!black,line width=0.55pt,line cap=round},
+  localizedState/.style={circle,fill=white,draw=cRed!74!black,line width=0.62pt,
+    inner sep=0pt,minimum size=1.55mm},
+  stateCore/.style={circle,fill=cGray!76!black,draw=none,inner sep=0pt,
+    minimum size=0.48mm},
   sulfurTrace/.style={cAmber!76!black,line width=0.62pt,line cap=round},
-  drainArrow/.style={-{Stealth[length=3.4pt,width=2.5pt]},cBlue!72!black,
-    line width=0.62pt},
+  fieldGuide/.style={cRed!64!black,line width=0.50pt,line cap=round},
   storyArrow/.style={-{Stealth[length=3.4pt,width=2.4pt]},cGray!62!black,
     line width=0.52pt},
   storyRail/.style={cGray!57!black,line width=0.52pt,line cap=round,line join=round},
@@ -45,11 +45,12 @@
 \path[use as bounding box] (0.00,0.38) rectangle (16.38,5.02);
 
 % A single, open mechanism strip. Measurement forks to two sibling material
-% states; both states merge into the common qualitative readout.
+% states; both states merge into the common qualitative readout.  The entire
+% strip is field-on: no source-OFF or discharge interval is implied here.
 \node[panelLetter,anchor=west] at (0.14,4.88) {a};
 
 % The fork/merge rail owns the comparison topology. It deliberately contains no
-% direct Conventional -> Sulfur connector, so neither material reads as a
+% direct Ideal -> Sulfur connector, so neither material reads as a
 % chronological intermediate of the other.
 \draw[storyRail] (3.08,2.62)--(3.74,2.62);
 \draw[storyRail] (3.74,1.87)--(3.74,3.36);
@@ -66,72 +67,77 @@
 \node[panelTitle,anchor=north] at (1.90,4.72) {Measurement};
 \node[labelMute,anchor=north] at (1.90,4.29) {MIM stack};
 
-% The field and humidity are visibly owned by this stack, rather than floating
-% in a free label lane that could be mistaken for an actuation condition.
+% The neutral field guide and ON label establish a held DC condition without
+% inventing an electrode polarity or a carrier sign.
 \fill[electrode] (0.74,3.03) rectangle (3.08,3.31);
 \fill[film] (0.74,2.08) rectangle (3.08,3.03);
 \fill[electrode] (0.74,1.80) rectangle (3.08,2.08);
-\draw[axisArrow,cRed!70!black] (2.73,2.22)--(2.73,2.88);
-\node[labelStd,text=cRed!70!black,anchor=south] at (1.32,3.47)
-  {$E=15\,\mathrm{MV\,m^{-1}}$};
+\draw[fieldGuide] (2.70,2.22)--(2.70,2.88);
+\draw[fieldGuide] (2.84,2.22)--(2.84,2.88);
+\node[labelStd,text=cRed!70!black,anchor=south] at (1.90,3.47)
+  {$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$};
 \node[labelMute,anchor=north] at (1.90,1.47) {25\,\% RH chamber};
 
 % --------------------------------------------------------------------------
 % Parallel material comparison
 % --------------------------------------------------------------------------
 \node[panelTitle,anchor=north] at (8.18,4.72) {Material comparison};
-\node[columnTitle,anchor=south west] at (5.05,3.84) {Conventional dielectric};
-\node[labelMute,anchor=south west] at (7.85,3.84) {finite shallow sites};
+\node[columnTitle,anchor=south west] at (5.05,3.94) {Ideal dielectric};
+\node[labelMute,anchor=south west] at (8.04,3.94) {fast polarization};
 
-\fill[conventionalFilm] (5.05,3.00) rectangle (11.36,3.72);
-\draw[wire] (5.05,3.00)--(11.36,3.00);
-\draw[wire] (5.05,3.72)--(11.36,3.72);
-\node[trapBlue] at (6.28,3.42) {};
-\node[trapBlue] at (7.76,3.25) {};
-\node[trapBlue] at (9.36,3.48) {};
-% Each blue cue drains through the film boundary.  The arrowheads deliberately
-% leave the film instead of ending in an unowned interior lane.
-\draw[drainArrow] (6.28,3.33)--(6.28,2.88);
-\draw[drainArrow] (7.76,3.16)--(7.76,2.88);
-\draw[drainArrow] (9.36,3.39)--(9.36,2.88);
-
-% Keep the two compared materials on one shared label lane.  The retained
-% charge qualifier owns the lower state without demoting it to a footnote.
-\node[columnTitle,anchor=south west] at (5.05,2.38) {Sulfur-rich copolymer};
-\node[labelMute,anchor=south west] at (8.22,2.38) {retained charge};
-
-\fill[film] (5.05,1.48) rectangle (11.36,2.22);
-\draw[wire] (5.05,1.48)--(11.36,1.48);
-\draw[wire] (5.05,2.22)--(11.36,2.22);
-% Amber is one sparse, irregular host field rather than repeated short icons.
-% Red signed marks sit directly on that host as retained-charge cues.
-\draw[sulfurTrace] (5.45,1.94)--(5.77,1.70)--(6.10,1.92)--(6.48,1.74)--(6.88,1.96);
-\draw[sulfurTrace] (7.16,1.75)--(7.50,2.01)--(7.86,1.84)--(8.22,2.00)--(8.62,1.77);
-\draw[sulfurTrace] (8.94,1.94)--(9.22,1.69)--(9.62,1.88)--(9.98,1.71)--(10.38,1.95)
-  --(10.74,1.77)--(11.03,1.91);
-\node[retainedCharge] (q1) at (6.10,1.92) {};
-\node[retainedCharge] (q2) at (8.22,2.00) {};
-\node[retainedCharge] (q3) at (10.38,1.95) {};
-\foreach \q in {q1,q2,q3}{
-  \draw[white,line width=0.34pt] ($ (\q.center)+(-0.34mm,0) $)--($ (\q.center)+(0.34mm,0) $);
-  \draw[white,line width=0.34pt] ($ (\q.center)+(0,-0.34mm) $)--($ (\q.center)+(0,0.34mm) $);
+% The ideal baseline uses bound dipoles, not free-carrier drain arrows.  This
+% represents the response before the 2 s analysis window, not a measured control.
+\fill[electrode] (5.05,3.66) rectangle (11.36,3.83);
+\fill[idealFilm] (5.05,2.96) rectangle (11.36,3.66);
+\fill[electrode] (5.05,2.79) rectangle (11.36,2.96);
+\foreach \x/\y in {6.05/3.24,7.15/3.44,8.32/3.20,9.48/3.42,10.48/3.18}{
+  \draw[dipole] (\x,\y-0.14)--(\x,\y+0.14);
+  \fill[cBlue!34] (\x,\y-0.18) circle (0.035);
+  \fill[cBlue!34] (\x,\y+0.18) circle (0.035);
 }
+\draw[fieldGuide] (10.97,3.10)--(10.97,3.54);
+
+\node[columnTitle,anchor=south west] at (5.05,2.31) {Sulfur-rich copolymer};
+\node[labelMute,anchor=south west] at (8.55,2.31) {long-lived relaxation};
+
+\fill[electrode] (5.05,2.03) rectangle (11.36,2.20);
+\fill[film] (5.05,1.33) rectangle (11.36,2.03);
+\fill[electrode] (5.05,1.16) rectangle (11.36,1.33);
+% One sparse, irregular host field supports sign-neutral localized-state cues.
+\draw[sulfurTrace] (5.44,1.75)--(5.78,1.53)--(6.10,1.74)--(6.49,1.56)--(6.89,1.78);
+\draw[sulfurTrace] (7.18,1.54)--(7.50,1.84)--(7.87,1.65)--(8.22,1.82)--(8.64,1.55);
+\draw[sulfurTrace] (8.96,1.76)--(9.22,1.53)--(9.62,1.72)--(9.98,1.55)--(10.38,1.78)
+  --(10.74,1.59)--(11.03,1.74);
+\node[localizedState] (q1) at (6.10,1.74) {};
+\node[stateCore] at (6.10,1.74) {};
+\node[localizedState] (q2) at (8.22,1.82) {};
+\node[stateCore] at (8.22,1.82) {};
+\node[localizedState] (q3) at (10.38,1.78) {};
+\node[stateCore] at (10.38,1.78) {};
+\draw[fieldGuide] (10.97,1.47)--(10.97,1.91);
+\node[labelMute,anchor=north] at (7.98,1.02) {sign-neutral localized charge states};
 
 % --------------------------------------------------------------------------
 % What we read
 % --------------------------------------------------------------------------
-\node[panelTitle,anchor=north] at (14.40,4.72) {What we read};
+\node[panelTitle,anchor=north] at (14.40,4.72) {Current readout};
 
-\draw[axisArrow] (12.92,1.82)--(12.92,3.64);
-\draw[axisArrow] (12.92,1.82)--(15.85,1.82);
-\node[labelMute,anchor=south west] at (12.92,3.72) {$I(t)$};
-\node[labelMute,anchor=north] at (14.38,1.64) {time};
-\draw[traceEarly] (13.16,3.38)--(14.14,2.88);
-\draw[traceLate] (14.14,2.88)--(15.60,2.46);
+% The field rail is deliberately continuous across the acquisition: it blocks
+% the source-OFF/discharge reading that would contradict the actual experiment.
+\draw[fieldGuide,line width=0.78pt] (12.92,3.87)--(15.85,3.87);
+\node[labelStd,text=cRed!70!black,anchor=south] at (14.38,3.91)
+  {$E_\mathrm{app}$ held ON during acquisition};
+\draw[axisArrow] (12.92,1.38)--(12.92,3.30);
+\draw[axisArrow] (12.92,1.38)--(15.85,1.38);
+\node[labelMute,anchor=south west] at (12.92,3.38) {$I(t)$};
+\node[labelMute,anchor=north] at (14.38,1.20) {time};
+\node[labelMute,anchor=north west] at (13.02,1.20) {$t=0$};
+\draw[traceEarly] (13.16,3.10)--(14.14,2.48);
+\draw[traceLate] (14.14,2.48)--(15.60,2.10);
 \draw[cGray!44!black,line width=0.42pt,dash pattern=on 1.2pt off 1.2pt]
-  (14.14,1.85)--(14.14,3.56);
-\node[labelStd,anchor=south west] at (13.22,3.39) {2--30\,s};
-\node[labelStd,anchor=north west] at (14.27,2.33) {30--300\,s};
+  (14.14,1.42)--(14.14,3.18);
+\node[labelStd,anchor=south west] at (13.22,3.24) {2--30\,s: slope};
+\node[labelStd,anchor=south west] at (14.38,2.69) {30--300\,s: deviation};
 
 \end{tikzpicture}%
 }

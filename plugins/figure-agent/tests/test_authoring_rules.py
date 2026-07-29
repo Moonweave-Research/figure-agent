@@ -121,6 +121,23 @@ def test_project_rule_preserves_floating_coulomb_topology() -> None:
     assert "points away from the driven electrode" in rule["rule"]
 
 
+def test_pair001_rule_preserves_field_on_transient_sign_neutrality() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "pair001.field-on-transient-sign-neutrality"
+    )
+    assert rule["category"] == "physics_semantics"
+    assert "field remains on" in rule["rule"]
+    assert "source-OFF" in rule["rule"]
+    assert "sign-neutral glyph" in rule["rule"]
+    assert "ideal-dielectric baseline" in rule["rule"]
+
+
 def test_project_rule_preserves_reversed_cantilever_morphology() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-project.md"

@@ -34,17 +34,17 @@ semantic_assertions:
   - id: comparison-precedes-readout
     relation: left_of
     subject: Material
-    reference: What
+    reference: Current
     tolerance_pt: 12.0
-  - id: conventional-above-sulfur
+  - id: ideal-above-sulfur
     relation: above
-    subject: Conventional
+    subject: Ideal
     reference: Sulfur-rich
     tolerance_pt: 12.0
 
 panels:
   - id: A
-    caption: Measurement context, conventional-versus-sulfur charge retention schematic, and the two transient-current windows read in panels b–d
+    caption: Field-on measurement context, ideal-dielectric baseline versus sulfur-rich working comparison, and the two transient-current readouts in panels b–d
     bbox_pdf_cm: [0.00, 0.00, 16.38, 4.75]
 
 text_boundary_checks:

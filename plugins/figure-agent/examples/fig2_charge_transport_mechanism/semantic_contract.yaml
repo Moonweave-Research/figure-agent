@@ -5,12 +5,13 @@ required_objects:
   - panel_a.measurement_context
   - panel_a.mim_stack
   - panel_a.field_condition
-  - panel_a.conventional_dielectric
-  - panel_a.finite_traps
-  - panel_a.charge_drain
+  - panel_a.ideal_dielectric
+  - panel_a.bound_dipoles
+  - panel_a.fast_polarization
   - panel_a.sulfur_copolymer
-  - panel_a.broad_trap_landscape
-  - panel_a.retained_charge
+  - panel_a.localized_charge_states
+  - panel_a.long_lived_relaxation
+  - panel_a.field_held_on
   - panel_a.transient_readout
   - panel_a.early_window
   - panel_a.late_window
@@ -25,14 +26,18 @@ forbidden_implications:
   - panel_a.universal_conventional_dielectric_law
   - panel_a.actuation_charging_setup
   - panel_a.second_electrical_measurement_instrument
+  - panel_a.signed_carrier_inference
+  - panel_a.source_off_during_transient
+  - panel_a.calibrated_trap_depth_or_density
 
 protected_relations:
   - mim_stack_contains_polymer_film_between_electrodes
   - measurement_context_forks_to_parallel_material_comparison
   - conventional_and_sulfur_are_sibling_comparison_states
   - parallel_material_comparison_merges_to_common_readout
-  - conventional_finite_traps_have_outward_drain_cues
-  - sulfur_broad_population_contains_retained_charge_cue
+  - ideal_baseline_shows_bound_dipoles_without_free_carrier_flow
+  - sulfur_working_picture_uses_sign_neutral_localized_charge_cues
+  - field_is_held_on_throughout_current_acquisition
   - transient_readout_uses_one_trace_with_two_time_windows
   - early_window_precedes_late_window
   - strip_is_schematic_and_data_panels_are_pipeline_owned
@@ -53,24 +58,27 @@ semantic_legibility:
     - object_id: panel_a.field_condition
       declared_role: applied_field_context
       forbidden_readings: [exact_voltage_source_schematic]
-    - object_id: panel_a.conventional_dielectric
-      declared_role: conceptual_comparison_material
-      forbidden_readings: [universal_dielectric_baseline]
-    - object_id: panel_a.finite_traps
-      declared_role: finite_shallow_trap_population
-      forbidden_readings: [calibrated_density_distribution]
-    - object_id: panel_a.charge_drain
-      declared_role: conceptual_charge_loss_cue
+    - object_id: panel_a.ideal_dielectric
+      declared_role: conceptual_ideal_dielectric_baseline
+      forbidden_readings: [measured_PI_PTFE_or_PET_control]
+    - object_id: panel_a.bound_dipoles
+      declared_role: rapid_bound_polarization_cue
+      forbidden_readings: [free_carrier_or_charge_drain]
+    - object_id: panel_a.fast_polarization
+      declared_role: pre_analysis_window_response
       forbidden_readings: [measured_current_trace]
     - object_id: panel_a.sulfur_copolymer
       declared_role: sulfur_rich_comparison_material
       forbidden_readings: [separate_particle_phase]
-    - object_id: panel_a.broad_trap_landscape
-      declared_role: conceptual_distributed_trap_population
-      forbidden_readings: [fig1_energy_diagram, fitted_density_of_states]
-    - object_id: panel_a.retained_charge
-      declared_role: conceptual_retained_charge_cue
-      forbidden_readings: [calibrated_charge_density]
+    - object_id: panel_a.localized_charge_states
+      declared_role: sign_neutral_working_charge_localization_cue
+      forbidden_readings: [carrier_polarity, calibrated_charge_density, trap_energy_distribution]
+    - object_id: panel_a.long_lived_relaxation
+      declared_role: qualitative_late_time_relaxation_cue
+      forbidden_readings: [direct_trap_depth_or_density_measurement]
+    - object_id: panel_a.field_held_on
+      declared_role: constant_applied_field_condition
+      forbidden_readings: [source_off_or_discharge_interval]
     - object_id: panel_a.transient_readout
       declared_role: qualitative_two_window_readout_icon
       forbidden_readings: [quantitative_data_panel]
@@ -83,7 +91,7 @@ semantic_legibility:
   visible_connectors:
     - connector_id: panel_a.measurement_to_conventional
       from_object: panel_a.measurement_context
-      to_object: panel_a.conventional_dielectric
+      to_object: panel_a.ideal_dielectric
       declared_role: story_stage_transition
       render_style: stage_transition
       epistemic_status: derived
@@ -94,7 +102,7 @@ semantic_legibility:
       render_style: stage_transition
       epistemic_status: derived
     - connector_id: panel_a.conventional_to_readout
-      from_object: panel_a.conventional_dielectric
+      from_object: panel_a.ideal_dielectric
       to_object: panel_a.transient_readout
       declared_role: readout_transition
       render_style: stage_transition
@@ -117,7 +125,7 @@ semantic_legibility:
       render_style: response_trace
   parallel_comparisons:
     - comparison_id: panel_a.material_states
-      members: [panel_a.conventional_dielectric, panel_a.sulfur_copolymer]
+      members: [panel_a.ideal_dielectric, panel_a.sulfur_copolymer]
       shared_input: panel_a.measurement_context
       shared_output: panel_a.transient_readout
       comparison_basis: schematic_state
@@ -131,7 +139,7 @@ semantic_legibility:
     - from_object: panel_a.measurement_context
       to_object: panel_a.sulfur_copolymer
       declared_role: actuation_force
-    - from_object: panel_a.broad_trap_landscape
+    - from_object: panel_a.localized_charge_states
       to_object: panel_a.transient_readout
       declared_role: calibrated_data_fit
   label_ownership:
@@ -140,7 +148,7 @@ semantic_legibility:
     - label_id: panel_a.field_label
       owner: panel_a.field_condition
     - label_id: panel_a.conventional_header
-      owner: panel_a.conventional_dielectric
+      owner: panel_a.ideal_dielectric
     - label_id: panel_a.sulfur_header
       owner: panel_a.sulfur_copolymer
     - label_id: panel_a.early_window_label

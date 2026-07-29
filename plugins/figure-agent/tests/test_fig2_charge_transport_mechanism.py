@@ -19,13 +19,13 @@ def test_fig2_declares_a_parallel_material_comparison_contract() -> None:
     comparison = result["semantic_legibility"]["parallel_comparisons"][0]
 
     assert comparison["members"] == [
-        "panel_a.conventional_dielectric",
+        "panel_a.ideal_dielectric",
         "panel_a.sulfur_copolymer",
     ]
     assert result["summary"]["parallel_comparison_count"] == 1
     assert all(
         {connector["from_object"], connector["to_object"]}
-        != {"panel_a.conventional_dielectric", "panel_a.sulfur_copolymer"}
+        != {"panel_a.ideal_dielectric", "panel_a.sulfur_copolymer"}
         for connector in result["semantic_legibility"]["visible_connectors"]
     )
 
@@ -38,5 +38,10 @@ def test_fig2_redraw_uses_a_shared_fork_merge_without_legacy_comparison_copy() -
     assert "material contrast" not in source
     assert "comparisonArrow" not in source
     assert "trapAmber" not in source
-    assert "retainedCharge" in source
+    assert "localizedState" in source
     assert "sulfurTrace" in source
+    assert "Conventional dielectric" not in source
+    assert "charge drains" not in source
+    assert "{$+$}" not in source
+    assert "{$-$}" not in source
+    assert "held ON during acquisition" in source
