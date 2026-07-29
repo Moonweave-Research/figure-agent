@@ -24,6 +24,7 @@ STYLE_LOCK_AUTHORING_REQUIREMENTS = (
     "Keep every explicit line width at or above 0.25pt.",
     r"Do not use local \tiny or \scriptsize font overrides.",
 )
+LEGACY_STYLE_LOCK_AUTHORING_REQUIREMENTS = STYLE_LOCK_AUTHORING_REQUIREMENTS
 ALLOWED_REPOSITORY_READ_PATHS = (
     "AGENTS.md",
     "styles/polymer-paper-preamble.sty",
@@ -52,6 +53,7 @@ COMPARISON_ARTIFACT_NAMES = frozenset(
     for kind, suffix in (("packet", ".json"), ("prompt", ".md"))
 )
 ORRO_LANE_ID = re.compile(r"[a-z0-9][a-z0-9-]*")
+INTERVENTION_MODES = {"raw", "figure_agent"}
 
 
 class AuthoringExecutionPacketError(ValueError):
@@ -98,7 +100,7 @@ def _validate_bound_packet(packet: dict[str, object]) -> None:
         prompt_text
     ):
         raise AuthoringExecutionPacketError("prompt hash drift")
-    _validate_prompt_requirements(prompt_text)
+    validate_prompt_for_packet(packet, prompt_text)
 
 
 def compile_orro_execution_plans(
@@ -422,6 +424,28 @@ def _validate_prompt_requirements(prompt: str) -> None:
             )
 
 
+def validate_prompt_for_packet(packet: dict[str, object], prompt: str) -> None:
+    """Validate prompt content against its declared intervention boundary."""
+    mode = packet.get("intervention_mode", "figure_agent")
+    if mode == "figure_agent":
+        _validate_prompt_requirements(prompt)
+        return
+    if mode != "raw":
+        raise AuthoringExecutionPacketError("intervention_mode invalid")
+    forbidden = (
+        "## Mandatory standalone TikZ source requirements",
+        "## Style Lock authoring requirements",
+        "## Semantic contracts and forbidden implications",
+        "## Curated visual assets",
+        "## Project and paper authoring rules",
+        "Figure Agent",
+        "Review constraints",
+        *MANDATORY_SOURCE_REQUIREMENTS,
+    )
+    if any(item in prompt for item in forbidden):
+        raise AuthoringExecutionPacketError("raw prompt contains Figure Agent contracts")
+
+
 def _contract_lines(context_pack: dict[str, Any]) -> list[str]:
     contracts = context_pack.get("semantic_contracts", {})
     lines: list[str] = []
@@ -497,8 +521,45 @@ def render_authoring_prompt(
     allowed_repository_read_paths: tuple[str, ...],
     context_pack: dict[str, Any],
     model_id: str,
+    intervention_mode: str = "figure_agent",
 ) -> str:
     """Render the sole authoring prompt authority in a deterministic order."""
+    if intervention_mode == "raw":
+        task = context_pack.get("paper_context", {}).get("authoring_task", "")
+        if not isinstance(task, str) or not task.strip():
+            raise AuthoringExecutionPacketError(
+                "neutral authoring task is required for raw comparison"
+            )
+        lines = [
+            f"# Bound raw authoring execution: {name}",
+            "",
+            "## Output and attempt boundary",
+            "- Resolve every repository path from the repository root.",
+            "- Do not change directory before resolving paths.",
+            f"- Write exactly one new source to [{repository_output_path}].",
+            "- Do not create an intermediate subdirectory beneath "
+            f"[{Path(repository_output_path).parent.as_posix()}].",
+            "- Start from the declared blank artifact; perform one attempt only.",
+            "- Do not inspect or repair historical generated sources.",
+            "- Read repository file content only from "
+            + " and ".join(f"[{path}]" for path in allowed_repository_read_paths)
+            + "; no additional repository context is supplied.",
+            "",
+            "## Neutral authoring task",
+            task.strip(),
+            "",
+            "## Provenance and publication boundary",
+            f"- Declared model: {model_id}",
+            "- feedback_rounds: 0",
+            "- manual_repairs: 0",
+            "- filesystem_read_isolation: unavailable",
+            "- publication_acceptance: not_claimed",
+        ]
+        prompt = "\n".join(lines) + "\n"
+        validate_prompt_for_packet({"intervention_mode": "raw"}, prompt)
+        return prompt
+    if intervention_mode != "figure_agent":
+        raise AuthoringExecutionPacketError("intervention_mode invalid")
     lines = [
         f"# Bound authoring execution: {name}",
         "",
@@ -580,7 +641,7 @@ def render_authoring_prompt(
         ]
     )
     prompt = "\n".join(lines) + "\n"
-    _validate_prompt_requirements(prompt)
+    validate_prompt_for_packet({"intervention_mode": "figure_agent"}, prompt)
     return prompt
 
 
@@ -597,10 +658,20 @@ def compile_authoring_execution_packet(
     layout_contract: str | None = None,
     shape_profile: str | None = None,
     composition_profile: str | None = None,
+    intervention_mode: str = "figure_agent",
 ) -> tuple[dict[str, object], str]:
     """Compile one deterministic packet without executing an authoring model."""
     if not model_id.strip():
         raise AuthoringExecutionPacketError("model_id must be non-empty")
+    if intervention_mode not in INTERVENTION_MODES:
+        raise AuthoringExecutionPacketError("intervention_mode invalid")
+    if intervention_mode == "raw" and any(
+        value is not None
+        for value in (layout_contract, shape_profile, composition_profile)
+    ):
+        raise AuthoringExecutionPacketError(
+            "raw comparison cannot bind Figure Agent layout or shape interventions"
+        )
     workspace_root = workspace_root.resolve()
     budget_path = _resolve_regular_file(
         workspace_root, budget_contract, label="budget contract"
@@ -624,6 +695,8 @@ def compile_authoring_execution_packet(
         for path in ALLOWED_REPOSITORY_READ_PATHS
     )
     runtime_visual_assets = deepcopy(context_pack["visual_assets"])
+    if intervention_mode == "raw":
+        runtime_visual_assets["selected"] = []
     runtime_visual_assets["root"] = {
         "kind": "plugin_root",
         "path": str(plugin_root.resolve()),
@@ -647,6 +720,17 @@ def compile_authoring_execution_packet(
         allowed_repository_read_paths=allowed_repository_read_paths,
         context_pack=context_pack,
         model_id=model_id.strip(),
+        intervention_mode=intervention_mode,
+    )
+    mandatory_source_requirements = (
+        list(MANDATORY_SOURCE_REQUIREMENTS)
+        if intervention_mode == "figure_agent"
+        else []
+    )
+    style_lock_requirements = (
+        list(STYLE_LOCK_AUTHORING_REQUIREMENTS)
+        if intervention_mode == "figure_agent"
+        else []
     )
     packet: dict[str, object] = {
         "schema": SCHEMA,
@@ -668,6 +752,7 @@ def compile_authoring_execution_packet(
         "output_path": relative_output.as_posix(),
         "repository_output_path": repository_output_path,
         "execution_cwd": bound_execution_cwd,
+        "intervention_mode": intervention_mode,
         "layout_contract": (
             {
                 "path": context_pack["sources"]["layout_lanes"],
@@ -702,9 +787,16 @@ def compile_authoring_execution_packet(
             else None
         ),
         "visual_assets": runtime_visual_assets,
-        "mandatory_source_requirements": list(MANDATORY_SOURCE_REQUIREMENTS),
-        "required_panel_markers": _required_panel_markers(context_pack),
-        "style_lock_authoring_requirements": list(STYLE_LOCK_AUTHORING_REQUIREMENTS),
+        "mandatory_source_requirements": mandatory_source_requirements,
+        "required_panel_markers": (
+            _required_panel_markers(context_pack)
+            if intervention_mode == "figure_agent"
+            else []
+        ),
+        "style_lock_authoring_requirements": style_lock_requirements,
+        "semantic_contract_application": (
+            "injected" if intervention_mode == "figure_agent" else "omitted"
+        ),
         "allowed_repository_read_paths": list(allowed_repository_read_paths),
         "forbidden_import_classes": [
             "fig1_fixture_artifacts",
@@ -807,7 +899,7 @@ def write_authoring_execution_packet(
         raise AuthoringExecutionPacketError("prompt hash drift")
     if prompt_record.get("utf8") != prompt:
         raise AuthoringExecutionPacketError("prompt byte drift")
-    _validate_prompt_requirements(prompt)
+    validate_prompt_for_packet(packet, prompt)
     packet_path.parent.mkdir(parents=True, exist_ok=True)
     packet_bytes = json.dumps(
         packet, indent=2, sort_keys=True, ensure_ascii=False

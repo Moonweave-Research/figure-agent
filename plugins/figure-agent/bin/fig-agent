@@ -44,6 +44,7 @@ CORE_COMMANDS = frozenset(
         "authoring-input-audit",
         "authoring-packet",
         "authoring-preflight",
+        "authoring-preflight-ab",
         "authoring-preflight-triplet",
         "authoring-receipt",
         "authoring-repair-finalize",
@@ -652,6 +653,39 @@ def _authoring_preflight_triplet(argv: list[str]) -> int:
         )
     except (ValueError, OSError, json.JSONDecodeError) as exc:
         print(f"fig-agent authoring-preflight-triplet: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _authoring_preflight_ab(argv: list[str]) -> int:
+    import authoring_execution_preflight
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-preflight-ab")
+    parser.add_argument("--raw", required=True)
+    parser.add_argument("--verified", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+
+    def packet_path(value: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("packet path must be repository-relative and safe")
+        resolved = (workspace_root / relative).resolve(strict=False)
+        if not resolved.is_relative_to(workspace_root):
+            raise ValueError("packet path must remain inside the workspace")
+        return resolved
+
+    try:
+        payload = authoring_execution_preflight.preflight_authoring_ab(
+            packet_path(args.raw),
+            packet_path(args.verified),
+        )
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-preflight-ab: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
@@ -2282,6 +2316,8 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_preflight(rest)
     if command == "authoring-preflight-triplet":
         return _authoring_preflight_triplet(rest)
+    if command == "authoring-preflight-ab":
+        return _authoring_preflight_ab(rest)
     if command == "authoring-repair-packet":
         return _authoring_repair_packet(rest)
     if command == "authoring-repair-materialize":

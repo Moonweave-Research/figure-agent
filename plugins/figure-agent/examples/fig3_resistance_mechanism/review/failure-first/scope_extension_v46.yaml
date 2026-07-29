@@ -1,0 +1,12 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v45.yaml
+extends_sha256: sha256:b77d72b6958cfd0f90e823159c5ddfd4fce94b21293c0ee33b332c8b0d13d9e9
+reason: admit the bounded raw-versus-Figure-Agent authoring packet comparison path and its fail-closed preflight regression coverage without changing figure source or claiming acceptance
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v46.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/scripts/authoring_execution_preflight.py
+  - plugins/figure-agent/tests/test_cli_command_surface.py
+publication_acceptance: not_claimed

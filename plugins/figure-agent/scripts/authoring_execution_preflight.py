@@ -52,8 +52,8 @@ def _load_packet(packet_path: Path) -> tuple[dict[str, Any], Path]:
     ):
         raise AuthoringExecutionPreflightError("prompt byte drift")
     try:
-        authoring_execution_packet._validate_prompt_requirements(
-            prompt_bytes.decode("utf-8")
+        authoring_execution_packet.validate_prompt_for_packet(
+            payload, prompt_bytes.decode("utf-8")
         )
     except authoring_execution_packet.AuthoringExecutionPacketError as exc:
         raise AuthoringExecutionPreflightError(str(exc)) from exc
@@ -178,6 +178,91 @@ def preflight_authoring_pair(
         "filesystem_read_isolation": "unavailable",
         "intervention_field": intervention_field,
         **conditions,
+    }
+
+
+def preflight_authoring_ab(
+    raw_packet_path: Path,
+    verified_packet_path: Path,
+) -> dict[str, object]:
+    """Validate a raw counterfactual against one Figure Agent authoring arm."""
+    raw, raw_prompt = _load_packet(raw_packet_path)
+    verified, verified_prompt = _load_packet(verified_packet_path)
+    if raw.get("intervention_mode") != "raw":
+        raise AuthoringExecutionPreflightError("raw intervention_mode invalid")
+    if verified.get("intervention_mode") != "figure_agent":
+        raise AuthoringExecutionPreflightError("verified intervention_mode invalid")
+    for field in (
+        "model_id",
+        "execution_cwd",
+        "budget_contract",
+        "blank_start",
+        "feedback_rounds",
+        "manual_repairs",
+        "forbidden_import_classes",
+        "filesystem_read_isolation",
+        "publication_acceptance",
+    ):
+        _equal_field(raw, verified, field)
+    raw_context = raw.get("context_pack")
+    verified_context = verified.get("context_pack")
+    if not isinstance(raw_context, dict) or not isinstance(verified_context, dict):
+        raise AuthoringExecutionPreflightError("context_pack invalid")
+    if raw_context.get("schema") != verified_context.get("schema"):
+        raise AuthoringExecutionPreflightError("context_pack schema mismatch")
+    if raw_context.get("base_sha256") != verified_context.get("base_sha256"):
+        raise AuthoringExecutionPreflightError("context_pack base_sha256 mismatch")
+    if (
+        raw.get("mandatory_source_requirements") != []
+        or raw.get("required_panel_markers") != []
+        or raw.get("style_lock_authoring_requirements") != []
+        or raw.get("semantic_contract_application") != "omitted"
+        or raw.get("layout_contract") is not None
+        or raw.get("shape_profile") is not None
+        or raw.get("composition_profile") is not None
+        or (raw.get("visual_assets") or {}).get("selected") != []
+    ):
+        raise AuthoringExecutionPreflightError("raw Figure Agent boundary invalid")
+    accepted_style_contracts = {
+        tuple(authoring_execution_packet.LEGACY_STYLE_LOCK_AUTHORING_REQUIREMENTS),
+        tuple(authoring_execution_packet.STYLE_LOCK_AUTHORING_REQUIREMENTS),
+    }
+    if (
+        verified.get("mandatory_source_requirements")
+        != list(authoring_execution_packet.MANDATORY_SOURCE_REQUIREMENTS)
+        or tuple(verified.get("style_lock_authoring_requirements") or ())
+        not in accepted_style_contracts
+        or verified.get("semantic_contract_application") != "injected"
+    ):
+        raise AuthoringExecutionPreflightError(
+            "verified Figure Agent boundary invalid"
+        )
+    if raw.get("output_path") == verified.get("output_path"):
+        raise AuthoringExecutionPreflightError("output_path must be disjoint")
+    if raw_packet_path.resolve() == verified_packet_path.resolve():
+        raise AuthoringExecutionPreflightError("packet paths must be disjoint")
+    if raw_prompt.resolve() == verified_prompt.resolve():
+        raise AuthoringExecutionPreflightError("prompt paths must be disjoint")
+
+    def condition(
+        packet: dict[str, Any], packet_path: Path, prompt_path: Path
+    ) -> dict[str, object]:
+        return {
+            "intervention_mode": packet["intervention_mode"],
+            "packet_path": _artifact_reference(packet, packet_path),
+            "packet_sha256": packet["packet_sha256"],
+            "prompt_path": _artifact_reference(packet, prompt_path),
+            "prompt_sha256": packet["prompt"]["sha256"],
+            "output_path": packet["output_path"],
+        }
+
+    return {
+        "schema": SCHEMA,
+        "decision": "pass",
+        "comparison": "raw_vs_figure_agent",
+        "filesystem_read_isolation": "unavailable",
+        "raw": condition(raw, raw_packet_path, raw_prompt),
+        "verified": condition(verified, verified_packet_path, verified_prompt),
     }
 
 

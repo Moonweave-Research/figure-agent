@@ -110,7 +110,13 @@ def _compile(
     ),
     execution_cwd: str = ".",
     composition_profile: str | None = None,
+    intervention_mode: str = "figure_agent",
 ) -> tuple[dict[str, object], str]:
+    if intervention_mode == "raw":
+        (workspace / "examples/context_demo/authoring_task.md").write_text(
+            "Author a neutral first-pass schematic for the declared topic.\n",
+            encoding="utf-8",
+        )
     return authoring_execution_packet.compile_authoring_execution_packet(
         "context_demo",
         plugin_root=PLUGIN_ROOT,
@@ -121,7 +127,56 @@ def _compile(
         output_path=output_path,
         execution_cwd=execution_cwd,
         composition_profile=composition_profile,
+        intervention_mode=intervention_mode,
     )
+
+
+def test_raw_packet_omits_figure_agent_contract_injection(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    packet, prompt = _compile(
+        workspace,
+        output_path=(
+            "examples/context_demo/review/failure-first/execution-binding-v1/"
+            "raw_generated.tex"
+        ),
+        intervention_mode="raw",
+    )
+
+    assert packet["intervention_mode"] == "raw"
+    assert packet["mandatory_source_requirements"] == []
+    assert packet["required_panel_markers"] == []
+    assert packet["style_lock_authoring_requirements"] == []
+    assert packet["semantic_contract_application"] == "omitted"
+    assert packet["visual_assets"]["selected"] == []
+    assert "## Neutral authoring task" in prompt
+    assert "Figure Agent" not in prompt
+    assert "## Mandatory standalone TikZ source requirements" not in prompt
+    assert r"\usepackage{polymer-paper-preamble}" not in prompt
+
+
+def test_raw_packet_requires_neutral_authoring_task(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    with pytest.raises(
+        authoring_execution_packet.AuthoringExecutionPacketError,
+        match="neutral authoring task is required",
+    ):
+        authoring_execution_packet.compile_authoring_execution_packet(
+            "context_demo",
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+            model_id="gpt-5.5",
+            budget_contract="examples/context_demo/review/budget.yaml",
+            blank_start="examples/context_demo/review/blank.txt",
+            output_path=(
+                "examples/context_demo/review/failure-first/execution-binding-v1/"
+                "raw_generated.tex"
+            ),
+            intervention_mode="raw",
+        )
 
 
 def test_composition_profile_is_an_explicit_base_equal_intervention(
@@ -583,7 +638,13 @@ def _write_arm(
     plugin_root: Path = PLUGIN_ROOT,
     shape_profile: str | None = None,
     composition_profile: str | None = None,
+    intervention_mode: str = "figure_agent",
 ) -> tuple[Path, Path]:
+    if intervention_mode == "raw":
+        (workspace / "examples/context_demo/authoring_task.md").write_text(
+            "Author a neutral first-pass schematic for the declared topic.\n",
+            encoding="utf-8",
+        )
     output = (
         "examples/context_demo/review/failure-first/execution-binding-v1/"
         f"{arm}_generated.tex"
@@ -598,6 +659,7 @@ def _write_arm(
         output_path=output,
         shape_profile=shape_profile,
         composition_profile=composition_profile,
+        intervention_mode=intervention_mode,
     )
     attempt = workspace / "examples/context_demo/review/failure-first/execution-binding-v1"
     packet_path = attempt / f"{arm}_packet.json"
@@ -695,6 +757,39 @@ def test_preflight_accepts_equal_triplet_with_disjoint_outputs(tmp_path: Path) -
     assert len(
         {item["packet_sha256"] for item in result["conditions"].values()}
     ) == 3
+
+
+def test_preflight_accepts_raw_control_and_figure_agent_treatment(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    raw, _ = _write_arm(workspace, "raw", intervention_mode="raw")
+    verified, _ = _write_arm(workspace, "verified")
+
+    result = authoring_execution_preflight.preflight_authoring_ab(raw, verified)
+
+    assert result["schema"] == "figure-agent.authoring-execution-preflight.v1"
+    assert result["decision"] == "pass"
+    assert result["comparison"] == "raw_vs_figure_agent"
+    assert result["raw"]["intervention_mode"] == "raw"
+    assert result["verified"]["intervention_mode"] == "figure_agent"
+    assert result["raw"]["output_path"] != result["verified"]["output_path"]
+
+
+def test_preflight_rejects_two_figure_agent_arms_for_raw_comparison(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    raw, _ = _write_arm(workspace, "raw")
+    verified, _ = _write_arm(workspace, "verified")
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="raw intervention_mode invalid",
+    ):
+        authoring_execution_preflight.preflight_authoring_ab(raw, verified)
 
 
 def test_preflight_rejects_shape_and_composition_changing_together(
@@ -835,6 +930,38 @@ def test_authoring_preflight_triplet_cli(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload["decision"] == "pass"
     assert set(payload["conditions"]) == {"raw", "verified", "repaired"}
+
+
+def test_authoring_preflight_ab_cli(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    attempt_rel = "examples/context_demo/review/failure-first/execution-binding-v1"
+    _write_arm(workspace, "raw", intervention_mode="raw")
+    _write_arm(workspace, "verified")
+    env = os.environ.copy()
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-preflight-ab",
+            "--raw",
+            f"{attempt_rel}/raw_packet.json",
+            "--verified",
+            f"{attempt_rel}/verified_packet.json",
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["decision"] == "pass"
+    assert payload["comparison"] == "raw_vs_figure_agent"
 
 
 def test_preflight_rejects_unequal_model_contract(tmp_path: Path) -> None:

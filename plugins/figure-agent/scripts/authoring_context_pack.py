@@ -143,6 +143,7 @@ def _style_lock_tokens(style_path: Path) -> dict[str, Any]:
 
 def _paper_context(example_dir: Path) -> dict[str, str]:
     files = {
+        "authoring_task": example_dir / "authoring_task.md",
         "briefing": example_dir / "briefing.md",
         "design": example_dir / "design.md",
         "authoring_contract": example_dir / "authoring_contract.md",
