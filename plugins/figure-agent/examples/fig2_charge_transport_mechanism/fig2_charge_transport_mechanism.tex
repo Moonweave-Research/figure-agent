@@ -11,9 +11,9 @@
   every node/.style={font=\sffamily\fontsize{6.0}{7.1}\selectfont},
   panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
     text=cGray!92!black},
-  panelTitle/.style={font=\sffamily\bfseries\fontsize{6.6}{7.8}\selectfont,
+  panelTitle/.style={font=\sffamily\bfseries\fontsize{6.25}{7.45}\selectfont,
     text=cGray!82!black},
-  columnTitle/.style={font=\sffamily\bfseries\fontsize{6.8}{8.1}\selectfont,
+  columnTitle/.style={font=\sffamily\bfseries\fontsize{6.7}{8.0}\selectfont,
     text=cGray!86!black},
   labelStd/.style={font=\sffamily\fontsize{5.7}{6.8}\selectfont,
     text=cGray!84!black},
@@ -25,16 +25,14 @@
   conventionalFilm/.style={fill=cBlue!6,draw=cBlue!58!black,line width=0.75pt},
   trapBlue/.style={circle,fill=cBlue!72,draw=cBlue!60!black,line width=0.3pt,
     inner sep=0pt,minimum size=1.7mm},
-  trapRed/.style={circle,fill=cRed!78,draw=cRed!60!black,line width=0.3pt,
-    inner sep=0pt,minimum size=1.7mm},
-  trapAmber/.style={circle,fill=cAmber!88,draw=cRed!58!black,line width=0.3pt,
+  retainedCharge/.style={circle,fill=cRed!78,draw=cRed!60!black,line width=0.3pt,
     inner sep=0pt,minimum size=1.75mm},
+  sulfurTrace/.style={cAmber!76!black,line width=0.62pt,line cap=round},
   drainArrow/.style={-{Stealth[length=3.4pt,width=2.5pt]},cBlue!72!black,
     line width=0.62pt},
   storyArrow/.style={-{Stealth[length=3.4pt,width=2.4pt]},cGray!62!black,
     line width=0.52pt},
-  comparisonArrow/.style={{Stealth[length=3.1pt,width=2.2pt]}-{Stealth[length=3.1pt,width=2.2pt]},
-    cGray!58!black,line width=0.48pt},
+  storyRail/.style={cGray!57!black,line width=0.52pt,line cap=round,line join=round},
   axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
     line width=0.55pt},
   traceEarly/.style={cRed!76!black,line width=0.9pt,line cap=round},
@@ -46,94 +44,95 @@
 % carry less decorative geometry than the former full-height separators.
 \path[use as bounding box] (0.00,0.38) rectangle (16.38,5.02);
 
-% A single, open mechanism strip. Measurement feeds a parallel material
-% comparison; both material states feed the common qualitative readout.
+% A single, open mechanism strip. Measurement forks to two sibling material
+% states; both states merge into the common qualitative readout.
 \node[panelLetter,anchor=west] at (0.14,4.88) {a};
 
-% Reading-order cues stay on a shared mechanism rail; the paired arrow marks
-% a comparison, not a sequential conversion from one dielectric into another.
-\draw[storyArrow] (3.38,3.62)--(4.24,3.62);
-\draw[comparisonArrow] (7.30,3.62)--(8.18,3.62);
-\node[labelMute,anchor=south] at (7.74,3.68) {material contrast};
-\draw[storyArrow] (11.46,3.62)--(12.42,3.62);
+% The fork/merge rail owns the comparison topology. It deliberately contains no
+% direct Conventional -> Sulfur connector, so neither material reads as a
+% chronological intermediate of the other.
+\draw[storyRail] (3.08,2.62)--(3.74,2.62);
+\draw[storyRail] (3.74,1.87)--(3.74,3.36);
+\draw[storyArrow] (3.74,3.36)--(5.04,3.36);
+\draw[storyArrow] (3.74,1.87)--(5.04,1.87);
+\draw[storyRail] (11.36,1.87)--(12.08,1.87);
+\draw[storyRail] (11.36,3.36)--(12.08,3.36);
+\draw[storyRail] (12.08,1.87)--(12.08,3.36);
+\draw[storyArrow] (12.08,2.62)--(12.72,2.62);
 
 % --------------------------------------------------------------------------
 % Measurement
 % --------------------------------------------------------------------------
-\node[columnTitle,anchor=north] at (2.02,4.72) {Measurement};
-\node[labelMute,anchor=north] at (2.02,4.30) {MIM stack};
+\node[panelTitle,anchor=north] at (1.90,4.72) {Measurement};
+\node[labelMute,anchor=north] at (1.90,4.29) {MIM stack};
 
-% A compact vertical MIM stack: the film is the amber middle layer, not a
-% second electrode or a free-standing sample.
-\fill[electrode] (0.78,2.98) rectangle (3.22,3.28);
-\fill[film] (0.78,2.10) rectangle (3.22,2.98);
-\fill[electrode] (0.78,1.80) rectangle (3.22,2.10);
-\node[labelStd,text=cRed!70!black,anchor=west] at (0.18,1.46)
+% The field and humidity are visibly owned by this stack, rather than floating
+% in a free label lane that could be mistaken for an actuation condition.
+\fill[electrode] (0.74,3.03) rectangle (3.08,3.31);
+\fill[film] (0.74,2.08) rectangle (3.08,3.03);
+\fill[electrode] (0.74,1.80) rectangle (3.08,2.08);
+\draw[axisArrow,cRed!70!black] (2.73,2.22)--(2.73,2.88);
+\node[labelStd,text=cRed!70!black,anchor=south] at (1.32,3.47)
   {$E=15\,\mathrm{MV\,m^{-1}}$};
-\node[labelMute,anchor=north] at (2.02,0.80) {25\,\%RH chamber};
+\node[labelMute,anchor=north] at (1.90,1.47) {25\,\%RH chamber};
 
 % --------------------------------------------------------------------------
-% Conventional dielectric
+% Parallel material comparison
 % --------------------------------------------------------------------------
-\node[columnTitle,anchor=north] at (5.72,4.72) {Conventional dielectric};
-\node[labelMute,anchor=north] at (5.72,4.30) {finite shallow sites};
+\node[panelTitle,anchor=north] at (8.18,4.72) {Material comparison};
+\node[columnTitle,anchor=south west] at (5.05,3.84) {Conventional dielectric};
+\node[labelMute,anchor=south west] at (7.85,3.84) {finite shallow sites};
 
-\fill[conventionalFilm] (4.40,2.12) rectangle (7.04,3.40);
-\draw[wire] (4.40,2.12)--(7.04,2.12);
-\draw[wire] (4.40,3.40)--(7.04,3.40);
-\node[trapBlue] at (5.05,2.78) {};
-\node[trapBlue] at (5.72,2.43) {};
-\node[trapBlue] at (6.40,2.95) {};
-\draw[drainArrow] (5.05,2.69)--(5.05,1.68);
-\draw[drainArrow] (5.72,2.34)--(5.72,1.55);
-\draw[drainArrow] (6.40,3.04)--(6.40,1.68);
-\node[labelStd,text=cBlue!66!black,anchor=north] at (5.72,1.18)
+\fill[conventionalFilm] (5.05,3.00) rectangle (11.36,3.72);
+\draw[wire] (5.05,3.00)--(11.36,3.00);
+\draw[wire] (5.05,3.72)--(11.36,3.72);
+\node[trapBlue] at (6.28,3.42) {};
+\node[trapBlue] at (7.76,3.25) {};
+\node[trapBlue] at (9.36,3.48) {};
+\draw[drainArrow] (6.28,3.33)--(6.28,2.56);
+\draw[drainArrow] (7.76,3.16)--(7.76,2.56);
+\draw[drainArrow] (9.36,3.39)--(9.36,2.56);
+\node[labelStd,text=cBlue!66!black,anchor=north] at (10.72,2.78)
   {charge drains};
 
-% --------------------------------------------------------------------------
-% Sulfur-rich copolymer
-% --------------------------------------------------------------------------
-\node[columnTitle,anchor=north] at (9.78,4.72) {Sulfur-rich copolymer};
-\node[labelMute,anchor=north] at (9.78,4.30) {distributed trap population};
+\node[columnTitle,anchor=south west] at (3.92,1.04) {Sulfur-rich};
 
-\fill[film] (8.38,2.12) rectangle (11.18,3.40);
-\draw[wire] (8.38,2.12)--(11.18,2.12);
-\draw[wire] (8.38,3.40)--(11.18,3.40);
-% Non-periodic host traces make the breadth visible without recreating Fig1's
-% energy diagram or implying a calibrated density distribution.
-\draw[cGray!48!black,line width=0.48pt,line cap=round]
-  (8.58,2.88) .. controls (8.88,2.56) and (9.12,3.10) .. (9.48,2.62);
-\draw[cAmber!62!black,line width=0.55pt,line cap=round]
-  (9.46,2.34) .. controls (9.82,2.14) and (10.10,2.84) .. (10.44,2.58);
-\draw[cGray!48!black,line width=0.48pt,line cap=round]
-  (10.30,3.08) .. controls (10.62,2.76) and (10.80,3.20) .. (11.02,2.68);
-\node[trapAmber] at (8.88,2.76) {};
-\node[trapRed] at (9.36,2.56) {};
-\node[trapAmber] at (9.88,2.44) {};
-\node[trapRed] at (10.20,2.86) {};
-\node[trapAmber] at (10.60,2.98) {};
-\node[trapRed] at (10.96,2.72) {};
-% The occupied sites remain inside the film and have no outward drain arrows;
-% that restrained contrast carries retention without a decorative halo.
-\node[labelStd,text=cRed!68!black,anchor=north] at (9.78,1.18)
+\fill[film] (5.05,1.48) rectangle (11.36,2.22);
+\draw[wire] (5.05,1.48)--(11.36,1.48);
+\draw[wire] (5.05,2.22)--(11.36,2.22);
+% Amber is host structure only. Red signed marks are a different retained
+% charge cue, attached to that structure rather than posing as a second trap
+% population.
+\draw[sulfurTrace] (5.55,1.91)--(5.82,1.72)--(6.17,1.93);
+\draw[sulfurTrace] (7.12,1.72)--(7.35,1.96)--(7.73,1.88);
+\draw[sulfurTrace] (8.92,1.93)--(9.17,1.70)--(9.54,1.86);
+\draw[sulfurTrace] (10.25,1.74)--(10.56,1.98)--(11.00,1.80);
+\node[retainedCharge] (q1) at (6.15,1.82) {};
+\node[retainedCharge] (q2) at (7.72,1.88) {};
+\node[retainedCharge] (q3) at (9.46,1.83) {};
+\node[retainedCharge] (q4) at (10.76,1.88) {};
+\foreach \q in {q1,q2,q3,q4}{
+  \draw[white,line width=0.34pt] ($ (\q.center)+(-0.34mm,0) $)--($ (\q.center)+(0.34mm,0) $);
+  \draw[white,line width=0.34pt] ($ (\q.center)+(0,-0.34mm) $)--($ (\q.center)+(0,0.34mm) $);
+}
+\node[labelStd,text=cRed!68!black,anchor=north] at (8.18,1.14)
   {charge retained};
 
 % --------------------------------------------------------------------------
 % What we read
 % --------------------------------------------------------------------------
-\node[columnTitle,anchor=north] at (14.34,4.72) {What we read};
-\node[labelMute,anchor=north] at (14.34,4.30) {one decay, two windows};
+\node[panelTitle,anchor=north] at (14.40,4.72) {What we read};
 
-\draw[axisArrow] (12.92,1.95)--(12.92,3.64);
-\draw[axisArrow] (12.92,1.95)--(15.85,1.95);
-\node[labelMute,anchor=east,rotate=90] at (12.40,2.80) {$I(t)$};
-\node[labelMute,anchor=north] at (14.38,1.77) {time};
-\draw[traceEarly] (13.16,3.38)--(14.05,2.88);
-\draw[traceLate] (14.05,2.88)--(15.60,2.46);
+\draw[axisArrow] (12.92,1.82)--(12.92,3.64);
+\draw[axisArrow] (12.92,1.82)--(15.85,1.82);
+\node[labelMute,anchor=south west] at (12.92,3.72) {$I(t)$};
+\node[labelMute,anchor=north] at (14.38,1.64) {time};
+\draw[traceEarly] (13.16,3.38)--(14.14,2.88);
+\draw[traceLate] (14.14,2.88)--(15.60,2.46);
 \draw[cGray!44!black,line width=0.42pt,dash pattern=on 1.2pt off 1.2pt]
-  (14.05,1.98)--(14.05,3.56);
+  (14.14,1.85)--(14.14,3.56);
 \node[labelStd,anchor=south west] at (13.22,3.39) {2--30\,s};
-\node[labelStd,anchor=north west] at (14.18,2.33) {30--300\,s};
+\node[labelStd,anchor=north west] at (14.27,2.33) {30--300\,s};
 
 \end{tikzpicture}%
 }

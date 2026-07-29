@@ -7,6 +7,7 @@ title: "Fig. 2a — Charge-transport mechanism schematic"
 style_profile: polymer-paper
 undeclared_geometry_profile: schematic
 visual_clash_cap: 8
+review_scale_previews: required
 
 final_size_contract:
   basis: width_limited_nature_family_main_figure
@@ -22,23 +23,23 @@ final_size_contract:
 
 semantic_contract_required: true
 
-# These anchors protect the intended left-to-right reading order without
-# turning the schematic into a coordinate recipe for future authoring.
+# These anchors check reader-role hierarchy without forcing a particular fork,
+# merge, brace, or other comparison primitive.
 semantic_assertions:
-  - id: measurement-precedes-conventional
+  - id: measurement-precedes-comparison
     relation: left_of
     subject: Measurement
-    reference: Conventional
+    reference: Material
     tolerance_pt: 12.0
-  - id: conventional-precedes-sulfur
+  - id: comparison-precedes-readout
     relation: left_of
+    subject: Material
+    reference: What
+    tolerance_pt: 12.0
+  - id: conventional-above-sulfur
+    relation: above
     subject: Conventional
     reference: Sulfur-rich
-    tolerance_pt: 12.0
-  - id: sulfur-precedes-readout
-    relation: left_of
-    subject: Sulfur-rich
-    reference: What
     tolerance_pt: 12.0
 
 panels:
@@ -53,13 +54,13 @@ text_boundary_checks:
     mode: contain_text
     bbox_pdf_cm: [0.00, 0.00, 16.38, 1.20]
     clearance_pt: 0.0
-    text_allowlist: [Measurement, Conventional, Sulfur-rich, What]
+    text_allowlist: [Measurement, Material, What]
 
 label_path_proximity_checks:
   - id: readout-window-divider
     kind: vertical_line
     role: fit-window-divider
-    x_pdf_cm: 14.05
+    x_pdf_cm: 14.14
     y_range_pdf_cm: [1.95, 3.64]
     clearance_pt: 2.5
     text_phrases:

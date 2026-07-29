@@ -28,7 +28,9 @@ forbidden_implications:
 
 protected_relations:
   - mim_stack_contains_polymer_film_between_electrodes
-  - measurement_context_precedes_material_comparison
+  - measurement_context_forks_to_parallel_material_comparison
+  - conventional_and_sulfur_are_sibling_comparison_states
+  - parallel_material_comparison_merges_to_common_readout
   - conventional_finite_traps_have_outward_drain_cues
   - sulfur_broad_population_contains_retained_charge_cue
   - transient_readout_uses_one_trace_with_two_time_windows
@@ -79,19 +81,24 @@ semantic_legibility:
       declared_role: late_fit_window
       forbidden_readings: [exact_fit_result]
   visible_connectors:
-    - connector_id: panel_a.measurement_to_comparison
+    - connector_id: panel_a.measurement_to_conventional
       from_object: panel_a.measurement_context
       to_object: panel_a.conventional_dielectric
       declared_role: story_stage_transition
       render_style: stage_transition
       epistemic_status: derived
-    - connector_id: panel_a.comparison_to_sulfur
-      from_object: panel_a.conventional_dielectric
+    - connector_id: panel_a.measurement_to_sulfur
+      from_object: panel_a.measurement_context
       to_object: panel_a.sulfur_copolymer
-      declared_role: conceptual_material_comparison
-      render_style: comparison_transition
-      epistemic_status: conditional
-      condition: The contrast is a schematic working model that motivates the measured transport comparison.
+      declared_role: story_stage_transition
+      render_style: stage_transition
+      epistemic_status: derived
+    - connector_id: panel_a.conventional_to_readout
+      from_object: panel_a.conventional_dielectric
+      to_object: panel_a.transient_readout
+      declared_role: readout_transition
+      render_style: stage_transition
+      epistemic_status: derived
     - connector_id: panel_a.sulfur_to_readout
       from_object: panel_a.sulfur_copolymer
       to_object: panel_a.transient_readout
@@ -108,6 +115,18 @@ semantic_legibility:
       to_object: panel_a.late_window
       declared_role: fit_window_ownership
       render_style: response_trace
+  parallel_comparisons:
+    - comparison_id: panel_a.material_states
+      members: [panel_a.conventional_dielectric, panel_a.sulfur_copolymer]
+      shared_input: panel_a.measurement_context
+      shared_output: panel_a.transient_readout
+      comparison_basis: schematic_state
+      input_connector_ids:
+        - panel_a.measurement_to_conventional
+        - panel_a.measurement_to_sulfur
+      output_connector_ids:
+        - panel_a.conventional_to_readout
+        - panel_a.sulfur_to_readout
   forbidden_connectors:
     - from_object: panel_a.measurement_context
       to_object: panel_a.sulfur_copolymer

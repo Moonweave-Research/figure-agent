@@ -93,6 +93,7 @@ def test_accepts_declared_object_connector_and_label_roles() -> None:
         "forbidden_connector_count": 1,
         "label_ownership_count": 1,
         "panel_story_role_count": 0,
+        "parallel_comparison_count": 0,
         "electrical_node_count": 2,
         "electrical_connection_count": 0,
         "floating_object_count": 1,
@@ -126,6 +127,105 @@ def test_accepts_distinct_panel_reader_tasks_in_declared_order() -> None:
     result = validate_semantic_legibility_contract(contract)
 
     assert result["summary"]["panel_story_role_count"] == 2
+
+
+def _parallel_comparison_contract() -> dict:
+    contract = valid_contract()
+    required = [
+        "panel_a.measurement",
+        "panel_a.conventional",
+        "panel_a.sulfur",
+        "panel_a.readout",
+    ]
+    contract["required_objects"] = required
+    contract["semantic_legibility"]["object_roles"] = [
+        {"object_id": object_id, "declared_role": "scientific_symbol", "forbidden_readings": []}
+        for object_id in required
+    ]
+    contract["semantic_legibility"]["visible_connectors"] = [
+        {
+            "connector_id": "measurement_to_conventional",
+            "from_object": "panel_a.measurement",
+            "to_object": "panel_a.conventional",
+            "declared_role": "story_stage_transition",
+            "render_style": "stage_transition",
+        },
+        {
+            "connector_id": "measurement_to_sulfur",
+            "from_object": "panel_a.measurement",
+            "to_object": "panel_a.sulfur",
+            "declared_role": "story_stage_transition",
+            "render_style": "stage_transition",
+        },
+        {
+            "connector_id": "conventional_to_readout",
+            "from_object": "panel_a.conventional",
+            "to_object": "panel_a.readout",
+            "declared_role": "readout_transition",
+            "render_style": "stage_transition",
+        },
+        {
+            "connector_id": "sulfur_to_readout",
+            "from_object": "panel_a.sulfur",
+            "to_object": "panel_a.readout",
+            "declared_role": "readout_transition",
+            "render_style": "stage_transition",
+        },
+    ]
+    contract["semantic_legibility"]["forbidden_connectors"] = []
+    contract["semantic_legibility"]["label_ownership"] = []
+    contract["semantic_legibility"]["parallel_comparisons"] = [
+        {
+            "comparison_id": "materials",
+            "members": ["panel_a.conventional", "panel_a.sulfur"],
+            "shared_input": "panel_a.measurement",
+            "shared_output": "panel_a.readout",
+            "comparison_basis": "schematic_state",
+            "input_connector_ids": ["measurement_to_conventional", "measurement_to_sulfur"],
+            "output_connector_ids": ["conventional_to_readout", "sulfur_to_readout"],
+        }
+    ]
+    contract["semantic_legibility"].pop("electrical_topology")
+    return contract
+
+
+def test_accepts_parallel_comparison_with_shared_fork_and_merge() -> None:
+    result = validate_semantic_legibility_contract(_parallel_comparison_contract())
+
+    assert result["summary"]["parallel_comparison_count"] == 1
+
+
+def test_rejects_parallel_comparison_that_connects_member_states_directly() -> None:
+    contract = _parallel_comparison_contract()
+    contract["semantic_legibility"]["visible_connectors"].append(
+        {
+            "connector_id": "conventional_to_sulfur",
+            "from_object": "panel_a.conventional",
+            "to_object": "panel_a.sulfur",
+            "declared_role": "conceptual_material_comparison",
+            "render_style": "comparison_transition",
+        }
+    )
+
+    with pytest.raises(
+        SemanticLegibilityContractError,
+        match="parallel_comparison_member_connector_forbidden",
+    ):
+        validate_semantic_legibility_contract(contract)
+
+
+def test_rejects_parallel_comparison_without_both_shared_input_branches() -> None:
+    contract = _parallel_comparison_contract()
+    contract["semantic_legibility"]["parallel_comparisons"][0]["input_connector_ids"] = [
+        "measurement_to_conventional",
+        "conventional_to_readout",
+    ]
+
+    with pytest.raises(
+        SemanticLegibilityContractError,
+        match="parallel_comparison_connector_topology_invalid",
+    ):
+        validate_semantic_legibility_contract(contract)
 
 
 def test_rejects_redundant_panel_story_roles() -> None:

@@ -284,6 +284,102 @@ def _panel_story(section: dict[str, Any]) -> list[dict[str, Any]]:
     return [declared[panel_id] for panel_id in order]
 
 
+def _parallel_comparisons(
+    section: dict[str, Any],
+    required: set[str],
+    visible_connectors: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Validate an opt-in sibling comparison without prescribing its drawing.
+
+    The declaration records a graph: one shared input forks to two material
+    states, and those states merge into one shared readout.  It intentionally
+    does not choose a fork, brace, rail, coordinate system, or TikZ primitive.
+    """
+    values = section.get("parallel_comparisons")
+    if values is None:
+        return []
+    if not isinstance(values, list) or not values:
+        raise SemanticLegibilityContractError("parallel_comparisons_invalid")
+    connectors = {
+        item["connector_id"]: item
+        for item in visible_connectors
+        if isinstance(item.get("connector_id"), str)
+    }
+    seen: set[str] = set()
+    for item in values:
+        if not isinstance(item, dict):
+            raise SemanticLegibilityContractError("parallel_comparison_invalid")
+        comparison_id = item.get("comparison_id")
+        members = item.get("members")
+        shared_input = item.get("shared_input")
+        shared_output = item.get("shared_output")
+        basis = item.get("comparison_basis")
+        if (
+            not _nonempty_string(comparison_id)
+            or comparison_id in seen
+            or not isinstance(members, list)
+            or len(members) != 2
+            or not all(_nonempty_string(member) and member in required for member in members)
+            or len(set(members)) != 2
+            or not _nonempty_string(shared_input)
+            or shared_input not in required
+            or not _nonempty_string(shared_output)
+            or shared_output not in required
+            or shared_input == shared_output
+            or shared_input in members
+            or shared_output in members
+            or basis not in COMPARISON_BASES
+        ):
+            raise SemanticLegibilityContractError("parallel_comparison_invalid")
+        if basis == "observed_evidence" and not _nonempty_string(item.get("evidence_source")):
+            raise SemanticLegibilityContractError(
+                "parallel_comparison_evidence_source_missing"
+            )
+        member_set = set(members)
+        if any(
+            {connector["from_object"], connector["to_object"]} == member_set
+            for connector in visible_connectors
+        ):
+            raise SemanticLegibilityContractError(
+                "parallel_comparison_member_connector_forbidden"
+            )
+
+        for key, expected_from, expected_to in (
+            ("input_connector_ids", shared_input, member_set),
+            ("output_connector_ids", member_set, shared_output),
+        ):
+            connector_ids = item.get(key)
+            if (
+                not isinstance(connector_ids, list)
+                or len(connector_ids) != 2
+                or not all(_nonempty_string(connector_id) for connector_id in connector_ids)
+                or len(set(connector_ids)) != 2
+                or any(connector_id not in connectors for connector_id in connector_ids)
+            ):
+                raise SemanticLegibilityContractError(
+                    "parallel_comparison_connector_set_invalid"
+                )
+            selected = [connectors[connector_id] for connector_id in connector_ids]
+            if isinstance(expected_from, str):
+                valid = {
+                    connector["to_object"]
+                    for connector in selected
+                    if connector["from_object"] == expected_from
+                } == expected_to
+            else:
+                valid = {
+                    connector["from_object"]
+                    for connector in selected
+                    if connector["to_object"] == expected_to
+                } == expected_from
+            if not valid:
+                raise SemanticLegibilityContractError(
+                    "parallel_comparison_connector_topology_invalid"
+                )
+        seen.add(comparison_id)
+    return values
+
+
 def _causal_sequence(story: dict[str, Any], order: list[str]) -> None:
     """Validate an optional causal stage contract without fixing a layout.
 
@@ -443,6 +539,7 @@ def validate_semantic_legibility_contract(
     forbidden_connectors = _forbidden_connectors(section, required)
     label_ownership = _label_ownership(section, required)
     panel_story = _panel_story(section)
+    parallel_comparisons = _parallel_comparisons(section, required, visible_connectors)
     electrical_nodes, electrical_connections = _electrical_topology(
         section, required, visible_connectors
     )
@@ -455,6 +552,7 @@ def validate_semantic_legibility_contract(
             "forbidden_connector_count": len(forbidden_connectors),
             "label_ownership_count": len(label_ownership),
             "panel_story_role_count": len(panel_story),
+            "parallel_comparison_count": len(parallel_comparisons),
             "electrical_node_count": len(electrical_nodes),
             "electrical_connection_count": len(electrical_connections),
             "floating_object_count": sum(

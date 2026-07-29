@@ -3,19 +3,19 @@
 ## Composition
 
 Use a 163.8 × 46.4 mm wide strip matching the current Fig. 2a slot. Keep one
-open white row with four semantic zones, but let the two material zones read as
-a parallel comparison rather than four equal UI cards:
+open white row with three reader roles: measurement context, a paired material
+comparison, and one common readout. The two material states are siblings, not
+two serial UI cards:
 
 1. Measurement context and MIM stack.
 2. Conventional dielectric: finite sites and drain cues.
 3. Sulfur-rich copolymer: distributed sites and retained-charge cue.
 4. Readout icon with the early and late time windows.
 
-The header lane carries the panel letter and compact zone labels. A single
-mechanism rail connects measurement to the comparison and the comparison to
-the readout; a short double-headed mark between the material zones denotes
-contrast, not sequential processing. The object lane carries the physical
-marks. The bottom lane carries only short explanatory labels.
+The header lane carries the panel letter and compact role labels. A shared rail
+must fork from measurement to both material states, then merge from both states
+into the readout. The object lane carries the physical marks. The bottom lane
+carries only short explanatory labels.
 
 ## Visual decisions
 
@@ -23,11 +23,12 @@ marks. The bottom lane carries only short explanatory labels.
   conventional population, and cRed only for charge/field emphasis.
 - Keep line weights above the reduction threshold and avoid gradients, 3-D
   substrate blocks, or decorative halos.
-- Make the comparison visible with object geometry: outward arrows for drain,
-  distributed occupied sites inside the sulfur film and no outward drain cues.
-- Do not use a large circular halo, repeated bead loop, or decorative polymer
-  wave; those cues make a localized population read as ornament or a second
-  material phase.
+- Make the comparison visible with object geometry: outward drain cues for the
+  conventional state; sulfur-host traces with distinct red retained-charge cues
+  and no outward drain cues for the sulfur-rich state.
+- Do not use a large circular halo, repeated amber/red bead population, or a
+  decorative polymer wave; those cues make a localized population read as
+  ornament or a second material phase.
 - Keep the readout trace qualitative and number-free except for the two declared
   window labels.
 - Do not use full-height column rules or equal framed cards; whitespace and the
