@@ -18,6 +18,10 @@ import shape_profile as shape_profile_compiler
 import yaml
 from checks import check_label_path_proximity
 from inputs import parse_spec
+from quality.semantic_legibility_contract import (
+    SemanticLegibilityContractError,
+    validate_semantic_legibility_contract,
+)
 from semantic_contracts import SemanticContractError, collect_semantic_contracts
 
 SCHEMA = "figure-agent.authoring-context-pack.v1"
@@ -27,11 +31,84 @@ REUSABLE_VISUAL_ASSET_STATUSES = {
     "reviewed_reusable",
 }
 LAYOUT_LANES_SCHEMA = "figure-agent.layout-lanes.v1"
+FAILURE_FIRST_SEMANTIC_SCHEMA = "figure-agent.failure-first-semantic-contract.v1"
 SAFE_CATALOG_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
 class AuthoringContextPackError(ValueError):
     """Raised when an authoring context pack cannot be compiled."""
+
+
+def _standalone_semantic_contract(example_dir: Path) -> dict[str, Any] | None:
+    """Adapt a fixture-local failure-first contract into the context schema."""
+    path = example_dir / "semantic_contract.yaml"
+    if path.is_symlink() or not path.is_file():
+        if not path.exists() and not path.is_symlink():
+            return None
+        raise AuthoringContextPackError("standalone semantic contract must be regular")
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or payload.get("schema") != FAILURE_FIRST_SEMANTIC_SCHEMA:
+        raise AuthoringContextPackError("standalone semantic contract schema invalid")
+    try:
+        validate_semantic_legibility_contract(payload)
+    except SemanticLegibilityContractError as exc:
+        raise AuthoringContextPackError(
+            f"standalone semantic contract invalid: {exc}"
+        ) from exc
+
+    def string_list(key: str) -> list[str]:
+        values = payload.get(key, [])
+        if (
+            not isinstance(values, list)
+            or any(not isinstance(value, str) or not value.strip() for value in values)
+            or len(values) != len(set(values))
+        ):
+            raise AuthoringContextPackError(
+                f"standalone semantic contract {key} invalid"
+            )
+        return values
+
+    selector = payload.get("selector_id")
+    if not isinstance(selector, str) or not selector.strip():
+        raise AuthoringContextPackError("standalone semantic contract selector invalid")
+    selector_root = selector.split(".", 1)[0]
+    panel_id = (
+        selector_root.removeprefix("panel_").upper()
+        if selector_root.startswith("panel_")
+        else selector_root
+    )
+    required_objects = string_list("required_objects")
+    protected_relations = string_list("protected_relations")
+    forbidden_implications = string_list("forbidden_implications")
+    return {
+        "schema": "figure-agent.semantic-contracts.v1",
+        "enabled": True,
+        "source": "standalone_failure_first_contract",
+        "semantic_claims": [
+            {
+                "panel_id": panel_id,
+                "id": f"required-object:{object_id}",
+                "claim": f"The figure includes required object [{object_id}].",
+            }
+            for object_id in required_objects
+        ],
+        "locked_invariants": [
+            {
+                "panel_id": panel_id,
+                "id": f"protected-relation:{relation}",
+                "invariant": f"Protected relation holds: [{relation}].",
+            }
+            for relation in protected_relations
+        ]
+        + [
+            {
+                "panel_id": panel_id,
+                "id": f"forbidden-implication:{implication}",
+                "invariant": f"Forbidden implication is absent: [{implication}].",
+            }
+            for implication in forbidden_implications
+        ],
+    }
 
 
 def _read_optional_text(path: Path, *, limit: int = 12000) -> str:
@@ -637,6 +714,10 @@ def build_context_pack(
         semantic_contracts = collect_semantic_contracts(spec)
     except SemanticContractError as exc:
         raise AuthoringContextPackError(str(exc)) from exc
+    if not semantic_contracts["enabled"]:
+        semantic_contracts = (
+            _standalone_semantic_contract(example_dir) or semantic_contracts
+        )
 
     catalog_path = _selected_rule_catalog_path(spec, paths)
     fixture_catalog = (
