@@ -16,8 +16,8 @@ cantilever. The sequence is:
 1. a two-terminal high-voltage drive bends the cantilever by the initial
    attractive interaction;
 2. the source is switched off and the specimen lead is manually isolated so
-   the specimen is electrically floating while the support reference remains
-   the stated boundary condition;
+   the mounted specimen is electrically floating; the OFF/float state does not
+   retain a ground symbol or invent a fixed-support electrical reference;
 3. the retained charge produces an immediately reversed charge-mediated
    force, so the trace passes through the neutral angle into a reverse bend;
 4. the reverse bend relaxes slowly toward the polarity-independent Maxwell
