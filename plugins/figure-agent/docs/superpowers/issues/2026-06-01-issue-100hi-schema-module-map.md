@@ -198,6 +198,7 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.fixture-compare.v1` | read-only multi-fixture comparison | `fixture_compare.py` | operators | `mutation_boundary: read_only_no_source_or_state_mutation`; recommendation buckets are advisory next-action hints, not enforced elsewhere |
 | `figure-agent.fixture-fork.v1` | fixture duplication receipt | `fixture_fork.py` | operators | Receipt sets `acceptance_state: NOT_DECLARED`; copy explicitly excludes state files (`critique.md`, `golden_acceptance.json`); no downstream reader |
 | `figure-agent.fixture-visual-quality-metrics.v1` | advisory visual-quality metrics | `visual_quality_metrics.py` | `fixture_compare.py` | Payload declares `policy: advisory_only` and `mutation_boundary: writes_build_metrics_only_no_gate_state`; read for display only, no gating |
+| `figure-agent.review-scale-preview-manifest.v1` | hash-bound 100/50/33% review previews | `review_scale_previews.py` | `status.py`, review operators | Derived previews must match one render hash; stale or incomplete preview sets downgrade render evidence and never imply publication acceptance |
 
 ## Module Ownership Map
 

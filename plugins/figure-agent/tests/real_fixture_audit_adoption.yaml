@@ -122,6 +122,22 @@ fixtures:
       adds semantic-region provenance, but it does not declare deterministic
       text-boundary or label-path geometry.
 
+  - fixture: fig2_charge_transport_mechanism
+    reference_image: false
+    text_boundary_check_ids:
+      - mechanism-strip-top-band
+    label_path_check_ids:
+      - readout-window-divider
+    aesthetic_intent: true
+    critique_reference_pack: false
+    paper_aesthetic_context: nc-main-text-series
+    journal_art_direction_playbook:
+    adoption_status: adopted_high_risk
+    rationale: >
+      Fig2 declares a bounded mechanism strip and an explicit readout-window
+      divider; the fixture remains schematic and its data panels stay bound to
+      the declared charge-transport pipeline.
+
   - fixture: fig3_trap_schematic_slice4_illustration_grammar
     reference_image: true
     text_boundary_check_ids: []
@@ -333,6 +349,7 @@ fixtures:
       - manual-sequence-arrow
       - panel-c-coulomb-arrow
       - trace-switch-line
+      - panel-d-bend-angle-axis
     aesthetic_intent: false
     critique_reference_pack: false
     paper_aesthetic_context:
