@@ -37,6 +37,7 @@ _HUMAN_BLOCKER_CODES = {
     "critique_reference_missing",
     "export_tracked_golden",
     "not_accepted",
+    "acceptance_not_declared",
     "publication_gate_required",
     "final_artifact_blocked",
     "release_acceptance_decision_recorded",
@@ -479,15 +480,25 @@ def status_next_action_summary(status: Mapping[str, Any]) -> dict[str, Any]:
         manual = first_blocker.get("manual") is True
         evidence_refs = [f"status.first_blocker:{code}"]
     action = _action_from_command(safe_command) or _action_from_status(status)
+    release_blockers = _release_blockers(status)
+    # A fresh exploratory candidate has no plugin action left, but its
+    # undeclared acceptance is still a human release gate.  Do not collapse
+    # that state into ``complete``: callers use this summary to decide whether
+    # another verify-only loop is safe to run.
+    if blocking_source in {"acceptance_not_declared", "not_accepted"} and release_blockers:
+        action = ACTION_HUMAN_GATE_STOP
     return _summary(
         fixture=fixture,
         action=action,
         reason=reason,
         blocking_source=blocking_source,
         safe_command=safe_command,
-        requires_human=manual and blocking_source in _HUMAN_BLOCKER_CODES,
+        requires_human=(
+            action in _HUMAN_ACTIONS
+            or (manual and blocking_source in _HUMAN_BLOCKER_CODES)
+        ),
         evidence_refs=evidence_refs,
-        release_blockers=_release_blockers(status),
+        release_blockers=release_blockers,
     )
 
 

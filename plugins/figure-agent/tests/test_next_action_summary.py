@@ -116,6 +116,43 @@ def test_status_summary_marks_reference_missing_as_human_decision_not_host_visio
     assert summary["decision_boundary"]["authority"] == "human"
 
 
+def test_status_summary_exposes_undeclared_acceptance_as_human_gate() -> None:
+    summary = status_next_action_summary(
+        {
+            "name": "demo",
+            "next": "fixture has no accepted or final-ready declaration",
+            "render_state": "FRESH",
+            "critique_state": "FRESH",
+            "export_state": "FRESH",
+            "workflow_ready": True,
+            "final_ready": False,
+            "status_explanation": {
+                "first_blocker": {
+                    "code": "acceptance_not_declared",
+                    "message": "explicit human acceptance is required before release",
+                    "manual": True,
+                },
+                "buckets": {
+                    "human_blockers": [
+                        {
+                            "code": "acceptance_not_declared",
+                            "message": "explicit human acceptance is required before release",
+                            "manual": True,
+                        }
+                    ]
+                },
+            },
+        }
+    )
+
+    _assert_summary_shape(summary)
+    assert summary["action"] == "human_gate_stop"
+    assert summary["requires_human"] is True
+    assert summary["decision_boundary"]["kind"] == "human_decision"
+    assert summary["decision_boundary"]["authority"] == "human"
+    assert summary["release_blocker"]["requires_human"] is True
+
+
 def test_driver_summary_marks_reference_missing_as_workflow_blocker_not_host_vision() -> None:
     summary = driver_next_action_summary(
         {
