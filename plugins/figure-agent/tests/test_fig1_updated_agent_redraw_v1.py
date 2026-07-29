@@ -490,7 +490,7 @@ def test_repaired_s8_atom_labels_survive_reduction() -> None:
     panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
 
     assert r"\foreach \i in {1,...,8}" in panel_a
-    assert r"\fontsize{4.3}{5.0}\selectfont" in panel_a
+    assert r"\fontsize{4.6}{5.4}\selectfont" in panel_a
     assert "fill=white, inner sep=0.35pt" in panel_a
     assert "circle, draw=cAmber" not in panel_a
     assert r"\fontsize{3.1}{3.8}\selectfont" not in panel_a
