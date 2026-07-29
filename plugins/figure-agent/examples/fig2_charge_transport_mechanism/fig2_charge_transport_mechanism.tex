@@ -74,7 +74,7 @@
 \draw[axisArrow,cRed!70!black] (2.73,2.22)--(2.73,2.88);
 \node[labelStd,text=cRed!70!black,anchor=south] at (1.32,3.47)
   {$E=15\,\mathrm{MV\,m^{-1}}$};
-\node[labelMute,anchor=north] at (1.90,1.47) {25\,\%RH chamber};
+\node[labelMute,anchor=north] at (1.90,1.47) {25\,\% RH chamber};
 
 % --------------------------------------------------------------------------
 % Parallel material comparison
@@ -89,34 +89,33 @@
 \node[trapBlue] at (6.28,3.42) {};
 \node[trapBlue] at (7.76,3.25) {};
 \node[trapBlue] at (9.36,3.48) {};
-\draw[drainArrow] (6.28,3.33)--(6.28,2.56);
-\draw[drainArrow] (7.76,3.16)--(7.76,2.56);
-\draw[drainArrow] (9.36,3.39)--(9.36,2.56);
-\node[labelStd,text=cBlue!66!black,anchor=north] at (10.72,2.78)
-  {charge drains};
+% Each blue cue drains through the film boundary.  The arrowheads deliberately
+% leave the film instead of ending in an unowned interior lane.
+\draw[drainArrow] (6.28,3.33)--(6.28,2.88);
+\draw[drainArrow] (7.76,3.16)--(7.76,2.88);
+\draw[drainArrow] (9.36,3.39)--(9.36,2.88);
 
-\node[columnTitle,anchor=south west] at (3.92,1.04) {Sulfur-rich};
+% Keep the two compared materials on one shared label lane.  The retained
+% charge qualifier owns the lower state without demoting it to a footnote.
+\node[columnTitle,anchor=south west] at (5.05,2.38) {Sulfur-rich copolymer};
+\node[labelMute,anchor=south west] at (8.22,2.38) {retained charge};
 
 \fill[film] (5.05,1.48) rectangle (11.36,2.22);
 \draw[wire] (5.05,1.48)--(11.36,1.48);
 \draw[wire] (5.05,2.22)--(11.36,2.22);
-% Amber is host structure only. Red signed marks are a different retained
-% charge cue, attached to that structure rather than posing as a second trap
-% population.
-\draw[sulfurTrace] (5.55,1.91)--(5.82,1.72)--(6.17,1.93);
-\draw[sulfurTrace] (7.12,1.72)--(7.35,1.96)--(7.73,1.88);
-\draw[sulfurTrace] (8.92,1.93)--(9.17,1.70)--(9.54,1.86);
-\draw[sulfurTrace] (10.25,1.74)--(10.56,1.98)--(11.00,1.80);
-\node[retainedCharge] (q1) at (6.15,1.82) {};
-\node[retainedCharge] (q2) at (7.72,1.88) {};
-\node[retainedCharge] (q3) at (9.46,1.83) {};
-\node[retainedCharge] (q4) at (10.76,1.88) {};
-\foreach \q in {q1,q2,q3,q4}{
+% Amber is one sparse, irregular host field rather than repeated short icons.
+% Red signed marks sit directly on that host as retained-charge cues.
+\draw[sulfurTrace] (5.45,1.94)--(5.77,1.70)--(6.10,1.92)--(6.48,1.74)--(6.88,1.96);
+\draw[sulfurTrace] (7.16,1.75)--(7.50,2.01)--(7.86,1.84)--(8.22,2.00)--(8.62,1.77);
+\draw[sulfurTrace] (8.94,1.94)--(9.22,1.69)--(9.62,1.88)--(9.98,1.71)--(10.38,1.95)
+  --(10.74,1.77)--(11.03,1.91);
+\node[retainedCharge] (q1) at (6.10,1.92) {};
+\node[retainedCharge] (q2) at (8.22,2.00) {};
+\node[retainedCharge] (q3) at (10.38,1.95) {};
+\foreach \q in {q1,q2,q3}{
   \draw[white,line width=0.34pt] ($ (\q.center)+(-0.34mm,0) $)--($ (\q.center)+(0.34mm,0) $);
   \draw[white,line width=0.34pt] ($ (\q.center)+(0,-0.34mm) $)--($ (\q.center)+(0,0.34mm) $);
 }
-\node[labelStd,text=cRed!68!black,anchor=north] at (8.18,1.14)
-  {charge retained};
 
 % --------------------------------------------------------------------------
 % What we read
