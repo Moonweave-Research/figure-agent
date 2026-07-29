@@ -1,0 +1,12 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v47.yaml
+extends_sha256: sha256:1afefdabb665349c71d0b0c9e81e35480eaea80c926deae538e102eca02bf896
+reason: consume packet-bound generation receipt v2 evidence in equal-input ablation checks while retaining legacy receipt compatibility
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v48.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/scripts/quality/failure_ablation.py
+  - plugins/figure-agent/tests/test_failure_ablation.py
+publication_acceptance: not_claimed

@@ -13,6 +13,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "quality"))
 
 from failure_ablation import FailureAblationError, evaluate_ablation
+from generation_receipt import record_generation_receipt
 
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
@@ -98,6 +99,58 @@ def add_generation_receipt(
         "transcript_sha256": "sha256:" + hashlib.sha256(transcript_bytes).hexdigest(),
     }
     path.write_text(yaml.safe_dump(payload), encoding="utf-8")
+
+
+def add_v2_generation_receipt(path: Path, *, model_id: str = "test-model") -> None:
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    neutral_task = "Author a neutral first-pass schematic for the declared topic.\n"
+    packet_path = path.with_name(f"{path.stem}.packet.json")
+    prompt = (
+        "# Bound raw authoring execution\n\n"
+        "## Neutral authoring task\n"
+        f"{neutral_task}"
+        "\n## Provenance and publication boundary\n"
+    )
+    packet_path.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.authoring-execution-packet.v1",
+                "model_id": model_id,
+                "context_pack": {
+                    "schema": "figure-agent.authoring-context-pack.v1",
+                    "base_sha256": "sha256:" + "a" * 64,
+                },
+                "prompt": {
+                    "utf8": prompt,
+                    "sha256": "sha256:"
+                    + hashlib.sha256(prompt.encode()).hexdigest(),
+                },
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    budget_path = path.with_name("budget-v2.yaml")
+    budget_path.write_text("attempts: 1\n", encoding="utf-8")
+    starting_path = path.with_name("starting-v2.tex")
+    generated_path = path.with_name(f"{path.stem}.generated-v2.tex")
+    starting_path.write_text("starting artifact\n", encoding="utf-8")
+    generated_path.write_text(f"generated {path.stem} artifact\n", encoding="utf-8")
+    payload["input_packet_hash"] = _sha256(packet_path)
+    payload["budget_contract_hash"] = _sha256(budget_path)
+    payload["shared_task_hash"] = (
+        "sha256:" + hashlib.sha256(neutral_task.encode()).hexdigest()
+    )
+    path.write_text(yaml.safe_dump(payload), encoding="utf-8")
+    record_generation_receipt(
+        path,
+        model_id=model_id,
+        source_commit="0123456789abcdef",
+        input_packet=packet_path,
+        budget_contract=budget_path,
+        starting_artifact=starting_path,
+        generated_artifact=generated_path,
+    )
 
 
 def test_ablation_requires_exactly_raw_verified_repaired(tmp_path: Path) -> None:
@@ -314,6 +367,18 @@ def test_ablation_accepts_runs_with_matching_generation_receipts(tmp_path: Path)
     paths = write_comparable_runs(tmp_path)
     for path in paths.values():
         add_generation_receipt(path)
+
+    report = evaluate_ablation(paths)
+
+    assert report["comparison_evidence"] == "transcript_bound"
+
+
+def test_ablation_accepts_packet_bound_v2_generation_receipts(
+    tmp_path: Path,
+) -> None:
+    paths = write_comparable_runs(tmp_path)
+    for path in paths.values():
+        add_v2_generation_receipt(path)
 
     report = evaluate_ablation(paths)
 

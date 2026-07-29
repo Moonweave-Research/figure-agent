@@ -6,13 +6,17 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+import generation_receipt
 import yaml
 
 RUN_SCHEMA = "figure-agent.failure-ablation-run.v1"
 REPORT_SCHEMA = "figure-agent.failure-ablation-report.v1"
 VARIANTS = {"raw", "verified", "repaired"}
 SCIENTIFIC_CLASSES = {"semantic", "relation"}
-GENERATION_RECEIPT_SCHEMA = "figure-agent.generation-receipt.v1"
+GENERATION_RECEIPT_SCHEMAS = {
+    "figure-agent.generation-receipt.v1",
+    "figure-agent.generation-receipt.v2",
+}
 COMPARISON_ELIGIBLE = "eligible_equal_input"
 
 
@@ -116,19 +120,33 @@ def _delta(current: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
 def _has_bound_generation_receipt(run: dict[str, Any]) -> bool:
     """Return whether a run has a contract-bound, hash-verified transcript."""
     receipt = run.get("generation_receipt")
-    if not isinstance(receipt, dict) or receipt.get("schema") != GENERATION_RECEIPT_SCHEMA:
+    if (
+        not isinstance(receipt, dict)
+        or receipt.get("schema") not in GENERATION_RECEIPT_SCHEMAS
+    ):
         return False
+    is_v2 = receipt.get("schema") == "figure-agent.generation-receipt.v2"
     required = (
         "model_id",
         "source_commit",
         "starting_artifact_sha256",
         "generated_artifact_sha256",
     )
+    if is_v2:
+        required += (
+            "input_packet_path",
+            "shared_task_sha256",
+            "context_pack_base_sha256",
+        )
     if any(not isinstance(receipt.get(key), str) or not receipt[key] for key in required):
         return False
     if not (
         receipt.get("input_packet_sha256") == run.get("input_packet_hash")
         and receipt.get("budget_contract_sha256") == run.get("budget_contract_hash")
+        and (
+            not is_v2
+            or receipt.get("shared_task_sha256") == run.get("shared_task_hash")
+        )
     ):
         return False
 
@@ -152,6 +170,30 @@ def _has_bound_generation_receipt(run: dict[str, Any]) -> bool:
     actual_hash = f"sha256:{hashlib.sha256(transcript_bytes).hexdigest()}"
     if actual_hash != declared_hash:
         return False
+    if is_v2:
+        input_packet_path = Path(receipt["input_packet_path"])
+        if input_packet_path.is_absolute() or len(input_packet_path.parts) != 1:
+            return False
+        input_packet = run_path.parent / input_packet_path
+        if input_packet.is_symlink() or not input_packet.is_file():
+            return False
+        if (
+            f"sha256:{hashlib.sha256(input_packet.read_bytes()).hexdigest()}"
+            != receipt["input_packet_sha256"]
+        ):
+            return False
+        try:
+            packet, shared_task_sha256, context_pack_base_sha256 = (
+                generation_receipt.load_bound_authoring_packet(input_packet)
+            )
+        except generation_receipt.GenerationReceiptError:
+            return False
+        if not (
+            packet.get("model_id") == receipt["model_id"]
+            and shared_task_sha256 == receipt["shared_task_sha256"]
+            and context_pack_base_sha256 == receipt["context_pack_base_sha256"]
+        ):
+            return False
     for artifact_kind in ("starting", "generated"):
         artifact_path_value = receipt.get(f"{artifact_kind}_artifact_path")
         artifact_hash = receipt.get(f"{artifact_kind}_artifact_sha256")
@@ -171,18 +213,25 @@ def _has_bound_generation_receipt(run: dict[str, Any]) -> bool:
         return False
     if not isinstance(transcript_payload, dict):
         return False
+    transcript_keys = [
+        "model_id",
+        "input_packet_sha256",
+        "budget_contract_sha256",
+        "source_commit",
+        "starting_artifact_path",
+        "starting_artifact_sha256",
+        "generated_artifact_path",
+        "generated_artifact_sha256",
+    ]
+    if is_v2:
+        transcript_keys[1:1] = ["input_packet_path"]
+        transcript_keys[2:2] = [
+            "shared_task_sha256",
+            "shared_task_binding_source",
+            "context_pack_base_sha256",
+        ]
     return all(
-        transcript_payload.get(key) == receipt.get(key)
-        for key in (
-            "model_id",
-            "input_packet_sha256",
-            "budget_contract_sha256",
-            "source_commit",
-            "starting_artifact_path",
-            "starting_artifact_sha256",
-            "generated_artifact_path",
-            "generated_artifact_sha256",
-        )
+        transcript_payload.get(key) == receipt.get(key) for key in transcript_keys
     )
 
 
@@ -226,9 +275,12 @@ def evaluate_ablation(run_paths: dict[str, Path]) -> dict[str, Any]:
         name: _load_run(path, expected_variant=name)
         for name, path in run_paths.items()
     }
+    shared_task_states = {name: runs[name].get("shared_task_hash") for name in VARIANTS}
+    if any(shared_task_states.values()) and not all(shared_task_states.values()):
+        raise FailureAblationError("comparison_contract_mismatch")
     keys = (
         "model_contract_hash",
-        "input_packet_hash",
+        "shared_task_hash" if all(shared_task_states.values()) else "input_packet_hash",
         "budget_contract_hash",
         "figure_family",
     )
