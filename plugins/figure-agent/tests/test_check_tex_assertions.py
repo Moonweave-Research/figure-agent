@@ -23,6 +23,17 @@ def test_find_styled_draws_matches_style_among_other_options():
     assert cta.find_styled_draws(line, "forceArr") == [(1.0, 2.0, 3.0, 2.0)]
 
 
+def test_find_styled_draws_resolves_named_straight_path_endpoints():
+    tex = "\n".join(
+        [
+            "\\coordinate (comparison_out) at (1.0,2.0);",
+            "\\coordinate (readout_entry) at (3.0,2.0);",
+            "\\draw[storyArrow] (comparison_out) -- (readout_entry);",
+        ]
+    )
+    assert cta.find_styled_draws(tex, "storyArrow") == [(1.0, 2.0, 3.0, 2.0)]
+
+
 def test_find_styled_draws_empty_when_style_absent():
     assert cta.find_styled_draws("\\draw[defArr] (0,0) -- (1,1);", "forceArr") == []
 

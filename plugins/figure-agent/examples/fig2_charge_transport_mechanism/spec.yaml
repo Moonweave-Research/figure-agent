@@ -23,6 +23,23 @@ final_size_contract:
 
 semantic_contract_required: true
 
+tex_assertions:
+  - id: comparison-reaches-readout
+    source_name: fig2_charge_transport_mechanism.tex
+    anchor_style: storyArrow
+    axis: x
+    direction: increasing
+    minimum_matches: 1
+    require_unidirectional_arrow: true
+
+named_endpoint_assertions:
+  - id: comparison-arrow-binds-to-readout-boundary
+    source_name: fig2_charge_transport_mechanism.tex
+    anchor_style: storyArrow
+    minimum_paths: 1
+    required_anchors: [comparison_out, readout_entry]
+    allowed_anchors: [comparison_out, readout_entry]
+
 # These anchors check reader-role hierarchy without forcing a particular
 # bracket, separator, or other comparison primitive.
 semantic_assertions:

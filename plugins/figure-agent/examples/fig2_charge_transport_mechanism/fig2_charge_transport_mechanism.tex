@@ -97,7 +97,9 @@
 \draw[fieldGuide] (9.14,1.78)--(9.14,2.88);
 \node[labelMute,anchor=north] at (7.44,0.74) {sign-neutral localized charge states};
 
-\draw[storyArrow] (9.70,2.34)--(10.34,2.34);
+\coordinate (comparison_out) at (9.46,2.34);
+\coordinate (readout_entry) at (10.92,2.34);
+\draw[storyArrow] (comparison_out)--(readout_entry);
 % fig-agent:end object=sulfur_working_state
 
 % --------------------------------------------------------------------------

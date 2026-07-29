@@ -64,3 +64,13 @@ def test_fig2_declares_rearrangeable_composition_units() -> None:
     assert scene["objects"]["qualitative_current_readout"]["anchor_target"] == (
         "sulfur_working_state"
     )
+
+
+def test_fig2_binds_the_comparison_arrow_to_the_readout_boundary() -> None:
+    spec = yaml.safe_load((FIXTURE / "spec.yaml").read_text(encoding="utf-8"))
+    source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
+
+    assert "(comparison_out)--(readout_entry)" in source
+    assertion = spec["named_endpoint_assertions"][0]
+    assert assertion["anchor_style"] == "storyArrow"
+    assert assertion["required_anchors"] == ["comparison_out", "readout_entry"]

@@ -198,6 +198,13 @@ def _styled_draws_raw(tex_text: str, style: str) -> list[tuple[float, float, flo
         end = coordinates.get(match.group(3))
         if start is not None and end is not None:
             named_paths.append((*start, *end, match.group(1)))
+    for match in _STYLED_NAMED_DRAW_RE.finditer(stripped):
+        if not _has_style_token(match.group(1), style):
+            continue
+        start = coordinates.get(match.group(2))
+        end = coordinates.get(match.group(3))
+        if start is not None and end is not None:
+            named_paths.append((*start, *end, match.group(1)))
     return literal_paths + named_paths
 
 
