@@ -30,11 +30,12 @@ def test_fig2_declares_a_parallel_material_comparison_contract() -> None:
     )
 
 
-def test_fig2_redraw_uses_a_shared_fork_merge_without_legacy_comparison_copy() -> None:
+def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() -> None:
     source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
 
-    assert "storyRail" in source
-    assert "Material comparison" in source
+    assert "held ON during acquisition" in source
+    assert "same MIM geometry" in source
+    assert "storyRail" not in source
     assert "material contrast" not in source
     assert "comparisonArrow" not in source
     assert "trapAmber" not in source

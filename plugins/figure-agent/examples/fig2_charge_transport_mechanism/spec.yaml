@@ -23,23 +23,18 @@ final_size_contract:
 
 semantic_contract_required: true
 
-# These anchors check reader-role hierarchy without forcing a particular fork,
-# merge, brace, or other comparison primitive.
+# These anchors check reader-role hierarchy without forcing a particular
+# bracket, separator, or other comparison primitive.
 semantic_assertions:
-  - id: measurement-precedes-comparison
+  - id: ideal-left-of-sulfur
     relation: left_of
-    subject: Measurement
-    reference: Material
+    subject: Ideal
+    reference: Sulfur-rich
     tolerance_pt: 12.0
   - id: comparison-precedes-readout
     relation: left_of
-    subject: Material
+    subject: Sulfur-rich
     reference: Current
-    tolerance_pt: 12.0
-  - id: ideal-above-sulfur
-    relation: above
-    subject: Ideal
-    reference: Sulfur-rich
     tolerance_pt: 12.0
 
 panels:
@@ -52,9 +47,9 @@ text_boundary_checks:
     kind: rect
     role: header_band
     mode: contain_text
-    bbox_pdf_cm: [0.00, 0.00, 16.38, 1.20]
+    bbox_pdf_cm: [0.00, 0.00, 16.38, 1.75]
     clearance_pt: 0.0
-    text_allowlist: [Measurement, Material, What]
+    text_allowlist: [DC, Ideal, Sulfur-rich, Current]
 
 label_path_proximity_checks:
   - id: readout-window-divider

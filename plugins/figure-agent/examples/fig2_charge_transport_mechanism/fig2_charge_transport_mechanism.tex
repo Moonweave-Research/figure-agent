@@ -32,7 +32,6 @@
   fieldGuide/.style={cRed!64!black,line width=0.50pt,line cap=round},
   storyArrow/.style={-{Stealth[length=3.4pt,width=2.4pt]},cGray!62!black,
     line width=0.52pt},
-  storyRail/.style={cGray!57!black,line width=0.52pt,line cap=round,line join=round},
   axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
     line width=0.55pt},
   traceEarly/.style={cRed!76!black,line width=0.9pt,line cap=round},
@@ -44,89 +43,64 @@
 % carry less decorative geometry than the former full-height separators.
 \path[use as bounding box] (0.00,0.38) rectangle (16.38,5.02);
 
-% A single, open mechanism strip. Measurement forks to two sibling material
-% states; both states merge into the common qualitative readout.  The entire
-% strip is field-on: no source-OFF or discharge interval is implied here.
+% A single, open mechanism strip.  The two material cells share one held DC
+% field rail and one readout, so they read as lateral experimental comparators
+% rather than upper/lower stages of a serial process.
 \node[panelLetter,anchor=west] at (0.14,4.88) {a};
 
-% The fork/merge rail owns the comparison topology. It deliberately contains no
-% direct Ideal -> Sulfur connector, so neither material reads as a
-% chronological intermediate of the other.
-\draw[storyRail] (3.08,2.62)--(3.74,2.62);
-\draw[storyRail] (3.74,1.87)--(3.74,3.36);
-\draw[storyArrow] (3.74,3.36)--(5.04,3.36);
-\draw[storyArrow] (3.74,1.87)--(5.04,1.87);
-\draw[storyRail] (11.36,1.87)--(12.08,1.87);
-\draw[storyRail] (11.36,3.36)--(12.08,3.36);
-\draw[storyRail] (12.08,1.87)--(12.08,3.36);
-\draw[storyArrow] (12.08,2.62)--(12.72,2.62);
+% --------------------------------------------------------------------------
+% Shared field-on material comparison
+% --------------------------------------------------------------------------
+\node[panelTitle,anchor=west] at (0.72,4.72) {DC charging-current measurement};
+\node[labelStd,text=cRed!70!black,anchor=south] at (6.08,4.25)
+  {$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$ held ON during acquisition};
+\draw[fieldGuide,line width=0.78pt] (0.72,4.11)--(11.44,4.11);
+\node[labelMute,anchor=north] at (6.08,3.90) {same MIM geometry \;\textbar\; 25\,\% RH};
 
-% --------------------------------------------------------------------------
-% Measurement
-% --------------------------------------------------------------------------
-\node[panelTitle,anchor=north] at (1.90,4.72) {Measurement};
-\node[labelMute,anchor=north] at (1.90,4.29) {MIM stack};
-
-% The neutral field guide and ON label establish a held DC condition without
-% inventing an electrode polarity or a carrier sign.
-\fill[electrode] (0.74,3.03) rectangle (3.08,3.31);
-\fill[film] (0.74,2.08) rectangle (3.08,3.03);
-\fill[electrode] (0.74,1.80) rectangle (3.08,2.08);
-\draw[fieldGuide] (2.70,2.22)--(2.70,2.88);
-\draw[fieldGuide] (2.84,2.22)--(2.84,2.88);
-\node[labelStd,text=cRed!70!black,anchor=south] at (1.90,3.47)
-  {$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$};
-\node[labelMute,anchor=north] at (1.90,1.47) {25\,\% RH chamber};
-
-% --------------------------------------------------------------------------
-% Parallel material comparison
-% --------------------------------------------------------------------------
-\node[panelTitle,anchor=north] at (8.18,4.72) {Material comparison};
-\node[columnTitle,anchor=south west] at (5.05,3.94) {Ideal dielectric};
-\node[labelMute,anchor=south west] at (8.04,3.94) {fast polarization};
+\node[columnTitle,anchor=south] at (3.08,3.48) {Ideal dielectric};
+\node[labelMute,anchor=north] at (3.08,1.00) {fast bound polarization};
 
 % The ideal baseline uses bound dipoles, not free-carrier drain arrows.  This
-% represents the response before the 2 s analysis window, not a measured control.
-\fill[electrode] (5.05,3.66) rectangle (11.36,3.83);
-\fill[idealFilm] (5.05,2.96) rectangle (11.36,3.66);
-\fill[electrode] (5.05,2.79) rectangle (11.36,2.96);
-\foreach \x/\y in {6.05/3.24,7.15/3.44,8.32/3.20,9.48/3.42,10.48/3.18}{
+% represents a conceptual response before the 2 s analysis window, not a data control.
+\fill[electrode] (0.76,3.16) rectangle (5.40,3.34);
+\fill[idealFilm] (0.76,1.50) rectangle (5.40,3.16);
+\fill[electrode] (0.76,1.32) rectangle (5.40,1.50);
+\foreach \x/\y in {1.52/2.18,2.32/2.60,3.12/2.04,3.92/2.58,4.72/2.20}{
   \draw[dipole] (\x,\y-0.14)--(\x,\y+0.14);
   \fill[cBlue!34] (\x,\y-0.18) circle (0.035);
   \fill[cBlue!34] (\x,\y+0.18) circle (0.035);
 }
-\draw[fieldGuide] (10.97,3.10)--(10.97,3.54);
+\draw[fieldGuide] (5.04,1.78)--(5.04,2.88);
 
-\node[columnTitle,anchor=south west] at (5.05,2.31) {Sulfur-rich copolymer};
-\node[labelMute,anchor=south west] at (8.55,2.31) {long-lived relaxation};
+\node[columnTitle,anchor=south] at (9.08,3.48) {Sulfur-rich copolymer};
+\node[labelMute,anchor=north] at (9.08,1.00) {long-lived charge relaxation};
 
-\fill[electrode] (5.05,2.03) rectangle (11.36,2.20);
-\fill[film] (5.05,1.33) rectangle (11.36,2.03);
-\fill[electrode] (5.05,1.16) rectangle (11.36,1.33);
+\fill[electrode] (6.76,3.16) rectangle (11.40,3.34);
+\fill[film] (6.76,1.50) rectangle (11.40,3.16);
+\fill[electrode] (6.76,1.32) rectangle (11.40,1.50);
 % One sparse, irregular host field supports sign-neutral localized-state cues.
-\draw[sulfurTrace] (5.44,1.75)--(5.78,1.53)--(6.10,1.74)--(6.49,1.56)--(6.89,1.78);
-\draw[sulfurTrace] (7.18,1.54)--(7.50,1.84)--(7.87,1.65)--(8.22,1.82)--(8.64,1.55);
-\draw[sulfurTrace] (8.96,1.76)--(9.22,1.53)--(9.62,1.72)--(9.98,1.55)--(10.38,1.78)
-  --(10.74,1.59)--(11.03,1.74);
-\node[localizedState] (q1) at (6.10,1.74) {};
-\node[stateCore] at (6.10,1.74) {};
-\node[localizedState] (q2) at (8.22,1.82) {};
-\node[stateCore] at (8.22,1.82) {};
-\node[localizedState] (q3) at (10.38,1.78) {};
-\node[stateCore] at (10.38,1.78) {};
-\draw[fieldGuide] (10.97,1.47)--(10.97,1.91);
-\node[labelMute,anchor=north] at (7.98,1.02) {sign-neutral localized charge states};
+\draw[sulfurTrace] (7.13,2.11)--(7.48,1.76)--(7.84,2.00)--(8.20,1.72)--(8.60,2.10);
+\draw[sulfurTrace] (8.98,2.42)--(9.30,2.08)--(9.66,2.31)--(10.04,1.98)--(10.42,2.35)
+  --(10.78,2.09)--(11.09,2.28);
+\draw[sulfurTrace] (7.20,2.84)--(7.56,2.54)--(7.92,2.76)--(8.28,2.49)--(8.68,2.86);
+\node[localizedState] (q1) at (7.84,2.00) {};
+\node[stateCore] at (7.84,2.00) {};
+\node[localizedState] (q2) at (9.66,2.31) {};
+\node[stateCore] at (9.66,2.31) {};
+\node[localizedState] (q3) at (10.78,2.09) {};
+\node[stateCore] at (10.78,2.09) {};
+\draw[fieldGuide] (11.04,1.78)--(11.04,2.88);
+\node[labelMute,anchor=north] at (9.08,0.74) {sign-neutral localized charge states};
+
+\draw[storyArrow] (11.58,2.34)--(12.26,2.34);
 
 % --------------------------------------------------------------------------
 % What we read
 % --------------------------------------------------------------------------
-\node[panelTitle,anchor=north] at (14.40,4.72) {Current readout};
+\node[panelTitle,anchor=north] at (14.38,4.72) {Current readout};
 
-% The field rail is deliberately continuous across the acquisition: it blocks
-% the source-OFF/discharge reading that would contradict the actual experiment.
-\draw[fieldGuide,line width=0.78pt] (12.92,3.87)--(15.85,3.87);
-\node[labelStd,text=cRed!70!black,anchor=south] at (14.38,3.91)
-  {$E_\mathrm{app}$ held ON during acquisition};
+% The shared field rail above the material cells is deliberately continuous
+% through acquisition: it blocks a source-OFF/discharge reading.
 \draw[axisArrow] (12.92,1.38)--(12.92,3.30);
 \draw[axisArrow] (12.92,1.38)--(15.85,1.38);
 \node[labelMute,anchor=south west] at (12.92,3.38) {$I(t)$};

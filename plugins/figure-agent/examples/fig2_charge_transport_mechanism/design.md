@@ -3,20 +3,20 @@
 ## Composition
 
 Use a 163.8 × 46.4 mm wide strip matching the current Fig. 2a slot. Keep one
-open white row with three reader roles: measurement context, a paired material
-comparison, and one common readout. The two material states are siblings, not
-two serial UI cards:
+open white row with a shared field-on rail above two side-by-side material cells
+and one common readout. The two material states must be lateral siblings, not
+two serial stages or vertically stacked UI cards:
 
-1. Measurement context and MIM stack.
+1. Shared held-DC measurement condition and matched MIM geometry.
 2. Ideal dielectric: bound-dipole alignment and rapid pre-window polarization.
 3. Sulfur-rich copolymer: sign-neutral localized-state cues and long-lived
    relaxation, explicitly framed as a working picture.
 4. Readout icon with the early and late time windows.
 
-The header lane carries the panel letter and compact role labels. A shared rail
-must fork from measurement to both material states, then merge from both states
-into the readout. The object lane carries the physical marks. The bottom lane
-carries only short explanatory labels.
+The header lane carries the panel letter and the held-field condition. One
+continuous rail must span both material cells. The object lane carries matched
+MIM cells and their distinct physical marks; one direct arrow leads from their
+shared right edge to the readout. The bottom lane carries only short labels.
 
 ## Visual decisions
 

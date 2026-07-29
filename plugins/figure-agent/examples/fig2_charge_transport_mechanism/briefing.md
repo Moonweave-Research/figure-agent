@@ -18,14 +18,15 @@ inference; Fig. 5 owns the floating-clip actuation mechanism.
 The strip must read as a causal comparison without implying that one material
 is converted into the other:
 
-`field-on MIM measurement context → parallel ideal-baseline-versus-sulfur comparison
+`shared field-on MIM context → lateral ideal-baseline-versus-sulfur comparison
 → the two current-decay windows read in panels b–d`.
 
 ## §2 Panel content
 
-- **Measurement**: a compact MIM stack with the film between electrodes, the
-  declared held field `$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$`, and `25 %RH`
-  context. The field remains on during the whole transient acquisition.
+- **Comparison frame**: one shared held-field rail, with matched lateral MIM
+  cells for the ideal baseline and sulfur-rich copolymer. The declared field
+  `$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$` remains on during the whole
+  transient acquisition; `25 %RH` is a shared condition.
 - **Ideal dielectric**: aligned bound dipoles and a rapid polarization response
   completed before the `2–30 s` analysis window. This is a conceptual baseline,
   not PI, PTFE, PET, or a universal material law.

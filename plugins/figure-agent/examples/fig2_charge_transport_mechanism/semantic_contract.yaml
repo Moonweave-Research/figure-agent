@@ -23,7 +23,7 @@ forbidden_implications:
   - panel_a.s_s_energy_diagram
   - panel_a.decorative_retention_loop
   - panel_a.infographic_card_grid
-  - panel_a.universal_conventional_dielectric_law
+  - panel_a.universal_ideal_dielectric_law
   - panel_a.actuation_charging_setup
   - panel_a.second_electrical_measurement_instrument
   - panel_a.signed_carrier_inference
@@ -32,9 +32,9 @@ forbidden_implications:
 
 protected_relations:
   - mim_stack_contains_polymer_film_between_electrodes
-  - measurement_context_forks_to_parallel_material_comparison
-  - conventional_and_sulfur_are_sibling_comparison_states
-  - parallel_material_comparison_merges_to_common_readout
+  - held_field_binds_lateral_material_comparison
+  - ideal_and_sulfur_are_sibling_comparison_states
+  - lateral_material_comparison_feeds_common_readout
   - ideal_baseline_shows_bound_dipoles_without_free_carrier_flow
   - sulfur_working_picture_uses_sign_neutral_localized_charge_cues
   - field_is_held_on_throughout_current_acquisition
@@ -89,19 +89,19 @@ semantic_legibility:
       declared_role: late_fit_window
       forbidden_readings: [exact_fit_result]
   visible_connectors:
-    - connector_id: panel_a.measurement_to_conventional
+    - connector_id: panel_a.held_field_to_ideal
       from_object: panel_a.measurement_context
       to_object: panel_a.ideal_dielectric
       declared_role: story_stage_transition
       render_style: stage_transition
       epistemic_status: derived
-    - connector_id: panel_a.measurement_to_sulfur
+    - connector_id: panel_a.held_field_to_sulfur
       from_object: panel_a.measurement_context
       to_object: panel_a.sulfur_copolymer
       declared_role: story_stage_transition
       render_style: stage_transition
       epistemic_status: derived
-    - connector_id: panel_a.conventional_to_readout
+    - connector_id: panel_a.ideal_to_readout
       from_object: panel_a.ideal_dielectric
       to_object: panel_a.transient_readout
       declared_role: readout_transition
@@ -130,10 +130,10 @@ semantic_legibility:
       shared_output: panel_a.transient_readout
       comparison_basis: schematic_state
       input_connector_ids:
-        - panel_a.measurement_to_conventional
-        - panel_a.measurement_to_sulfur
+        - panel_a.held_field_to_ideal
+        - panel_a.held_field_to_sulfur
       output_connector_ids:
-        - panel_a.conventional_to_readout
+        - panel_a.ideal_to_readout
         - panel_a.sulfur_to_readout
   forbidden_connectors:
     - from_object: panel_a.measurement_context
@@ -147,7 +147,7 @@ semantic_legibility:
       owner: panel_a.measurement_context
     - label_id: panel_a.field_label
       owner: panel_a.field_condition
-    - label_id: panel_a.conventional_header
+    - label_id: panel_a.ideal_header
       owner: panel_a.ideal_dielectric
     - label_id: panel_a.sulfur_header
       owner: panel_a.sulfur_copolymer
