@@ -1275,7 +1275,7 @@ def infer_stage(example_dir: Path) -> dict:
         candidate_state = str(current_candidate.get("state") or "").upper()
         if candidate_state in {RENDER_MISSING, RENDER_STALE, RENDER_FRESH}:
             render_state = candidate_state
-            checks.append(("current_candidate", candidate_state.lower()))
+            checks.append(("current_candidate_render", candidate_state.lower()))
             if candidate_state == RENDER_STALE:
                 notes.append("current_candidate_render_stale")
             elif candidate_state == RENDER_MISSING:

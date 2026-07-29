@@ -289,7 +289,7 @@ def test_status_projects_declared_repair_candidate_evidence(tmp_path: Path) -> N
     assert result["current_candidate"]["source"] == (
         "review/failure-first/candidate-c5/repaired.tex"
     )
-    assert ("current_candidate", "fresh") in result["checks"]
+    assert ("current_candidate_render", "fresh") in result["checks"]
     assert result["strict_evidence"]["state"] == "passed"
     assert result["spine_evidence"]["physics_grounding"]["status"] == "grounded"
     assert result["spine_evidence"]["convention_receipt"]["state"] == "present"
