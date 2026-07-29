@@ -547,6 +547,11 @@ def _authoring_packet(argv: list[str]) -> int:
     parser.add_argument("--layout-contract")
     parser.add_argument("--shape-profile")
     parser.add_argument("--composition-profile")
+    parser.add_argument(
+        "--intervention-mode",
+        choices=("raw", "figure_agent"),
+        default="figure_agent",
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
@@ -564,6 +569,7 @@ def _authoring_packet(argv: list[str]) -> int:
             layout_contract=args.layout_contract,
             shape_profile=args.shape_profile,
             composition_profile=args.composition_profile,
+            intervention_mode=args.intervention_mode,
         )
         packet_path = authoring_execution_packet.resolve_attempt_artifact_path(
             paths.workspace_root,

@@ -964,6 +964,54 @@ def test_authoring_preflight_ab_cli(tmp_path: Path) -> None:
     assert payload["comparison"] == "raw_vs_figure_agent"
 
 
+def test_authoring_packet_raw_cli_binds_neutral_task(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    (workspace / "examples/context_demo/authoring_task.md").write_text(
+        "Author a neutral first-pass schematic for the declared topic.\n",
+        encoding="utf-8",
+    )
+    attempt_rel = "examples/context_demo/review/failure-first/execution-binding-v1"
+    env = os.environ.copy()
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-packet",
+            "context_demo",
+            "--model-id",
+            "gpt-5.5",
+            "--budget-contract",
+            "examples/context_demo/review/budget.yaml",
+            "--blank-start",
+            "examples/context_demo/review/blank.txt",
+            "--output-path",
+            f"{attempt_rel}/raw_generated.tex",
+            "--packet-out",
+            f"{attempt_rel}/raw_packet.json",
+            "--prompt-out",
+            f"{attempt_rel}/raw_prompt.md",
+            "--intervention-mode",
+            "raw",
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["intervention_mode"] == "raw"
+    assert payload["semantic_contract_application"] == "omitted"
+    assert "## Neutral authoring task" in (
+        workspace / attempt_rel / "raw_prompt.md"
+    ).read_text(encoding="utf-8")
+
+
 def test_preflight_rejects_unequal_model_contract(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _write_context_fixture(workspace)

@@ -1,0 +1,12 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v46.yaml
+extends_sha256: sha256:62f42bb9ff73535187ab6477aaf58fd0ce13b7dbb20d0bcadb79d95e1dcbcae1
+reason: bind new generation receipts to the adjacent authoring packet and neutral task without rewriting historical ablation evidence
+allowed_review_prefixes: []
+allowed_review_paths:
+  - review/failure-first/scope_extension_v47.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/scripts/quality/generation_receipt.py
+  - plugins/figure-agent/tests/test_generation_receipt.py
+publication_acceptance: not_claimed
