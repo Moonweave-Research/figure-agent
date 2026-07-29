@@ -138,6 +138,22 @@ def test_pair001_rule_preserves_field_on_transient_sign_neutrality() -> None:
     assert "ideal-dielectric baseline" in rule["rule"]
 
 
+def test_pair001_rule_preserves_lateral_field_on_comparison_occupancy() -> None:
+    catalog = authoring_rules.load_rule_catalog(
+        PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
+    )
+
+    rule = next(
+        rule
+        for rule in catalog["rules"]
+        if rule["id"] == "pair001.field-on-lateral-comparison-occupancy"
+    )
+    assert rule["category"] == "panel_layout"
+    assert "lateral siblings" in rule["rule"]
+    assert "shared condition" in rule["rule"]
+    assert "decorative afterthought" in rule["rule"]
+
+
 def test_project_rule_preserves_reversed_cantilever_morphology() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-project.md"

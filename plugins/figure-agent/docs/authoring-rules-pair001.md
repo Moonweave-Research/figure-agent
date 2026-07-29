@@ -3,6 +3,14 @@ schema: figure-agent.authoring-rules.v1
 fixture: fig1_overview_v2_pair_001_vault
 promotion_state: n1_hypotheses
 rules:
+  - id: pair001.field-on-lateral-comparison-occupancy
+    category: panel_layout
+    rule: In a field-on ideal-baseline-versus-working-material schematic, keep the two material cells as lateral siblings under one shared condition and give the qualitative readout a comparable claim-bearing lane. Do not stack the materials as serial stages or let oversized material cells reduce the readout to a decorative afterthought.
+    source:
+      kind: hand_patch_commit
+      locator: "Fig2 lateral-comparison composition audit (2026-07-29)"
+      quote: "The vertical stack read as serial hierarchy; the initial lateral candidate still starved the current-readout lane."
+    transfer_policy: use_as_constraint
   - id: pair001.panel-c-balanced-dual-view
     category: physics_semantics
     rule: Preserve the real-space plus energy-diagram split for localized traps, but allocate only the extra area required for common-scale legibility; do not assign Panel C privileged hero status.

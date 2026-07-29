@@ -42,6 +42,36 @@ panels:
     caption: Field-on measurement context, ideal-dielectric baseline versus sulfur-rich working comparison, and the two transient-current readouts in panels b–d
     bbox_pdf_cm: [0.00, 0.00, 16.38, 4.75]
 
+composition_model:
+  panels:
+    A:
+      objects:
+        comparison_frame:
+          kind: annotation
+          truth_bearing: false
+          role: panel_caption
+          semantic_claim: shared field-on condition for matched lateral material cells
+          allowed_creative_ops: [adjust_header_spacing, reframe_shared_condition]
+        ideal_baseline:
+          kind: material_state
+          truth_bearing: true
+          semantic_claim: ideal dielectric is a conceptual fast-polarization baseline
+          invariant: ideal_baseline_remains_lateral_and_is_not_an_actual_material_control
+          allowed_creative_ops: [resize_lateral_cell, redraw_bound_dipoles]
+        sulfur_working_state:
+          kind: material_state
+          truth_bearing: true
+          semantic_claim: sulfur-rich copolymer uses sign-neutral localized-charge cues for long-lived relaxation
+          invariant: sulfur_state_remains_lateral_and_avoids_signed_carrier_or_trap_depth_claims
+          allowed_creative_ops: [resize_lateral_cell, redraw_amorphous_host]
+        qualitative_current_readout:
+          kind: mini_plot
+          truth_bearing: true
+          anchor_target: sulfur_working_state
+          semantic_claim: qualitative two-window current readout follows the sulfur working picture
+          invariant: readout_remains_schematic_not_measured_and_keeps_early_before_late_window
+          allowed_creative_ops: [resize_readout_lane, reshape_qualitative_curve, consolidate_annotation]
+
 text_boundary_checks:
   - id: mechanism-strip-top-band
     kind: rect
@@ -55,7 +85,7 @@ label_path_proximity_checks:
   - id: readout-window-divider
     kind: vertical_line
     role: fit-window-divider
-    x_pdf_cm: 14.14
+    x_pdf_cm: 12.90
     y_range_pdf_cm: [1.95, 3.64]
     clearance_pt: 2.5
     text_phrases:

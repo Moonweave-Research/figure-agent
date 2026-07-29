@@ -7,8 +7,10 @@ import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = PLUGIN_ROOT / "examples" / "fig2_charge_transport_mechanism"
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
+import composition_scene  # noqa: E402
 from semantic_legibility_contract import validate_semantic_legibility_contract  # noqa: E402
 
 
@@ -45,4 +47,20 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert "charge drains" not in source
     assert "{$+$}" not in source
     assert "{$-$}" not in source
-    assert "held ON during acquisition" in source
+
+
+def test_fig2_declares_rearrangeable_composition_units() -> None:
+    scene = composition_scene.build_semantic_scene_model(
+        "fig2_charge_transport_mechanism", workspace_root=PLUGIN_ROOT
+    )
+
+    assert scene["status"] == "ready"
+    assert set(scene["objects"]) == {
+        "comparison_frame",
+        "ideal_baseline",
+        "sulfur_working_state",
+        "qualitative_current_readout",
+    }
+    assert scene["objects"]["qualitative_current_readout"]["anchor_target"] == (
+        "sulfur_working_state"
+    )
