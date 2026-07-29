@@ -7,7 +7,10 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks"))
 
-from check_print_size_contract import evaluate_contract  # noqa: E402, I001
+from check_print_size_contract import (  # noqa: E402, I001
+    _journal_policy_floor,
+    evaluate_contract,
+)
 
 
 CONTRACT = {
@@ -65,3 +68,39 @@ def test_contract_rejects_under_sized_print_font() -> None:
     )
     assert result["status"] == "failed"
     assert any("below min_print_font_pt" in item for item in result["violations"])
+
+
+def test_nature_family_policy_rejects_a_declared_floor_below_five_points() -> None:
+    result = evaluate_contract(
+        page_size_pt=(427.064, 435.31),
+        source_font_sizes_pt=[4.0, 5.8],
+        contract={**CONTRACT, "basis": "height_limited_nature_family_main_figure"},
+        policy_min_print_font_pt=5.0,
+    )
+
+    assert result["status"] == "failed"
+    assert result["effective_min_print_font_pt"] == 5.0
+    assert any("built-in journal floor" in item for item in result["violations"])
+    assert any("effective min_print_font_pt 5.00 pt" in item for item in result["violations"])
+
+
+def test_non_nature_policy_keeps_the_declared_floor_as_authority() -> None:
+    result = evaluate_contract(
+        page_size_pt=(427.064, 435.31),
+        source_font_sizes_pt=[4.6, 5.8],
+        contract={**CONTRACT, "basis": "project_schematic"},
+    )
+
+    assert result["status"] == "passed"
+    assert result["policy_min_print_font_pt"] is None
+    assert result["effective_min_print_font_pt"] == 4.4
+
+
+def test_journal_policy_floor_is_selected_only_by_explicit_nature_basis() -> None:
+    assert (
+        _journal_policy_floor(
+            {"basis": "height_limited_nature_family_main_figure"}
+        )
+        == 5.0
+    )
+    assert _journal_policy_floor({"basis": "project_schematic"}) is None

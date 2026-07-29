@@ -22,6 +22,11 @@ import yaml
 PT_TO_MM = 25.4 / 72.0
 MM_TOLERANCE = 0.25
 FONT_TOLERANCE = 0.01
+JOURNAL_MIN_PRINT_FONT_PT = 5.0
+NATURE_FAMILY_BASES = {
+    "height_limited_nature_family_main_figure",
+    "width_limited_nature_family_main_figure",
+}
 
 
 class PrintSizeContractError(ValueError):
@@ -61,6 +66,14 @@ def _contract_values(contract: dict[str, Any]) -> tuple[float, float, float, flo
     return natural_width, natural_height, target_width, max_height, min_print_font
 
 
+def _journal_policy_floor(contract: dict[str, Any]) -> float | None:
+    """Return the built-in floor for an explicitly named journal profile."""
+
+    if contract.get("basis") in NATURE_FAMILY_BASES:
+        return JOURNAL_MIN_PRINT_FONT_PT
+    return None
+
+
 def _page_size_pt(pdf_path: Path) -> tuple[float, float]:
     result = subprocess.run(
         ["pdfinfo", str(pdf_path)],
@@ -90,15 +103,28 @@ def evaluate_contract(
     page_size_pt: tuple[float, float],
     source_font_sizes_pt: list[float],
     contract: dict[str, Any],
+    policy_min_print_font_pt: float | None = None,
 ) -> dict[str, Any]:
     """Return deterministic print-size metrics and violations."""
 
     natural_width, natural_height, target_width, max_height, min_print_font = (
         _contract_values(contract)
     )
+    effective_min_print_font = max(
+        min_print_font,
+        policy_min_print_font_pt or min_print_font,
+    )
     page_width = page_size_pt[0] * PT_TO_MM
     page_height = page_size_pt[1] * PT_TO_MM
     violations: list[str] = []
+    if (
+        policy_min_print_font_pt is not None
+        and min_print_font + FONT_TOLERANCE < policy_min_print_font_pt
+    ):
+        violations.append(
+            f"declared min_print_font_pt {min_print_font:.2f} pt is below the built-in "
+            f"journal floor {policy_min_print_font_pt:.2f} pt"
+        )
     if abs(page_width - natural_width) > MM_TOLERANCE:
         violations.append(
             f"PDF width {page_width:.2f} mm differs from declared natural width "
@@ -129,10 +155,16 @@ def evaluate_contract(
     else:
         source_min_font = min(source_font_sizes_pt)
         print_min_font = source_min_font * placement_scale
-        if print_min_font + FONT_TOLERANCE < min_print_font:
+        if print_min_font + FONT_TOLERANCE < effective_min_print_font:
+            floor_label = (
+                "effective min_print_font_pt"
+                if policy_min_print_font_pt is not None
+                else "min_print_font_pt"
+            )
             violations.append(
                 f"smallest explicit font {source_min_font:.2f} pt becomes {print_min_font:.2f} pt "
-                f"at print scale, below min_print_font_pt {min_print_font:.2f} pt"
+                f"at print scale, below {floor_label} "
+                f"{effective_min_print_font:.2f} pt"
             )
 
     return {
@@ -147,6 +179,8 @@ def evaluate_contract(
         "source_min_font_pt": source_min_font,
         "print_min_font_pt": print_min_font,
         "min_print_font_pt": min_print_font,
+        "policy_min_print_font_pt": policy_min_print_font_pt,
+        "effective_min_print_font_pt": effective_min_print_font,
         "violations": violations,
         "status": "passed" if not violations else "failed",
     }
@@ -178,6 +212,7 @@ def validate(
         page_size_pt=_page_size_pt(pdf_path),
         source_font_sizes_pt=_font_sizes_pt(tex_path.read_text(encoding="utf-8")),
         contract=contract,
+        policy_min_print_font_pt=_journal_policy_floor(contract),
     )
     result["authority"] = str(authority_path)
     result["pdf"] = str(pdf_path)
