@@ -29,12 +29,12 @@
     inner sep=0pt,minimum size=1.7mm},
   trapAmber/.style={circle,fill=cAmber!88,draw=cRed!58!black,line width=0.3pt,
     inner sep=0pt,minimum size=1.75mm},
-  fieldArrow/.style={-{Stealth[length=3.4pt,width=2.4pt]},cRed!72!black,
-    line width=0.55pt},
   drainArrow/.style={-{Stealth[length=3.4pt,width=2.5pt]},cBlue!72!black,
     line width=0.62pt},
-  storyArrow/.style={-{Stealth[length=3.4pt,width=2.4pt]},cGray!56!black,
-    line width=0.48pt},
+  storyArrow/.style={-{Stealth[length=3.4pt,width=2.4pt]},cGray!62!black,
+    line width=0.52pt},
+  comparisonArrow/.style={{Stealth[length=3.1pt,width=2.2pt]}-{Stealth[length=3.1pt,width=2.2pt]},
+    cGray!58!black,line width=0.48pt},
   axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
     line width=0.55pt},
   traceEarly/.style={cRed!76!black,line width=0.9pt,line cap=round},
@@ -42,14 +42,20 @@
     dash pattern=on 2pt off 1.3pt},
 ]
 
-% A single, open four-stage strip. The drawing carries the comparison; the
-% labels name the working interpretation without pretending to be data.
-\node[panelLetter,anchor=west] at (0.10,5.02) {a};
+% Preserve the allocated Fig. 2a row height while allowing the open canvas to
+% carry less decorative geometry than the former full-height separators.
+\path[use as bounding box] (0.00,0.38) rectangle (16.38,5.02);
 
-% Reading-order cues stay in the header lane, away from the objects and labels.
-\draw[storyArrow] (3.70,4.37)--(4.38,4.37);
-\draw[storyArrow] (7.78,4.37)--(8.46,4.37);
-\draw[storyArrow] (11.86,4.37)--(12.54,4.37);
+% A single, open mechanism strip. Measurement feeds a parallel material
+% comparison; both material states feed the common qualitative readout.
+\node[panelLetter,anchor=west] at (0.14,4.88) {a};
+
+% Reading-order cues stay on a shared mechanism rail; the paired arrow marks
+% a comparison, not a sequential conversion from one dielectric into another.
+\draw[storyArrow] (3.38,3.62)--(4.24,3.62);
+\draw[comparisonArrow] (7.30,3.62)--(8.18,3.62);
+\node[labelMute,anchor=south] at (7.74,3.68) {material contrast};
+\draw[storyArrow] (11.46,3.62)--(12.42,3.62);
 
 % --------------------------------------------------------------------------
 % Measurement
@@ -59,86 +65,75 @@
 
 % A compact vertical MIM stack: the film is the amber middle layer, not a
 % second electrode or a free-standing sample.
-\fill[electrode] (0.90,2.92) rectangle (3.12,3.16);
-\fill[film] (0.90,2.15) rectangle (3.12,2.92);
-\fill[electrode] (0.90,1.91) rectangle (3.12,2.15);
-\draw[wire] (2.01,3.16)--(2.01,3.64);
-\draw[wire] (2.01,1.91)--(2.01,1.53);
-\node[labelStd,anchor=west] at (2.22,3.58) {upper electrode};
-\node[labelStd,anchor=west] at (2.22,1.49) {lower electrode};
-\draw[fieldArrow] (1.35,3.48)--(1.35,2.98);
-\draw[fieldArrow] (1.55,3.48)--(1.55,2.98);
-\draw[fieldArrow] (1.75,3.48)--(1.75,2.98);
-\node[labelStd,text=cRed!70!black,anchor=east] at (1.22,3.24)
+\fill[electrode] (0.78,2.98) rectangle (3.22,3.28);
+\fill[film] (0.78,2.10) rectangle (3.22,2.98);
+\fill[electrode] (0.78,1.80) rectangle (3.22,2.10);
+\node[labelStd,text=cRed!70!black,anchor=west] at (0.18,1.46)
   {$E=15\,\mathrm{MV\,m^{-1}}$};
-\node[labelMute,anchor=north] at (2.02,1.25) {25\,\%RH chamber};
+\node[labelMute,anchor=north] at (2.02,0.80) {25\,\%RH chamber};
 
 % --------------------------------------------------------------------------
 % Conventional dielectric
 % --------------------------------------------------------------------------
-\draw[wire] (4.10,0.54)--(4.10,4.72);
-\node[columnTitle,anchor=north] at (6.14,4.72) {Conventional dielectric};
-\node[labelMute,anchor=north] at (6.14,4.30) {finite traps};
+\node[columnTitle,anchor=north] at (5.72,4.72) {Conventional dielectric};
+\node[labelMute,anchor=north] at (5.72,4.30) {finite shallow sites};
 
-\fill[conventionalFilm] (4.72,2.22) rectangle (7.56,3.05);
-\draw[wire] (4.72,2.22)--(7.56,2.22);
-\draw[wire] (4.72,3.05)--(7.56,3.05);
-\node[trapBlue] at (5.35,2.66) {};
-\node[trapBlue] at (6.14,2.50) {};
-\node[trapBlue] at (6.93,2.72) {};
-\draw[drainArrow] (5.35,2.57)--(5.35,3.72);
-\draw[drainArrow] (6.14,2.41)--(6.14,3.72);
-\draw[drainArrow] (6.93,2.63)--(6.93,3.72);
-\node[labelStd,text=cBlue!66!black,anchor=north] at (6.14,1.82)
+\fill[conventionalFilm] (4.40,2.12) rectangle (7.04,3.40);
+\draw[wire] (4.40,2.12)--(7.04,2.12);
+\draw[wire] (4.40,3.40)--(7.04,3.40);
+\node[trapBlue] at (5.05,2.78) {};
+\node[trapBlue] at (5.72,2.43) {};
+\node[trapBlue] at (6.40,2.95) {};
+\draw[drainArrow] (5.05,2.69)--(5.05,1.68);
+\draw[drainArrow] (5.72,2.34)--(5.72,1.55);
+\draw[drainArrow] (6.40,3.04)--(6.40,1.68);
+\node[labelStd,text=cBlue!66!black,anchor=north] at (5.72,1.18)
   {charge drains};
 
 % --------------------------------------------------------------------------
 % Sulfur-rich copolymer
 % --------------------------------------------------------------------------
-\draw[wire] (8.20,0.54)--(8.20,4.72);
-\node[columnTitle,anchor=north] at (10.22,4.72) {Sulfur-rich copolymer};
-\node[labelMute,anchor=north] at (10.22,4.30) {broad trap landscape};
+\node[columnTitle,anchor=north] at (9.78,4.72) {Sulfur-rich copolymer};
+\node[labelMute,anchor=north] at (9.78,4.30) {distributed trap population};
 
-\fill[film] (8.78,2.22) rectangle (11.66,3.05);
-\draw[wire] (8.78,2.22)--(11.66,2.22);
-\draw[wire] (8.78,3.05)--(11.66,3.05);
-% Non-periodic sites make the breadth visible without recreating Fig1's energy
-% diagram or implying a calibrated density distribution.
+\fill[film] (8.38,2.12) rectangle (11.18,3.40);
+\draw[wire] (8.38,2.12)--(11.18,2.12);
+\draw[wire] (8.38,3.40)--(11.18,3.40);
+% Non-periodic host traces make the breadth visible without recreating Fig1's
+% energy diagram or implying a calibrated density distribution.
 \draw[cGray!48!black,line width=0.48pt,line cap=round]
-  (8.98,2.72) .. controls (9.20,2.55) and (9.46,2.92) .. (9.68,2.66);
+  (8.58,2.88) .. controls (8.88,2.56) and (9.12,3.10) .. (9.48,2.62);
 \draw[cAmber!62!black,line width=0.55pt,line cap=round]
-  (9.82,2.42) .. controls (10.04,2.26) and (10.25,2.78) .. (10.50,2.55);
+  (9.46,2.34) .. controls (9.82,2.14) and (10.10,2.84) .. (10.44,2.58);
 \draw[cGray!48!black,line width=0.48pt,line cap=round]
-  (10.72,2.78) .. controls (10.96,2.52) and (11.18,2.92) .. (11.48,2.55);
-\node[trapAmber] at (9.24,2.73) {};
-\node[trapRed] at (9.83,2.58) {};
-\node[trapAmber] at (10.31,2.42) {};
-\node[trapRed] at (10.70,2.76) {};
-\node[trapAmber] at (11.17,2.72) {};
-\node[trapRed] at (11.48,2.55) {};
+  (10.30,3.08) .. controls (10.62,2.76) and (10.80,3.20) .. (11.02,2.68);
+\node[trapAmber] at (8.88,2.76) {};
+\node[trapRed] at (9.36,2.56) {};
+\node[trapAmber] at (9.88,2.44) {};
+\node[trapRed] at (10.20,2.86) {};
+\node[trapAmber] at (10.60,2.98) {};
+\node[trapRed] at (10.96,2.72) {};
 % The occupied sites remain inside the film and have no outward drain arrows;
 % that restrained contrast carries retention without a decorative halo.
-\node[labelStd,text=cRed!68!black,anchor=north] at (10.22,1.82)
+\node[labelStd,text=cRed!68!black,anchor=north] at (9.78,1.18)
   {charge retained};
 
 % --------------------------------------------------------------------------
 % What we read
 % --------------------------------------------------------------------------
-\draw[wire] (12.30,0.54)--(12.30,4.72);
 \node[columnTitle,anchor=north] at (14.34,4.72) {What we read};
-\node[labelMute,anchor=north] at (14.34,4.30) {same current trace, two windows};
+\node[labelMute,anchor=north] at (14.34,4.30) {one decay, two windows};
 
-\draw[axisArrow] (12.92,1.77)--(12.92,3.61);
-\draw[axisArrow] (12.92,1.77)--(15.85,1.77);
-\node[labelMute,anchor=east,rotate=90] at (12.40,2.73) {$I(t)$};
-\node[labelMute,anchor=north] at (14.38,1.59) {time};
-\draw[traceEarly] (13.15,3.35)--(14.05,2.86);
-\draw[traceLate] (14.05,2.86)--(15.60,2.43);
+\draw[axisArrow] (12.92,1.95)--(12.92,3.64);
+\draw[axisArrow] (12.92,1.95)--(15.85,1.95);
+\node[labelMute,anchor=east,rotate=90] at (12.40,2.80) {$I(t)$};
+\node[labelMute,anchor=north] at (14.38,1.77) {time};
+\draw[traceEarly] (13.16,3.38)--(14.05,2.88);
+\draw[traceLate] (14.05,2.88)--(15.60,2.46);
 \draw[cGray!44!black,line width=0.42pt,dash pattern=on 1.2pt off 1.2pt]
-  (14.05,1.80)--(14.05,3.53);
-\node[labelStd,anchor=south west] at (13.23,3.36) {2--30\,s};
-\node[labelStd,anchor=north west] at (14.20,2.28) {30--300\,s};
-\node[labelMute,anchor=north] at (14.34,1.10) {schematic readout};
+  (14.05,1.98)--(14.05,3.56);
+\node[labelStd,anchor=south west] at (13.22,3.39) {2--30\,s};
+\node[labelStd,anchor=north west] at (14.18,2.33) {30--300\,s};
 
 \end{tikzpicture}%
 }

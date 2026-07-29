@@ -2,17 +2,20 @@
 
 ## Composition
 
-Use a 163.8 × 52.3 mm wide strip matching the current Fig. 2a slot. Keep one
-open white row with four equal semantic zones separated by hairline rules:
+Use a 163.8 × 46.4 mm wide strip matching the current Fig. 2a slot. Keep one
+open white row with four semantic zones, but let the two material zones read as
+a parallel comparison rather than four equal UI cards:
 
 1. Measurement context and MIM stack.
 2. Conventional dielectric: finite sites and drain cues.
 3. Sulfur-rich copolymer: distributed sites and retained-charge cue.
 4. Readout icon with the early and late time windows.
 
-The header lane carries the panel letter, compact title, and low-contrast
-left-to-right story arrows. The object lane carries the physical marks. The
-bottom lane carries only short explanatory labels.
+The header lane carries the panel letter and compact zone labels. A single
+mechanism rail connects measurement to the comparison and the comparison to
+the readout; a short double-headed mark between the material zones denotes
+contrast, not sequential processing. The object lane carries the physical
+marks. The bottom lane carries only short explanatory labels.
 
 ## Visual decisions
 
@@ -27,6 +30,8 @@ bottom lane carries only short explanatory labels.
   material phase.
 - Keep the readout trace qualitative and number-free except for the two declared
   window labels.
+- Do not use full-height column rules or equal framed cards; whitespace and the
+  object silhouettes should establish the four lanes.
 
 ## Review order
 

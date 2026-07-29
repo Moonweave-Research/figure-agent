@@ -14,11 +14,11 @@ the late-time response departs from the early power law. Fig. 3 owns the
 frequency-domain dielectric response; Fig. 4 owns ISPD trap-distribution
 inference; Fig. 5 owns the floating-clip actuation mechanism.
 
-The strip must read left to right:
+The strip must read as a causal comparison without implying that one material
+is converted into the other:
 
-`MIM measurement context → conventional finite-trap drain → sulfur-rich broad
-trap landscape with retained charge → the two current-decay windows read in
-panels b–d`.
+`MIM measurement context → parallel conventional-versus-sulfur trap comparison
+→ the two current-decay windows read in panels b–d`.
 
 ## §2 Panel content
 

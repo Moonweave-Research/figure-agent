@@ -56,20 +56,11 @@ text_boundary_checks:
     text_allowlist: [Measurement, Conventional, Sulfur-rich, What]
 
 label_path_proximity_checks:
-  - id: measurement-field-label
-    kind: vertical_line
-    role: field_direction
-    x_pdf_cm: 3.0
-    y_range_pdf_cm: [1.85, 3.70]
-    clearance_pt: 2.5
-    text_phrases:
-      - id: field-label
-        words: [MV]
   - id: readout-window-divider
     kind: vertical_line
     role: fit-window-divider
     x_pdf_cm: 14.05
-    y_range_pdf_cm: [1.77, 3.61]
+    y_range_pdf_cm: [1.95, 3.64]
     clearance_pt: 2.5
     text_phrases:
       - id: late-window
