@@ -60,8 +60,8 @@ _NEXT_4_NOT_ACCEPTED = (
     " defects, then set accepted: true in spec.yaml."
 )
 _NEXT_4_ACCEPTANCE_NOT_DECLARED = (
-    "fixture has no accepted or final-ready declaration — keep iterating with"
-    " /fig_loop <name>, or make an explicit human acceptance/final-artifact"
+    "fixture has no accepted or final-ready declaration — stop automatic"
+    " iteration and obtain an explicit human acceptance/final-artifact"
     " decision before release."
 )
 _NEXT_4_ACCEPTANCE_AUTHORIZED = (

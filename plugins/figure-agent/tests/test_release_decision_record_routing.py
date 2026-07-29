@@ -66,6 +66,8 @@ def test_stage_4_without_decision_record_stays_at_acceptance_gate() -> None:
 
     assert "fixture has no accepted or final-ready declaration" in hint
     assert "explicit human acceptance/final-artifact decision" in hint
+    assert "stop automatic iteration" in hint
+    assert "keep iterating" not in hint
     assert "closeout-accept" not in hint
     assert "accepted: true" not in hint
 
