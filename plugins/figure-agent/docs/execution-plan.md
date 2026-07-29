@@ -9,33 +9,19 @@
 
 **Tech stack:** Python 3.11+, pytest, PyYAML, existing Figure Agent CLI and quality modules, TikZ/LuaLaTeX, PDF/PNG review evidence, existing dvisvgm export. Add no dependency.
 
----
-
 ## Current QA stop state — 2026-07-14
 
-The reviewed baseline `09cd206a` was 32 commits ahead of `main` and had no
-commits to merge from `main`. A detached clean-worktree run collected 3,778 tests and
-finished with `3740 passed, 4 failed, 29 skipped, 5 xfailed`. The four failures
-are release blockers, not publication findings:
+The reviewed baseline `09cd206a` reported `3740 passed, 4 failed, 29 skipped,
+5 xfailed` in a detached clean worktree. Q0 closed those historical
+clean-checkout and destructive-test blockers. Q0–Q5 are now complete on the
+active Fig3 source.
 
-1. a layout test requires an ignored historical v64 PDF that is absent from a
-   clean checkout;
-2. this active plan exceeded its authority-test size limit;
-3. the Fig1 evidence verifier requires an ignored `review/states/build/raw.png`;
-4. the historical hybrid Fig3 attribution test resolves `unbound`, not `exact`.
-
-This update closes item 2; Q0 owns the remaining clean-checkout failures and
-the destructive-test boundary found during review.
-
-Q0–Q3 are complete on the active Fig3 source. The strict compile is green and
-its status keeps render freshness separate from detector evidence. The geometry
-report attributes 16/20 operations (five transfer paths, two analytic plots),
-resolves five rendered curved arrows, and records non-zero layout clearances.
-
-This is a bounded machine result, not publication acceptance: four operations
-remain outside typed parsing, and the hash-bound current-render scaffold still
-awaits a named human verdict. Critique and export evidence are present. Q4 is
-next; keep historical sources read-only.
+The strict compile is green. The geometry report attributes 16/20 operations,
+resolves five rendered curved arrows, and records non-zero layout clearances;
+four operations remain outside typed parsing. Moon's hash-bound verdict accepts
+the development baseline only. Strict render, critique, adjudication, crop, and
+export evidence are fresh, but none claims publication acceptance. Preserve
+historical sources and execute only the declared Fig1 comparable replay next.
 
 ## 0. Authority and execution rules
 
@@ -220,11 +206,14 @@ modules listed in Section 0.
   declarations. In particular, preserve sign-agnostic repeated trapping in A,
   discrete-to-continuous distribution evolution in B, and the distinction
   between `n` (breadth) and `rho_60s` (magnitude).
-- [x] Produce comparable `raw`, `verified`, and `repaired` manifests using the
-  same model, input packet, budget, and starting artifact. `comparable-v1/`
+- [x] Produce historical `raw`, `verified`, and `repaired` authoring-intervention
+  manifests using the same model, task, budget, and starting artifact.
+  `comparable-v1/`
   records a reproducible preamble integration failure. `comparable-v2/` proves
   that executable Style Lock injection removes broad source blockers, but its
-  prompt-only layout treatment is not enforcement or repair. Moon rejected both
+  prompt-only layout treatment is not enforcement or bounded repair. Its third
+  generation is therefore classified as an additional authoring intervention,
+  not as a child of the verified artifact. Moon rejected both
   rendered arms for collisions, unnatural paths, weak sample rendering, and
   unresolved band-energy authority; the repaired arm also regressed the band
   shapes. The verified arm remains the repair seed. All detailed intermediate
@@ -257,9 +246,9 @@ modules listed in Section 0.
 
 ### Ordered next execution
 
-**Current next executable step:** complete Q4 for the maintained Fig3 evidence.
-Before any further authoring experiment, complete Q5's constraint-diet gate; do
-not add another generator, renderer, candidate family, or workflow shell.
+**Current next executable step:** run the clean two-arm replay after the rejected
+v5; exact Panel F semantics now byte-bind the curved motif, but the replay must
+prove visual benefit without coordinates or another renderer/workflow shell.
 
 - [x] **Q0 — Make QA non-destructive and clean-checkout complete.** Copy every
   historical TeX input and its required local dependencies to `tmp_path` before
@@ -287,13 +276,13 @@ not add another generator, renderer, candidate family, or workflow shell.
   human/scientific decision. Evidence: 16/20 source operations (including five
   `to_curve` paths and two `analytic_plot` records) map to five rendered arrows;
   this bounds detector coverage only, not physical band-energy shape.
-- [ ] **Q4 — Refresh evidence and close human review.** Regenerate critique,
+- [x] **Q4 — Refresh evidence and close human review.** Regenerate critique,
   audit crops, compile/export receipts, and review hashes in a clean environment.
   A named development-baseline scaffold verdict is now recorded; prospective
   correction minutes were not captured and must not be reconstructed after the
-  fact. The critique/adjudication refresh remains open after any source repair.
-  Machine-valid or review-ready remains distinct from publication acceptance.
-- [ ] **Q5 — Reduce the active product surface before composition v2.** Preserve
+  fact. The strict render, critique, adjudication, crop, export, and review-hash
+  surfaces are fresh. Publication acceptance remains separate.
+- [x] **Q5 — Reduce the active product surface before composition v2.** Preserve
   historical artifacts and compatibility schema readers, but inventory every
   top-level command and classify it as core, internal compatibility, or retired
   from the default path. Freeze direct-SVG generation, SVG-polish, deterministic
@@ -395,8 +384,17 @@ and Fig3 evidence, rather than starting another implementation lane.
   improvement cannot offset semantic/relation failures, no capability promotes,
   and `docs/product-spec.md` remains unchanged.
 
-- [ ] **Next evidence — additive Fig1 three-arm replay.** Preserve historical `review/ablation/` evidence and create only `review/failure-first/comparable-v1/`; before model invocation, run `./bin/fig-agent authoring-preflight-triplet --raw examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/raw_packet.json --verified examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/verified_packet.json --repaired examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/repaired_packet.json --json`.
-  A pass proves only equal-input packet binding and disjoint outputs—not execution, a receipt, review, correction time, product claim, or publication acceptance; real clean-environment runs and named human outcomes remain required.
+- [ ] **Next evidence — run corrected Fig1 two-arm replay, then repair B.**
+  Preserve prior attempts; use only `review/failure-first/comparable-v2/`.
+  Bind A and B to the same neutral `authoring_task.md`, model, budget, and blank.
+  A gets no tool/review/renderer contracts; B gets the Figure Agent packet.
+  `fig-agent authoring-preflight-ab` rejects TikZ, Style Lock, or semantic-
+  contract injection into A.
+  Never create a repaired authoring packet or third independent model call.
+  After B, run strict QA, exact attribution, named human authorization,
+  materialization, and finalization; C is the hash-bound child of B. Require
+  `repair_lineage_evidence: bound`, prospective correction minutes, and named
+  blinded outcomes. No machine result claims product or publication success.
 
 Runtime review surfaces use `figure-agent.current-render-review-scaffold.v1`
 and `figure-agent.strict-status.v1`; neither schema is a publication verdict.
@@ -437,7 +435,8 @@ This plan is complete only when:
 
 1. Panel F has all required review scales and a recorded human-effort status;
 2. Fig3 proves the same control loop without Fig1-specific imports;
-3. both families have comparable raw, verified, and repaired evidence;
+3. both families have comparable raw and verified authoring evidence plus a
+   verified-to-repaired hash-bound lineage;
 4. at least one recurring failure is exactly attributable and safely reduced
    without scientific regression;
 5. rollback and clean reproduction are proven;

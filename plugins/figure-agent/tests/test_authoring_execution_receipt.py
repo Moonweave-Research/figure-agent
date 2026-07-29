@@ -30,6 +30,10 @@ def _evidence(tmp_path: Path, *, with_visual_asset: bool = False) -> dict[str, P
         + "panels: []\n",
         encoding="utf-8",
     )
+    (fixture / "authoring_task.md").write_text(
+        "Draw one editable scientific schematic.\n",
+        encoding="utf-8",
+    )
     (review / "budget.yaml").write_text("max_attempts: 1\n", encoding="utf-8")
     (review / "blank.txt").write_text("", encoding="utf-8")
     output_rel = (

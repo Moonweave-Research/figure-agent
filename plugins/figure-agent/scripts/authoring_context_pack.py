@@ -17,6 +17,10 @@ import shape_profile as shape_profile_compiler
 import yaml
 from checks import check_label_path_proximity
 from inputs import parse_spec
+from quality.semantic_legibility_contract import (
+    SemanticLegibilityContractError,
+    validate_semantic_legibility_contract,
+)
 from semantic_contracts import SemanticContractError, collect_semantic_contracts
 
 SCHEMA = "figure-agent.authoring-context-pack.v1"
@@ -26,11 +30,83 @@ REUSABLE_VISUAL_ASSET_STATUSES = {
     "reviewed_reusable",
 }
 LAYOUT_LANES_SCHEMA = "figure-agent.layout-lanes.v1"
+FAILURE_FIRST_SEMANTIC_SCHEMA = "figure-agent.failure-first-semantic-contract.v1"
 SAFE_CATALOG_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
 class AuthoringContextPackError(ValueError):
     """Raised when an authoring context pack cannot be compiled."""
+
+
+def _standalone_semantic_contract(example_dir: Path) -> dict[str, Any] | None:
+    path = example_dir / "semantic_contract.yaml"
+    if path.is_symlink() or not path.is_file():
+        if not path.exists() and not path.is_symlink():
+            return None
+        raise AuthoringContextPackError("standalone semantic contract must be regular")
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or payload.get("schema") != FAILURE_FIRST_SEMANTIC_SCHEMA:
+        raise AuthoringContextPackError("standalone semantic contract schema invalid")
+    try:
+        validate_semantic_legibility_contract(payload)
+    except SemanticLegibilityContractError as exc:
+        raise AuthoringContextPackError(
+            f"standalone semantic contract invalid: {exc}"
+        ) from exc
+
+    def string_list(key: str) -> list[str]:
+        values = payload.get(key, [])
+        if (
+            not isinstance(values, list)
+            or any(not isinstance(value, str) or not value.strip() for value in values)
+            or len(values) != len(set(values))
+        ):
+            raise AuthoringContextPackError(
+                f"standalone semantic contract {key} invalid"
+            )
+        return values
+
+    selector = payload.get("selector_id")
+    if not isinstance(selector, str) or not selector.strip():
+        raise AuthoringContextPackError("standalone semantic contract selector invalid")
+    selector_root = selector.split(".", 1)[0]
+    panel_id = (
+        selector_root.removeprefix("panel_").upper()
+        if selector_root.startswith("panel_")
+        else selector_root
+    )
+    required_objects = string_list("required_objects")
+    protected_relations = string_list("protected_relations")
+    forbidden_implications = string_list("forbidden_implications")
+    return {
+        "schema": "figure-agent.semantic-contracts.v1",
+        "enabled": True,
+        "source": "standalone_failure_first_contract",
+        "semantic_claims": [
+            {
+                "panel_id": panel_id,
+                "id": f"required-object:{object_id}",
+                "claim": f"The figure includes required object [{object_id}].",
+            }
+            for object_id in required_objects
+        ],
+        "locked_invariants": [
+            {
+                "panel_id": panel_id,
+                "id": f"protected-relation:{relation}",
+                "invariant": f"Protected relation holds: [{relation}].",
+            }
+            for relation in protected_relations
+        ]
+        + [
+            {
+                "panel_id": panel_id,
+                "id": f"forbidden-implication:{implication}",
+                "invariant": f"Forbidden implication is absent: [{implication}].",
+            }
+            for implication in forbidden_implications
+        ],
+    }
 
 
 def _read_optional_text(path: Path, *, limit: int = 12000) -> str:
@@ -65,6 +141,7 @@ def _style_lock_tokens(style_path: Path) -> dict[str, Any]:
 
 def _paper_context(example_dir: Path) -> dict[str, str]:
     files = {
+        "authoring_task": example_dir / "authoring_task.md",
         "briefing": example_dir / "briefing.md",
         "design": example_dir / "design.md",
         "authoring_contract": example_dir / "authoring_contract.md",
@@ -105,7 +182,60 @@ def _catalog_file(plugin_root: Path, value: object, *, label: str) -> Path:
     return path
 
 
-def _authoring_visual_assets(plugin_root: Path, spec: dict[str, Any]) -> dict[str, Any]:
+def _declared_semantic_ids(
+    semantic_contracts: dict[str, Any],
+) -> tuple[set[str], set[str]]:
+    required_objects: set[str] = set()
+    protected_relations: set[str] = set()
+    for claim in semantic_contracts.get("semantic_claims", []):
+        claim_id = claim.get("id") if isinstance(claim, dict) else None
+        if isinstance(claim_id, str) and claim_id.startswith("required-object:"):
+            required_objects.add(claim_id.removeprefix("required-object:"))
+    for invariant in semantic_contracts.get("locked_invariants", []):
+        invariant_id = invariant.get("id") if isinstance(invariant, dict) else None
+        if isinstance(invariant_id, str) and invariant_id.startswith(
+            "protected-relation:"
+        ):
+            protected_relations.add(
+                invariant_id.removeprefix("protected-relation:")
+            )
+    return required_objects, protected_relations
+
+
+def _semantic_asset_ids(
+    entries: dict[str, Any], semantic_contracts: dict[str, Any]
+) -> list[str]:
+    required_objects, protected_relations = _declared_semantic_ids(
+        semantic_contracts
+    )
+    selected: list[str] = []
+    for asset_id, entry in entries.items():
+        if not isinstance(entry, dict):
+            continue
+        applicability = entry.get("applicability")
+        if not isinstance(applicability, dict):
+            continue
+        object_ids = applicability.get("required_objects_all", [])
+        relation_ids = applicability.get("protected_relations_all", [])
+        if (
+            isinstance(object_ids, list)
+            and bool(object_ids)
+            and all(isinstance(item, str) for item in object_ids)
+            and set(object_ids).issubset(required_objects)
+            and isinstance(relation_ids, list)
+            and bool(relation_ids)
+            and all(isinstance(item, str) for item in relation_ids)
+            and set(relation_ids).issubset(protected_relations)
+        ):
+            selected.append(asset_id)
+    return selected
+
+
+def _authoring_visual_assets(
+    plugin_root: Path,
+    spec: dict[str, Any],
+    semantic_contracts: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     catalog_path = plugin_root / "styles" / "snippets" / "INDEX.yaml"
     config = spec.get("authoring_context_pack") or {}
     if not isinstance(config, dict):
@@ -123,8 +253,14 @@ def _authoring_visual_assets(plugin_root: Path, spec: dict[str, Any]) -> dict[st
     if not isinstance(entries, dict):
         raise AuthoringContextPackError("curated visual asset catalog is invalid")
 
+    semantic_contracts = semantic_contracts or {}
+    semantic_ids = _semantic_asset_ids(entries, semantic_contracts)
+    selected_ids = [*raw_ids, *(item for item in semantic_ids if item not in raw_ids)]
+    required_objects, protected_relations = _declared_semantic_ids(
+        semantic_contracts
+    )
     selected: list[dict[str, Any]] = []
-    for asset_id in raw_ids:
+    for asset_id in selected_ids:
         entry = entries.get(asset_id)
         if not isinstance(entry, dict):
             raise AuthoringContextPackError(
@@ -146,6 +282,9 @@ def _authoring_visual_assets(plugin_root: Path, spec: dict[str, Any]) -> dict[st
         ]
         signature = api.get("signature")
         tunable = api.get("tunable")
+        include = api.get("include")
+        if isinstance(include, str):
+            directives.append(f"Load it once with [{include}].")
         if isinstance(signature, str):
             tunable_text = (
                 ", ".join(str(item) for item in tunable)
@@ -173,6 +312,21 @@ def _authoring_visual_assets(plugin_root: Path, spec: dict[str, Any]) -> dict[st
             "authoring_directives": directives,
             "read_paths": [entry["file"]],
         }
+        if asset_id in raw_ids:
+            item["selection"] = {"mode": "explicit_spec"}
+        else:
+            applicability = entry["applicability"]
+            item["selection"] = {
+                "mode": "declared_semantic_applicability",
+                "matched_required_objects": sorted(
+                    set(applicability["required_objects_all"])
+                    & required_objects
+                ),
+                "matched_protected_relations": sorted(
+                    set(applicability["protected_relations_all"])
+                    & protected_relations
+                ),
+            }
         for output_key, entry_key in (
             ("contract", "contract"),
             ("transfer_receipt", "transfer_receipt"),
@@ -594,6 +748,10 @@ def build_context_pack(
         semantic_contracts = collect_semantic_contracts(spec)
     except SemanticContractError as exc:
         raise AuthoringContextPackError(str(exc)) from exc
+    if not semantic_contracts["enabled"]:
+        semantic_contracts = (
+            _standalone_semantic_contract(example_dir) or semantic_contracts
+        )
 
     catalog_path = _selected_rule_catalog_path(spec, paths)
     fixture_catalog = (
@@ -618,7 +776,9 @@ def build_context_pack(
         if label_path_checks
         else None
     )
-    visual_assets = _authoring_visual_assets(paths.plugin_root, spec)
+    visual_assets = _authoring_visual_assets(
+        paths.plugin_root, spec, semantic_contracts
+    )
     selected_shape_profile = _shape_profile(example_dir, shape_profile)
     selected_composition_profile = _composition_profile(
         example_dir, composition_profile
@@ -629,6 +789,9 @@ def build_context_pack(
         "read_only": True,
         "sources": {
             "spec": _relative(paths.workspace_root, spec_path),
+            "authoring_task": _relative(
+                paths.workspace_root, example_dir / "authoring_task.md"
+            ),
             "briefing": _relative(paths.workspace_root, example_dir / "briefing.md"),
             "design_philosophy": _relative(paths.plugin_root, philosophy_path),
             "style_lock": _relative(paths.plugin_root, style_path),
@@ -648,6 +811,17 @@ def build_context_pack(
         "fixture": {
             "title": spec.get("title", ""),
             "style_profile": spec.get("style_profile", ""),
+            "tex_assertions": [
+                {
+                    key: assertion[key]
+                    for key in ("id", "anchor_style", "axis", "direction")
+                    if key in assertion
+                }
+                for assertion in spec.get("tex_assertions", [])
+                if isinstance(assertion, dict)
+                and isinstance(assertion.get("id"), str)
+                and isinstance(assertion.get("anchor_style"), str)
+            ],
             "panels": [
                 {
                     "id": panel.get("id", f"panel_{index + 1}"),

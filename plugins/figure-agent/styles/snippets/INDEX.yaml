@@ -81,6 +81,7 @@ snippets:
       data_grounded: false
     api:
       kind: macro
+      include: '\input{snippets/panel-f-floating-cantilever.tex}'
       signature: '\PanelFFloatingCantilever{prefix}{(x,y)}'
       tunable: [prefix, origin]
     preconditions:
@@ -101,6 +102,16 @@ snippets:
     anti_patterns:
       - "grounded sample or grounded cantilever"
       - "bidirectional actuation sequence"
+    applicability:
+      required_objects_all:
+        - panel_f.cantilever
+        - panel_f.electrode
+        - panel_f.ground_reference
+        - panel_f.voltage_source
+      protected_relations_all:
+        - cantilever_remains_electrically_floating
+        - voltage_source_drives_electrode
+        - voltage_source_returns_to_ground
     smoke_fixture: examples/fig1_failure_first_panel_f_pilot/fig1_failure_first_panel_f_pilot.tex
     consumed_by:
       - "examples/fig1_failure_first_panel_f_pilot"

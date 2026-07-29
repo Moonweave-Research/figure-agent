@@ -343,7 +343,10 @@ The active authoring control plane also preserves
 `figure-agent.authoring-execution-packet.v1`,
 `figure-agent.authoring-execution-preflight.v1`,
 `figure-agent.authoring-execution-receipt.v1`,
+`figure-agent.failure-first-semantic-contract.v1`,
 `figure-agent.repair-execution-packet.v3`, and
+`figure-agent.repair-materialization-preview.v1`,
+`figure-agent.repair-materialization-receipt.v2`,
 `figure-agent.shape-profile.v1`, and
 `figure-agent.composition-profile.v1` as evidence contracts. Their machine-valid
 state remains subordinate to rendered and human review.
@@ -387,12 +390,21 @@ new observation or repair primitive rather than another LLM retry.
 
 ## 10. Benchmark and proof model
 
-Figure Agent is evaluated by an ablation with fixed model, input, budget, and
-starting artifact:
+Figure Agent is evaluated by an ablation with fixed model, scientific task,
+budget, and starting artifact:
 
 - A: raw LLM authoring;
 - B: the same LLM plus Figure Agent contracts and verification;
-- C: the same LLM plus contracts, verification, and bounded repair.
+- C: B's generated artifact after strict QA, exact attribution, named
+  human-authorized bounded repair, materialization, and finalization.
+
+A and B are the only authoring calls. Both hash-bind the same neutral
+`authoring_task.md`; that task must contain scientific content only, with no
+Figure Agent purpose, review policy, renderer, style, or contract language. A
+receives only that neutral task. B additionally receives Figure Agent's output,
+style, semantic, and provenance contracts. C must carry canonical packet,
+authorization, receipt, and artifact lineage to B; a repaired generation receipt
+or third independent generation is not bounded-repair evidence.
 
 Evaluation must cover at least two materially different scientific figure
 families and include complex panels. Metrics remain separate:
@@ -434,6 +446,14 @@ Grammar should encode reusable invariants such as semantic salience, layer
 ownership, stroke roles, curvature families, controlled repetition, and optical
 alignment. It must not become an Illustrator clone or prescribe arbitrary page
 geometry.
+
+A reviewed same-family motif may be supplied to an authoring packet when its
+catalog applicability contract is satisfied by exact declared object and
+relation IDs. Selection must not rely on prose keywords, fixture names, or
+coordinates. The packet must bind the motif source, semantic contract, transfer
+receipt, load instruction, callable API, and byte hashes while leaving
+whole-panel composition to the authoring model. This is a bounded visual-vocabulary
+aid, not a promoted general grammar and not evidence of publication quality.
 
 ## 12. Acceptance model
 
@@ -512,9 +532,9 @@ Current repository evidence supports these conclusions:
   than publication-quality success;
 - the active Fig3 source now has a fresh passing strict compile and meets its
   declared geometry-coverage floor (21/25 operations typed; four remain outside
-  typed parsing). This supports a bounded machine clean claim only: the
-  hash-bound current-render scaffold still awaits a named human verdict, and it
-  does not decide physical band-energy shape or publication quality; and
+  typed parsing). Its hash-bound current-render scaffold records Moon's
+  development-baseline verdict. This does not decide physical band-energy shape,
+  publication quality, or release acceptance; and
 - the repository does not yet prove that Figure Agent reduces correction cost
   relative to the same LLM without the system.
 
@@ -567,8 +587,9 @@ failure-first evidence, not as a composition-assistance result. The next attempt
 must add comparison eligibility and non-coordinate containment controls; it must
 not revive a complete composition grammar.
 
-The failure corpus and first A/B/C baseline now exist. The active execution plan
-therefore closes QA integrity and coverage gaps first, then closes the incomplete
-Fig1 and Fig3 human-review boundaries, and only then makes a two-family
-capability decision. It must not add another renderer, motif family, or
-fixture-specific polish rule.
+The failure corpus and historical authoring-intervention baseline now exist. The
+first Fig1 replay is invalid because raw inherited tool/review language; the
+second is also invalid because raw inherited spec-derived panel lines outside
+the task hash. The third replay uses only the neutral task in A and adds Figure
+Agent contracts only in B; C must derive from B through the bounded transaction.
+It must not add another renderer, motif family, or fixture-specific polish rule.

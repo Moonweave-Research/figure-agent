@@ -43,6 +43,10 @@ panels:
         encoding="utf-8",
     )
     (fixture / "briefing.md").write_text("## §1. Topic\nCharge trapping\n", encoding="utf-8")
+    (fixture / "authoring_task.md").write_text(
+        "Draw a six-panel scientific overview of charge trapping.\n",
+        encoding="utf-8",
+    )
     (fixture / "design.md").write_text("Use compact visual grammar.\n", encoding="utf-8")
     (fixture / "authoring_plan.md").write_text(
         "Hero: panel C should read as deep trap first, then escape barrier.\n",
@@ -119,6 +123,35 @@ forbidden:
         encoding="utf-8",
     )
     return profile
+
+
+def test_context_pack_binds_machine_tex_assertion_anchor_styles(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(
+        workspace,
+        extra_spec=(
+            "tex_assertions:\n"
+            "  - id: force-points-away\n"
+            "    anchor_style: panelForceArrow\n"
+            "    axis: x\n"
+            "    direction: decreasing\n"
+        ),
+    )
+
+    pack = authoring_context_pack.build_context_pack(
+        "context_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert pack["fixture"]["tex_assertions"] == [
+        {
+            "id": "force-points-away",
+            "anchor_style": "panelForceArrow",
+            "axis": "x",
+            "direction": "decreasing",
+        }
+    ]
 
 
 def test_context_pack_injects_non_coordinate_composition_profile(
@@ -507,11 +540,118 @@ def test_context_pack_cli_compiles_read_only_json_payload(tmp_path: Path) -> Non
     assert payload["scope_boundary"]["durable_paper_specific_knowledge_compilation"] is True
     assert payload["semantic_contracts"]["enabled"] is True
     assert payload["semantic_contracts"]["semantic_claims"][0]["id"] == "trap-depth"
+
+
+def test_context_pack_adapts_standalone_failure_first_semantic_contract(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        "name: context_demo\n"
+        "title: Context Demo\n"
+        "panels:\n"
+        "  - id: F\n"
+        "    caption: Floating cantilever mechanism\n",
+        encoding="utf-8",
+    )
+    (fixture / "semantic_contract.yaml").write_text(
+        "schema: figure-agent.failure-first-semantic-contract.v1\n"
+        "selector_id: panel_f.mechanism_scene\n"
+        "required_objects: [panel_f.cantilever, panel_f.electrode]\n"
+        "forbidden_implications: [panel_f.grounded_cantilever]\n"
+        "protected_relations: [cantilever_remains_electrically_floating]\n"
+        "semantic_legibility:\n"
+        "  object_roles:\n"
+        "    - object_id: panel_f.cantilever\n"
+        "      declared_role: mechanical_member\n"
+        "      forbidden_readings: []\n"
+        "    - object_id: panel_f.electrode\n"
+        "      declared_role: active_electrode\n"
+        "      forbidden_readings: []\n"
+        "  visible_connectors: []\n"
+        "  forbidden_connectors: []\n"
+        "  label_ownership: []\n"
+        "publication_acceptance: not_claimed\n",
+        encoding="utf-8",
+    )
+
+    payload = authoring_context_pack.build_context_pack(
+        "context_demo", plugin_root=PLUGIN_ROOT, workspace_root=workspace
+    )
+
+    contracts = payload["semantic_contracts"]
+    assert contracts["enabled"] is True
+    assert contracts["source"] == "standalone_failure_first_contract"
+    assert {item["id"] for item in contracts["semantic_claims"]} == {
+        "required-object:panel_f.cantilever",
+        "required-object:panel_f.electrode",
+    }
+    assert {item["id"] for item in contracts["locked_invariants"]} == {
+        "protected-relation:cantilever_remains_electrically_floating",
+        "forbidden-implication:panel_f.grounded_cantilever",
+    }
     # context_demo != fig1_overview_v2_pair_001_vault: the per-fixture catalog is
     # scoped to its own fixture, so a non-matching fixture gets no per-fixture catalog
     assert payload["rule_catalog"] is None
     assert payload["sources"]["rule_catalog"] == ""
     assert "briefing" in payload["paper_context"]
+
+
+def test_context_pack_rejects_broken_semantic_contract_symlink(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        "name: context_demo\n"
+        "title: Context Demo\n"
+        "panels:\n"
+        "  - id: F\n"
+        "    caption: Floating cantilever mechanism\n",
+        encoding="utf-8",
+    )
+    (fixture / "semantic_contract.yaml").symlink_to("missing.yaml")
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="standalone semantic contract must be regular",
+    ):
+        authoring_context_pack.build_context_pack(
+            "context_demo", plugin_root=PLUGIN_ROOT, workspace_root=workspace
+        )
+
+
+def test_context_pack_uses_canonical_standalone_semantic_validation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    (fixture / "spec.yaml").write_text(
+        "name: context_demo\n"
+        "title: Context Demo\n"
+        "panels:\n"
+        "  - id: F\n"
+        "    caption: Floating cantilever mechanism\n",
+        encoding="utf-8",
+    )
+    (fixture / "semantic_contract.yaml").write_text(
+        "schema: figure-agent.failure-first-semantic-contract.v1\n"
+        "selector_id: panel_f.mechanism_scene\n"
+        "required_objects: [panel_f.cantilever]\n"
+        "forbidden_implications: []\n"
+        "protected_relations: []\n"
+        "semantic_legibility:\n"
+        "  object_roles: []\n"
+        "publication_acceptance: not_claimed\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        authoring_context_pack.AuthoringContextPackError,
+        match="standalone semantic contract invalid",
+    ):
+        authoring_context_pack.build_context_pack(
+            "context_demo", plugin_root=PLUGIN_ROOT, workspace_root=workspace
+        )
 
 
 def test_context_pack_binds_explicit_curated_visual_assets(tmp_path: Path) -> None:
@@ -547,6 +687,33 @@ def test_context_pack_binds_explicit_curated_visual_assets(tmp_path: Path) -> No
     assert "## Curated Visual Assets" in rendered
     assert "panel_f_floating_cantilever" in rendered
     assert "Do not redraw its owned geometry" in rendered
+
+
+def test_context_pack_selects_reviewed_asset_from_declared_semantics() -> None:
+    payload = authoring_context_pack.build_context_pack(
+        "fig1_failure_first_panel_f_pilot",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=PLUGIN_ROOT,
+    )
+
+    selected = payload["visual_assets"]["selected"]
+    assert [asset["id"] for asset in selected] == [
+        "panel_f_floating_cantilever"
+    ]
+    assert selected[0]["selection"] == {
+        "mode": "declared_semantic_applicability",
+        "matched_required_objects": [
+            "panel_f.cantilever",
+            "panel_f.electrode",
+            "panel_f.ground_reference",
+            "panel_f.voltage_source",
+        ],
+        "matched_protected_relations": [
+            "cantilever_remains_electrically_floating",
+            "voltage_source_drives_electrode",
+            "voltage_source_returns_to_ground",
+        ],
+    }
 
 
 def test_context_pack_rejects_unknown_curated_visual_asset(tmp_path: Path) -> None:

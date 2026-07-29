@@ -1,5 +1,5 @@
 {
-  "comparison_evidence": "transcript_bound",
+  "comparison_evidence": "authoring_transcript_bound_only",
   "deltas": {
     "repaired_vs_raw": {
       "confirmed_defect_count": -2,
@@ -16,6 +16,7 @@
   },
   "product_claim": "not_authorized",
   "publication_acceptance": "not_claimed",
+  "repair_lineage_evidence": "missing_or_invalid",
   "reproduction_gate": "passed",
   "schema": "figure-agent.failure-ablation-report.v1",
   "variants": {

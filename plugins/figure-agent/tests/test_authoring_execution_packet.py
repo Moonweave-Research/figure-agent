@@ -52,6 +52,10 @@ authoring_context_pack:
         encoding="utf-8",
     )
     (fixture / "briefing.md").write_text("## Topic\nCharge trapping\n", encoding="utf-8")
+    (fixture / "authoring_task.md").write_text(
+        "Draw a six-panel scientific overview of charge trapping.\n",
+        encoding="utf-8",
+    )
     (fixture / "design.md").write_text("Use compact visual grammar.\n", encoding="utf-8")
     (fixture / "authoring_plan.md").write_text(
         "Panel C should read as deep trap first.\n",
@@ -86,6 +90,10 @@ def test_packet_allows_and_binds_selected_curated_visual_asset(tmp_path: Path) -
     )
     assert "## Curated visual assets" in prompt
     assert "Do not redraw its owned geometry" in prompt
+    assert (
+        r"Load it once with [\input{snippets/panel-f-floating-cantilever.tex}]."
+        in prompt
+    )
     authoring_execution_packet.validate_visual_asset_bindings(packet)
     assert all(
         Path(path).is_file() for path in packet["allowed_repository_read_paths"][2:]
@@ -110,6 +118,7 @@ def _compile(
     ),
     execution_cwd: str = ".",
     composition_profile: str | None = None,
+    intervention_mode: str = "figure_agent",
 ) -> tuple[dict[str, object], str]:
     return authoring_execution_packet.compile_authoring_execution_packet(
         "context_demo",
@@ -121,6 +130,7 @@ def _compile(
         output_path=output_path,
         execution_cwd=execution_cwd,
         composition_profile=composition_profile,
+        intervention_mode=intervention_mode,
     )
 
 
@@ -183,11 +193,15 @@ def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
     assert "manual_repairs: 0" in prompt
     assert "publication_acceptance: not_claimed" in prompt
     assert "Trap energy diagram" in prompt
-    assert "Charge trapping" in prompt
+    assert "Draw a six-panel scientific overview of charge trapping." in prompt
     assert "Do not create an intermediate subdirectory" in prompt
     assert "Use only the preamble palette tokens" in prompt
     assert "Keep every explicit line width at or above 0.25pt" in prompt
     assert r"Do not use local \tiny or \scriptsize font overrides" in prompt
+    assert (
+        "Never use a single backslash as prose punctuation or a line-break "
+        "substitute" in prompt
+    )
     assert packet["allowed_repository_read_paths"] == [
         "AGENTS.md",
         "styles/polymer-paper-preamble.sty",
@@ -200,7 +214,28 @@ def test_compiles_canonical_packet_and_prompt(tmp_path: Path) -> None:
         "white, and gray.",
         "Keep every explicit line width at or above 0.25pt.",
         r"Do not use local \tiny or \scriptsize font overrides.",
+        "Never use a single backslash as prose punctuation or a line-break "
+        "substitute; use a space, or a valid double-backslash line break only "
+        "in a node configured for multiline text.",
     ]
+
+
+def test_verified_prompt_injects_machine_assertion_anchor_style(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    spec = fixture / "spec.yaml"
+    spec.write_text(
+        spec.read_text(encoding="utf-8")
+        + "tex_assertions:\n"
+        + "  - id: force-points-away\n"
+        + "    anchor_style: panelForceArrow\n",
+        encoding="utf-8",
+    )
+
+    _, prompt = _compile(workspace)
+
+    assert "Machine assertion [force-points-away]" in prompt
+    assert "apply TikZ style [panelForceArrow]" in prompt
 
 
 def test_binds_repo_relative_execution_cwd_into_packet_and_prompt(tmp_path: Path) -> None:
@@ -579,6 +614,7 @@ def _write_arm(
     plugin_root: Path = PLUGIN_ROOT,
     shape_profile: str | None = None,
     composition_profile: str | None = None,
+    intervention_mode: str = "figure_agent",
 ) -> tuple[Path, Path]:
     output = (
         "examples/context_demo/review/failure-first/execution-binding-v1/"
@@ -594,6 +630,7 @@ def _write_arm(
         output_path=output,
         shape_profile=shape_profile,
         composition_profile=composition_profile,
+        intervention_mode=intervention_mode,
     )
     attempt = workspace / "examples/context_demo/review/failure-first/execution-binding-v1"
     packet_path = attempt / f"{arm}_packet.json"
@@ -605,6 +642,102 @@ def _write_arm(
         prompt=prompt,
     )
     return packet_path, prompt_path
+
+
+def test_raw_authoring_packet_omits_figure_agent_contract_injection(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+
+    packet, prompt = _compile(workspace, intervention_mode="raw")
+
+    assert packet["intervention_mode"] == "raw"
+    assert packet["mandatory_source_requirements"] == []
+    assert packet["style_lock_authoring_requirements"] == []
+    assert packet["semantic_contract_application"] == "omitted"
+    assert "Draw a six-panel scientific overview of charge trapping." in prompt
+    assert "Binding fixture briefing (verbatim)" not in prompt
+    assert "Figure Agent" not in prompt
+    assert "Review constraints" not in prompt
+    assert "TikZ" not in prompt
+    assert "## Mandatory standalone TikZ source requirements" not in prompt
+    assert "## Style Lock authoring requirements" not in prompt
+    assert "## Semantic contracts and forbidden implications" not in prompt
+    assert "- Required panels:" not in prompt
+    assert "Column D" not in prompt
+    assert r"\usepackage{polymer-paper-preamble}" not in prompt
+
+
+def test_raw_authoring_requires_neutral_hash_bound_task(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _write_context_fixture(workspace)
+    (fixture / "authoring_task.md").unlink()
+
+    with pytest.raises(
+        authoring_execution_packet.AuthoringExecutionPacketError,
+        match="neutral authoring task",
+    ):
+        _compile(workspace, intervention_mode="raw")
+
+
+def test_ab_preflight_requires_raw_control_and_figure_agent_treatment(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    raw, _ = _write_arm(workspace, "control", intervention_mode="raw")
+    verified, _ = _write_arm(workspace, "treatment")
+
+    result = authoring_execution_preflight.preflight_authoring_ab(raw, verified)
+
+    assert result["decision"] == "pass"
+    assert result["comparison"] == "raw_vs_figure_agent"
+    assert result["raw"]["intervention_mode"] == "raw"
+    assert result["verified"]["intervention_mode"] == "figure_agent"
+
+
+def test_ab_preflight_rejects_two_figure_agent_packets(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    raw, _ = _write_arm(workspace, "control")
+    verified, _ = _write_arm(workspace, "treatment")
+
+    with pytest.raises(
+        authoring_execution_preflight.AuthoringExecutionPreflightError,
+        match="raw intervention_mode invalid",
+    ):
+        authoring_execution_preflight.preflight_authoring_ab(raw, verified)
+
+
+def test_authoring_preflight_ab_cli(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_context_fixture(workspace)
+    attempt_rel = "examples/context_demo/review/failure-first/execution-binding-v1"
+    _write_arm(workspace, "control", intervention_mode="raw")
+    _write_arm(workspace, "treatment")
+    env = os.environ.copy()
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-preflight-ab",
+            "--raw",
+            f"{attempt_rel}/control_packet.json",
+            "--verified",
+            f"{attempt_rel}/treatment_packet.json",
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["comparison"] == "raw_vs_figure_agent"
 
 
 @pytest.mark.parametrize(

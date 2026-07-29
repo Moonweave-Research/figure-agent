@@ -38,8 +38,9 @@ families:
         sha256: sha256:e88097ce9a84acfcc9b728dfd61c1f6b027ab8fa30d7178e9f128b2a54682e28
       - path: examples/fig3_resistance_mechanism/review/failure-first/comparable-v2/repaired.yaml
         sha256: sha256:f21f73556a1db248f4aed498fb403c55b8107d36aef98449d2ac1c9b217899e9
-    comparison_contract: eligible_equal_input_with_transcript_bound_receipts
-    comparison_evidence: transcript_bound
+    comparison_contract: eligible_equal_task_authoring_interventions_with_bound_generation_receipts
+    comparison_evidence: authoring_transcript_bound_only
+    repair_lineage_evidence: missing_or_invalid
     metrics:
       raw_confirmed_defects: 4
       verified_confirmed_defects: 3
@@ -56,8 +57,8 @@ families:
         raw: not_recorded
         verified: rejected_by_moon
         repaired: rejected_by_moon
-      provenance: bound_generation_receipts_and_equal_input_contract
-    interpretation: Contract injection reduces declared defect counts, but neither assisted condition earned human acceptance; machine improvement therefore cannot become a quality or publication claim.
+      provenance: bound_generation_receipts_without_verified_to_repaired_lineage
+    interpretation: Contract injection reduces declared defect counts, but the third arm is another authoring intervention rather than a bounded child of verified, and neither assisted condition earned human acceptance. It therefore cannot support a repair, quality, or publication claim.
 cross_family_findings:
   semantic_or_relation_regression_policy: A visual reduction never compensates for a semantic or relation failure.
   transferred_capabilities: []
@@ -66,7 +67,7 @@ cross_family_findings:
 capabilities:
   - id: failure_first_comparison_contract
     classification: retain_experimental
-    evidence: Fig3 comparable-v2 is transcript-bound and equal-input, but Fig1 is staged-only.
+    evidence: Fig3 comparable-v2 binds its authoring transcripts but lacks verified-to-repaired lineage; Fig1 is staged-only.
   - id: declared_semantic_relation_guard
     classification: retain_experimental
     evidence: Fig1 demonstrates one exact semantic repair; independent two-family transcript-bound and human-accepted replication is absent.
@@ -85,6 +86,6 @@ capabilities:
 product_rule_change: not_authorized
 publication_acceptance: not_claimed
 next_evidence_required:
-  - Run a Fig1 equal-input, transcript-bound raw/verified/repaired comparison with a named human verdict for every condition.
+  - Run a Fig1 equal-task, transcript-bound raw/verified authoring comparison, then derive repaired from verified with hash-bound repair lineage and a named human verdict for every condition.
   - Record prospective correction minutes during a real bounded repair.
   - Require human acceptance in both families before any capability is promoted.

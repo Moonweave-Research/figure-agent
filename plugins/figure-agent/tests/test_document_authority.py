@@ -132,7 +132,7 @@ def test_canonical_docs_define_failure_first_llm_control() -> None:
         "Figure production is not Figure Agent product development.",
         "A: raw LLM authoring",
         "B: the same LLM plus Figure Agent contracts and verification",
-        "C: the same LLM plus contracts, verification, and bounded repair",
+        "C: B's generated artifact after strict QA",
     ):
         assert required in product
 
@@ -212,7 +212,7 @@ def test_product_authority_describes_completed_baseline_and_active_next_step() -
     product = _read(PLUGIN_ROOT / PRODUCT_DOC)
     normalized = " ".join(product.split())
 
-    assert "The active execution plan therefore closes" in normalized
+    assert "The third replay uses only the neutral task in A" in normalized
     assert "The next execution plan must therefore begin" not in product
 
 

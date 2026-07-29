@@ -34,6 +34,139 @@ def _yaml(relative: str) -> dict:
     return yaml.safe_load((FIXTURE / relative).read_text(encoding="utf-8"))
 
 
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_fig1_comparable_v1_is_preserved_as_invalid_intervention_leakage() -> None:
+    root = FIXTURE / "review" / "failure-first" / "comparable-v1"
+    contract = yaml.safe_load((root / "comparison_contract.yaml").read_text())
+    raw_packet = json.loads((root / "raw_packet.json").read_text())
+    verified_packet = json.loads((root / "verified_packet.json").read_text())
+    raw_prompt = (root / "raw_prompt.md").read_text()
+    verified_prompt = (root / "verified_prompt.md").read_text()
+
+    assert contract["comparison_eligibility"] == "invalid_intervention_leakage"
+    assert contract["sequential_repair"] == {
+        "state": "forbidden_for_invalid_comparison",
+        "parent_variant": "verified",
+        "independent_third_authoring_call": "forbidden",
+        "required_evaluator_state": "repair_lineage_evidence_bound",
+    }
+    assert raw_packet["intervention_mode"] == "raw"
+    assert verified_packet["intervention_mode"] == "figure_agent"
+    assert raw_packet["context_pack"]["base_sha256"] == verified_packet[
+        "context_pack"
+    ]["base_sha256"]
+    assert "Semantic claim" not in raw_prompt
+    assert "Figure Agent" in raw_prompt
+    assert "Protected relation holds" not in raw_prompt
+    assert "Protected relation holds" in verified_prompt
+    for name in ("raw", "verified"):
+        condition = contract["conditions"][name]
+        assert condition["packet_file_sha256"] == _sha256(
+            root / condition["packet_path"]
+        )
+        assert condition["prompt_sha256"] == _sha256(
+            root / condition["prompt_path"]
+        )
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-preflight-ab",
+            "--raw",
+            str((root / "raw_packet.json").relative_to(PLUGIN_ROOT)),
+            "--verified",
+            str((root / "verified_packet.json").relative_to(PLUGIN_ROOT)),
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "raw prompt contains Figure Agent contracts" in result.stderr
+
+
+def test_fig1_comparable_v2_binds_neutral_raw_vs_figure_agent() -> None:
+    root = FIXTURE / "review" / "failure-first" / "comparable-v2"
+    contract = yaml.safe_load((root / "comparison_contract.yaml").read_text())
+    raw_packet = json.loads((root / "raw_packet.json").read_text())
+    verified_packet = json.loads((root / "verified_packet.json").read_text())
+    raw_prompt = (root / "raw_prompt.md").read_text()
+    verified_prompt = (root / "verified_prompt.md").read_text()
+
+    assert contract["comparison_eligibility"] == "invalid_shared_input_not_task_only"
+    assert contract["shared_contract"]["authoring_task_sha256"] == _sha256(
+        FIXTURE / "authoring_task.md"
+    )
+    assert raw_packet["context_pack"]["base_sha256"] == verified_packet[
+        "context_pack"
+    ]["base_sha256"]
+    assert "Figure Agent" not in raw_prompt
+    assert "TikZ" not in raw_prompt
+    assert "Review constraints" not in raw_prompt
+    assert "Semantic claim" not in raw_prompt
+    assert "Semantic claim" in verified_prompt
+    assert "Protected relation holds" in verified_prompt
+    for name in ("raw", "verified"):
+        condition = contract["conditions"][name]
+        assert condition["packet_file_sha256"] == _sha256(
+            root / condition["packet_path"]
+        )
+        assert condition["prompt_sha256"] == _sha256(
+            root / condition["prompt_path"]
+        )
+
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-preflight-ab",
+            "--raw",
+            str((root / "raw_packet.json").relative_to(PLUGIN_ROOT)),
+            "--verified",
+            str((root / "verified_packet.json").relative_to(PLUGIN_ROOT)),
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == json.loads((root / "preflight.json").read_text())
+
+
+def test_fig1_comparable_v3_raw_is_task_only_and_preflight_passes() -> None:
+    root = FIXTURE / "review" / "failure-first" / "comparable-v3"
+    contract = yaml.safe_load((root / "comparison_contract.yaml").read_text())
+    raw_prompt = (root / "raw_prompt.md").read_text()
+
+    assert contract["comparison_eligibility"] == "eligible_executed_human_rejected"
+    assert "- Required panels:" not in raw_prompt
+    assert "Column D" not in raw_prompt
+    assert "Figure Agent" not in raw_prompt
+    assert "TikZ" not in raw_prompt
+    result = subprocess.run(
+        [
+            str(PLUGIN_ROOT / "bin" / "fig-agent"),
+            "authoring-preflight-ab",
+            "--raw",
+            str((root / "raw_packet.json").relative_to(PLUGIN_ROOT)),
+            "--verified",
+            str((root / "verified_packet.json").relative_to(PLUGIN_ROOT)),
+            "--json",
+        ],
+        cwd=PLUGIN_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+
 def test_pilot_pins_reviewed_source_and_exact_jig_authority() -> None:
     authority = _yaml("authority.yaml")
     assert authority["source"] == {

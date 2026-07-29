@@ -1028,7 +1028,7 @@ def test_fig3_comparable_v1_declares_one_shared_contract_and_three_conditions() 
     assert contract["publication_acceptance"] == "not_claimed"
 
 
-def test_fig3_comparable_v1_is_transcript_bound_but_nonrenderable() -> None:
+def test_fig3_comparable_v1_is_authoring_bound_but_nonrenderable() -> None:
     contract = yaml.safe_load(COMPARISON_CONTRACT.read_text(encoding="utf-8"))
     runs: dict[str, Path] = {}
     receipts: list[dict[str, str]] = []
@@ -1068,7 +1068,8 @@ def test_fig3_comparable_v1_is_transcript_bound_but_nonrenderable() -> None:
         (COMPARABLE_V1 / "ablation_report.json").read_text(encoding="utf-8")
     )
     assert report == tracked_report
-    assert report["comparison_evidence"] == "transcript_bound"
+    assert report["comparison_evidence"] == "authoring_transcript_bound_only"
+    assert report["repair_lineage_evidence"] == "missing_or_invalid"
     assert report["reproduction_gate"] == "failed"
     assert report["deltas"]["verified_vs_raw"][
         "confirmed_defect_occurrence_count"
@@ -1160,7 +1161,8 @@ def test_fig3_comparable_v2_is_reproducible_but_still_requires_human_review() ->
     assert report == json.loads(
         (COMPARABLE_V2 / "ablation_report.json").read_text(encoding="utf-8")
     )
-    assert report["comparison_evidence"] == "transcript_bound"
+    assert report["comparison_evidence"] == "authoring_transcript_bound_only"
+    assert report["repair_lineage_evidence"] == "missing_or_invalid"
     assert report["reproduction_gate"] == "passed"
     assert report["variants"]["raw"]["confirmed_defect_occurrence_count"] == 26
     assert report["variants"]["verified"]["confirmed_defect_occurrence_count"] == 6

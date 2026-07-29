@@ -43,7 +43,7 @@ CORE_COMMANDS = frozenset(
         "authoring-input-audit",
         "authoring-packet",
         "authoring-preflight",
-        "authoring-preflight-triplet",
+        "authoring-preflight-ab",
         "authoring-receipt",
         "authoring-repair-finalize",
         "authoring-repair-materialize",
@@ -89,6 +89,7 @@ INTERNAL_COMPATIBILITY_COMMANDS = frozenset(
         "apply-candidate-ready",
         "apply-plan",
         "authoring-orro-plan",
+        "authoring-preflight-triplet",
         "benchmark-compare",
         "benchmark-detectors",
         "benchmark-list",
@@ -503,6 +504,11 @@ def _authoring_packet(argv: list[str]) -> int:
     parser.add_argument("--layout-contract")
     parser.add_argument("--shape-profile")
     parser.add_argument("--composition-profile")
+    parser.add_argument(
+        "--intervention-mode",
+        choices=("raw", "figure_agent"),
+        default="figure_agent",
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
@@ -520,6 +526,7 @@ def _authoring_packet(argv: list[str]) -> int:
             layout_contract=args.layout_contract,
             shape_profile=args.shape_profile,
             composition_profile=args.composition_profile,
+            intervention_mode=args.intervention_mode,
         )
         packet_path = authoring_execution_packet.resolve_attempt_artifact_path(
             paths.workspace_root,
@@ -574,6 +581,39 @@ def _authoring_preflight(argv: list[str]) -> int:
         )
     except (ValueError, OSError, json.JSONDecodeError) as exc:
         print(f"fig-agent authoring-preflight: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _authoring_preflight_ab(argv: list[str]) -> int:
+    import authoring_execution_preflight
+
+    parser = argparse.ArgumentParser(prog="fig-agent authoring-preflight-ab")
+    parser.add_argument("--raw", required=True)
+    parser.add_argument("--verified", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    workspace_root = _paths().workspace_root.resolve()
+
+    def packet_path(value: str) -> Path:
+        relative = Path(value)
+        if relative.is_absolute() or any(
+            part in {"", ".", ".."} for part in relative.parts
+        ):
+            raise ValueError("packet path must be repository-relative and safe")
+        resolved = (workspace_root / relative).resolve(strict=False)
+        if not resolved.is_relative_to(workspace_root):
+            raise ValueError("packet path must remain inside the workspace")
+        return resolved
+
+    try:
+        payload = authoring_execution_preflight.preflight_authoring_ab(
+            packet_path(args.raw),
+            packet_path(args.verified),
+        )
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"fig-agent authoring-preflight-ab: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
@@ -2085,7 +2125,8 @@ def _failure_ablation(argv: list[str]) -> int:
             "raw": args.raw,
             "verified": args.verified,
             "repaired": args.repaired,
-        }
+        },
+        workspace_root=_paths().workspace_root,
     )
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
@@ -2148,6 +2189,8 @@ def main(argv: list[str] | None = None) -> int:
         return _authoring_packet(rest)
     if command == "authoring-preflight":
         return _authoring_preflight(rest)
+    if command == "authoring-preflight-ab":
+        return _authoring_preflight_ab(rest)
     if command == "authoring-preflight-triplet":
         return _authoring_preflight_triplet(rest)
     if command == "authoring-repair-packet":
