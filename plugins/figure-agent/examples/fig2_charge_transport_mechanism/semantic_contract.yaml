@@ -20,6 +20,8 @@ forbidden_implications:
   - panel_a.calibrated_trap_density
   - panel_a.exact_exponent_value
   - panel_a.s_s_energy_diagram
+  - panel_a.decorative_retention_loop
+  - panel_a.infographic_card_grid
   - panel_a.universal_conventional_dielectric_law
   - panel_a.actuation_charging_setup
   - panel_a.second_electrical_measurement_instrument

@@ -10,7 +10,7 @@ visual_clash_cap: 8
 
 final_size_contract:
   basis: width_limited_nature_family_main_figure
-  natural_size_mm: [163.8, 47.53]
+  natural_size_mm: [163.8, 46.42]
   target_width_mm: 163.8
   max_height_mm: 170.0
   min_print_font_pt: 5.0

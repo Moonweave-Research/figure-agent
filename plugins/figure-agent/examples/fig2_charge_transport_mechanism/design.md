@@ -21,7 +21,10 @@ bottom lane carries only short explanatory labels.
 - Keep line weights above the reduction threshold and avoid gradients, 3-D
   substrate blocks, or decorative halos.
 - Make the comparison visible with object geometry: outward arrows for drain,
-  distributed sites plus a closed retention cue for sulfur.
+  distributed occupied sites inside the sulfur film and no outward drain cues.
+- Do not use a large circular halo, repeated bead loop, or decorative polymer
+  wave; those cues make a localized population read as ornament or a second
+  material phase.
 - Keep the readout trace qualitative and number-free except for the two declared
   window labels.
 

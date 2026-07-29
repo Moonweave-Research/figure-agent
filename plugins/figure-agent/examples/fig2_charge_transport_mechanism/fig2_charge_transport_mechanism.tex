@@ -22,6 +22,7 @@
   wire/.style={cGray!72!black,line width=0.65pt,line cap=round,line join=round},
   electrode/.style={fill=cGray!20,draw=cGray!74!black,line width=0.65pt},
   film/.style={fill=cAmber!10,draw=cAmber!72!black,line width=0.75pt},
+  conventionalFilm/.style={fill=cBlue!6,draw=cBlue!58!black,line width=0.75pt},
   trapBlue/.style={circle,fill=cBlue!72,draw=cBlue!60!black,line width=0.3pt,
     inner sep=0pt,minimum size=1.7mm},
   trapRed/.style={circle,fill=cRed!78,draw=cRed!60!black,line width=0.3pt,
@@ -32,7 +33,6 @@
     line width=0.55pt},
   drainArrow/.style={-{Stealth[length=3.4pt,width=2.5pt]},cBlue!72!black,
     line width=0.62pt},
-  retainCue/.style={cRed!65!black,line width=0.55pt,line cap=round},
   storyArrow/.style={-{Stealth[length=3.4pt,width=2.4pt]},cGray!56!black,
     line width=0.48pt},
   axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
@@ -45,7 +45,6 @@
 % A single, open four-stage strip. The drawing carries the comparison; the
 % labels name the working interpretation without pretending to be data.
 \node[panelLetter,anchor=west] at (0.10,5.02) {a};
-\node[panelTitle,anchor=west] at (0.45,5.02) {charge-transport mechanism schematic};
 
 % Reading-order cues stay in the header lane, away from the objects and labels.
 \draw[storyArrow] (3.70,4.37)--(4.38,4.37);
@@ -73,7 +72,6 @@
 \node[labelStd,text=cRed!70!black,anchor=east] at (1.22,3.24)
   {$E=15\,\mathrm{MV\,m^{-1}}$};
 \node[labelMute,anchor=north] at (2.02,1.25) {25\,\%RH chamber};
-\node[labelMute,anchor=north] at (2.02,0.86) {discharge current};
 
 % --------------------------------------------------------------------------
 % Conventional dielectric
@@ -82,7 +80,7 @@
 \node[columnTitle,anchor=north] at (6.14,4.72) {Conventional dielectric};
 \node[labelMute,anchor=north] at (6.14,4.30) {finite traps};
 
-\fill[film] (4.72,2.22) rectangle (7.56,3.05);
+\fill[conventionalFilm] (4.72,2.22) rectangle (7.56,3.05);
 \draw[wire] (4.72,2.22)--(7.56,2.22);
 \draw[wire] (4.72,3.05)--(7.56,3.05);
 \node[trapBlue] at (5.35,2.66) {};
@@ -93,8 +91,6 @@
 \draw[drainArrow] (6.93,2.63)--(6.93,3.72);
 \node[labelStd,text=cBlue!66!black,anchor=north] at (6.14,1.82)
   {charge drains};
-\node[labelMute,anchor=north] at (6.14,1.38)
-  {finite, shallow population};
 
 % --------------------------------------------------------------------------
 % Sulfur-rich copolymer
@@ -108,23 +104,22 @@
 \draw[wire] (8.78,3.05)--(11.66,3.05);
 % Non-periodic sites make the breadth visible without recreating Fig1's energy
 % diagram or implying a calibrated density distribution.
+\draw[cGray!48!black,line width=0.48pt,line cap=round]
+  (8.98,2.72) .. controls (9.20,2.55) and (9.46,2.92) .. (9.68,2.66);
 \draw[cAmber!62!black,line width=0.55pt,line cap=round]
-  (8.98,2.72) .. controls (9.35,2.45) and (9.50,2.90) .. (9.86,2.58)
-  .. controls (10.24,2.30) and (10.34,2.87) .. (10.70,2.63)
-  .. controls (11.06,2.42) and (11.20,2.85) .. (11.48,2.55);
+  (9.82,2.42) .. controls (10.04,2.26) and (10.25,2.78) .. (10.50,2.55);
+\draw[cGray!48!black,line width=0.48pt,line cap=round]
+  (10.72,2.78) .. controls (10.96,2.52) and (11.18,2.92) .. (11.48,2.55);
 \node[trapAmber] at (9.24,2.73) {};
 \node[trapRed] at (9.83,2.58) {};
-\node[trapAmber] at (10.31,2.32) {};
-\node[trapRed] at (10.70,2.63) {};
-\node[trapAmber] at (11.17,2.84) {};
+\node[trapAmber] at (10.31,2.42) {};
+\node[trapRed] at (10.70,2.76) {};
+\node[trapAmber] at (11.17,2.72) {};
 \node[trapRed] at (11.48,2.55) {};
-% A closed cue around one occupied site communicates retention without a
-% floating arrow that could be mistaken for a transport vector.
-\draw[retainCue] (10.48,2.18) arc[start angle=205,end angle=500,radius=0.39];
+% The occupied sites remain inside the film and have no outward drain arrows;
+% that restrained contrast carries retention without a decorative halo.
 \node[labelStd,text=cRed!68!black,anchor=north] at (10.22,1.82)
   {charge retained};
-\node[labelMute,anchor=north] at (10.22,1.38)
-  {distributed, long-lived population};
 
 % --------------------------------------------------------------------------
 % What we read
