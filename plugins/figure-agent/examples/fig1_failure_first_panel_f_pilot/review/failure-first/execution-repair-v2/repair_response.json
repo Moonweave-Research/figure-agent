@@ -1,0 +1,1 @@
+{"replacement_utf8":"\\usepackage{tikz}\n\\usepackage{polymer-paper-preamble}\n\\providecommand{\\distribution}{distribution}\n\\providecommand{\\support}{support}","change_summary":"Defined the distribution and support prose control words in the editable preamble without changing panel geometry or scientific semantics."}

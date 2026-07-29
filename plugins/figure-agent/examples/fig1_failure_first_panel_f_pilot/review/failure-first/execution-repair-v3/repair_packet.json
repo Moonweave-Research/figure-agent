@@ -1,0 +1,80 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "Two prose labels use single-backslash control words (distribution and support), causing undefined-control-sequence failures. Repair only the preamble boundary, preserve an explicit word space at both call sites, and do not change panel geometry or scientific semantics.",
+      "id": "HF001",
+      "subject": "undefined_prose_control_sequences"
+    },
+    "finding_id": "HF001",
+    "protected_invariants": [
+      "\\usepackage{tikz}",
+      "\\usepackage{polymer-paper-preamble}",
+      "derived trap-energy",
+      "mechanically held",
+      "electrically floating cantilever"
+    ],
+    "repair_family": "style_normalization",
+    "report_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v3/human_findings.before.json",
+    "selector": {
+      "anchor_end": "\\begin{document}",
+      "anchor_start": "\\documentclass[tikz,border=4pt]{standalone}",
+      "kind": "semantic_anchor",
+      "selector_id": "shared_preamble_compile_repair",
+      "source_hash": "sha256:fc9734421921bb8a9adbf34ddf113a0c5a83de6ecf25f07f9546e14432d69418"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v3/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:bc414402a7f1c9e2a56ae4e71e88320a91ec12fb3c5ac8ddb4dfab628974336a"
+    }
+  ],
+  "fixture": "fig1_failure_first_panel_f_pilot",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v3/repaired_generated.tex",
+  "packet_sha256": "sha256:c225385245364a71755595de37244c2fecfb11c0027d92cbdda27b85435a6040",
+  "prompt": {
+    "sha256": "sha256:f0ea8a8cd7c5f111cedff6c0a8926203b61cb50115a357c4f8b7714ddb7b35b8",
+    "utf8": "# Bound repair execution: fig1_failure_first_panel_f_pilot\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v3/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/verified_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: style_normalization\n- Machine finding: {\"finding\": \"Two prose labels use single-backslash control words (distribution and support), causing undefined-control-sequence failures. Repair only the preamble boundary, preserve an explicit word space at both call sites, and do not change panel geometry or scientific semantics.\", \"id\": \"HF001\", \"subject\": \"undefined_prose_control_sequences\"}\n- Change content only between the exact anchor lines [\\documentclass[tikz,border=4pt]{standalone}] and [\\begin{document}].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [\\usepackage{tikz}].\n- Preserve the exact token [\\usepackage{polymer-paper-preamble}].\n- Preserve the exact token [derived trap-energy].\n- Preserve the exact token [mechanically held].\n- Preserve the exact token [electrically floating cantilever].\n\n## Bound editable source bytes\n```tex\n\\usepackage{tikz}\n\\usepackage{polymer-paper-preamble}\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v3/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/verified_generated.tex",
+    "sha256": "sha256:fc9734421921bb8a9adbf34ddf113a0c5a83de6ecf25f07f9546e14432d69418"
+  },
+  "target_contract": {
+    "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v3/repair_targets.json",
+    "sha256": "sha256:03819075c78e051522cf2c3a828654759bf1f2d0546cb7c083e0b2f76875921e"
+  },
+  "verification": "external_sequential_compile_required"
+}

@@ -1,0 +1,38 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: raw
+model_contract_hash: sha256:ffc50c70661c227edf8daae6f8dbed2dd0645386c12d43bc7fc44da166e043bd
+shared_task_hash: sha256:3e88f6978943b19d58650f0d8c4655dadc15d71dc9a74815e6f31eeb54dbb3b0
+input_packet_hash: sha256:9aa15780819bedbb4a3be8e0870200c33adc1242f94a804c51aab47b7c6e1ae4
+budget_contract_hash: sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762
+figure_family: sulfur-polymer-six-panel-overview
+comparison_eligibility: eligible_equal_input
+findings:
+- id: RAW-COMPILE-001
+  failure_class: reproducibility
+  review_outcome: confirmed_defect
+  occurrences: 1
+  evidence: missing decorations.pathreplacing library prevents diagnostic render
+- id: RAW-STYLE-001
+  failure_class: style
+  review_outcome: confirmed_defect
+  occurrences: 43
+  evidence: default Style Lock rejects missing preamble, local palette, and non-palette
+    colors
+human_correction_minutes: null
+intervention_count: 0
+clean_reproduction: false
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
+generation_receipt:
+  schema: figure-agent.generation-receipt.v1
+  model_id: gpt-5.5
+  input_packet_sha256: sha256:9aa15780819bedbb4a3be8e0870200c33adc1242f94a804c51aab47b7c6e1ae4
+  budget_contract_sha256: sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762
+  source_commit: c6a28e406045092f9e8dae16361734b03fdabb8c
+  starting_artifact_path: blank_start.txt
+  starting_artifact_sha256: sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+  generated_artifact_path: raw_generated.tex
+  generated_artifact_sha256: sha256:e08c26f43146346d40a50b4c7531255ec586d59d86f2bfbce49dee0e6d828576
+  transcript_path: raw.transcript.json
+  transcript_sha256: sha256:2d5bcca8a7b53951a1a8a8fff1902db535a15cacc0b32904483a3806e0d0d1d2

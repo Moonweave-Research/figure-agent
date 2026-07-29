@@ -1,0 +1,261 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily,
+  panel/.style={draw=cLGray, rounded corners=2pt, line width=0.45pt, fill=white},
+  paneltitle/.style={font=\sffamily\bfseries\fontsize{8.5}{10.2}\selectfont, text=cGray},
+  label/.style={font=\sffamily\fontsize{6.3}{7.5}\selectfont, text=cGray},
+  smalllabel/.style={font=\sffamily\fontsize{5.4}{6.5}\selectfont, text=cGray},
+  axis/.style={-{Stealth[length=3pt,width=2.2pt]}, draw=cGray, line width=0.42pt},
+  flow/.style={-{Stealth[length=3.2pt,width=2.4pt]}, draw=cTeal, line width=0.62pt},
+  sulfur/.style={circle, draw=cAmber, fill=cAmberSphere!55, line width=0.42pt,
+    minimum size=2.5mm, inner sep=0pt},
+  carbon/.style={circle, draw=cGray, fill=white, line width=0.38pt,
+    minimum size=2.0mm, inner sep=0pt},
+  charge/.style={circle, draw=cBlue, fill=cBlue!18, line width=0.36pt,
+    minimum size=2.2mm, inner sep=0pt,
+    font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont, text=cBlue},
+  note/.style={rounded corners=1.5pt, fill=cLGray!22, inner sep=2.5pt,
+    font=\sffamily\fontsize{5.6}{6.8}\selectfont, text=cGray, align=center}
+]
+
+% Panel frames
+\foreach \x/\y in {0/6.15,6.05/6.15,12.10/6.15,0/0,6.05/0,12.10/0}{
+  \path[panel] (\x,\y) rectangle ++(5.70,5.82);
+}
+
+% A: primary microstructure
+\begin{scope}[shift={(0,6.15)}]
+  \node[paneltitle, anchor=north west] at (0.18,5.62) {A};
+  \node[label, anchor=north] at (2.90,5.56) {poly(S-r-DIB) primary microstructure};
+
+  \draw[cAmber, line width=1.05pt, rounded corners=5pt]
+    (0.55,3.58) -- (1.05,3.82) -- (1.55,3.46) -- (2.05,3.82) -- (2.55,3.47)
+    -- (3.05,3.82) -- (3.55,3.47) -- (4.05,3.80) -- (4.55,3.50) -- (5.10,3.74);
+  \foreach \x/\y in {0.55/3.58,1.05/3.82,1.55/3.46,2.05/3.82,2.55/3.47,
+    3.05/3.82,3.55/3.47,4.05/3.80,4.55/3.50,5.10/3.74}{
+    \node[sulfur] at (\x,\y) {\textcolor{cAmber}{\bfseries S}};
+  }
+
+  \draw[cGray, line width=0.72pt] (2.55,3.47) -- (2.55,2.90);
+  \draw[cGray, line width=0.66pt]
+    (2.55,2.90) -- (2.18,2.69) -- (2.18,2.26) -- (2.55,2.05)
+    -- (2.92,2.26) -- (2.92,2.69) -- cycle;
+  \draw[cGray, line width=0.42pt]
+    (2.28,2.65) -- (2.28,2.32)
+    (2.33,2.20) -- (2.55,2.08)
+    (2.77,2.20) -- (2.88,2.40);
+  \draw[cGray, line width=0.72pt] (2.18,2.48) -- (1.62,2.48);
+  \draw[cGray, line width=0.72pt] (2.92,2.48) -- (3.48,2.48);
+  \draw[cAmber, line width=0.90pt, rounded corners=4pt]
+    (0.68,1.52) -- (1.18,1.78) -- (1.68,1.46) -- (2.18,1.76);
+  \draw[cAmber, line width=0.90pt, rounded corners=4pt]
+    (2.92,1.76) -- (3.42,1.46) -- (3.92,1.78) -- (4.42,1.48) -- (4.92,1.72);
+  \draw[cGray, line width=0.72pt] (1.62,2.48) -- (1.62,1.50);
+  \draw[cGray, line width=0.72pt] (3.48,2.48) -- (3.48,1.50);
+  \foreach \x/\y in {0.68/1.52,1.18/1.78,1.68/1.46,2.18/1.76,
+    2.92/1.76,3.42/1.46,3.92/1.78,4.42/1.48,4.92/1.72}{
+    \node[sulfur, minimum size=2.2mm] at (\x,\y) {};
+  }
+  \node[note] at (2.86,0.66) {sulfur-rich segments linked by DIB units};
+\end{scope}
+
+% B: composition variation
+\begin{scope}[shift={(6.05,6.15)}]
+  \node[paneltitle, anchor=north west] at (0.18,5.62) {B};
+  \node[label, anchor=north] at (2.90,5.56) {Sulfur composition variation};
+  \node[smalllabel, anchor=north] at (2.90,5.16) {3 representatives from S60, S70, S75, S80, S85};
+
+  \node[label, font=\sffamily\bfseries\fontsize{6.3}{7.5}\selectfont, text=cBrown]
+    at (0.58,4.27) {S60};
+  \draw[cGray, line width=0.62pt, rounded corners=4pt]
+    (1.03,4.27) -- (1.48,4.52) -- (1.93,4.08) -- (2.38,4.48) -- (2.83,4.10)
+    -- (3.28,4.50) -- (3.73,4.11) -- (4.18,4.48) -- (4.63,4.15) -- (5.08,4.42);
+  \foreach \x/\y in {1.03/4.27,1.48/4.52,2.38/4.48,3.28/4.50,4.18/4.48,5.08/4.42}{
+    \node[sulfur, minimum size=2.0mm] at (\x,\y) {};
+  }
+  \foreach \x/\y in {1.93/4.08,2.83/4.10,3.73/4.11,4.63/4.15}{
+    \node[carbon] at (\x,\y) {};
+  }
+
+  \node[label, font=\sffamily\bfseries\fontsize{6.3}{7.5}\selectfont, text=cBrown]
+    at (0.58,2.92) {S75};
+  \draw[cAmber, line width=0.78pt, rounded corners=4pt]
+    (1.03,2.92) -- (1.48,3.17) -- (1.93,2.73) -- (2.38,3.13) -- (2.83,2.75)
+    -- (3.28,3.15) -- (3.73,2.76) -- (4.18,3.13) -- (4.63,2.80) -- (5.08,3.07);
+  \foreach \x/\y in {1.03/2.92,1.48/3.17,1.93/2.73,2.38/3.13,3.28/3.15,
+    3.73/2.76,4.18/3.13,4.63/2.80,5.08/3.07}{
+    \node[sulfur, minimum size=2.0mm] at (\x,\y) {};
+  }
+  \node[carbon] at (2.83,2.75) {};
+
+  \node[label, font=\sffamily\bfseries\fontsize{6.3}{7.5}\selectfont, text=cBrown]
+    at (0.58,1.57) {S85};
+  \draw[cAmber, line width=0.98pt, rounded corners=4pt]
+    (1.03,1.57) -- (1.48,1.82) -- (1.93,1.38) -- (2.38,1.78) -- (2.83,1.40)
+    -- (3.28,1.80) -- (3.73,1.41) -- (4.18,1.78) -- (4.63,1.45) -- (5.08,1.72);
+  \foreach \x/\y in {1.03/1.57,1.48/1.82,1.93/1.38,2.38/1.78,2.83/1.40,
+    3.28/1.80,3.73/1.41,4.18/1.78,4.63/1.45,5.08/1.72}{
+    \node[sulfur, minimum size=2.0mm] at (\x,\y) {};
+  }
+  \draw[axis] (1.08,0.58) -- (5.05,0.58);
+  \node[smalllabel, anchor=north] at (3.06,0.48) {increasing sulfur fraction};
+\end{scope}
+
+% C: localized traps in real and energy space
+\begin{scope}[shift={(12.10,6.15)}]
+  \node[paneltitle, anchor=north west] at (0.18,5.62) {C};
+  \node[label, anchor=north] at (2.90,5.56) {Localized traps};
+  \node[smalllabel] at (1.42,4.93) {real space};
+  \node[smalllabel] at (4.27,4.93) {energy space};
+
+  \path[draw=cGray, fill=cLGray!18, rounded corners=7pt, line width=0.50pt]
+    (0.40,1.05) rectangle (2.63,4.60);
+  \draw[cAmber, line width=1.0pt, rounded corners=6pt]
+    (0.65,3.90) -- (1.05,4.15) -- (1.43,3.72) -- (1.82,4.04) -- (2.28,3.73);
+  \draw[cAmber, line width=0.82pt, rounded corners=6pt]
+    (0.72,1.62) -- (1.14,1.92) -- (1.56,1.52) -- (1.98,1.88) -- (2.35,1.60);
+  \draw[cGray, line width=0.55pt]
+    (0.85,2.95) .. controls (1.10,3.34) and (1.38,2.48) .. (1.66,2.90)
+    .. controls (1.88,3.22) and (2.12,2.55) .. (2.34,2.92);
+  \node[charge] at (1.43,2.65) {$-$};
+  \draw[cBlue, dashed, line width=0.44pt] (1.43,2.65) circle[radius=0.45];
+  \node[smalllabel, text=cBlue, anchor=north] at (1.43,2.08) {localized charge};
+
+  \draw[axis] (3.12,1.15) -- (3.12,4.48);
+  \node[smalllabel, rotate=90] at (2.82,2.82) {energy};
+  \draw[cTeal, line width=0.72pt] (3.38,4.02) -- (5.24,4.02);
+  \draw[cTeal, line width=0.72pt] (3.38,1.55) -- (5.24,1.55);
+  \node[smalllabel, anchor=west, text=cTeal] at (3.42,4.23) {transport states};
+  \node[smalllabel, anchor=west, text=cTeal] at (3.42,1.34) {lower states};
+  \foreach \y in {2.14,2.55,2.94,3.28}{
+    \draw[cAmber, line width=0.62pt] (3.70,\y) -- (4.83,\y);
+  }
+  \node[charge] at (4.24,3.02) {$-$};
+  \draw[cRed, dashed, line width=0.40pt] (3.53,3.52) rectangle (4.98,2.01);
+  \node[smalllabel, text=cRed, anchor=north] at (4.25,1.89) {trap levels};
+\end{scope}
+
+% D: kinetic evidence
+\begin{scope}[shift={(0,0)}]
+  \node[paneltitle, anchor=north west] at (0.18,5.62) {D};
+  \node[label, anchor=north] at (2.90,5.56) {Kinetic evidence};
+
+  \node[note, minimum width=0.78cm, minimum height=0.62cm] (smu) at (0.82,3.96) {SMU};
+  \draw[cGray, line width=0.52pt] (1.24,4.08) -- (1.54,4.08) -- (1.54,4.42) -- (2.12,4.42);
+  \draw[cGray, line width=0.52pt] (1.24,3.84) -- (1.54,3.84) -- (1.54,3.50) -- (2.12,3.50);
+  \path[draw=cGray, fill=cLGray!28, line width=0.52pt] (2.12,3.30) rectangle (3.72,4.62);
+  \path[draw=cBlue, fill=cBlue!18, line width=0.42pt] (2.32,3.48) rectangle (3.52,4.43);
+  \node[smalllabel] at (2.92,3.93) {MIM};
+  \node[smalllabel, anchor=north] at (2.92,3.20) {metal--insulator--metal};
+  \draw[flow] (3.92,3.96) -- (4.70,3.96);
+  \node[smalllabel, align=center] at (4.77,3.31) {current\\transient};
+
+  \draw[axis] (0.72,0.82) -- (0.72,2.67);
+  \draw[axis] (0.72,0.82) -- (4.92,0.82);
+  \node[smalllabel, rotate=90] at (0.35,1.74) {$I(t)$};
+  \node[smalllabel, anchor=north] at (2.84,0.68) {time $t$};
+  \draw[cBlue, line width=1.02pt]
+    plot[smooth] coordinates {(0.88,2.48) (1.18,2.18) (1.55,1.86) (2.00,1.56)
+      (2.55,1.32) (3.20,1.14) (4.00,1.01) (4.75,0.94)};
+  \node[note, anchor=west, text=cBlue] at (3.12,2.12) {$I(t)\sim t^{-n}$};
+  \draw[cBlue, -{Stealth[length=2.8pt,width=2.1pt]}, line width=0.42pt]
+    (3.46,2.00) -- (2.84,1.35);
+\end{scope}
+
+% E: ISPD-paired evidence
+\begin{scope}[shift={(6.05,0)}]
+  \node[paneltitle, anchor=north west] at (0.18,5.62) {E};
+  \node[label, anchor=north] at (2.90,5.56) {ISPD-paired evidence};
+
+  \draw[cGray, line width=0.58pt] (0.52,4.58) -- (1.38,4.58);
+  \draw[cGray, line width=0.58pt] (0.95,4.58) -- (0.95,4.16);
+  \draw[cRed, line width=0.60pt] (0.73,4.16) -- (1.17,4.16) -- (1.03,3.93) -- (0.87,3.93) -- cycle;
+  \foreach \x in {0.82,0.95,1.08}{
+    \draw[cRed, -{Stealth[length=2.4pt,width=1.8pt]}, line width=0.32pt]
+      (\x,3.82) -- (\x,3.42);
+  }
+  \path[draw=cGray, fill=cAmberSphere!28, line width=0.48pt] (0.42,3.14) rectangle (1.48,3.38);
+  \node[smalllabel, anchor=north] at (0.95,3.06) {corona};
+
+  \draw[cGray, line width=0.58pt] (2.25,4.55) -- (2.25,3.82);
+  \path[draw=cBlue, fill=cBlue!18, line width=0.48pt]
+    (2.04,4.76) rectangle (2.46,4.55);
+  \draw[cBlue, line width=0.62pt] (2.25,3.82) -- (2.25,3.48);
+  \draw[cBlue, -{Stealth[length=2.5pt,width=1.9pt]}, line width=0.36pt]
+    (2.25,3.48) -- (1.74,3.27);
+  \node[smalllabel, anchor=north] at (2.25,3.08) {probe};
+  \draw[flow] (2.80,3.83) -- (3.43,3.83);
+
+  \draw[axis] (3.65,3.05) -- (3.65,4.75);
+  \draw[axis] (3.65,3.05) -- (5.27,3.05);
+  \draw[cTeal, line width=0.88pt]
+    plot[smooth] coordinates {(3.72,4.60) (3.96,4.34) (4.24,4.02) (4.57,3.67) (4.92,3.42) (5.18,3.30)};
+  \node[smalllabel, anchor=north] at (4.48,2.93) {$t$};
+  \node[smalllabel, rotate=90] at (3.35,3.90) {$V_s$};
+
+  \draw[flow] (2.70,2.54) -- (2.70,2.03);
+  \node[note, minimum width=2.1cm] at (2.70,2.77) {surface-potential decay};
+  \node[smalllabel, text=cTeal] at (3.18,2.27) {derived};
+  \draw[axis] (1.18,0.62) -- (1.18,1.94);
+  \draw[axis] (1.18,0.62) -- (4.63,0.62);
+  \draw[cAmber, line width=0.92pt]
+    plot[smooth] coordinates {(1.25,0.70) (1.55,0.76) (1.85,0.94) (2.15,1.37)
+      (2.45,1.72) (2.75,1.49) (3.05,1.10) (3.40,0.83) (3.85,0.71) (4.50,0.68)};
+  \node[smalllabel, rotate=90] at (0.86,1.28) {$g(E_t)$};
+  \node[smalllabel, anchor=north] at (2.90,0.50) {trap energy $E_t$};
+\end{scope}
+
+% F: floating cantilever and source-ground circuit
+\begin{scope}[shift={(12.10,0)}]
+  \node[paneltitle, anchor=north west] at (0.18,5.62) {F};
+  \node[label, anchor=north] at (2.90,5.56) {Trapped-charge Coulomb repulsion};
+
+  % Restrained mechanical support, with no electrical connection
+  \path[draw=cGray, fill=cLGray!45, line width=0.58pt]
+    (0.44,3.23) rectangle (1.18,4.45);
+  \foreach \y in {3.38,3.68,3.98,4.28}{
+    \draw[cGray, line width=0.30pt] (0.49,\y) -- (0.77,\y+0.14);
+  }
+  \node[smalllabel, align=center, anchor=north] at (0.81,3.10) {mechanical\\support};
+
+  % Electrically floating cantilever held only by the support
+  \path[draw=cBrown, fill=cAmberSphere!32, line width=0.72pt, rounded corners=1pt]
+    (1.18,3.72) -- (4.86,4.19) -- (4.91,3.91) -- (1.18,3.46) -- cycle;
+  \node[smalllabel, text=cBrown, anchor=south] at (3.15,4.14) {floating cantilever};
+  \foreach \x/\y in {2.22/3.72,2.83/3.80,3.44/3.88,4.05/3.96,4.58/4.03}{
+    \node[charge] at (\x,\y) {$-$};
+  }
+
+  % Driven electrode and visible air gap
+  \path[draw=cGray, fill=cBlue!20, line width=0.66pt]
+    (1.65,2.12) rectangle (5.00,2.43);
+  \node[smalllabel, text=cBlue, anchor=north] at (3.33,2.04) {driven electrode};
+  \draw[cGray, {Stealth[length=2.4pt,width=1.8pt]}-{Stealth[length=2.4pt,width=1.8pt]},
+    line width=0.36pt] (4.70,2.52) -- (4.70,3.70);
+  \node[note, anchor=east] at (4.50,3.04) {air gap};
+
+  % Coulomb force points away from the electrode
+  \draw[cRed, -{Stealth[length=4.0pt,width=3.0pt]}, line width=1.0pt]
+    (3.60,3.56) -- (3.60,4.88);
+  \node[label, text=cRed, anchor=west] at (3.72,4.72) {$F_{\mathrm C}$};
+
+  % Compact source circuit: source drives electrode, return terminates at ground
+  \draw[cGray, line width=0.58pt] (3.34,2.12) -- (3.34,1.44) -- (2.55,1.44);
+  \draw[cGray, line width=0.58pt] (1.75,1.44) -- (1.25,1.44) -- (1.25,0.72);
+  \draw[cGray, fill=white, line width=0.58pt] (2.15,1.44) circle[radius=0.40];
+  \node[label, text=cRed] at (2.15,1.58) {$+$};
+  \node[label, text=cBlue] at (2.15,1.29) {$-$};
+  \node[smalllabel, anchor=north] at (2.15,0.96) {voltage source};
+  \draw[cGray, line width=0.58pt] (0.88,0.72) -- (1.62,0.72);
+  \draw[cGray, line width=0.48pt] (0.98,0.57) -- (1.52,0.57);
+  \draw[cGray, line width=0.38pt] (1.08,0.43) -- (1.42,0.43);
+  \node[smalllabel, anchor=west] at (1.66,0.60) {source return};
+  \node[note, anchor=east] at (5.15,0.80) {sample has no electrical contact};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v3/verified_generated.tex",
+  "bound_source_sha256": "sha256:6c8ff91dc561db9ee28f21c5e820a4925c289aa7fd57d1308441ba141e584395",
+  "findings": [
+    {
+      "id": "HF003",
+      "subject": "panel_f_source_sample_text_collision",
+      "finding": "The strict detector confirms that source in the source-return label overlaps sample in the no-contact label. Reposition only these two adjacent label declarations; preserve their exact text and all circuit, ground, sample, force, and electrode geometry."
+    }
+  ]
+}

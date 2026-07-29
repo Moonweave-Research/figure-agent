@@ -1,0 +1,54 @@
+{
+  "allowed_repository_read_paths": [
+    "AGENTS.md"
+  ],
+  "blank_start": {
+    "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/blank_start.txt",
+    "sha256": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "budget_contract": {
+    "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/budget_contract.yaml",
+    "sha256": "sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762"
+  },
+  "composition_profile": null,
+  "context_pack": {
+    "base_sha256": "sha256:9319b8f936ba04bb387f3d6d51f23e239530b565312ae7cfc57220b1e7f0f3fc",
+    "schema": "figure-agent.authoring-context-pack.v1",
+    "sha256": "sha256:9319b8f936ba04bb387f3d6d51f23e239530b565312ae7cfc57220b1e7f0f3fc"
+  },
+  "execution_cwd": ".",
+  "feedback_rounds": 0,
+  "filesystem_read_isolation": "unavailable",
+  "fixture": "fig1_failure_first_panel_f_pilot",
+  "forbidden_import_classes": [
+    "fig1_fixture_artifacts",
+    "historical_generated_sources"
+  ],
+  "intervention_mode": "raw",
+  "layout_contract": null,
+  "mandatory_source_requirements": [],
+  "manual_repairs": 0,
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/raw_generated.tex",
+  "packet_sha256": "sha256:b4a4b516f572c76c02df77ac2ca2caa24f7e0971786cd00704d82ae171b1a9b1",
+  "prompt": {
+    "sha256": "sha256:4475e7cc961020b2965ab428092beb132ed8ebab59396a1dc25bcea1273032ed",
+    "utf8": "# Raw authoring execution: fig1_failure_first_panel_f_pilot\n\n## Output and attempt boundary\n- Resolve every repository path from the repository root.\n- Write exactly one new source to [examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/raw_generated.tex].\n- Create an editable standalone TeX/TikZ scientific figure.\n- Start from the declared blank artifact; perform one attempt only.\n- Do not inspect or repair historical generated sources.\n\n## Scientific task\n- Required panels:\n  - [A] poly(S-r-DIB) primary microstructure\n  - [B] Sulfur composition variation — 3 representative chains (S60/S75/S85) of paper's 5-sample range (S60/S70/S75/S80/S85)\n  - [C] Localized traps (HERO\n  - [D] Column D — Kinetic evidence (SMU+MIM apparatus + I(t)~t^-n result)\n  - [E] Column E — ISPD-paired evidence (corona+probe apparatus + V_s decay + g(E_t) derived)\n  - [F] Column F — trapped-charge Coulomb repulsion with a grounded voltage-source return and floating cantilever\n- Binding fixture briefing (verbatim):\n\n# Fig1 failure-first Panel F pilot\n\n## §1. Intent\n\nTest whether Figure Agent can turn a reviewed complex-panel defect into exact,\nmultiscale evidence and one bounded repair without pretending that machine\nchecks establish publication quality.\n\n## §3. Correctness rules\n\n- Panel F must show one understated fixed mechanical boundary holding the\n  cantilever: a restrained support rail, short structural stem, and shallow jaw.\n- Panel F must show a compact voltage source driving the right electrode.\n- The source return must terminate at ground; the ground belongs to the source\n  circuit, not to the sample.\n- The sample and cantilever must remain electrically floating, with no\n  electrical connector at the mechanical jig.\n- The holder's material and conductivity are not established by the reference;\n  leave them electrically unmodeled rather than declaring an insulating or\n  conducting clip.\n- A compact source symbol is sufficient; a detailed instrument display is not required.\n- The historical v5f source must remain unchanged.\n\n## §6. Physics invariants\n\n- The cantilever must remain separated from the right electrode by an air gap.\n- The Coulomb-force arrow must point away from the right electrode.\n- Correcting the source/ground topology must not alter charge, cantilever,\n  electrode, air-gap, or force relations.\n\n## §7. Review constraints\n\n- Raw, verified, and repaired states must use the same model/input/budget\n  contracts.\n- Review must include whole, panel, object/relation, and zoom evidence.\n- A named human must supply scientific and visual verdicts separately.\n- Machine gates must not claim publication acceptance.\n\n## Provenance and publication boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 0\n- manual_repairs: 0\n- filesystem_read_isolation: unavailable\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/raw_generated.tex",
+  "schema": "figure-agent.authoring-execution-packet.v1",
+  "semantic_contract_application": "omitted",
+  "shape_profile": null,
+  "style_lock_authoring_requirements": [],
+  "visual_assets": {
+    "catalog_path": "styles/snippets/INDEX.yaml",
+    "catalog_sha256": "sha256:7903a00188cac224fc01d7561549e5c1104693098095db6bf4c2873cfb2f09b2",
+    "root": {
+      "kind": "plugin_root",
+      "path": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/slice2-fig3-comparable-runs/plugins/figure-agent"
+    },
+    "schema": "figure-agent.authoring-visual-assets.v1",
+    "selected": []
+  }
+}

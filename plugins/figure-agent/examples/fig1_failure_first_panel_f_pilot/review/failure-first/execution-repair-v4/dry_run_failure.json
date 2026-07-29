@@ -1,0 +1,11 @@
+{
+  "schema": "figure-agent.repair-dry-run-failure.v1",
+  "packet_sha256": "sha256:cc79f15ce6cd6437a053ff9ba45cb1b331765cb534b090ec7393b1312fa398f7",
+  "response_path": "repair_response.json",
+  "response_sha256": "sha256:662c150ef2db59d4013d39f70df94700ef3d1886a644e8941c05394e237b5f87",
+  "decision": "rejected_before_materialization",
+  "reason": "candidate must change one source block",
+  "source_mutated": false,
+  "output_materialized": false,
+  "publication_acceptance": "not_claimed"
+}

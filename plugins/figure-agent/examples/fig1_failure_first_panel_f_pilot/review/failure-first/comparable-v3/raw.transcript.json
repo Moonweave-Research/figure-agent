@@ -1,0 +1,14 @@
+{
+  "budget_contract_sha256": "sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762",
+  "context_pack_base_sha256": "sha256:eacc463f8ca25a64087aa9c92db3f6fc725dbcedc789d5a18fbb67ab6a4e4431",
+  "generated_artifact_path": "raw_generated.tex",
+  "generated_artifact_sha256": "sha256:06c8bc4e09694b10cda7aeb0942bd3e78e496426cfc58e5b6e2d88b49ce753d0",
+  "input_packet_path": "raw_packet.json",
+  "input_packet_sha256": "sha256:5a5d2b6ad40ebe32a6ae1bb10da5734c355e1b19adf9b0b844395a9791e3203c",
+  "model_id": "gpt-5.5",
+  "shared_task_binding_source": "input_packet.prompt.shared_neutral_authoring_task",
+  "shared_task_sha256": "sha256:3e88f6978943b19d58650f0d8c4655dadc15d71dc9a74815e6f31eeb54dbb3b0",
+  "source_commit": "c6a28e406045092f9e8dae16361734b03fdabb8c",
+  "starting_artifact_path": "blank_start.txt",
+  "starting_artifact_sha256": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+}

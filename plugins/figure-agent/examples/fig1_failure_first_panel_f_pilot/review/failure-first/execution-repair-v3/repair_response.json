@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "\\usepackage{tikz}\n\\usepackage{polymer-paper-preamble}\n\\providecommand{\\distribution}{\\space distribution}\n\\providecommand{\\support}{\\space support}",
+  "change_summary": "Defined both accidental prose control words with an explicit leading word space while preserving the source packages, geometry, and scientific labels."
+}

@@ -1,0 +1,80 @@
+{
+  "author_may_compile": false,
+  "author_may_write_files": false,
+  "change_budget": {
+    "max_attempts": 1,
+    "max_changed_lines": 6,
+    "max_source_blocks": 1
+  },
+  "editable_target": {
+    "finding": {
+      "finding": "Panel F visually draws the Coulomb-force arrow but omits the declared panelFCoulombRepulsionArrow style, and the bottom sample/source labels collide. Add the assertion style to the existing force draw and reposition only the bottom circuit labels while preserving the floating sample, driven electrode, source return ground, force direction, and all panel geometry.",
+      "id": "HF002",
+      "subject": "panel_f_relation_address_and_bottom_label_collision"
+    },
+    "finding_id": "HF002",
+    "protected_invariants": [
+      "floating cantilever",
+      "driven electrode",
+      "sample has no electrical contact",
+      "source return",
+      "air gap"
+    ],
+    "repair_family": "relation_restore",
+    "report_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v4/human_findings.before.json",
+    "selector": {
+      "anchor_end": "\\end{tikzpicture}",
+      "anchor_start": "% F: floating cantilever and source-ground circuit",
+      "kind": "semantic_anchor",
+      "selector_id": "panel_f_complete_scene",
+      "source_hash": "sha256:6c8ff91dc561db9ee28f21c5e820a4925c289aa7fd57d1308441ba141e584395"
+    }
+  },
+  "execution_cwd": ".",
+  "finding_reports": [
+    {
+      "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v4/human_findings.before.json",
+      "schema": "figure-agent.human-correction-findings.v1",
+      "sha256": "sha256:c8075c6b12dbf004205ddebf3f36b9fac09f11925ec5543710dedc18fb54db76"
+    }
+  ],
+  "fixture": "fig1_failure_first_panel_f_pilot",
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v4/repaired_generated.tex",
+  "packet_sha256": "sha256:cc79f15ce6cd6437a053ff9ba45cb1b331765cb534b090ec7393b1312fa398f7",
+  "prompt": {
+    "sha256": "sha256:c4f36136ff8c289aa7a741aa2a81b242112ffb0a1eb87b1faff2726a8ee0513f",
+    "utf8": "# Bound repair execution: fig1_failure_first_panel_f_pilot\n\n## Single-attempt boundary\n- Return one JSON object matching the bound response schema.\n- Do not use filesystem or shell tools.\n- Put only the replacement content between the anchors in the replacement_utf8 field.\n- Put a concise factual description in the change_summary field.\n- The controller will materialize a validated candidate at [examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v4/repaired_generated.tex].\n- Reproduce the complete bound source from [examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v3/verified_generated.tex] below.\n- Perform one repair attempt only.\n- Do not compile, render, or run a gate.\n- Do not inspect any historical source or review artifact.\n- Do not overwrite the bound source or any existing artifact.\n- Change at most six source lines in one source block.\n\n## Exact editable boundary\n- Repair family: relation_restore\n- Machine finding: {\"finding\": \"Panel F visually draws the Coulomb-force arrow but omits the declared panelFCoulombRepulsionArrow style, and the bottom sample/source labels collide. Add the assertion style to the existing force draw and reposition only the bottom circuit labels while preserving the floating sample, driven electrode, source return ground, force direction, and all panel geometry.\", \"id\": \"HF002\", \"subject\": \"panel_f_relation_address_and_bottom_label_collision\"}\n- Change content only between the exact anchor lines [% F: floating cantilever and source-ground circuit] and [\\end{tikzpicture}].\n- Keep both anchor lines byte-identical.\n- Do not act on ambiguous or unbound findings.\n\n## Protected scientific invariants\n- Preserve the exact token [floating cantilever].\n- Preserve the exact token [driven electrode].\n- Preserve the exact token [sample has no electrical contact].\n- Preserve the exact token [source return].\n- Preserve the exact token [air gap].\n\n## Bound editable source bytes\n```tex\n\\begin{scope}[shift={(12.10,0)}]\n  \\node[paneltitle, anchor=north west] at (0.18,5.62) {F};\n  \\node[label, anchor=north] at (2.90,5.56) {Trapped-charge Coulomb repulsion};\n\n  % Restrained mechanical support, with no electrical connection\n  \\path[draw=cGray, fill=cLGray!45, line width=0.58pt]\n    (0.44,3.23) rectangle (1.18,4.45);\n  \\foreach \\y in {3.38,3.68,3.98,4.28}{\n    \\draw[cGray, line width=0.30pt] (0.49,\\y) -- (0.77,\\y+0.14);\n  }\n  \\node[smalllabel, align=center, anchor=north] at (0.81,3.10) {mechanical\\\\support};\n\n  % Electrically floating cantilever held only by the support\n  \\path[draw=cBrown, fill=cAmberSphere!32, line width=0.72pt, rounded corners=1pt]\n    (1.18,3.72) -- (4.86,4.19) -- (4.91,3.91) -- (1.18,3.46) -- cycle;\n  \\node[smalllabel, text=cBrown, anchor=south] at (3.15,4.14) {floating cantilever};\n  \\foreach \\x/\\y in {2.22/3.72,2.83/3.80,3.44/3.88,4.05/3.96,4.58/4.03}{\n    \\node[charge] at (\\x,\\y) {$-$};\n  }\n\n  % Driven electrode and visible air gap\n  \\path[draw=cGray, fill=cBlue!20, line width=0.66pt]\n    (1.65,2.12) rectangle (5.00,2.43);\n  \\node[smalllabel, text=cBlue, anchor=north] at (3.33,2.04) {driven electrode};\n  \\draw[cGray, {Stealth[length=2.4pt,width=1.8pt]}-{Stealth[length=2.4pt,width=1.8pt]},\n    line width=0.36pt] (4.70,2.52) -- (4.70,3.70);\n  \\node[note, anchor=east] at (4.50,3.04) {air gap};\n\n  % Coulomb force points away from the electrode\n  \\draw[cRed, -{Stealth[length=4.0pt,width=3.0pt]}, line width=1.0pt]\n    (3.60,3.56) -- (3.60,4.88);\n  \\node[label, text=cRed, anchor=west] at (3.72,4.72) {$F_{\\mathrm C}$};\n\n  % Compact source circuit: source drives electrode, return terminates at ground\n  \\draw[cGray, line width=0.58pt] (3.34,2.12) -- (3.34,1.44) -- (2.55,1.44);\n  \\draw[cGray, line width=0.58pt] (1.75,1.44) -- (1.25,1.44) -- (1.25,0.72);\n  \\draw[cGray, fill=white, line width=0.58pt] (2.15,1.44) circle[radius=0.40];\n  \\node[label, text=cRed] at (2.15,1.58) {$+$};\n  \\node[label, text=cBlue] at (2.15,1.29) {$-$};\n  \\node[smalllabel, anchor=north] at (2.15,0.96) {voltage source};\n  \\draw[cGray, line width=0.58pt] (0.88,0.72) -- (1.62,0.72);\n  \\draw[cGray, line width=0.48pt] (0.98,0.57) -- (1.52,0.57);\n  \\draw[cGray, line width=0.38pt] (1.08,0.43) -- (1.42,0.43);\n  \\node[smalllabel, anchor=west] at (1.66,0.60) {source return};\n  \\node[note, anchor=east] at (5.15,0.80) {sample has no electrical contact};\n\\end{scope}\n```\n\n## Provenance boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 1\n- manual_repairs: 0\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v4/repaired_generated.tex",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "change_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "replacement_utf8": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "replacement_utf8",
+      "change_summary"
+    ],
+    "type": "object"
+  },
+  "review_only_findings": [],
+  "schema": "figure-agent.repair-execution-packet.v3",
+  "source": {
+    "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v3/verified_generated.tex",
+    "sha256": "sha256:6c8ff91dc561db9ee28f21c5e820a4925c289aa7fd57d1308441ba141e584395"
+  },
+  "target_contract": {
+    "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v4/repair_targets.json",
+    "sha256": "sha256:5431951d12be0d4a7939cfcf701d5f30edb8a7e3d18c9a28598a6970f15c355a"
+  },
+  "verification": "external_sequential_compile_required"
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "figure-agent.repair-preview-review.v1",
+  "preview_sha256": "sha256:0e994256675296cceed2e4e08d0ff929ce7af5b94af67dd9e2a6029b1d7d397c",
+  "decision": "rejected_before_authorization",
+  "reason": "The macros render trap-energydistribution and mechanicalsupport without word spacing.",
+  "source_mutated": false,
+  "output_materialized": false,
+  "publication_acceptance": "not_claimed"
+}

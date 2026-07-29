@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.repair-materialization-preview.v1",
+  "fixture": "fig1_failure_first_panel_f_pilot",
+  "packet_sha256": "sha256:d503676564952854dbe241235a157e5d6f11970ab8fc46617992f2112e8ff690",
+  "source_sha256": "sha256:6c8ff91dc561db9ee28f21c5e820a4925c289aa7fd57d1308441ba141e584395",
+  "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v5/repaired_generated.tex",
+  "output_sha256": "sha256:62c3ba29441806e93a682266581a3a90d768a449e0c6c7a9202e11a8d98f5820",
+  "changed_source_blocks": 1,
+  "changed_lines": 4,
+  "preserved_boundary_blank_lines": 1,
+  "change_summary": "Separated the adjacent source-return and no-contact labels vertically while preserving their exact text and all diagram geometry.",
+  "publication_acceptance": "not_claimed",
+  "preview_sha256": "sha256:5a0ca3c464e6982425262b3893302a2e5fc08a0db2af0292e5377f8ef31782fb"
+}

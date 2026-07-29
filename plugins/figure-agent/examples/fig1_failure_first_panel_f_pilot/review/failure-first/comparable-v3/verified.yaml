@@ -1,0 +1,41 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: verified
+model_contract_hash: sha256:ffc50c70661c227edf8daae6f8dbed2dd0645386c12d43bc7fc44da166e043bd
+shared_task_hash: sha256:3e88f6978943b19d58650f0d8c4655dadc15d71dc9a74815e6f31eeb54dbb3b0
+input_packet_hash: sha256:52f0a7fb0fe991f3e3fdc3c83264085e65a00805d22d4c7a95a6ed05b39df1cb
+budget_contract_hash: sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762
+figure_family: sulfur-polymer-six-panel-overview
+comparison_eligibility: eligible_equal_input
+findings:
+- id: VERIFIED-COLLISION-001
+  failure_class: collision
+  review_outcome: confirmed_defect
+  occurrences: 2
+  evidence: strict detector confirms Panel E probe/surface-potential and Panel F sample/source text collisions
+- id: VERIFIED-ATTRIBUTION-001
+  failure_class: provenance
+  review_outcome: confirmed_defect
+  occurrences: 1
+  evidence: visually present Panel F force arrow lacks the declared machine-addressable assertion style
+human_correction_minutes: null
+intervention_count: 1
+clean_reproduction: false
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
+generation_receipt:
+  schema: figure-agent.generation-receipt.v2
+  model_id: gpt-5.5
+  input_packet_path: verified_packet.json
+  input_packet_sha256: sha256:52f0a7fb0fe991f3e3fdc3c83264085e65a00805d22d4c7a95a6ed05b39df1cb
+  shared_task_sha256: sha256:3e88f6978943b19d58650f0d8c4655dadc15d71dc9a74815e6f31eeb54dbb3b0
+  shared_task_binding_source: input_packet.prompt.shared_neutral_authoring_task
+  context_pack_base_sha256: sha256:eacc463f8ca25a64087aa9c92db3f6fc725dbcedc789d5a18fbb67ab6a4e4431
+  budget_contract_sha256: sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762
+  source_commit: c6a28e406045092f9e8dae16361734b03fdabb8c
+  starting_artifact_path: blank_start.txt
+  starting_artifact_sha256: sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+  generated_artifact_path: verified_generated.tex
+  generated_artifact_sha256: sha256:6c8ff91dc561db9ee28f21c5e820a4925c289aa7fd57d1308441ba141e584395
+  transcript_path: verified.transcript.json
+  transcript_sha256: sha256:3be4f40926d70f117aa1074c54309a21aabfbc7b68f08a95477dfb9cd7f891fa

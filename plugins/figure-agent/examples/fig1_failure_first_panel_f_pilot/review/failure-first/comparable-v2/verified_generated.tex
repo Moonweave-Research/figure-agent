@@ -1,0 +1,267 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{tikz}
+\usepackage{polymer-paper-preamble}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily,
+  panel/.style={draw=cLGray, line width=0.55pt, rounded corners=2pt, fill=white},
+  panel title/.style={font=\sffamily\bfseries\fontsize{8.2}{9.8}\selectfont, text=black, anchor=west},
+  panel letter/.style={circle, fill=cGray, text=white, inner sep=0pt, minimum size=4.8mm,
+    font=\sffamily\bfseries\fontsize{7.2}{8.6}\selectfont},
+  label/.style={font=\sffamily\fontsize{6.2}{7.4}\selectfont, text=cGray, align=center},
+  small label/.style={font=\sffamily\fontsize{5.3}{6.4}\selectfont, text=cGray, align=center},
+  micro label/.style={font=\sffamily\fontsize{4.7}{5.6}\selectfont, text=cGray, align=center},
+  axis/.style={-{Stealth[length=2.7pt,width=2.0pt]}, draw=cGray, line width=0.38pt},
+  cue arrow/.style={-{Stealth[length=3.1pt,width=2.3pt]}, draw=cGray, line width=0.48pt},
+  apparatus/.style={draw=cGray, line width=0.48pt, fill=white},
+  soft box/.style={draw=cLGray, line width=0.38pt, rounded corners=1.5pt, fill=cLGray!18},
+  charge/.style={circle, draw=cBlue!80!black, fill=cBlue!65, text=white,
+    line width=0.3pt, inner sep=0pt, minimum size=2.3mm,
+    font=\sffamily\bfseries\fontsize{4.5}{5.4}\selectfont},
+  sulfur/.style={circle, draw=cAmber, fill=cAmberSphere!55, line width=0.42pt,
+    inner sep=0pt, minimum size=2.6mm,
+    font=\sffamily\bfseries\fontsize{5.1}{6.1}\selectfont, text=cBrown},
+  polymer bond/.style={draw=cGray, line width=0.72pt},
+  data curve/.style={draw=cBlue, line width=0.85pt},
+  derived curve/.style={draw=cTeal, line width=0.85pt}
+]
+
+% Panel frames
+\foreach \x/\y in {0/5.35,5.65/5.35,11.30/5.35,0/0,5.65/0,11.30/0} {
+  \path[panel] (\x,\y) rectangle ++(5.35,5.05);
+}
+
+% --------------------------------------------------------------------------
+% A — primary microstructure
+\node[panel letter] at (0.34,10.05) {A};
+\node[panel title] at (0.68,10.05) {poly(S-r-DIB) microstructure};
+
+\begin{scope}[shift={(0.28,5.55)}]
+  \node[label, anchor=west] at (0.10,3.80) {sulfur-rich random copolymer};
+  \draw[polymer bond] (0.34,2.74) -- (0.84,2.98) -- (1.34,2.72) -- (1.84,3.00);
+  \draw[polymer bond] (1.84,3.00) -- (2.23,2.80);
+  \draw[polymer bond] (3.03,2.80) -- (3.44,3.00) -- (3.94,2.72) -- (4.44,2.98) -- (4.82,2.76);
+  \foreach \p in {(0.34,2.74),(0.84,2.98),(1.34,2.72),(1.84,3.00),(3.44,3.00),(3.94,2.72),(4.44,2.98),(4.82,2.76)}
+    \node[sulfur] at \p {S};
+
+  % DIB aromatic unit and two vinyl-derived connections
+  \draw[polymer bond, fill=cLGray!22]
+    (2.23,2.80) -- (2.43,3.15) -- (2.83,3.15) -- (3.03,2.80)
+    -- (2.83,2.45) -- (2.43,2.45) -- cycle;
+  \draw[draw=cGray, line width=0.35pt] (2.41,2.80) circle (0.25cm);
+  \draw[polymer bond] (2.43,3.15) -- (2.23,3.54) -- (1.94,3.54);
+  \draw[polymer bond] (2.83,2.45) -- (3.03,2.06) -- (3.32,2.06);
+  \node[small label, text=cBrown] at (2.63,1.72) {DIB-derived aromatic junction};
+  \draw[cue arrow] (2.63,1.98) -- (2.63,2.34);
+
+  \draw[draw=cAmber, line width=0.48pt, rounded corners=2pt]
+    (0.12,2.32) rectangle (1.98,3.40);
+  \node[micro label, text=cAmber] at (1.05,2.10) {sulfur segment};
+  \draw[draw=cAmber, line width=0.48pt, rounded corners=2pt]
+    (3.28,2.30) rectangle (5.00,3.40);
+  \node[micro label, text=cAmber] at (4.14,2.10) {sulfur segment};
+
+  \node[soft box, label, text=cGray, minimum width=4.45cm, minimum height=0.62cm]
+    at (2.62,0.72) {covalently linked sulfur-rich backbone};
+\end{scope}
+
+% --------------------------------------------------------------------------
+% B — composition variation
+\node[panel letter] at (5.99,10.05) {B};
+\node[panel title] at (6.33,10.05) {Sulfur composition variation};
+
+\begin{scope}[shift={(5.90,5.55)}]
+  \node[small label, anchor=west] at (0.08,3.80)
+    {representative chains from S60/S70/S75/S80/S85};
+
+  \foreach \yy/\name/\col in {3.05/S60/cRed,2.05/S75/cAmber,1.05/S85/cTeal} {
+    \node[font=\sffamily\bfseries\fontsize{6.1}{7.3}\selectfont, text=\col, anchor=east]
+      at (0.64,\yy) {\name};
+    \draw[draw=cGray, line width=0.70pt]
+      plot[smooth] coordinates {(0.86,\yy) (1.18,\yy+0.16) (1.50,\yy-0.10)
+      (1.82,\yy+0.15) (2.14,\yy-0.11) (2.46,\yy+0.14) (2.78,\yy-0.08)
+      (3.10,\yy+0.15) (3.42,\yy-0.10) (3.74,\yy+0.14) (4.06,\yy-0.07) (4.42,\yy+0.12)};
+  }
+  \foreach \x in {1.18,2.14,3.42}
+    \node[sulfur] at (\x,3.21) {S};
+  \foreach \x in {1.18,1.82,2.46,3.10,3.74}
+    \node[sulfur] at (\x,2.21) {S};
+  \foreach \x in {0.98,1.50,2.02,2.54,3.06,3.58,4.10,4.42}
+    \node[sulfur] at (\x,1.21) {S};
+
+  \draw[cue arrow, draw=cAmber] (4.70,3.15) -- (4.70,1.15);
+  \node[micro label, text=cAmber, rotate=90] at (4.94,2.15) {increasing sulfur content};
+  \node[soft box, micro label, minimum width=4.0cm, minimum height=0.48cm]
+    at (2.58,0.40) {three representatives of the five-sample series};
+\end{scope}
+
+% --------------------------------------------------------------------------
+% C — localized traps: real space + energy space
+\node[panel letter] at (11.64,10.05) {C};
+\node[panel title] at (11.98,10.05) {Localized traps};
+
+\begin{scope}[shift={(11.55,5.55)}]
+  \node[small label, text=cBrown] at (1.25,3.78) {real space};
+  \node[small label, text=cBrown] at (3.86,3.78) {energy space};
+  \draw[draw=cLGray, line width=0.35pt] (2.58,0.48) -- (2.58,3.58);
+
+  \draw[draw=cGray, line width=0.72pt]
+    plot[smooth] coordinates {(0.18,2.86) (0.55,3.12) (0.92,2.73) (1.28,3.03)
+      (1.64,2.60) (2.06,2.92) (2.38,2.64)};
+  \draw[draw=cAmber, line width=0.55pt, fill=cAmberSphere!35]
+    (0.42,1.12) .. controls (0.82,0.55) and (1.48,0.55) .. (1.91,1.12)
+    .. controls (1.50,0.91) and (0.82,0.91) .. cycle;
+  \node[charge] at (1.16,1.12) {$-$};
+  \draw[cue arrow, draw=cBlue] (1.16,2.40) -- (1.16,1.34);
+  \node[micro label, text=cBlue] at (1.16,2.56) {localized charge};
+  \node[micro label, text=cAmber] at (1.18,0.44) {local potential well};
+
+  \draw[axis] (3.02,0.66) -- (3.02,3.42);
+  \node[micro label, rotate=90] at (2.80,2.04) {Energy};
+  \path[draw=cGray, line width=0.48pt, fill=cLGray!28] (3.26,3.05) rectangle (4.85,3.40);
+  \path[draw=cGray, line width=0.48pt, fill=cLGray!28] (3.26,0.66) rectangle (4.85,1.01);
+  \node[micro label] at (4.05,3.23) {transport states};
+  \node[micro label] at (4.05,0.84) {lower states};
+  \foreach \yy in {1.48,1.82,2.18,2.50} {
+    \draw[draw=cAmber, line width=0.62pt] (3.50,\yy) -- (4.06,\yy);
+  }
+  \foreach \yy in {1.62,2.02,2.34} {
+    \node[charge] at (4.36,\yy) {$-$};
+  }
+  \node[micro label, text=cAmber] at (4.05,1.27) {localized trap levels};
+\end{scope}
+
+% --------------------------------------------------------------------------
+% D — SMU/MIM and current decay
+\node[panel letter] at (0.34,4.70) {D};
+\node[panel title] at (0.68,4.70) {Kinetic evidence};
+
+\begin{scope}[shift={(0.28,0.18)}]
+  \node[small label, text=cBrown] at (1.20,3.76) {SMU + MIM apparatus};
+  \node[small label, text=cBrown] at (3.92,3.76) {current decay};
+
+  \node[apparatus, rounded corners=1.2pt, minimum width=1.12cm, minimum height=0.76cm,
+    font=\sffamily\bfseries\fontsize{5.5}{6.6}\selectfont, text=cBlue] (smu) at (0.74,2.54) {SMU};
+  \draw[draw=cGray, line width=0.48pt] (1.30,2.72) -- (1.73,2.72) -- (1.73,3.10) -- (2.36,3.10);
+  \draw[draw=cGray, line width=0.48pt] (1.30,2.36) -- (1.73,2.36) -- (1.73,1.78) -- (2.36,1.78);
+  \path[draw=cGray, fill=cGray!65, line width=0.45pt] (2.18,2.90) rectangle (3.04,3.12);
+  \path[draw=cAmber, fill=cAmberSphere!45, line width=0.45pt] (2.18,2.10) rectangle (3.04,2.90);
+  \path[draw=cGray, fill=cGray!65, line width=0.45pt] (2.18,1.78) rectangle (3.04,2.10);
+  \node[micro label, text=cAmber] at (2.61,2.50) {polymer};
+  \node[micro label] at (2.61,1.47) {metal--insulator--metal};
+  \draw[cue arrow, draw=cBlue] (1.96,2.46) -- (2.14,2.46);
+  \node[micro label, text=cBlue] at (1.52,2.08) {bias / read};
+
+  \draw[axis] (3.42,1.20) -- (5.02,1.20);
+  \draw[axis] (3.42,1.20) -- (3.42,3.28);
+  \node[micro label] at (4.24,0.92) {$t$};
+  \node[micro label, rotate=90] at (3.16,2.22) {$I(t)$};
+  \draw[data curve]
+    plot[smooth] coordinates {(3.53,3.05) (3.72,2.72) (3.98,2.38) (4.28,2.08)
+      (4.62,1.82) (4.94,1.64)};
+  \node[soft box, font=\sffamily\fontsize{6.0}{7.2}\selectfont, text=cBlue,
+    minimum width=1.32cm, minimum height=0.46cm] at (4.26,3.15) {$I(t)\sim t^{-n}$};
+  \node[micro label] at (4.28,0.52) {illustrative relaxation};
+\end{scope}
+
+% --------------------------------------------------------------------------
+% E — ISPD-paired evidence
+\node[panel letter] at (5.99,4.70) {E};
+\node[panel title] at (6.33,4.70) {ISPD-paired evidence};
+
+\begin{scope}[shift={(5.90,0.18)}]
+  \node[small label, text=cBrown] at (1.22,3.78) {corona + probe};
+  \node[small label, text=cBrown] at (3.95,3.78) {paired readout};
+
+  \draw[draw=cGray, line width=0.55pt] (0.18,1.30) -- (2.36,1.30);
+  \path[draw=cAmber, fill=cAmberSphere!42, line width=0.48pt] (0.34,1.30) rectangle (2.20,1.62);
+  \node[micro label, text=cBrown] at (1.27,1.46) {polymer surface};
+  \draw[draw=cGray, line width=0.52pt, fill=cGray!15]
+    (0.58,3.18) -- (0.92,3.18) -- (0.82,2.62) -- (0.68,2.62) -- cycle;
+  \node[micro label] at (0.75,3.47) {corona};
+  \foreach \x in {0.62,0.84,1.06} {
+    \node[font=\sffamily\bfseries\fontsize{6.0}{7.2}\selectfont, text=cRed] at (\x,2.20) {$+$};
+  }
+  \draw[cue arrow, draw=cRed] (0.76,2.56) -- (0.84,1.78);
+  \draw[draw=cGray, line width=0.52pt, fill=cLGray!35] (1.54,3.20) -- (1.92,3.20) -- (1.78,2.58) -- cycle;
+  \node[micro label] at (1.74,3.47) {probe};
+  \draw[draw=cBlue, line width=0.42pt, dashed] (1.74,2.58) -- (1.74,1.72);
+
+  \draw[axis] (2.82,2.32) -- (4.86,2.32);
+  \draw[axis] (2.82,2.32) -- (2.82,3.50);
+  \node[micro label] at (3.84,2.06) {$t$};
+  \node[micro label, rotate=90] at (2.58,2.92) {$V_s$};
+  \draw[data curve]
+    plot[smooth] coordinates {(2.94,3.35) (3.22,3.12) (3.56,2.90) (3.96,2.72) (4.40,2.58) (4.78,2.50)};
+  \node[micro label, text=cBlue, anchor=west] at (4.06,3.20) {surface-potential decay};
+
+  \draw[axis] (2.82,0.55) -- (4.86,0.55);
+  \draw[axis] (2.82,0.55) -- (2.82,1.82);
+  \node[micro label] at (3.84,0.28) {$E_t$};
+  \node[micro label, rotate=90] at (2.56,1.18) {$g(E_t)$};
+  \draw[derived curve, fill=cTeal!18]
+    (2.92,0.56) .. controls (3.20,0.60) and (3.32,1.62) .. (3.74,1.68)
+    .. controls (4.18,1.66) and (4.36,0.66) .. (4.78,0.56) -- cycle;
+  \node[micro label, text=cTeal, anchor=west] at (4.02,1.47) {derived trap-energy\distribution};
+\end{scope}
+
+% --------------------------------------------------------------------------
+% F — mechanically held, electrically floating cantilever
+\node[panel letter] at (11.64,4.70) {F};
+\node[panel title] at (11.98,4.70) {Coulomb repulsion};
+
+\begin{scope}[shift={(11.55,0.18)}]
+  \node[small label, text=cBrown] at (2.62,3.82) {trapped charge on a floating cantilever};
+
+  % Restrained mechanical support: deliberately no electrical connector.
+  \path[draw=cGray, fill=cLGray!55, line width=0.58pt]
+    (0.28,1.44) rectangle (0.76,3.16);
+  \foreach \yy in {1.58,1.88,2.18,2.48,2.78,3.08}
+    \draw[draw=cGray, line width=0.28pt] (0.30,\yy) -- (0.49,\yy+0.18);
+  \node[micro label, anchor=north] at (0.52,1.30) {mechanical\support};
+
+  % Cantilever is mechanically clamped only and remains electrically floating.
+  \path[draw=cBrown, fill=cArmAmber!38, line width=0.65pt]
+    (0.76,2.39) -- (3.18,2.56) -- (3.20,2.82) -- (0.76,2.70) -- cycle;
+  \node[micro label, text=cBrown] at (1.92,3.08) {electrically floating cantilever};
+  \foreach \x/\y in {1.35/2.68,1.82/2.70,2.28/2.74,2.72/2.77} {
+    \node[charge] at (\x,\y) {$-$};
+  }
+  \node[micro label, text=cBlue] at (2.10,2.22) {trapped charges};
+
+  % Driven electrode at right, separated by a clearly visible air gap.
+  \path[draw=cGray, fill=cGray!70, line width=0.60pt]
+    (3.72,1.76) rectangle (4.08,3.12);
+  \node[micro label, rotate=90, text=white] at (3.90,2.44) {electrode};
+  \draw[draw=cTeal, line width=0.42pt, {Stealth[length=2.5pt,width=1.8pt]}-{Stealth[length=2.5pt,width=1.8pt]}]
+    (3.24,2.06) -- (3.68,2.06);
+  \node[micro label, text=cTeal] at (3.46,1.82) {air gap};
+
+  % Coulomb force points left, away from the electrode on the right.
+  \draw[-{Stealth[length=4.2pt,width=3.0pt]}, draw=cRed, line width=0.92pt]
+    (2.86,3.28) -- (1.56,3.28);
+  \node[small label, text=cRed] at (2.20,3.52) {$F_{\mathrm{C}}$ away from electrode};
+
+  % Compact source drives only the electrode; its return terminates at ground.
+  \node[apparatus, circle, minimum size=6.6mm,
+    font=\sffamily\bfseries\fontsize{5.1}{6.1}\selectfont, text=cBlue] (source) at (4.64,2.42) {$V$};
+  \node[micro label, text=cBlue] at (4.64,3.18) {voltage source};
+  \node[font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont, text=cRed] at (4.64,2.64) {$+$};
+  \node[font=\sffamily\bfseries\fontsize{5.0}{6.0}\selectfont, text=cBlue] at (4.64,2.20) {$-$};
+  \draw[draw=cRed, line width=0.52pt] (4.31,2.64) -- (4.08,2.64);
+  \draw[draw=cRed, line width=0.52pt] (4.97,2.64) -- (5.10,2.64) -- (5.10,3.44) -- (4.08,3.44) -- (4.08,3.12);
+  \node[micro label, text=cRed, anchor=east] at (5.06,3.62) {driven};
+
+  \draw[draw=cBlue, line width=0.52pt] (4.64,2.09) -- (4.64,1.10);
+  \draw[draw=cGray, line width=0.52pt] (4.30,1.10) -- (4.98,1.10);
+  \draw[draw=cGray, line width=0.52pt] (4.39,0.94) -- (4.89,0.94);
+  \draw[draw=cGray, line width=0.52pt] (4.49,0.78) -- (4.79,0.78);
+  \node[micro label, anchor=east] at (4.24,0.94) {source return};
+
+  \node[soft box, micro label, minimum width=3.30cm, minimum height=0.48cm]
+    at (2.08,0.62) {no sample contact; support is mechanical only};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

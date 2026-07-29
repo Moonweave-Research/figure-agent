@@ -1,0 +1,28 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v3/verified_generated.tex",
+  "source_sha256": "sha256:6c8ff91dc561db9ee28f21c5e820a4925c289aa7fd57d1308441ba141e584395",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v5/human_findings.before.json",
+        "id": "HF003"
+      },
+      "attribution": {"state": "exact"},
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "panel_f_bottom_label_pair",
+        "anchor_start": "  \\draw[cGray, line width=0.38pt] (1.08,0.43) -- (1.42,0.43);",
+        "anchor_end": "\\end{tikzpicture}"
+      },
+      "repair_family": "local_reposition",
+      "protected_invariants": [
+        "source return",
+        "sample has no electrical contact",
+        "floating cantilever",
+        "driven electrode",
+        "air gap"
+      ]
+    }
+  ]
+}

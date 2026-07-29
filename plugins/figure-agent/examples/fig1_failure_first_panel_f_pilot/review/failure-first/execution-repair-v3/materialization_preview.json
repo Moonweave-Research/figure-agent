@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.repair-materialization-preview.v1",
+  "fixture": "fig1_failure_first_panel_f_pilot",
+  "packet_sha256": "sha256:c225385245364a71755595de37244c2fecfb11c0027d92cbdda27b85435a6040",
+  "source_sha256": "sha256:fc9734421921bb8a9adbf34ddf113a0c5a83de6ecf25f07f9546e14432d69418",
+  "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v3/repaired_generated.tex",
+  "output_sha256": "sha256:6d22af04bc7665cc14450b267639ab3a372622dcf1098630beb3d54e78423103",
+  "changed_source_blocks": 1,
+  "changed_lines": 2,
+  "preserved_boundary_blank_lines": 1,
+  "change_summary": "Defined both accidental prose control words with an explicit leading word space while preserving the source packages, geometry, and scientific labels.",
+  "publication_acceptance": "not_claimed",
+  "preview_sha256": "sha256:0654bfd9cb723e1f7a271a312ff69321134f32f5ada6ac7f2c99147efa660711"
+}

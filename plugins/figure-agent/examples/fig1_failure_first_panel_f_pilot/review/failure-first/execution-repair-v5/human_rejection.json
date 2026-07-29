@@ -1,0 +1,10 @@
+{
+  "schema": "figure-agent.repair-preview-review.v1",
+  "preview_sha256": "sha256:5a0ca3c464e6982425262b3893302a2e5fc08a0db2af0292e5377f8ef31782fb",
+  "reviewer": "moon",
+  "decision": "rejected_before_authorization",
+  "reason": "The candidate only repositions labels while retaining an unacceptable Panel F cantilever composition and insufficient overall figure quality.",
+  "source_mutated": false,
+  "output_materialized": false,
+  "publication_acceptance": "not_claimed"
+}

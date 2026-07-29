@@ -1,0 +1,63 @@
+{
+  "allowed_repository_read_paths": [
+    "AGENTS.md",
+    "styles/polymer-paper-preamble.sty"
+  ],
+  "blank_start": {
+    "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/blank_start.txt",
+    "sha256": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "budget_contract": {
+    "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/budget_contract.yaml",
+    "sha256": "sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762"
+  },
+  "composition_profile": null,
+  "context_pack": {
+    "base_sha256": "sha256:eacc463f8ca25a64087aa9c92db3f6fc725dbcedc789d5a18fbb67ab6a4e4431",
+    "schema": "figure-agent.authoring-context-pack.v1",
+    "sha256": "sha256:eacc463f8ca25a64087aa9c92db3f6fc725dbcedc789d5a18fbb67ab6a4e4431"
+  },
+  "execution_cwd": ".",
+  "feedback_rounds": 0,
+  "filesystem_read_isolation": "unavailable",
+  "fixture": "fig1_failure_first_panel_f_pilot",
+  "forbidden_import_classes": [
+    "fig1_fixture_artifacts",
+    "historical_generated_sources"
+  ],
+  "intervention_mode": "figure_agent",
+  "layout_contract": null,
+  "mandatory_source_requirements": [
+    "\\documentclass[tikz,border=4pt]{standalone}",
+    "\\usepackage{tikz}",
+    "\\usepackage{polymer-paper-preamble}"
+  ],
+  "manual_repairs": 0,
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/verified_generated.tex",
+  "packet_sha256": "sha256:ed38656a261e904e7e81dce238ee88cc06a7b1beadbf9364591749db2e168510",
+  "prompt": {
+    "sha256": "sha256:028d1d171a2ac67ac31b4b419b71a1f778a8f7e9bbb6771e0da0a552d8bfe4de",
+    "utf8": "# Bound authoring execution: fig1_failure_first_panel_f_pilot\n\n## Output and attempt boundary\n- Resolve every repository path from the repository root.\n- Do not change directory before resolving paths.\n- Write exactly one new source to [examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/verified_generated.tex].\n- Do not create an intermediate subdirectory beneath [examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2].\n- Start from the declared blank artifact; perform one attempt only.\n- Do not inspect or repair historical generated sources.\n- Read repository file content only from [AGENTS.md] and [styles/polymer-paper-preamble.sty]; all other required authoring context is already bound below.\n\n## Mandatory standalone TikZ source requirements\n- \\documentclass[tikz,border=4pt]{standalone}\n- \\usepackage{tikz}\n- \\usepackage{polymer-paper-preamble}\n\n## Style Lock authoring requirements\n- Use only the preamble palette tokens cAmber, cBlue, cRed, cTeal, cGray, cLGray, cBrown, cArmAmber, and cAmberSphere, plus TikZ built-in black, white, and gray.\n- Keep every explicit line width at or above 0.25pt.\n- Do not use local \\tiny or \\scriptsize font overrides.\n\n## Semantic contracts and forbidden implications\n- Shared neutral authoring task (verbatim):\n\n# Fig1 scientific authoring task\n\nCreate a six-panel scientific overview of sulfur-rich polymer charge trapping.\n\n- Panel A: poly(S-r-DIB) primary microstructure.\n- Panel B: sulfur-composition variation using S60, S75, and S85 as representative chains from the S60/S70/S75/S80/S85 series.\n- Panel C: localized traps in real-space and energy-space views.\n- Panel D: kinetic evidence combining an SMU/MIM apparatus cue with an illustrative current-decay relation.\n- Panel E: ISPD evidence combining a corona/probe apparatus cue with surface-potential decay and a derived trap-energy distribution.\n- Panel F: trapped-charge Coulomb repulsion of a mechanically held, electrically floating cantilever near a driven electrode.\n\nFor Panel F, show one restrained mechanical support, a visible air gap between cantilever and electrode, a compact voltage source driving the electrode, and a source return terminating at ground. The ground belongs to the source circuit, not the sample. Do not add an electrical connector at the mechanical support. The Coulomb-force arrow points away from the driven electrode. Do not infer the support material or conductivity.\n\n- Required panels:\n  - [A] poly(S-r-DIB) primary microstructure\n  - [B] Sulfur composition variation — 3 representative chains (S60/S75/S85) of paper's 5-sample range (S60/S70/S75/S80/S85)\n  - [C] Localized traps (HERO\n  - [D] Column D — Kinetic evidence (SMU+MIM apparatus + I(t)~t^-n result)\n  - [E] Column E — ISPD-paired evidence (corona+probe apparatus + V_s decay + g(E_t) derived)\n  - [F] Column F — trapped-charge Coulomb repulsion with a grounded voltage-source return and floating cantilever\n\n- Semantic claim [F:required-object:panel_f.mechanical_jig]: The figure includes required object [panel_f.mechanical_jig].\n- Semantic claim [F:required-object:panel_f.cantilever]: The figure includes required object [panel_f.cantilever].\n- Semantic claim [F:required-object:panel_f.electrode]: The figure includes required object [panel_f.electrode].\n- Semantic claim [F:required-object:panel_f.coulomb_force]: The figure includes required object [panel_f.coulomb_force].\n- Semantic claim [F:required-object:panel_f.air_gap]: The figure includes required object [panel_f.air_gap].\n- Semantic claim [F:required-object:panel_f.trapped_charge_markers]: The figure includes required object [panel_f.trapped_charge_markers].\n- Semantic claim [F:required-object:panel_f.applied_voltage_cue]: The figure includes required object [panel_f.applied_voltage_cue].\n- Semantic claim [F:required-object:panel_f.voltage_source]: The figure includes required object [panel_f.voltage_source].\n- Semantic claim [F:required-object:panel_f.ground_reference]: The figure includes required object [panel_f.ground_reference].\n- Locked invariant [F:protected-relation:mechanical_jig_holds_cantilever]: Protected relation holds: [mechanical_jig_holds_cantilever].\n- Locked invariant [F:protected-relation:cantilever_separated_from_electrode_by_air_gap]: Protected relation holds: [cantilever_separated_from_electrode_by_air_gap].\n- Locked invariant [F:protected-relation:coulomb_force_points_away_from_electrode]: Protected relation holds: [coulomb_force_points_away_from_electrode].\n- Locked invariant [F:protected-relation:voltage_source_drives_electrode]: Protected relation holds: [voltage_source_drives_electrode].\n- Locked invariant [F:protected-relation:voltage_source_returns_to_ground]: Protected relation holds: [voltage_source_returns_to_ground].\n- Locked invariant [F:protected-relation:cantilever_remains_electrically_floating]: Protected relation holds: [cantilever_remains_electrically_floating].\n- Locked invariant [F:forbidden-implication:panel_f.grounded_sample]: Forbidden implication is absent: [panel_f.grounded_sample].\n- Locked invariant [F:forbidden-implication:panel_f.grounded_cantilever]: Forbidden implication is absent: [panel_f.grounded_cantilever].\n- Locked invariant [F:forbidden-implication:panel_f.second_contact]: Forbidden implication is absent: [panel_f.second_contact].\n- Locked invariant [F:forbidden-implication:panel_f.electrical_contact_at_jig]: Forbidden implication is absent: [panel_f.electrical_contact_at_jig].\n- Do not imply physics or quantitative relations absent from the declared contracts.\n\n## Curated visual assets\n- No curated visual assets selected.\n\n## Declared layout directives\n- No optional layout contract selected.\n\n## Optional shape-profile directives\n- No optional shape profile selected.\n\n## Optional composition-profile directives\n- No optional composition profile selected.\n\n## Provenance and publication boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 0\n- manual_repairs: 0\n- filesystem_read_isolation: unavailable\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/verified_generated.tex",
+  "schema": "figure-agent.authoring-execution-packet.v1",
+  "semantic_contract_application": "injected",
+  "shape_profile": null,
+  "style_lock_authoring_requirements": [
+    "Use only the preamble palette tokens cAmber, cBlue, cRed, cTeal, cGray, cLGray, cBrown, cArmAmber, and cAmberSphere, plus TikZ built-in black, white, and gray.",
+    "Keep every explicit line width at or above 0.25pt.",
+    "Do not use local \\tiny or \\scriptsize font overrides."
+  ],
+  "visual_assets": {
+    "catalog_path": "styles/snippets/INDEX.yaml",
+    "catalog_sha256": "sha256:7903a00188cac224fc01d7561549e5c1104693098095db6bf4c2873cfb2f09b2",
+    "root": {
+      "kind": "plugin_root",
+      "path": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/slice2-fig3-comparable-runs/plugins/figure-agent"
+    },
+    "schema": "figure-agent.authoring-visual-assets.v1",
+    "selected": []
+  }
+}

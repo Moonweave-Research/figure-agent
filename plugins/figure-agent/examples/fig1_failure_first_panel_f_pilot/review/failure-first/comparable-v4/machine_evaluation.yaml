@@ -1,0 +1,23 @@
+schema: figure-agent.failure-first-machine-evaluation.v1
+fixture: fig1_failure_first_panel_f_pilot
+comparison_state: staged_without_generation_receipts
+preflight: pass
+raw:
+  source_sha256: sha256:c2992fb9226b5382b14516f00a2be83e61704f120a4bf8f88a5d79c08eabeeed
+  compile_state: style_lock_blocked
+  confirmed_blocker_classes:
+    - missing_preamble
+    - definecolor
+    - non_palette_color
+verified:
+  source_sha256: sha256:98eb9c7578993ba65b8a527fa505c3b8d35ef93a0a5dff5bbcd9381daca81931
+  render_sha256: sha256:a81aeb31d386e1ed29ab1af0c15c97d7c88e13489b566263e61ceca9d1883cc1
+  normal_compile: passed
+  strict_compile: failed
+  selected_visual_asset: panel_f_floating_cantilever
+  visual_asset_invoked: true
+  confirmed_strict_findings:
+    - three Panel F title and descriptor text collisions
+    - missing panelFCoulombRepulsionArrow assertion anchor
+human_review: pending
+publication_acceptance: not_claimed

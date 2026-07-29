@@ -1,0 +1,1 @@
+{"replacement_utf8":"\\usepackage{tikz}\n\\usepackage{polymer-paper-preamble}\n\\providecommand{\\distribution}{distribution}\n\\providecommand{\\support}{support}","change_summary":"Defined the two prose control words in the editable preamble so they render as literal labels without altering geometry or scientific content."}

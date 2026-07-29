@@ -1,0 +1,30 @@
+{
+  "schema": "figure-agent.repair-target-contract.v1",
+  "source_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/verified_generated.tex",
+  "source_sha256": "sha256:fc9734421921bb8a9adbf34ddf113a0c5a83de6ecf25f07f9546e14432d69418",
+  "targets": [
+    {
+      "finding": {
+        "report_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v1/human_findings.before.json",
+        "id": "HF001"
+      },
+      "attribution": {
+        "state": "exact"
+      },
+      "selector": {
+        "kind": "semantic_anchor",
+        "selector_id": "shared_preamble_compile_repair",
+        "anchor_start": "\\documentclass[tikz,border=4pt]{standalone}",
+        "anchor_end": "\\begin{document}"
+      },
+      "repair_family": "style_normalization",
+      "protected_invariants": [
+        "\\usepackage{tikz}",
+        "\\usepackage{polymer-paper-preamble}",
+        "derived trap-energy",
+        "mechanical",
+        "support"
+      ]
+    }
+  ]
+}

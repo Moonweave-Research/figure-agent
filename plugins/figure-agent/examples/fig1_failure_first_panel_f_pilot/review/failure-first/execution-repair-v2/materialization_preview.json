@@ -1,0 +1,14 @@
+{
+  "schema": "figure-agent.repair-materialization-preview.v1",
+  "fixture": "fig1_failure_first_panel_f_pilot",
+  "packet_sha256": "sha256:ee107fbeaf7d86a02ad8de594fa77527e5d3b86cdd74ebe5bad5f34162557a18",
+  "source_sha256": "sha256:fc9734421921bb8a9adbf34ddf113a0c5a83de6ecf25f07f9546e14432d69418",
+  "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/execution-repair-v2/repaired_generated.tex",
+  "output_sha256": "sha256:41a196e21b7d5346a9a06c5fd95e1a015e44077ae5f1ed77d169387fd5979674",
+  "changed_source_blocks": 1,
+  "changed_lines": 2,
+  "preserved_boundary_blank_lines": 1,
+  "change_summary": "Defined the distribution and support prose control words in the editable preamble without changing panel geometry or scientific semantics.",
+  "publication_acceptance": "not_claimed",
+  "preview_sha256": "sha256:0e994256675296cceed2e4e08d0ff929ce7af5b94af67dd9e2a6029b1d7d397c"
+}

@@ -1,0 +1,22 @@
+{
+  "comparison": "raw_vs_figure_agent",
+  "decision": "pass",
+  "filesystem_read_isolation": "unavailable",
+  "raw": {
+    "intervention_mode": "raw",
+    "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/raw_generated.tex",
+    "packet_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/raw_packet.json",
+    "packet_sha256": "sha256:3da7a94323cd0d10e9b7a6c51f65b1f08a4fbc9c72e19fcb4a3e8e5088a8d18d",
+    "prompt_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/raw_prompt.md",
+    "prompt_sha256": "sha256:4c17ec360cc21cd2e6588cb40e734cb8ea66b3eb459651fec9c1ee4f90fd6238"
+  },
+  "schema": "figure-agent.authoring-execution-preflight.v1",
+  "verified": {
+    "intervention_mode": "figure_agent",
+    "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/verified_generated.tex",
+    "packet_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/verified_packet.json",
+    "packet_sha256": "sha256:ed38656a261e904e7e81dce238ee88cc06a7b1beadbf9364591749db2e168510",
+    "prompt_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/verified_prompt.md",
+    "prompt_sha256": "sha256:028d1d171a2ac67ac31b4b419b71a1f778a8f7e9bbb6771e0da0a552d8bfe4de"
+  }
+}

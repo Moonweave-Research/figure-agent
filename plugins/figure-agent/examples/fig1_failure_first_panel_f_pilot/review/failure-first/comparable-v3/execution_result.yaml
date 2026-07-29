@@ -1,0 +1,26 @@
+schema: figure-agent.authoring-comparison-execution-result.v1
+fixture: fig1_failure_first_panel_f_pilot
+comparison_contract: comparison_contract.yaml
+state: raw_blocked_verified_default_pass_strict_failed
+raw:
+  source_sha256: sha256:06c8bc4e09694b10cda7aeb0942bd3e78e496426cfc58e5b6e2d88b49ce753d0
+  default_compile: failed
+  style_lock_blockers: 44
+verified:
+  source_sha256: sha256:6c8ff91dc561db9ee28f21c5e820a4925c289aa7fd57d1308441ba141e584395
+  default_compile: passed
+  strict_compile: failed
+  diagnostic_render: build/verified_generated.png
+  blocking_evidence:
+  - two confirmed text collisions in Panels E and F
+  - Panel F assertion style absent, so the relation is not exactly attributable
+sequential_repair:
+  state: human_rejected_no_materialization
+  parent_variant: verified
+  selected_attempt: ../execution-repair-v5
+  packet_sha256: sha256:d503676564952854dbe241235a157e5d6f11970ab8fc46617992f2112e8ff690
+  preview_sha256: sha256:5a0ca3c464e6982425262b3893302a2e5fc08a0db2af0292e5377f8ef31782fb
+  candidate_output_sha256: sha256:62c3ba29441806e93a682266581a3a90d768a449e0c6c7a9202e11a8d98f5820
+  human_review: ../execution-repair-v5/human_rejection.json
+human_verdict: pending
+publication_acceptance: not_claimed

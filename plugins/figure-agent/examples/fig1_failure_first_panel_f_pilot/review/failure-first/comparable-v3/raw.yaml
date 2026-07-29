@@ -1,0 +1,42 @@
+schema: figure-agent.failure-ablation-run.v1
+variant: raw
+model_contract_hash: sha256:ffc50c70661c227edf8daae6f8dbed2dd0645386c12d43bc7fc44da166e043bd
+shared_task_hash: sha256:3e88f6978943b19d58650f0d8c4655dadc15d71dc9a74815e6f31eeb54dbb3b0
+input_packet_hash: sha256:5a5d2b6ad40ebe32a6ae1bb10da5734c355e1b19adf9b0b844395a9791e3203c
+budget_contract_hash: sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762
+figure_family: sulfur-polymer-six-panel-overview
+comparison_eligibility: eligible_equal_input
+findings:
+- id: RAW-STYLE-001
+  failure_class: style
+  review_outcome: confirmed_defect
+  occurrences: 44
+  evidence: default Style Lock rejects missing shared preamble and non-palette local
+    colors
+- id: RAW-TYPO-001
+  failure_class: typography
+  review_outcome: confirmed_defect
+  occurrences: 31
+  evidence: Style Lock reports tiny/scriptsize overrides and source-order risks
+human_correction_minutes: null
+intervention_count: 0
+clean_reproduction: false
+human_verdict:
+  state: pending
+publication_acceptance: not_claimed
+generation_receipt:
+  schema: figure-agent.generation-receipt.v2
+  model_id: gpt-5.5
+  input_packet_path: raw_packet.json
+  input_packet_sha256: sha256:5a5d2b6ad40ebe32a6ae1bb10da5734c355e1b19adf9b0b844395a9791e3203c
+  shared_task_sha256: sha256:3e88f6978943b19d58650f0d8c4655dadc15d71dc9a74815e6f31eeb54dbb3b0
+  shared_task_binding_source: input_packet.prompt.shared_neutral_authoring_task
+  context_pack_base_sha256: sha256:eacc463f8ca25a64087aa9c92db3f6fc725dbcedc789d5a18fbb67ab6a4e4431
+  budget_contract_sha256: sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762
+  source_commit: c6a28e406045092f9e8dae16361734b03fdabb8c
+  starting_artifact_path: blank_start.txt
+  starting_artifact_sha256: sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+  generated_artifact_path: raw_generated.tex
+  generated_artifact_sha256: sha256:06c8bc4e09694b10cda7aeb0942bd3e78e496426cfc58e5b6e2d88b49ce753d0
+  transcript_path: raw.transcript.json
+  transcript_sha256: sha256:00e9962f92888019882bece169e086d9a3a24d5cc6fc9b4ddf8335bc00504837

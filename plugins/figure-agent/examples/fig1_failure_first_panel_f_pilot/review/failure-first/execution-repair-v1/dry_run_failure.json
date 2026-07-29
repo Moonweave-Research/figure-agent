@@ -1,0 +1,10 @@
+{
+  "schema": "figure-agent.repair-dry-run-failure.v1",
+  "packet_sha256": "sha256:6115fb0a2eee4be8f6d692376bc862b3077356ef25b21f9411926c60b8922d6e",
+  "response_path": "repair_response.json",
+  "decision": "rejected_before_materialization",
+  "reason": "protected invariant changed",
+  "source_mutated": false,
+  "output_materialized": false,
+  "publication_acceptance": "not_claimed"
+}

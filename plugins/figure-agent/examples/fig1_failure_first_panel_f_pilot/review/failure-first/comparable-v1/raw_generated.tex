@@ -1,0 +1,219 @@
+\documentclass[tikz,border=5pt]{standalone}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usetikzlibrary{arrows.meta,calc,decorations.pathmorphing,patterns,positioning,shapes.geometric}
+
+\definecolor{ink}{HTML}{20262E}
+\definecolor{muted}{HTML}{66717D}
+\definecolor{sulfur}{HTML}{E0A21A}
+\definecolor{dib}{HTML}{3979A8}
+\definecolor{charge}{HTML}{D6534D}
+\definecolor{field}{HTML}{8B5FBF}
+\definecolor{panel}{HTML}{F7F8FA}
+\definecolor{linegray}{HTML}{C8CDD3}
+\definecolor{accent}{HTML}{2E8B7D}
+
+\tikzset{
+  every node/.style={font=\sffamily, text=ink},
+  panelbox/.style={draw=linegray, fill=panel, rounded corners=2pt, line width=.55pt},
+  title/.style={font=\sffamily\bfseries\small, anchor=west},
+  label/.style={font=\sffamily\scriptsize, text=muted},
+  tinylabel/.style={font=\sffamily\tiny, text=muted},
+  flow/.style={-{Latex[length=2.2mm]}, line width=.85pt, draw=ink},
+  softflow/.style={-{Latex[length=1.8mm]}, line width=.65pt, draw=muted},
+  charge/.style={circle, draw=charge, fill=charge!10, text=charge,
+                 minimum size=3.6mm, inner sep=0pt, font=\sffamily\bfseries\tiny},
+}
+
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm]
+
+% panel frames
+\foreach \x/\y/\L/\T in {
+  0/7/A/{Primary microstructure},
+  6.35/7/B/{Sulfur composition variation},
+  12.7/7/C/{Localized traps},
+  0/0/D/{Kinetic evidence},
+  6.35/0/E/{ISPD-paired evidence},
+  12.7/0/F/{Coulomb-driven bending}}
+{
+  \draw[panelbox] (\x,\y) rectangle ++(6.05,6.55);
+  \node[font=\sffamily\bfseries\large,anchor=north west] at (\x+.22,\y+6.33) {\L};
+  \node[title] at (\x+.68,\y+6.12) {\T};
+}
+
+% A: polymer microstructure
+\begin{scope}[shift={(0,7)}]
+  \node[label,anchor=west] at (.55,5.55) {poly(S-r-DIB)};
+  \draw[line width=1.15pt,dib] (.68,3.30) -- (1.15,3.58) -- (1.62,3.30) -- (2.09,3.58);
+  \draw[line width=.8pt,dib] (.91,3.44) -- (.91,4.02);
+  \draw[line width=.8pt,dib] (1.86,3.44) -- (1.86,4.02);
+  \draw[dib,line width=.8pt] (.70,4.02) -- (1.12,4.02);
+  \draw[dib,line width=.8pt] (1.65,4.02) -- (2.07,4.02);
+  \node[font=\scriptsize\bfseries,text=dib] at (1.39,2.86) {DIB-rich node};
+  \draw[line width=1.25pt,sulfur] (2.09,3.58) -- (2.55,3.30) -- (3.01,3.58) -- (3.47,3.30)
+    -- (3.93,3.58) -- (4.39,3.30) -- (4.85,3.58) -- (5.31,3.30);
+  \foreach \x in {2.55,3.01,3.47,3.93,4.39,4.85}
+    \node[circle,fill=sulfur,inner sep=1.25pt] at (\x,{3.30+0.28*mod(round((\x-2.55)/.46),2)}) {};
+  \node[font=\scriptsize\bfseries,text=sulfur] at (3.72,2.86) {$\mathrm{S}_n$ segment};
+  \draw[decorate,decoration={brace,amplitude=4pt},muted] (.65,4.58) -- (5.34,4.58)
+    node[midway,above=5pt,label] {random covalent network};
+  \node[align=center,font=\scriptsize] at (3.03,1.35)
+    {crosslinked aromatic nodes joined by\\variable-length sulfur sequences};
+\end{scope}
+
+% B: representative sulfur compositions
+\begin{scope}[shift={(6.35,7)}]
+  \foreach \yy/\name/\count in {4.78/S60/4,3.48/S75/7,2.18/S85/10}{
+    \node[font=\scriptsize\bfseries,anchor=e] at (1.02,\yy) {\name};
+    \draw[dib,line width=1.1pt] (1.25,\yy) -- (1.65,\yy+.18);
+    \foreach \i in {1,...,\count}{
+      \pgfmathsetmacro{\xx}{1.65+0.34*\i}
+      \pgfmathsetmacro{\dy}{0.16*(-1)^\i}
+      \draw[sulfur,line width=1.1pt] (\xx-.34,\yy-\dy) -- (\xx,\yy+\dy);
+      \fill[sulfur] (\xx,\yy+\dy) circle (1.15pt);
+    }
+    \pgfmathsetmacro{\xend}{1.65+0.34*\count}
+    \draw[dib,line width=1.1pt] (\xend,\yy+0.16*(-1)^\count) -- (5.30,\yy);
+  }
+  \node[tinylabel,anchor=west] at (1.22,5.45) {DIB};
+  \node[tinylabel,text=sulfur] at (3.04,5.45) {increasing sulfur fraction};
+  \node[tinylabel,anchor=east] at (5.34,5.45) {DIB};
+  \draw[softflow] (1.55,1.32) -- (4.95,1.32);
+  \node[label] at (3.25,.82) {representative chains from S60--S85 series};
+  \node[tinylabel] at (3.25,.47) {paper range: S60 / S70 / S75 / S80 / S85};
+\end{scope}
+
+% C: localized trap landscape
+\begin{scope}[shift={(12.7,7)}]
+  \draw[ink,line width=.9pt] (.68,4.75)
+    .. controls (1.22,4.63) and (1.45,3.52) .. (2.05,4.12)
+    .. controls (2.62,4.70) and (2.83,2.42) .. (3.42,3.46)
+    .. controls (3.95,4.38) and (4.35,3.42) .. (5.38,4.72);
+  \draw[dashed,muted] (.68,4.75) -- (5.38,4.75);
+  \node[tinylabel,anchor=west] at (.73,4.98) {transport level};
+  \fill[field!18] (2.67,4.23) .. controls (2.93,3.48) and (3.05,2.50) .. (3.42,3.46)
+    .. controls (3.10,2.30) and (2.75,3.18) .. cycle;
+  \node[charge] (e1) at (2.03,3.83) {$-$};
+  \node[charge] (e2) at (3.39,3.10) {$-$};
+  \draw[softflow] (1.22,4.48) .. controls (1.48,4.20) .. (e1.west);
+  \draw[softflow] (2.36,3.93) .. controls (2.75,3.54) .. (e2.west);
+  \node[font=\scriptsize\bfseries,text=field] at (3.58,2.40) {deep localized state};
+  \draw[field,-{Latex[length=1.8mm]},line width=.7pt] (3.58,2.62) -- (3.43,2.95);
+  \draw[decorate,decoration={brace,mirror,amplitude=4pt},muted] (5.32,4.72) -- (5.32,3.08)
+    node[midway,right=5pt,label] {$E_t$};
+  \node[align=center,font=\scriptsize] at (3.02,1.20)
+    {energetic disorder localizes injected charge\\and produces a broad trap-depth distribution};
+\end{scope}
+
+% D: SMU + MIM and power-law current
+\begin{scope}[shift={(0,0)}]
+  \node[draw=ink,rounded corners=1pt,minimum width=1.20cm,minimum height=.82cm,font=\scriptsize\bfseries] (smu) at (1.14,4.32) {SMU};
+  \draw[ink,line width=.8pt] (2.25,3.18) rectangle (3.68,4.78);
+  \fill[ink!70] (2.42,3.35) rectangle (3.51,3.58);
+  \fill[sulfur!45] (2.42,3.58) rectangle (3.51,4.36);
+  \fill[ink!70] (2.42,4.36) rectangle (3.51,4.59);
+  \node[tinylabel,anchor=west] at (3.80,4.48) {metal};
+  \node[tinylabel,anchor=west] at (3.80,3.97) {polymer};
+  \node[tinylabel,anchor=west] at (3.80,3.43) {metal};
+  \draw[ink,line width=.8pt] (smu.east) -- (2.06,4.32) -- (2.06,4.48) -- (2.42,4.48);
+  \draw[ink,line width=.8pt] (smu.east) ++(0,-.23) -- (1.92,4.09) -- (1.92,3.47) -- (2.42,3.47);
+  \node[label] at (2.98,2.80) {MIM device};
+  \node[font=\scriptsize\bfseries] at (1.08,2.80) {step bias};
+  \draw[flow] (4.88,3.98) -- (5.40,3.98);
+  \begin{scope}[shift={(1.00,.55)}]
+    \draw[->,ink,line width=.65pt] (0,0) -- (4.65,0) node[right,tinylabel] {$\log t$};
+    \draw[->,ink,line width=.65pt] (0,0) -- (0,1.65) node[above,tinylabel] {$\log I$};
+    \draw[charge,line width=1.15pt] (.35,1.43) -- (4.25,.32);
+    \node[font=\small\bfseries,text=charge,fill=panel] at (2.64,1.24) {$I(t)\sim t^{-n}$};
+    \draw[dashed,muted] (.55,1.25) -- (1.62,1.25) -- (1.62,.94);
+    \node[tinylabel] at (1.07,1.48) {transient};
+  \end{scope}
+\end{scope}
+
+% E: corona/probe, surface-potential decay, inferred DOS
+\begin{scope}[shift={(6.35,0)}]
+  \draw[ink,line width=1pt] (.62,3.13) -- (2.80,3.13);
+  \fill[sulfur!35] (.82,3.13) rectangle (2.60,3.55);
+  \node[tinylabel] at (1.71,2.82) {floating polymer film};
+  \node[draw=ink,fill=white,isosceles triangle,shape border rotate=-90,
+        minimum width=.5cm,minimum height=.55cm,inner sep=0pt] (needle) at (1.17,5.13) {};
+  \draw[charge,line width=.7pt] (1.17,4.78) -- (1.17,4.26);
+  \foreach \x in {.92,1.17,1.42} \node[charge,minimum size=2.8mm] at (\x,3.88) {$+$};
+  \node[tinylabel] at (1.18,5.59) {corona};
+  \draw[ink,line width=.8pt] (2.13,5.28) -- (2.13,4.56);
+  \draw[ink,line width=.8pt] (1.91,4.56) -- (2.35,4.56);
+  \draw[ink,line width=.8pt] (2.00,4.44) -- (2.26,4.44);
+  \draw[ink,line width=.8pt] (2.08,4.32) -- (2.18,4.32);
+  \node[tinylabel] at (2.15,5.58) {non-contact probe};
+  \draw[softflow] (2.96,4.23) -- (3.45,4.23);
+  \begin{scope}[shift={(3.58,3.05)}]
+    \draw[->,ink,line width=.6pt] (0,0) -- (2.05,0) node[right,tinylabel] {$t$};
+    \draw[->,ink,line width=.6pt] (0,0) -- (0,1.85) node[above,tinylabel] {$V_s$};
+    \draw[accent,line width=1pt] (.12,1.65) .. controls (.45,.82) and (1.25,.45) .. (1.90,.26);
+    \node[tinylabel,text=accent] at (1.33,1.23) {decay};
+  \end{scope}
+  \draw[flow] (3.00,2.44) -- (3.62,2.44);
+  \begin{scope}[shift={(3.75,.48)}]
+    \draw[->,ink,line width=.6pt] (0,0) -- (1.85,0) node[right,tinylabel] {$E_t$};
+    \draw[->,ink,line width=.6pt] (0,0) -- (0,1.55) node[above,tinylabel] {$g(E_t)$};
+    \draw[field,line width=1pt] (.10,.12) .. controls (.42,.32) and (.65,1.35) .. (1.68,1.18);
+    \node[tinylabel,text=field] at (1.06,.66) {derived};
+  \end{scope}
+  \node[font=\scriptsize\bfseries] at (1.78,2.04) {ISPD};
+  \node[tinylabel] at (1.78,1.68) {surface-potential protocol};
+\end{scope}
+
+% F: fixed fixture, floating cantilever, electrode, source and grounded return
+\begin{scope}[shift={(12.7,0)}]
+  % understated mechanical support: rail, stem, shallow jaw
+  \fill[muted!30] (.52,5.18) rectangle (2.18,5.36);
+  \draw[muted,line width=.75pt] (.52,5.18) rectangle (2.18,5.36);
+  \fill[muted!25] (.78,4.55) rectangle (1.03,5.18);
+  \draw[muted,line width=.75pt] (.78,4.55) rectangle (1.03,5.18);
+  \fill[muted!22] (.78,4.42) rectangle (1.55,4.58);
+  \draw[muted,line width=.75pt] (.78,4.42) rectangle (1.55,4.58);
+  \node[tinylabel,anchor=west] at (.54,5.62) {fixed mechanical boundary};
+  % mechanically held, electrically floating cantilever
+  \draw[sulfur!75!ink,line width=3pt,line cap=round] (1.38,4.47)
+    .. controls (2.55,4.35) and (3.42,3.72) .. (4.18,3.20);
+  \draw[sulfur!25,line width=1.2pt,line cap=round] (1.38,4.49)
+    .. controls (2.55,4.37) and (3.42,3.74) .. (4.18,3.22);
+  \node[label,anchor=west] at (1.70,4.75) {floating cantilever};
+  % trapped charges on cantilever
+  \foreach \x/\y in {2.45/4.18,3.00/3.91,3.53/3.60,3.94/3.33}
+    \node[charge,minimum size=3.1mm] at (\x,\y) {$-$};
+  % right electrode separated by air gap
+  \fill[ink!72] (4.72,2.80) rectangle (5.12,4.62);
+  \draw[ink,line width=.8pt] (4.72,2.80) rectangle (5.12,4.62);
+  \foreach \y in {3.15,3.65,4.15} \node[charge,minimum size=3.1mm] at (4.51,\y) {$-$};
+  \node[label,rotate=90] at (5.38,3.70) {driven electrode};
+  \draw[<->,muted,line width=.6pt] (4.20,2.94) -- (4.70,2.94)
+    node[midway,below=2pt,tinylabel] {air gap};
+  % repulsive force points away from electrode
+  \draw[-{Latex[length=2.8mm]},charge,line width=1.25pt] (3.72,3.10) -- (2.65,2.42);
+  \node[font=\scriptsize\bfseries,text=charge,anchor=east] at (2.62,2.35) {$F_{\mathrm C}$};
+  \node[tinylabel,anchor=west] at (2.74,1.96) {repulsion};
+  % compact source with one lead to electrode and grounded return
+  \draw[ink,line width=.8pt] (4.92,2.80) -- (4.92,2.06) -- (4.18,2.06);
+  \draw[ink,line width=.8pt] (4.18,1.76) circle (.30);
+  \node[font=\tiny] at (4.18,1.86) {$+$};
+  \node[font=\tiny] at (4.18,1.66) {$-$};
+  \draw[ink,line width=.8pt] (4.18,1.46) -- (4.18,.88);
+  \draw[ink,line width=.8pt] (3.88,.88) -- (4.48,.88);
+  \draw[ink,line width=.8pt] (3.98,.73) -- (4.38,.73);
+  \draw[ink,line width=.8pt] (4.08,.58) -- (4.28,.58);
+  \node[tinylabel,anchor=west] at (4.56,.76) {source return};
+  \node[label,anchor=east] at (3.75,1.76) {voltage source};
+  % explicit separation cue at mechanical jig
+  \node[tinylabel,align=left,anchor=west] at (.58,1.15)
+    {mechanical restraint only\\no electrical connector};
+  \draw[muted,dashed,line width=.55pt] (1.32,1.66) -- (1.31,4.29);
+\end{scope}
+
+% bottom reading key
+\node[tinylabel,anchor=east] at (18.70,-.28)
+  {schematic: apparatus and relations not to scale};
+
+\end{tikzpicture}
+\end{document}

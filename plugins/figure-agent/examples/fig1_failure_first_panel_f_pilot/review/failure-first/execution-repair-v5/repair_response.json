@@ -1,0 +1,4 @@
+{
+  "replacement_utf8": "  \\node[smalllabel, anchor=west] at (1.66,0.38) {source return};\n  \\node[note, anchor=east] at (5.15,0.92) {sample has no electrical contact};\n\\end{scope}\n",
+  "change_summary": "Separated the adjacent source-return and no-contact labels vertically while preserving their exact text and all diagram geometry."
+}

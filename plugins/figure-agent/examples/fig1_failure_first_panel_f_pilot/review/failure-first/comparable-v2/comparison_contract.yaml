@@ -1,0 +1,48 @@
+schema: figure-agent.failure-ablation-comparison.v1
+fixture: fig1_failure_first_panel_f_pilot
+comparison_eligibility: invalid_shared_input_not_task_only
+invalid_reason: raw inherited spec-derived required-panel lines beyond the declared neutral authoring_task.md hash
+comparison_question: Does Figure Agent contract injection improve the same LLM's first-attempt output for the same neutral scientific task?
+shared_contract:
+  model_id: gpt-5.5
+  source_commit: c6a28e406045092f9e8dae16361734b03fdabb8c
+  authoring_task_path: ../../../authoring_task.md
+  authoring_task_sha256: sha256:3e88f6978943b19d58650f0d8c4655dadc15d71dc9a74815e6f31eeb54dbb3b0
+  spec_path: ../../../spec.yaml
+  spec_sha256: sha256:af6c625b9c17e4ce9f0a2f53bfaa0263e7520ecad454816c14578c0f87a4f433
+  semantic_contract_path: ../../../semantic_contract.yaml
+  semantic_contract_sha256: sha256:a35e0a5de0dbeb13a6b0184c37add178654c7df6da42f7c535d8309097377661
+  budget_contract_path: budget_contract.yaml
+  budget_contract_sha256: sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762
+  starting_artifact_path: blank_start.txt
+  starting_artifact_sha256: sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+  authoring_attempts_per_condition: 1
+  feedback_rounds: 0
+  manual_repairs: 0
+conditions:
+  raw:
+    intervention: neutral_task_only
+    packet_path: raw_packet.json
+    packet_sha256: sha256:3da7a94323cd0d10e9b7a6c51f65b1f08a4fbc9c72e19fcb4a3e8e5088a8d18d
+    packet_file_sha256: sha256:9aa15780819bedbb4a3be8e0870200c33adc1242f94a804c51aab47b7c6e1ae4
+    prompt_path: raw_prompt.md
+    prompt_sha256: sha256:4c17ec360cc21cd2e6588cb40e734cb8ea66b3eb459651fec9c1ee4f90fd6238
+    output_path: raw_generated.tex
+  verified:
+    intervention: neutral_task_plus_figure_agent_contracts
+    packet_path: verified_packet.json
+    packet_sha256: sha256:ed38656a261e904e7e81dce238ee88cc06a7b1beadbf9364591749db2e168510
+    packet_file_sha256: sha256:d07a3de2dde0b19845bb4c89e401dbb476112dc5421572e4450b011246db5313
+    prompt_path: verified_prompt.md
+    prompt_sha256: sha256:028d1d171a2ac67ac31b4b419b71a1f778a8f7e9bbb6771e0da0a552d8bfe4de
+    output_path: verified_generated.tex
+sequential_repair:
+  state: noncomparative_repair_preview_ready
+  parent_variant: verified
+  independent_third_authoring_call: forbidden
+  required_evaluator_state: repair_lineage_evidence_bound
+  selected_attempt: ../execution-repair-v3
+  packet_sha256: sha256:c225385245364a71755595de37244c2fecfb11c0027d92cbdda27b85435a6040
+  preview_sha256: sha256:0654bfd9cb723e1f7a271a312ff69321134f32f5ada6ac7f2c99147efa660711
+  candidate_output_sha256: sha256:6d22af04bc7665cc14450b267639ab3a372622dcf1098630beb3d54e78423103
+publication_acceptance: not_claimed

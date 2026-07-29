@@ -1,0 +1,22 @@
+{
+  "comparison": "raw_vs_figure_agent",
+  "decision": "pass",
+  "filesystem_read_isolation": "unavailable",
+  "raw": {
+    "intervention_mode": "raw",
+    "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/raw_generated.tex",
+    "packet_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/raw_packet.json",
+    "packet_sha256": "sha256:b4a4b516f572c76c02df77ac2ca2caa24f7e0971786cd00704d82ae171b1a9b1",
+    "prompt_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/raw_prompt.md",
+    "prompt_sha256": "sha256:4475e7cc961020b2965ab428092beb132ed8ebab59396a1dc25bcea1273032ed"
+  },
+  "schema": "figure-agent.authoring-execution-preflight.v1",
+  "verified": {
+    "intervention_mode": "figure_agent",
+    "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/verified_generated.tex",
+    "packet_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/verified_packet.json",
+    "packet_sha256": "sha256:4a03725eae16ef50d5c1da516bc438649b36d2f5f8c7252a09880ca2e8479a2c",
+    "prompt_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v1/verified_prompt.md",
+    "prompt_sha256": "sha256:dee139bd4f0f74f8c1f7f854bb6b242198fea0fd8cdc0c5c5fc7eb6bf9276748"
+  }
+}

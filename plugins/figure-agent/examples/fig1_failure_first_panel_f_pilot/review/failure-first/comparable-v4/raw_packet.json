@@ -1,0 +1,54 @@
+{
+  "allowed_repository_read_paths": [
+    "AGENTS.md"
+  ],
+  "blank_start": {
+    "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v4/blank_start.txt",
+    "sha256": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "budget_contract": {
+    "path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v4/budget_contract.yaml",
+    "sha256": "sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762"
+  },
+  "composition_profile": null,
+  "context_pack": {
+    "base_sha256": "sha256:ba66b751768e92bf43d00460493f9d18899adb8c1e9b8d528a8509e86ccf3600",
+    "schema": "figure-agent.authoring-context-pack.v1",
+    "sha256": "sha256:ba66b751768e92bf43d00460493f9d18899adb8c1e9b8d528a8509e86ccf3600"
+  },
+  "execution_cwd": ".",
+  "feedback_rounds": 0,
+  "filesystem_read_isolation": "unavailable",
+  "fixture": "fig1_failure_first_panel_f_pilot",
+  "forbidden_import_classes": [
+    "fig1_fixture_artifacts",
+    "historical_generated_sources"
+  ],
+  "intervention_mode": "raw",
+  "layout_contract": null,
+  "mandatory_source_requirements": [],
+  "manual_repairs": 0,
+  "model_id": "gpt-5.5",
+  "output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v4/raw_generated.tex",
+  "packet_sha256": "sha256:224a1c61948d9e2239a9d04bbb7a9d3741093cdeafec22d6ed0a0abfeeaa3367",
+  "prompt": {
+    "sha256": "sha256:19d81092fac8f5f269412b10fa89f5bf108ebfa44eb05525b21b42948afbc919",
+    "utf8": "# Raw authoring execution: fig1_failure_first_panel_f_pilot\n\n## Output and attempt boundary\n- Resolve every repository path from the repository root.\n- Write exactly one new source to [examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v4/raw_generated.tex].\n- Create one editable scientific figure source.\n- Start from the declared blank artifact; perform one attempt only.\n- Do not inspect or repair historical generated sources.\n\n## Scientific task\n- Shared neutral authoring task (verbatim):\n\n# Fig1 scientific authoring task\n\nCreate a six-panel scientific overview of sulfur-rich polymer charge trapping.\n\n- Panel A: poly(S-r-DIB) primary microstructure.\n- Panel B: sulfur-composition variation using S60, S75, and S85 as representative chains from the S60/S70/S75/S80/S85 series.\n- Panel C: localized traps in real-space and energy-space views.\n- Panel D: kinetic evidence combining an SMU/MIM apparatus cue with an illustrative current-decay relation.\n- Panel E: ISPD evidence combining a corona/probe apparatus cue with surface-potential decay and a derived trap-energy distribution.\n- Panel F: trapped-charge Coulomb repulsion of a mechanically held, electrically floating cantilever near a driven electrode.\n\nFor Panel F, show one restrained mechanical support, a visible air gap between cantilever and electrode, a compact voltage source driving the electrode, and a source return terminating at ground. The ground belongs to the source circuit, not the sample. Do not add an electrical connector at the mechanical support. The Coulomb-force arrow points away from the driven electrode. Do not infer the support material or conductivity.\n\n## Provenance and publication boundary\n- Declared model: gpt-5.5\n- feedback_rounds: 0\n- manual_repairs: 0\n- filesystem_read_isolation: unavailable\n- publication_acceptance: not_claimed\n"
+  },
+  "publication_acceptance": "not_claimed",
+  "repository_output_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v4/raw_generated.tex",
+  "schema": "figure-agent.authoring-execution-packet.v1",
+  "semantic_contract_application": "omitted",
+  "shape_profile": null,
+  "style_lock_authoring_requirements": [],
+  "visual_assets": {
+    "catalog_path": "styles/snippets/INDEX.yaml",
+    "catalog_sha256": "sha256:6e70526c3409ec7494785c07faa1b50236c28af8da942b1b114680cb9e51ab4c",
+    "root": {
+      "kind": "plugin_root",
+      "path": "/Users/choemun-yeong/workspace/ResearchOS/[figure-agent]/.worktrees/slice2-fig3-comparable-runs/plugins/figure-agent"
+    },
+    "schema": "figure-agent.authoring-visual-assets.v1",
+    "selected": []
+  }
+}

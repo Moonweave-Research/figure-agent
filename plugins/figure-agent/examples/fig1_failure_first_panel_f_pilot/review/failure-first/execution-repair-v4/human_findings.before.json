@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v3/verified_generated.tex",
+  "bound_source_sha256": "sha256:6c8ff91dc561db9ee28f21c5e820a4925c289aa7fd57d1308441ba141e584395",
+  "findings": [
+    {
+      "id": "HF002",
+      "subject": "panel_f_relation_address_and_bottom_label_collision",
+      "finding": "Panel F visually draws the Coulomb-force arrow but omits the declared panelFCoulombRepulsionArrow style, and the bottom sample/source labels collide. Add the assertion style to the existing force draw and reposition only the bottom circuit labels while preserving the floating sample, driven electrode, source return ground, force direction, and all panel geometry."
+    }
+  ]
+}

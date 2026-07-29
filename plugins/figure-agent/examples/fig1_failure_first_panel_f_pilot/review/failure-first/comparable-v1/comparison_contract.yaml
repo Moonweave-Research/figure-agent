@@ -1,0 +1,43 @@
+schema: figure-agent.failure-ablation-comparison.v1
+fixture: fig1_failure_first_panel_f_pilot
+comparison_eligibility: invalid_intervention_leakage
+invalid_reason: raw prompt inherited Figure Agent evaluation and review language before the neutral shared-task boundary existed
+comparison_question: Does Figure Agent contract injection improve the same LLM's first-attempt output for the same scientific task?
+shared_contract:
+  model_id: gpt-5.5
+  briefing_path: ../../../briefing.md
+  briefing_sha256: sha256:c010df6bef6491c9aa3dad64adde14e6863b9561534a57493284a28aaaeaa511
+  spec_path: ../../../spec.yaml
+  spec_sha256: sha256:af6c625b9c17e4ce9f0a2f53bfaa0263e7520ecad454816c14578c0f87a4f433
+  semantic_contract_path: ../../../semantic_contract.yaml
+  semantic_contract_sha256: sha256:a35e0a5de0dbeb13a6b0184c37add178654c7df6da42f7c535d8309097377661
+  budget_contract_path: budget_contract.yaml
+  budget_contract_sha256: sha256:62a35ee11404c0761c96e776c64abbeaf7121b5cf251b5218799c9941c34f762
+  starting_artifact_path: blank_start.txt
+  starting_artifact_sha256: sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+  authoring_attempts_per_condition: 1
+  feedback_rounds: 0
+  manual_repairs: 0
+conditions:
+  raw:
+    intervention: raw_task_without_figure_agent_contracts
+    packet_path: raw_packet.json
+    packet_sha256: sha256:b4a4b516f572c76c02df77ac2ca2caa24f7e0971786cd00704d82ae171b1a9b1
+    packet_file_sha256: sha256:c1805c1591bc9828947b09613e4a92211c9baecefee1e760f3a380564f698a24
+    prompt_path: raw_prompt.md
+    prompt_sha256: sha256:4475e7cc961020b2965ab428092beb132ed8ebab59396a1dc25bcea1273032ed
+    output_path: raw_generated.tex
+  verified:
+    intervention: figure_agent_contracts_injected_before_authoring
+    packet_path: verified_packet.json
+    packet_sha256: sha256:4a03725eae16ef50d5c1da516bc438649b36d2f5f8c7252a09880ca2e8479a2c
+    packet_file_sha256: sha256:04b5a2a55ed5fb9ba7b44c98098dbaa5b368d91e72c1a1587c86b6dac27a22c3
+    prompt_path: verified_prompt.md
+    prompt_sha256: sha256:dee139bd4f0f74f8c1f7f854bb6b242198fea0fd8cdc0c5c5fc7eb6bf9276748
+    output_path: verified_generated.tex
+sequential_repair:
+  state: forbidden_for_invalid_comparison
+  parent_variant: verified
+  independent_third_authoring_call: forbidden
+  required_evaluator_state: repair_lineage_evidence_bound
+publication_acceptance: not_claimed

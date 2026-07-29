@@ -1,0 +1,12 @@
+{
+  "schema": "figure-agent.human-correction-findings.v1",
+  "bound_source_path": "examples/fig1_failure_first_panel_f_pilot/review/failure-first/comparable-v2/verified_generated.tex",
+  "bound_source_sha256": "sha256:fc9734421921bb8a9adbf34ddf113a0c5a83de6ecf25f07f9546e14432d69418",
+  "findings": [
+    {
+      "id": "HF001",
+      "subject": "undefined_prose_control_sequences",
+      "finding": "Two prose labels use single-backslash control words (distribution and support), causing undefined-control-sequence failures. Repair only the preamble boundary, preserve an explicit word space at both call sites, and do not change panel geometry or scientific semantics."
+    }
+  ]
+}
