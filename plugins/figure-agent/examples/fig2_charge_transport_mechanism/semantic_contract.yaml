@@ -1,0 +1,129 @@
+schema: figure-agent.failure-first-semantic-contract.v1
+selector_id: fig2.charge_transport_mechanism
+
+required_objects:
+  - panel_a.measurement_context
+  - panel_a.mim_stack
+  - panel_a.field_condition
+  - panel_a.conventional_dielectric
+  - panel_a.finite_traps
+  - panel_a.charge_drain
+  - panel_a.sulfur_copolymer
+  - panel_a.broad_trap_landscape
+  - panel_a.retained_charge
+  - panel_a.transient_readout
+  - panel_a.early_window
+  - panel_a.late_window
+
+forbidden_implications:
+  - panel_a.quantitative_transient_measurement
+  - panel_a.calibrated_trap_density
+  - panel_a.exact_exponent_value
+  - panel_a.s_s_energy_diagram
+  - panel_a.universal_conventional_dielectric_law
+  - panel_a.actuation_charging_setup
+  - panel_a.second_electrical_measurement_instrument
+
+protected_relations:
+  - mim_stack_contains_polymer_film_between_electrodes
+  - measurement_context_precedes_material_comparison
+  - conventional_finite_traps_have_outward_drain_cues
+  - sulfur_broad_population_contains_retained_charge_cue
+  - transient_readout_uses_one_trace_with_two_time_windows
+  - early_window_precedes_late_window
+  - strip_is_schematic_and_data_panels_are_pipeline_owned
+
+repair:
+  family: fig2_mechanism_strip
+  selector_id: fig2.charge_transport_mechanism
+  max_source_blocks: 1
+
+semantic_legibility:
+  object_roles:
+    - object_id: panel_a.measurement_context
+      declared_role: discharge_measurement_context
+      forbidden_readings: [actuation_setup, charging_instrument]
+    - object_id: panel_a.mim_stack
+      declared_role: metal_insulator_metal_stack
+      forbidden_readings: [cantilever, free_air_gap]
+    - object_id: panel_a.field_condition
+      declared_role: applied_field_context
+      forbidden_readings: [exact_voltage_source_schematic]
+    - object_id: panel_a.conventional_dielectric
+      declared_role: conceptual_comparison_material
+      forbidden_readings: [universal_dielectric_baseline]
+    - object_id: panel_a.finite_traps
+      declared_role: finite_shallow_trap_population
+      forbidden_readings: [calibrated_density_distribution]
+    - object_id: panel_a.charge_drain
+      declared_role: conceptual_charge_loss_cue
+      forbidden_readings: [measured_current_trace]
+    - object_id: panel_a.sulfur_copolymer
+      declared_role: sulfur_rich_comparison_material
+      forbidden_readings: [separate_particle_phase]
+    - object_id: panel_a.broad_trap_landscape
+      declared_role: conceptual_distributed_trap_population
+      forbidden_readings: [fig1_energy_diagram, fitted_density_of_states]
+    - object_id: panel_a.retained_charge
+      declared_role: conceptual_retained_charge_cue
+      forbidden_readings: [calibrated_charge_density]
+    - object_id: panel_a.transient_readout
+      declared_role: qualitative_two_window_readout_icon
+      forbidden_readings: [quantitative_data_panel]
+    - object_id: panel_a.early_window
+      declared_role: early_fit_window
+      forbidden_readings: [exact_fit_result]
+    - object_id: panel_a.late_window
+      declared_role: late_fit_window
+      forbidden_readings: [exact_fit_result]
+  visible_connectors:
+    - connector_id: panel_a.measurement_to_comparison
+      from_object: panel_a.measurement_context
+      to_object: panel_a.conventional_dielectric
+      declared_role: story_stage_transition
+      render_style: stage_transition
+      epistemic_status: derived
+    - connector_id: panel_a.comparison_to_sulfur
+      from_object: panel_a.conventional_dielectric
+      to_object: panel_a.sulfur_copolymer
+      declared_role: conceptual_material_comparison
+      render_style: comparison_transition
+      epistemic_status: conditional
+      condition: The contrast is a schematic working model that motivates the measured transport comparison.
+    - connector_id: panel_a.sulfur_to_readout
+      from_object: panel_a.sulfur_copolymer
+      to_object: panel_a.transient_readout
+      declared_role: readout_transition
+      render_style: stage_transition
+      epistemic_status: derived
+    - connector_id: panel_a.readout_owns_early_window
+      from_object: panel_a.transient_readout
+      to_object: panel_a.early_window
+      declared_role: fit_window_ownership
+      render_style: response_trace
+    - connector_id: panel_a.readout_owns_late_window
+      from_object: panel_a.transient_readout
+      to_object: panel_a.late_window
+      declared_role: fit_window_ownership
+      render_style: response_trace
+  forbidden_connectors:
+    - from_object: panel_a.measurement_context
+      to_object: panel_a.sulfur_copolymer
+      declared_role: actuation_force
+    - from_object: panel_a.broad_trap_landscape
+      to_object: panel_a.transient_readout
+      declared_role: calibrated_data_fit
+  label_ownership:
+    - label_id: panel_a.measurement_header
+      owner: panel_a.measurement_context
+    - label_id: panel_a.field_label
+      owner: panel_a.field_condition
+    - label_id: panel_a.conventional_header
+      owner: panel_a.conventional_dielectric
+    - label_id: panel_a.sulfur_header
+      owner: panel_a.sulfur_copolymer
+    - label_id: panel_a.early_window_label
+      owner: panel_a.early_window
+    - label_id: panel_a.late_window_label
+      owner: panel_a.late_window
+publication_acceptance: not_claimed

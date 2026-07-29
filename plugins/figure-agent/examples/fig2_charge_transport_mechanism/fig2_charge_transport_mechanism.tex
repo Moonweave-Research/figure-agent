@@ -1,0 +1,150 @@
+% Fig. 2a — charge-transport mechanism schematic.
+% Quantitative panels b–d are owned by the data pipeline; this fixture draws
+% only the reader-facing mechanism and the two-window readout they quantify.
+\documentclass[border=0pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{arrows.meta,calc,decorations.pathmorphing}
+
+\begin{document}
+\resizebox{163.8mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\sffamily\fontsize{6.0}{7.1}\selectfont},
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
+    text=cGray!92!black},
+  panelTitle/.style={font=\sffamily\bfseries\fontsize{6.6}{7.8}\selectfont,
+    text=cGray!82!black},
+  columnTitle/.style={font=\sffamily\bfseries\fontsize{6.8}{8.1}\selectfont,
+    text=cGray!86!black},
+  labelStd/.style={font=\sffamily\fontsize{5.7}{6.8}\selectfont,
+    text=cGray!84!black},
+  labelMute/.style={font=\sffamily\itshape\fontsize{5.25}{6.3}\selectfont,
+    text=cGray!63!black},
+  wire/.style={cGray!72!black,line width=0.65pt,line cap=round,line join=round},
+  electrode/.style={fill=cGray!20,draw=cGray!74!black,line width=0.65pt},
+  film/.style={fill=cAmber!10,draw=cAmber!72!black,line width=0.75pt},
+  trapBlue/.style={circle,fill=cBlue!72,draw=cBlue!60!black,line width=0.3pt,
+    inner sep=0pt,minimum size=1.7mm},
+  trapRed/.style={circle,fill=cRed!78,draw=cRed!60!black,line width=0.3pt,
+    inner sep=0pt,minimum size=1.7mm},
+  trapAmber/.style={circle,fill=cAmber!88,draw=cRed!58!black,line width=0.3pt,
+    inner sep=0pt,minimum size=1.75mm},
+  fieldArrow/.style={-{Stealth[length=3.4pt,width=2.4pt]},cRed!72!black,
+    line width=0.55pt},
+  drainArrow/.style={-{Stealth[length=3.4pt,width=2.5pt]},cBlue!72!black,
+    line width=0.62pt},
+  retainCue/.style={cRed!65!black,line width=0.55pt,line cap=round},
+  storyArrow/.style={-{Stealth[length=3.4pt,width=2.4pt]},cGray!56!black,
+    line width=0.48pt},
+  axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
+    line width=0.55pt},
+  traceEarly/.style={cRed!76!black,line width=0.9pt,line cap=round},
+  traceLate/.style={cRed!70!black,line width=0.9pt,line cap=round,
+    dash pattern=on 2pt off 1.3pt},
+]
+
+% A single, open four-stage strip. The drawing carries the comparison; the
+% labels name the working interpretation without pretending to be data.
+\node[panelLetter,anchor=west] at (0.10,5.02) {a};
+\node[panelTitle,anchor=west] at (0.45,5.02) {charge-transport mechanism schematic};
+
+% Reading-order cues stay in the header lane, away from the objects and labels.
+\draw[storyArrow] (3.70,4.37)--(4.38,4.37);
+\draw[storyArrow] (7.78,4.37)--(8.46,4.37);
+\draw[storyArrow] (11.86,4.37)--(12.54,4.37);
+
+% --------------------------------------------------------------------------
+% Measurement
+% --------------------------------------------------------------------------
+\node[columnTitle,anchor=north] at (2.02,4.72) {Measurement};
+\node[labelMute,anchor=north] at (2.02,4.30) {MIM stack};
+
+% A compact vertical MIM stack: the film is the amber middle layer, not a
+% second electrode or a free-standing sample.
+\fill[electrode] (0.90,2.92) rectangle (3.12,3.16);
+\fill[film] (0.90,2.15) rectangle (3.12,2.92);
+\fill[electrode] (0.90,1.91) rectangle (3.12,2.15);
+\draw[wire] (2.01,3.16)--(2.01,3.64);
+\draw[wire] (2.01,1.91)--(2.01,1.53);
+\node[labelStd,anchor=west] at (2.22,3.58) {upper electrode};
+\node[labelStd,anchor=west] at (2.22,1.49) {lower electrode};
+\draw[fieldArrow] (1.35,3.48)--(1.35,2.98);
+\draw[fieldArrow] (1.55,3.48)--(1.55,2.98);
+\draw[fieldArrow] (1.75,3.48)--(1.75,2.98);
+\node[labelStd,text=cRed!70!black,anchor=east] at (1.22,3.24)
+  {$E=15\,\mathrm{MV\,m^{-1}}$};
+\node[labelMute,anchor=north] at (2.02,1.25) {25\,\%RH chamber};
+\node[labelMute,anchor=north] at (2.02,0.86) {discharge current};
+
+% --------------------------------------------------------------------------
+% Conventional dielectric
+% --------------------------------------------------------------------------
+\draw[wire] (4.10,0.54)--(4.10,4.72);
+\node[columnTitle,anchor=north] at (6.14,4.72) {Conventional dielectric};
+\node[labelMute,anchor=north] at (6.14,4.30) {finite traps};
+
+\fill[film] (4.72,2.22) rectangle (7.56,3.05);
+\draw[wire] (4.72,2.22)--(7.56,2.22);
+\draw[wire] (4.72,3.05)--(7.56,3.05);
+\node[trapBlue] at (5.35,2.66) {};
+\node[trapBlue] at (6.14,2.50) {};
+\node[trapBlue] at (6.93,2.72) {};
+\draw[drainArrow] (5.35,2.57)--(5.35,3.72);
+\draw[drainArrow] (6.14,2.41)--(6.14,3.72);
+\draw[drainArrow] (6.93,2.63)--(6.93,3.72);
+\node[labelStd,text=cBlue!66!black,anchor=north] at (6.14,1.82)
+  {charge drains};
+\node[labelMute,anchor=north] at (6.14,1.38)
+  {finite, shallow population};
+
+% --------------------------------------------------------------------------
+% Sulfur-rich copolymer
+% --------------------------------------------------------------------------
+\draw[wire] (8.20,0.54)--(8.20,4.72);
+\node[columnTitle,anchor=north] at (10.22,4.72) {Sulfur-rich copolymer};
+\node[labelMute,anchor=north] at (10.22,4.30) {broad trap landscape};
+
+\fill[film] (8.78,2.22) rectangle (11.66,3.05);
+\draw[wire] (8.78,2.22)--(11.66,2.22);
+\draw[wire] (8.78,3.05)--(11.66,3.05);
+% Non-periodic sites make the breadth visible without recreating Fig1's energy
+% diagram or implying a calibrated density distribution.
+\draw[cAmber!62!black,line width=0.55pt,line cap=round]
+  (8.98,2.72) .. controls (9.35,2.45) and (9.50,2.90) .. (9.86,2.58)
+  .. controls (10.24,2.30) and (10.34,2.87) .. (10.70,2.63)
+  .. controls (11.06,2.42) and (11.20,2.85) .. (11.48,2.55);
+\node[trapAmber] at (9.24,2.73) {};
+\node[trapRed] at (9.83,2.58) {};
+\node[trapAmber] at (10.31,2.32) {};
+\node[trapRed] at (10.70,2.63) {};
+\node[trapAmber] at (11.17,2.84) {};
+\node[trapRed] at (11.48,2.55) {};
+% A closed cue around one occupied site communicates retention without a
+% floating arrow that could be mistaken for a transport vector.
+\draw[retainCue] (10.48,2.18) arc[start angle=205,end angle=500,radius=0.39];
+\node[labelStd,text=cRed!68!black,anchor=north] at (10.22,1.82)
+  {charge retained};
+\node[labelMute,anchor=north] at (10.22,1.38)
+  {distributed, long-lived population};
+
+% --------------------------------------------------------------------------
+% What we read
+% --------------------------------------------------------------------------
+\draw[wire] (12.30,0.54)--(12.30,4.72);
+\node[columnTitle,anchor=north] at (14.34,4.72) {What we read};
+\node[labelMute,anchor=north] at (14.34,4.30) {same current trace, two windows};
+
+\draw[axisArrow] (12.92,1.77)--(12.92,3.61);
+\draw[axisArrow] (12.92,1.77)--(15.85,1.77);
+\node[labelMute,anchor=east,rotate=90] at (12.40,2.73) {$I(t)$};
+\node[labelMute,anchor=north] at (14.38,1.59) {time};
+\draw[traceEarly] (13.15,3.35)--(14.05,2.86);
+\draw[traceLate] (14.05,2.86)--(15.60,2.43);
+\draw[cGray!44!black,line width=0.42pt,dash pattern=on 1.2pt off 1.2pt]
+  (14.05,1.80)--(14.05,3.53);
+\node[labelStd,anchor=south west] at (13.23,3.36) {2--30\,s};
+\node[labelStd,anchor=north west] at (14.20,2.28) {30--300\,s};
+\node[labelMute,anchor=north] at (14.34,1.10) {schematic readout};
+
+\end{tikzpicture}%
+}
+\end{document}
