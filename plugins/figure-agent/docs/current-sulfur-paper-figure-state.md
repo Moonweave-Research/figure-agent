@@ -17,8 +17,8 @@ The current paper bindings are:
 | Figure | Role | Fixture authority |
 |---|---|---|
 | Fig1 | overview, structure, and charge-trapping concept | `fig1_updated_agent_redraw_v1`, resolved through `review/current-candidate.json` |
-| Fig2 | dielectric and polarization response | planned; no active fixture |
-| Fig3 | transient conduction and trapping | `fig3_resistance_mechanism` |
+| Fig2 | transient charge transport and its mechanism context | `fig2_charge_transport_mechanism` |
+| Fig3 | frequency-domain dielectric response | planned; no active fixture |
 | Fig4 | trap-energy distribution | `fig4_trap_energy_diagram` |
 | Fig5 | cantilever actuation payoff | `fig5_cantilever_actuation_artifact_v2` |
 
@@ -88,11 +88,14 @@ remain `candidate_only` until a human gate explicitly changes that state.
   direction.
 - Any stronger mechanistic interpretation remains a paper-level human gate.
 
-## Fig3 and Fig4 role boundary
+## Fig2, Fig3, and Fig4 role boundary
 
-- Fig3 owns direct trapping evidence during conduction: capture/release,
-  qualitative transient-current decay, resistance increase, and the
-  composition-dependent state landscape.
+- Fig2 owns the transient charge-transport bridge: the MIM context, a
+  conventional-versus-sulfur schematic contrast, and the qualitative early/late
+  readout windows used by the bound data panels. The schematic does not replace
+  those measured panels or prove a microscopic mechanism by itself.
+- Fig3 owns the planned frequency-domain dielectric response. Do not silently
+  reuse the earlier resistance-mechanism fixture as the new Fig3 authority.
 - Fig4 owns trap energy/depth/lifetime quantification and the ISPD-derived
   distribution story.
 - A schematic must not turn qualitative state breadth into an undeclared
@@ -134,6 +137,8 @@ Durable invariants:
 ## Historical fixtures
 
 - `fig5_actuation_mechanism` is a regression fixture for an earlier convention.
+- `fig3_resistance_mechanism` remains regression evidence for an earlier
+  placement, not a current main-figure binding.
 - `fig5_cantilever_mechanism_v1` is a superseded first authoring trial.
 - `fig3_floating_clip_protocol` is SI/methods evidence with historical boundary
   assumptions.

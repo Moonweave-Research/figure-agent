@@ -23,24 +23,23 @@ Design constraint for the schematics (user, verbatim intent): "얄쌍하게 오�
 비대하지 않게" — slim, compact, dense, not bloated; explain just enough for human
 understanding.
 
-## The 5-figure plan (approach B — mechanism-sequenced)
+## The 5-figure plan (mechanism-sequenced; Fig2/Fig3 numbering superseded by the current layout)
 
 | Fig | Schematic (figure-agent) | Data graph (pipeline) | One-line role |
 |---|---|---|---|
 | **Fig1** | concept/structure of the sulfur polymer + the charge-trapping idea (whole-figure schematic) | — | "what this is about" |
-| **Fig2** | dielectric / polarization-response mechanism | ε_r vs composition + P–E loops | "tunable dielectric that stores charge" |
-| **Fig3** | cell structure → current flows → charge gets trapped → current↓ / resistance↑; meaning of the trap-conduction-law fit; why a given composition traps better | R(t)↑ over time + trap-law fit, composition series, 1 representative reference | "direct evidence: trapping happens during conduction (the bridge)" |
+| **Fig2** | MIM context → parallel conventional-versus-sulfur comparison → qualitative two-window transient readout | $I(t)$ + two-segment fit, composition-dependent $n$, and late-time deviation | "charge transport differs in the sulfur-rich copolymer" |
+| **Fig3** | frequency-domain dielectric-response mechanism | dielectric-frequency response data | "frequency-domain dielectric response" |
 | **Fig4** | trap energy landscape (shallow vs deep states, retention) | ISPD surface-potential decay curves + trap energy distribution N_t(E); S80 optimum | "the traps' energies / depths / lifetimes, quantified" |
 | **Fig5 (last)** | actuation charge → OFF/float → reversed drive → reverse bend and slow recovery | qualitative response trace; measured data only when bound | "the trapped charge produces a polarity-dependent mechanical response (payoff)" |
 
-## Figure-grouping rationale (resolves the user's open questions)
-- **Resistance → Fig3 (its own figure), NOT Fig2, NOT merged with ISPD.** Three reasons:
-  (1) physical-family — ε_r + P–E are polarization/dielectric response (one family → Fig2);
-  R(t)↑ is trapping-transport kinetics (different family). (2) narrative-bridge — R(t)↑ is
-  the first DIRECT trapping evidence, bridging "is a dielectric" (Fig2) → "quantify the
-  traps" (Fig4). (3) weight — resistance carries its own analysis (law fit + composition +
-  reference) — too much for a Fig2 panel.
-- **P–E loop → Fig2** (paired with ε_r as the dielectric/polarization response).
+## Figure-grouping rationale (current layout)
+- The current layout places the transient transport panels in **Fig2**: the
+  two-window $I(t)$ reading, composition dependence, and late-time departure
+  make one coherent transport story. Its schematic is therefore a narrow
+  comparison/context strip, not an invented quantitative plot.
+- **Fig3** now carries the frequency-domain dielectric response. This supersedes
+  the earlier dielectric-Fig2 / resistance-Fig3 numbering in this document.
 - **Reference samples → 1 representative in main Fig3; full set → SI.**
 
 ## Implications for figure-agent (the tool)
@@ -56,8 +55,9 @@ understanding.
 ## Current placement contract
 
 - Fig1 is bound to `fig1_updated_agent_redraw_v1` through its explicit current-candidate pointer.
-- Fig2 remains `planned_missing`; this is advisory, not a hidden fixture assignment.
-- Fig3 is bound to `fig3_resistance_mechanism`.
+- Fig2 is bound to `fig2_charge_transport_mechanism` as an active candidate;
+  this is a workflow binding, not human or publication acceptance.
+- Fig3 remains `planned_missing` for the frequency-domain dielectric-response figure.
 - Fig4 is bound to `fig4_trap_energy_diagram`.
 - Fig5 is bound to `fig5_cantilever_actuation_artifact_v2`.
 - Prior dogfood, vault, and first-trial fixtures remain classified non-main evidence.

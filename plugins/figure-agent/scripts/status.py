@@ -23,6 +23,7 @@ import closed_loop_current_state
 import current_candidate
 import current_render_review_scaffold
 import human_decision_record
+import review_scale_previews
 import runtime_paths
 import status_next_policy
 import status_readiness_policy
@@ -328,6 +329,23 @@ def _compute_render_state(
     if _is_stale(sources, (build_pdf,)):
         return RENDER_STALE
     return RENDER_FRESH
+
+
+def _review_scale_previews_summary(
+    build_png: Path, spec: dict[str, Any]
+) -> dict[str, Any]:
+    """Describe opt-in 100/50/33 review evidence without trusting loose PNGs."""
+    required = spec.get("review_scale_previews") == "required"
+    if not required:
+        return {"state": "NOT_REQUIRED", "required": False}
+    result = review_scale_previews.preview_status(build_png)
+    manifest = result.get("manifest")
+    return {
+        "state": result["state"],
+        "required": True,
+        "reason": result["reason"],
+        "manifest": manifest.as_posix() if isinstance(manifest, Path) else None,
+    }
 
 
 def _requires_publication_disclosure(spec: dict) -> bool:
@@ -908,6 +926,14 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         result["paper_plan"] = paper_plan
         if paper_plan.get("state") == "INVALID":
             result.setdefault("notes", []).append("paper_plan_invalid")
+    spec_path = example_dir / "spec.yaml"
+    if spec_path.is_file():
+        try:
+            spec = parse_spec(spec_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, ValueError):
+            spec = {}
+        build_png = example_dir / "build" / f"{example_dir.name}.png"
+        result["review_scale_previews"] = _review_scale_previews_summary(build_png, spec)
     explicit_candidate = current_candidate.resolve_current_candidate(example_dir)
     if explicit_candidate.get("state") != "NOT_DECLARED" or result.get("current_candidate") is None:
         result["current_candidate"] = explicit_candidate
@@ -1191,6 +1217,7 @@ def infer_stage(example_dir: Path) -> dict:
     tex_path = example_dir / f"{name}.tex"
     briefing_path = example_dir / "briefing.md"
     build_pdf = example_dir / "build" / f"{name}.pdf"
+    build_png = example_dir / "build" / f"{name}.png"
     previews_dir = example_dir / "previews"
     exports_dir = example_dir / "exports"
 
@@ -1230,6 +1257,14 @@ def infer_stage(example_dir: Path) -> dict:
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
     render_state = _compute_render_state(example_dir, spec_path, tex_path, build_pdf, sources)
+    review_scale_summary = _review_scale_previews_summary(build_png, spec)
+    if review_scale_summary["required"]:
+        preview_state = review_scale_summary["state"]
+        checks.append(("review_scale_previews", str(preview_state).lower()))
+        if preview_state != review_scale_previews.FRESH:
+            notes.append(f"review_scale_previews_{str(preview_state).lower()}")
+            if render_state == RENDER_FRESH:
+                render_state = RENDER_STALE
     canonical_render_state = render_state
     current_candidate = _resolve_current_candidate(
         example_dir,
@@ -1358,7 +1393,12 @@ def infer_stage(example_dir: Path) -> dict:
         )
 
     # Stage 3: build pdf exists, fresh against tex+briefing+style-lock, no exports
-    if build_pdf.exists() and tex_path.exists() and not _is_stale(sources, (build_pdf,)):
+    if (
+        build_pdf.exists()
+        and tex_path.exists()
+        and not _is_stale(sources, (build_pdf,))
+        and render_state == RENDER_FRESH
+    ):
         checks.append(("build_pdf", "fresh"))
         _append_critique_check(checks, notes, critique_state)
         critique_lint_summary = _append_critique_lint_check(

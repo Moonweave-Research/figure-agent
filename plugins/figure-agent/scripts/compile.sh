@@ -178,16 +178,26 @@ fi
 
 PDF_OUT="${BUILD_DIR}/${BASE}.pdf"
 PNG_OUT="${BUILD_DIR}/${BASE}.png"
+SCALE_PREVIEW_MANIFEST="${BUILD_DIR}/${BASE}_review_scale_previews.json"
+SCALE_PREVIEW_100="${BUILD_DIR}/${BASE}_100pct.png"
+SCALE_PREVIEW_50="${BUILD_DIR}/${BASE}_50pct.png"
+SCALE_PREVIEW_33="${BUILD_DIR}/${BASE}_33pct.png"
+
+clear_review_scale_previews() {
+  rm -f "$SCALE_PREVIEW_MANIFEST" "$SCALE_PREVIEW_100" "$SCALE_PREVIEW_50" "$SCALE_PREVIEW_33"
+}
 
 cleanup_failed_build() {
   local status=$?
   if [[ $status -ne 0 ]]; then
     rm -f "$PDF_OUT" "$PNG_OUT"
+    clear_review_scale_previews
   fi
 }
 trap cleanup_failed_build ERR
 
 rm -f "$PDF_OUT" "$PNG_OUT"
+clear_review_scale_previews
 "$ENGINE" -interaction=nonstopmode -jobname="$BASE" -output-directory="$BUILD_DIR" "$COMPILE_FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
 # Enforce physical print evidence for the active candidate only. A strict
@@ -365,6 +375,16 @@ trap - ERR
 
 if [[ $STRICT_CHECK_FAILURE -ne 0 ]]; then
   echo "ERROR: strict detector gate failed after review evidence generation" >&2
+  clear_review_scale_previews
+  exit 1
+fi
+
+# The 100/50/33 percent views are official review evidence only when they are
+# derived from this successful PNG and recorded in a hash-bound manifest.
+if ! "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/review_scale_previews.py" \
+  "$PNG_OUT" --json-output "$SCALE_PREVIEW_MANIFEST" >/dev/null; then
+  echo "ERROR: review scale preview generation failed" >&2
+  clear_review_scale_previews
   exit 1
 fi
 

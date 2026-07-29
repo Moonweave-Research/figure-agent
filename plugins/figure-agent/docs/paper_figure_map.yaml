@@ -13,13 +13,13 @@ figures:
     source_pointer: review/current-candidate.json
   fig2:
     figure_id: fig2
-    role_id: dielectric_polarization_response
-    status: planned_missing
+    role_id: charge_transport_mechanism_schematic
+    status: active_candidate
+    fixture: fig2_charge_transport_mechanism
   fig3:
     figure_id: fig3
-    role_id: transient_conduction_trapping
-    status: active_candidate
-    fixture: fig3_resistance_mechanism
+    role_id: frequency_domain_dielectric_response
+    status: planned_missing
   fig4:
     figure_id: fig4
     role_id: trap_energy_distribution
@@ -40,6 +40,7 @@ non_main:
     - fig1_failure_first_panel_f_pilot
     - fig3_trap_schematic_slice3_semantic
     - fig3_trap_schematic_slice4_illustration_grammar
+    - fig3_resistance_mechanism
     - fig5_actuation_mechanism
     - smoke_annotation_box_demo
     - smoke_contrast_demo

@@ -152,6 +152,49 @@ def test_compile_writes_explicit_strict_outcome_receipt_before_final_gate() -> N
     assert script.index(receipt_call) < script.index(final_gate)
 
 
+def test_compile_only_publishes_hash_bound_scale_previews_after_success() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    preview_call = '"$WORKFLOW_DIR/scripts/review_scale_previews.py"'
+    final_gate = 'echo "ERROR: strict detector gate failed after review evidence generation"'
+    assert 'SCALE_PREVIEW_MANIFEST="${BUILD_DIR}/${BASE}_review_scale_previews.json"' in script
+    assert "clear_review_scale_previews" in script
+    assert preview_call in script
+    assert script.index(final_gate) < script.index(preview_call)
+
+
+@pytest.mark.skipif(shutil.which("lualatex") is None, reason="requires lualatex")
+def test_compile_failure_clears_previous_scale_preview_evidence(tmp_path: Path) -> None:
+    tex_path = tmp_path / "broken.tex"
+    tex_path.write_text(
+        "\\documentclass{standalone}\n"
+        "\\usepackage{polymer-paper-preamble}\n"
+        "\\begin{document}\\undefinedcommand\\end{document}\n",
+        encoding="utf-8",
+    )
+    build = tmp_path / "build"
+    build.mkdir()
+    for suffix in ("100pct", "50pct", "33pct", "review_scale_previews.json"):
+        path = (
+            build / f"broken_{suffix}.png"
+            if suffix.endswith("pct")
+            else build / f"broken_{suffix}"
+        )
+        path.write_bytes(b"stale review evidence")
+
+    result = subprocess.run(
+        ["bash", "scripts/compile.sh", str(tex_path)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert not list(build.glob("broken_*pct.png")), result.stderr + result.stdout
+    assert not (build / "broken_review_scale_previews.json").exists()
+
+
 @pytest.mark.skipif(
     shutil.which("lockf") is None and shutil.which("flock") is None,
     reason="requires lockf or flock",

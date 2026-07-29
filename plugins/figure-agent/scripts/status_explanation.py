@@ -70,6 +70,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     release_ready = status.get("release_ready")
     final_ready = status.get("final_ready")
     release_decision = status.get("release_decision")
+    scale_previews = status.get("review_scale_previews")
 
     plugin_state: list[dict[str, Any]] = []
     fixture_freshness: list[dict[str, Any]] = []
@@ -88,6 +89,20 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
             "map/current-candidate contract before running workflow steps."
         ),
         manual=True,
+    )
+    preview_state = (
+        scale_previews.get("state") if isinstance(scale_previews, Mapping) else None
+    )
+    _append_if(
+        fixture_freshness,
+        preview_state in {"MISSING", "STALE", "INVALID"},
+        code=f"review_scale_previews_{str(preview_state).lower()}",
+        category=FIXTURE_FRESHNESS,
+        message=(
+            "100/50/33 percent review evidence is not hash-bound to the current "
+            "render; recompile before relying on reduced-scale inspection."
+        ),
+        next_command=_command(name, "/fig_compile"),
     )
 
     _append_if(
