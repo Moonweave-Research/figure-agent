@@ -1397,7 +1397,7 @@ def infer_stage(example_dir: Path) -> dict:
         build_pdf.exists()
         and tex_path.exists()
         and not _is_stale(sources, (build_pdf,))
-        and render_state == RENDER_FRESH
+        and render_state in {RENDER_FRESH, RENDER_NOT_SCAFFOLDED}
     ):
         checks.append(("build_pdf", "fresh"))
         _append_critique_check(checks, notes, critique_state)

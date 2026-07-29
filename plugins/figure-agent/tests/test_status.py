@@ -1352,6 +1352,7 @@ def test_stage_3_missing_briefing_does_not_suggest_export(tmp_path: Path) -> Non
     result = infer_stage(fig_dir)
 
     assert result["stage"] == 3
+    assert result["render_state"] == "NOT_SCAFFOLDED"
     assert "missing_briefing" in result["notes"]
     assert "briefing.md" in result["next"]
     assert "/fig_export" not in result["next"]
