@@ -6,6 +6,7 @@
 - `reviewer`: `choemun-yeong`
 - `reviewed_at`: `2026-07-29`
 - `evidence_class`: `human_scientific_direction`
+- `confirmation`: `explicit_author_confirmation_in_review_thread`
 - `publication_acceptance`: `not_claimed`
 
 ## Decision
