@@ -28,6 +28,8 @@
     line join=round},
   localizedState/.style={circle,fill=cRed!72!black,draw=none,
     minimum size=0.92mm,inner sep=0pt},
+  fieldRail/.style={cGray!48!black,line width=0.42pt,line cap=round},
+  callout/.style={cGray!54!black,line width=0.38pt,line cap=round},
   storyArrow/.style={-{Stealth[length=3.4pt,width=2.3pt]},cGray!58!black,
     line width=0.54pt},
   axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
@@ -50,6 +52,13 @@
   {$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$ held ON during acquisition
   \;\textbar\; 25\,\% RH};
 \draw[cGray!38!black,line width=0.40pt] (0.72,4.43)--(15.70,4.43);
+% The field is intentionally a shared condition rather than a voltage-source
+% cartoon: the experiment defines magnitude and duration, not a polarity story.
+\draw[fieldRail] (0.92,4.05)--(6.92,4.05);
+\draw[fieldRail] (2.17,4.05)--(2.17,3.80) (5.55,4.05)--(5.55,3.80);
+\fill[cGray!48!black] (2.17,3.80) circle (0.035) (5.55,3.80) circle (0.035);
+\node[labelMute,anchor=south] at (3.92,4.10)
+  {matched MIM test cells under a held field};
 % fig-agent:end object=comparison_frame
 
 % fig-agent:start object=ideal_baseline panel=A kind=material_state truth_bearing=true
@@ -58,17 +67,17 @@
 \draw[structure] (0.76,3.05)--(3.58,3.05) (0.76,1.83)--(3.58,1.83);
 \fill[electrode] (0.76,3.05) rectangle (3.58,3.19);
 \fill[electrode] (0.76,1.69) rectangle (3.58,1.83);
-\foreach \x/\y in {1.22/2.34,1.85/2.64,2.51/2.15,3.12/2.50}{
+\node[labelMute,anchor=south] at (2.17,3.21) {metal / polymer film / metal};
+\foreach \x/\y in {1.16/2.30,1.70/2.65,2.18/2.22,2.68/2.72,3.15/2.36}{
   \draw[dipole] (\x,\y-0.12)--(\x,\y+0.12);
   \fill[cBlue!36] (\x,\y-0.16) circle (0.032);
   \fill[cBlue!36] (\x,\y+0.16) circle (0.032);
 }
-\node[labelMute,anchor=north] at (2.17,1.38) {fast bound polarization};
+\node[labelMute,anchor=north] at (2.17,1.38) {rapid bound-polarization response};
 % fig-agent:end object=ideal_baseline
 
 % fig-agent:start object=sulfur_working_state panel=A kind=material_state truth_bearing=true
-\draw[cGray!40!black,line width=0.40pt] (3.78,1.62)--(3.78,3.28);
-\node[labelMute,anchor=south] at (3.78,3.34) {same MIM geometry};
+\node[labelMute] at (3.80,2.44) {vs.};
 
 \node[columnTitle,anchor=south] at (5.55,3.45) {Sulfur-rich copolymer};
 \fill[film] (4.02,1.83) rectangle (7.08,3.05);
@@ -83,11 +92,15 @@
   (6.25,2.43) .. controls (6.42,2.54) and (6.58,2.45) .. (6.77,2.31);
 \draw[sulfurTrace] (4.61,2.79) .. controls (4.80,2.60) and (4.99,2.56) ..
   (5.23,2.75);
-\foreach \x/\y in {4.98/2.19,6.25/2.43,6.44/2.53}{
+\draw[sulfurTrace] (5.56,2.02) .. controls (5.71,2.16) and (5.87,2.18) ..
+  (6.01,2.06) .. controls (6.15,1.96) and (6.32,1.98) .. (6.48,2.12);
+\foreach \x/\y in {4.98/2.19,6.01/2.06,6.25/2.43,6.44/2.53}{
   \node[localizedState] at (\x,\y) {};
 }
+\draw[callout] (6.45,2.54)--(6.78,2.80)--(6.97,2.80);
+\node[labelMute,anchor=west] at (7.00,2.80) {localized states};
 \node[labelMute,anchor=north] at (5.55,1.38) {long-lived charge relaxation};
-\node[labelMute,anchor=north] at (5.55,1.12) {sign-neutral localized charge states};
+\node[labelMute,anchor=north] at (5.55,1.12) {sign-neutral working picture};
 
 \coordinate (comparison_out) at (7.30,2.44);
 \coordinate (readout_entry) at (8.09,2.44);
@@ -110,8 +123,9 @@
   (11.20,1.46)--(11.20,3.16);
 \draw[traceLate] (11.20,2.43) .. controls (12.44,2.31) and (13.91,2.12) ..
   (15.33,2.02);
-\node[labelStd,anchor=south west] at (8.72,3.18) {2--30\,s: slope};
-\node[labelStd,anchor=south west] at (11.46,2.66) {30--300\,s: deviation};
+\node[labelStd,anchor=south west] at (8.72,3.18) {2--30\,s: early power-law fit};
+\node[labelMute,anchor=north] at (11.20,1.20) {$t=30\,\mathrm{s}$};
+\node[labelStd,anchor=south west] at (11.46,2.66) {30--300\,s: departure from fit};
 % fig-agent:end object=qualitative_current_readout
 
 \end{tikzpicture}%

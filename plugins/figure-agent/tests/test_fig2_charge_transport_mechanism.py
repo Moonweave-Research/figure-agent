@@ -36,7 +36,8 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
 
     assert "held ON during acquisition" in source
-    assert "same MIM geometry" in source
+    assert "matched MIM test cells under a held field" in source
+    assert "metal / polymer film / metal" in source
     assert "storyRail" not in source
     assert "material contrast" not in source
     assert "comparisonArrow" not in source
