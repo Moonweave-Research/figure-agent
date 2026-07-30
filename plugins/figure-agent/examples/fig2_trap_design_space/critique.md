@@ -1,18 +1,18 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_trap_design_space
-generated_at: 2026-07-02T13:09:25Z
+generated_at: 2026-07-30T12:00:00Z
 generator: critique_brief.py
-generator_version: sha256:a3b145eaccb5fb8290c0e35f3e91ba65fa37d8892a46436894884b0e43d73a07
+generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:982194dd21a583bcfd404c1a4fac4f5d12a336aa2ffd972cfed5357619a1a892
+critique_input_hash: sha256:0a958a81bfd1b82968ff6feff4ea7d81567852a03bce39f91ad648baed2f3278
 verdict: pass
 findings:
   - id: C001
     severity: MINOR
     category: label_placement
     tex_lines: [95, 96]
-    grounded_in_rule: "detector visual_clash VC005/VC006/VC007 (text_on_path/text_on_fill); panel-b x-axis at fig2.tex:80"
+    grounded_in_rule: "detector visual_clash VC001 (title-word near miss); panel-b x-axis at fig2.tex:80"
     observation: "Resolved in the current render: the conventional-cluster caption 'PI, PDMS, PET' was moved above the blue cluster with anchor=south at (7.60,5.58), clearing the panel-b x-axis baseline at y=3.90 and avoiding the panel-c seam. Compile evidence reports no text collisions."
     suggested_fix: "Applied: moved the labelMute node at fig2.tex:95 from anchor=north/y=4.12 to anchor=south/y=5.58 so 'PI, PDMS, PET (shallow, leaky)' sits above the conventional cluster instead of crossing the x-axis."
     proposed_offset:
@@ -493,10 +493,10 @@ reference_learning_accountability:
   linked_evidence: []
 micro_defects:
   - id: M001
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC001_Origin.png
+    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC001_of.png
     kind: label_path_near_miss
     severity: NIT
-    observation: "VC001 Origin: bold panel-a title word on clear background."
+    observation: "VC001 of: bold panel-a title word on clear background."
     linked_finding_id: ""
     visual_clash_ref: "VC001"
     text_boundary_ref: ""
@@ -504,358 +504,7 @@ micro_defects:
     undeclared_geometry_ref: ""
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC001 is not a defect: Origin is the bold panel title on white; the text_on_fill flag is a luma_std false positive."
-  - id: M002
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC002_of.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "VC002 of: bold panel-a title word on clear background."
-    linked_finding_id: ""
-    visual_clash_ref: "VC002"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC002 is not a defect: of is part of the bold panel title on white; the text_on_fill flag is a false positive."
-  - id: M003
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC003_S_S.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "VC003 S–S: italic S–S backbone label beneath the zigzag chain."
-    linked_finding_id: ""
-    visual_clash_ref: "VC003"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC003 is not a defect: the S–S backbone caption is legible italic text on white with clear separation from the chain."
-  - id: M004
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC004_S85.png
-    kind: label_curve_near_label
-    severity: NIT
-    observation: "VC004 S85: trajectory endpoint label beside the final gold point."
-    linked_finding_id: ""
-    visual_clash_ref: "VC004"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC004 is not a defect: S85 is a direct point label sitting clear to the right of its gold marker."
-  - id: M005
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC005_PI.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "VC005 PI,: first token of the relocated 'PI, PDMS, PET' caption above the conventional cluster; no x-axis crossing remains."
-    linked_finding_id: ""
-    visual_clash_ref: "VC005"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC005 is not a defect after the patch: PI is part of the conventional-cluster caption, now above the cluster and clear of the x-axis."
-  - id: M006
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC006_PDMS.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "VC006 PDMS,: middle token of the relocated conventional-cluster caption; clear of the x-axis after the patch."
-    linked_finding_id: ""
-    visual_clash_ref: "VC006"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC006 is not a defect after the patch: PDMS is part of the relocated conventional-cluster caption, not stacked on the axis."
-  - id: M007
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC007_PET.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "VC007 PET: last token of the relocated conventional-cluster caption; clear of the x-axis after the patch."
-    linked_finding_id: ""
-    visual_clash_ref: "VC007"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC007 is not a defect after the patch: PET is part of the relocated conventional-cluster caption, not stacked on the axis."
-  - id: M008
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC008_S60.png
-    kind: label_curve_near_label
-    severity: NIT
-    observation: "VC008 S60: trajectory start label beneath the first gold point."
-    linked_finding_id: ""
-    visual_clash_ref: "VC008"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "VC008 is not a defect: S60 is a direct point label clear of the arc and the panel boundary."
-  - id: M009
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC009_trap-distribution.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "VC009 trap-distribution: panel-b x-axis label on clear background."
-    linked_finding_id: ""
-    visual_clash_ref: "VC009"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC009 is not a defect: trap-distribution breadth is the x-axis label on white; the text_on_fill flag is a false positive."
-  - id: M010
-    crop: examples/fig2_trap_design_space/build/audit_crops/visual_clash/VC010_I_t.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "VC010 I(t): rotated panel-c y-axis label log I(t) on clear background."
-    linked_finding_id: ""
-    visual_clash_ref: "VC010"
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: ""
-    status: accept_simplification
-    accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC010 is not a defect: log I(t) is the vertical axis title on white; the near_miss flag is a false positive."
-  - id: M011
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q1.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG001: undeclared column rule (panel a/b vertical divider)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG001"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG001 is intended panel-divider geometry separating panel a from panel b; no figure edit required."
-  - id: M012
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q1.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG002: well reference line endpoint near 'shallow'."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG002"
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "UG002 is the dashed Coulomb-well reference line near the conventional caption; the endpoint stays legible and is intended."
-  - id: M013
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q1.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG003: well reference line endpoint near 'well,'."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG003"
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "UG003 is the same dashed well reference line; the caption stays clear and the geometry is intended."
-  - id: M014
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q1.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG004: undeclared horizontal rule (dashed well reference line)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG004"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG004 is the shared dashed reference line for the two Coulomb wells; intended schematic geometry."
-  - id: M015
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q1.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG005: 'creates' arrow endpoint near 'a'."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG005"
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "UG005 is the vertical 'creates' arrow near the cleavage caption; the endpoint is legible and intended."
-  - id: M016
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q1.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG006: 'creates' arrow endpoint near 'yields'."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG006"
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "UG006 is the same 'creates' arrow near the cleavage caption; intended schematic geometry."
-  - id: M017
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q1.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG007: undeclared column rule (the vertical 'creates' arrow)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG007"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG007 is the vertical cleavage arrow read as a column rule; intended schematic geometry."
-  - id: M018
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q3.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG008: undeclared horizontal rule (panel b/c separation region)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG008"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG008 is an axis/baseline rule in the lower figure region; intended schematic geometry."
-  - id: M019
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q3.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG009: panel-c axis endpoint near 'I(t)'."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG009"
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "UG009 is the panel-c left-icon vertical axis near its log I(t) title; legible and intended."
-  - id: M020
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q3.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG010: panel-c axis endpoint near 'log'."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG010"
-    status: accept_simplification
-    accept_simplification_reason: convention_acceptable
-    accept_simplification_rationale: "UG010 is the same panel-c vertical axis near the log I(t) title; intended schematic geometry."
-  - id: M021
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q3.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG011: undeclared column rule (panel-c left-icon y-axis)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG011"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG011 is the panel-c left-icon vertical axis read as a column rule; intended schematic geometry."
-  - id: M022
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q2.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG012: undeclared rect boundary (beyond-conventional shaded band)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG012"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG012 is the tan 'beyond conventional dielectrics' region required by the briefing; intended schematic geometry."
-  - id: M023
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q3.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG013: undeclared rect boundary (conventional-cluster shaded box)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG013"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG013 is the pale blue PI/PDMS/PET cluster box required to separate the conventional group; intended schematic geometry."
-  - id: M024
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q4.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG014: undeclared column rule (panel-c left-icon t-axis region)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG014"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG014 is an axis rule of the panel-c left kinetic icon; intended schematic geometry."
-  - id: M025
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q4.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG015: undeclared horizontal rule (panel-c left-icon t-axis)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG015"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG015 is the horizontal t-axis of the panel-c left kinetic icon; intended schematic geometry."
-  - id: M026
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q4.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG016: undeclared column rule (panel-c right-icon rho-axis)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG016"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG016 is the vertical rho-axis of the panel-c right kinetic icon; intended schematic geometry."
-  - id: M027
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q4.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG017: undeclared horizontal rule (panel-c right-icon sulfur-content axis)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG017"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG017 is the horizontal sulfur-content axis of the panel-c right kinetic icon; intended schematic geometry."
-  - id: M028
-    crop: examples/fig2_trap_design_space/build/audit_crops/full_q4.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: "UG018: undeclared rect boundary (conventional-dielectrics band in panel c)."
-    linked_finding_id: ""
-    visual_clash_ref: ""
-    text_boundary_ref: ""
-    label_path_ref: ""
-    undeclared_geometry_ref: "UG018"
-    status: accept_simplification
-    accept_simplification_reason: intentional_schematic
-    accept_simplification_rationale: "UG018 is the pale blue 'conventional dielectrics' baseline band under the panel-c rho icon; intended schematic geometry."
+    accept_simplification_rationale: "VC001 is not a defect: 'of' is part of the bold panel title on white; the near_miss flag is a luma false positive."
 crop_audit_log:
   - crop_id: full_q1
     path: build/audit_crops/full_q1.png
@@ -866,7 +515,7 @@ crop_audit_log:
     rationale: "Panel a origin region is legible; backbone, radical, wells, and captions are clear and separated."
     observed_objects: ["S–S backbone", "S• radical", "creates arrow", "blue and red Coulomb wells"]
     local_relationship: "Objects are separated and target-correct; the divider rule sits clear of all text."
-    candidate_refs: ["UG001", "UG002", "UG003", "UG004", "UG005", "UG006", "UG007"]
+    candidate_refs: []
     unintended_visible_anomaly: none
     anomaly_rationale: "No anomaly visible."
     anomaly_link: ""
@@ -879,7 +528,7 @@ crop_audit_log:
     rationale: "Panel b hero arc, the beyond-conventional band, and the S85 endpoint read cleanly."
     observed_objects: ["gold S60→S85 arc", "beyond conventional dielectrics band", "sulfur content arrow", "S85 label"]
     local_relationship: "The arc arrowhead meets S85 with the point label clear to its right."
-    candidate_refs: ["VC004", "UG012"]
+    candidate_refs: []
     unintended_visible_anomaly: none
     anomaly_rationale: "No anomaly visible."
     anomaly_link: ""
@@ -892,7 +541,7 @@ crop_audit_log:
     rationale: "Fresh post-compile inspection shows the lower-left crop is clean: the deep red well, trapped dots, panel divider, panel-c title, and I(t) icon remain separated."
     observed_objects: ["deep red Coulomb well with trapped dots", "panel divider", "panel-c title", "I(t) icon"]
     local_relationship: "The visible elements are separated; the previously resolved conventional-cluster caption issue is not present in this crop."
-    candidate_refs: ["VC005", "VC006", "VC007", "VC008", "UG008", "UG009", "UG010", "UG011", "UG013"]
+    candidate_refs: []
     unintended_visible_anomaly: none
     anomaly_rationale: "No anomaly visible in the current crop."
     anomaly_link: ""
@@ -905,7 +554,7 @@ crop_audit_log:
     rationale: "Panel c kinetic icons and the panel b x-axis label read cleanly with no collision."
     observed_objects: ["log I(t) icon", "conventional/sulfur/Debye lines", "rho vs sulfur-content icon", "conventional dielectrics band"]
     local_relationship: "Each icon's axes and curves stay separated; the conventional band sits below the rho rise."
-    candidate_refs: ["VC009", "UG014", "UG015", "UG016", "UG017", "UG018"]
+    candidate_refs: []
     unintended_visible_anomaly: none
     anomaly_rationale: "No anomaly visible."
     anomaly_link: ""
@@ -935,133 +584,16 @@ crop_audit_log:
     unintended_visible_anomaly: none
     anomaly_rationale: "No anomaly visible."
     anomaly_link: ""
-  - crop_id: VC001_Origin
-    path: build/audit_crops/visual_clash/VC001_Origin.png
+  - crop_id: VC001_of
+    path: build/audit_crops/visual_clash/VC001_of.png
     source: visual_clash:VC001
     inspected: true
     verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "Origin is the bold panel-a title on white background; legible."
-    observed_objects: ["Origin title word"]
-    local_relationship: "Title text sits on clear background with no underlying fill."
-    candidate_refs: ["VC001"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No anomaly visible."
-    anomaly_link: "accept_simplification:false_positive"
-  - crop_id: VC002_of
-    path: build/audit_crops/visual_clash/VC002_of.png
-    source: visual_clash:VC002
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "of is part of the bold panel-a title on white; legible."
+    linked_micro_defect_id: "M001"
+    rationale: "The word 'of' is part of the bold panel-a title on white; legible at full and reduced scale."
     observed_objects: ["of title word"]
-    local_relationship: "Title text on clear background."
-    candidate_refs: ["VC002"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No anomaly visible."
-    anomaly_link: "accept_simplification:false_positive"
-  - crop_id: VC003_S_S
-    path: build/audit_crops/visual_clash/VC003_S_S.png
-    source: visual_clash:VC003
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "S–S backbone caption is legible italic text under the chain."
-    observed_objects: ["S–S backbone caption", "zigzag chain"]
-    local_relationship: "Caption sits clear below the backbone."
-    candidate_refs: ["VC003"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No anomaly visible."
-    anomaly_link: "accept_simplification:false_positive"
-  - crop_id: VC004_S85
-    path: build/audit_crops/visual_clash/VC004_S85.png
-    source: visual_clash:VC004
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "S85 label is clear to the right of its gold marker."
-    observed_objects: ["S85 label", "gold endpoint marker"]
-    local_relationship: "Direct point label beside its marker."
-    candidate_refs: ["VC004"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No anomaly visible."
-    anomaly_link: "accept_simplification:convention_acceptable"
-  - crop_id: VC005_PI
-    path: build/audit_crops/visual_clash/VC005_PI.png
-    source: visual_clash:VC005
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "'PI,' is part of the relocated conventional-cluster caption and is clear of the panel-b x-axis."
-    observed_objects: ["PI caption token", "blue conventional cluster", "panel-b x-axis line"]
-    local_relationship: "Caption sits above the blue cluster, away from the x-axis baseline."
-    candidate_refs: ["VC005"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No anomaly visible."
-    anomaly_link: "accept_simplification:convention_acceptable"
-  - crop_id: VC006_PDMS
-    path: build/audit_crops/visual_clash/VC006_PDMS.png
-    source: visual_clash:VC006
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "'PDMS,' is part of the relocated conventional-cluster caption and is clear of the panel-b x-axis."
-    observed_objects: ["PDMS caption token", "blue conventional cluster", "panel-b x-axis line"]
-    local_relationship: "Caption sits above the blue cluster, away from the x-axis baseline."
-    candidate_refs: ["VC006"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No anomaly visible."
-    anomaly_link: "accept_simplification:convention_acceptable"
-  - crop_id: VC007_PET
-    path: build/audit_crops/visual_clash/VC007_PET.png
-    source: visual_clash:VC007
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "'PET' is part of the relocated conventional-cluster caption and is clear of the panel-b x-axis."
-    observed_objects: ["PET caption token", "blue conventional cluster", "panel-b x-axis line"]
-    local_relationship: "Caption sits above the blue cluster, away from the x-axis baseline."
-    candidate_refs: ["VC007"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No anomaly visible."
-    anomaly_link: "accept_simplification:convention_acceptable"
-  - crop_id: VC008_S60
-    path: build/audit_crops/visual_clash/VC008_S60.png
-    source: visual_clash:VC008
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "S60 label is clear beneath the first gold point."
-    observed_objects: ["S60 label", "gold start marker"]
-    local_relationship: "Direct point label clear of the arc."
-    candidate_refs: ["VC008"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No anomaly visible."
-    anomaly_link: "accept_simplification:convention_acceptable"
-  - crop_id: VC009_trap-distribution
-    path: build/audit_crops/visual_clash/VC009_trap-distribution.png
-    source: visual_clash:VC009
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "trap-distribution breadth is the panel-b x-axis label on white."
-    observed_objects: ["trap-distribution x-axis label"]
-    local_relationship: "Axis label on clear background below the axis."
-    candidate_refs: ["VC009"]
-    unintended_visible_anomaly: none
-    anomaly_rationale: "No anomaly visible."
-    anomaly_link: "accept_simplification:false_positive"
-  - crop_id: VC010_I_t
-    path: build/audit_crops/visual_clash/VC010_I_t.png
-    source: visual_clash:VC010
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ""
-    rationale: "log I(t) is the rotated panel-c y-axis title on white; legible."
-    observed_objects: ["log I(t) vertical axis title"]
-    local_relationship: "Rotated axis title on clear background."
-    candidate_refs: ["VC010"]
+    local_relationship: "Title text sits on a clear background with no underlying drawing."
+    candidate_refs: ["VC001"]
     unintended_visible_anomaly: none
     anomaly_rationale: "No anomaly visible."
     anomaly_link: "accept_simplification:false_positive"
@@ -1085,7 +617,8 @@ conventional cluster while leaving the panel-b x-axis and panel-c seam clear. A 
 post-patch compile reports no text collisions, no text-boundary clashes, and no
 label-path proximity candidates.
 
-The remaining visual-clash candidates (VC001–VC010) are false positives or
-accepted direct labels, and the eighteen undeclared-geometry candidates UG001–UG018 are
-intended schematic geometry. Print-scale proxies at 178 mm and thumbnail width keep the
-message legible. No open finding remains.
+The single visual-clash candidate VC001 is a false positive. The eighteen geometry
+signals are downranked by the fixture's schematic profile and are intentionally
+accounted as conceptual axes, dividers, and region frames rather than defects.
+Print-scale proxies at 178 mm and thumbnail width keep the message legible. No
+actionable finding remains.
