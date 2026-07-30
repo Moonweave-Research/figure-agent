@@ -20,7 +20,7 @@
   labelMute/.style={font=\sffamily\itshape\fontsize{5.05}{6.1}\selectfont,
     text=cGray!60!black},
   structure/.style={cGray!66!black,line width=0.55pt,line cap=round},
-  electrode/.style={fill=cGray!28,draw=none},
+  electrode/.style={fill=cGray!24,draw=cGray!58!black,line width=0.34pt},
   idealFilm/.style={fill=cBlue!6,draw=none},
   film/.style={fill=cAmber!11,draw=none},
   dipole/.style={cBlue!62!black,line width=0.54pt,line cap=round},
@@ -56,8 +56,8 @@
 \node[columnTitle,anchor=south] at (2.17,3.45) {Ideal dielectric};
 \fill[idealFilm] (0.76,1.83) rectangle (3.58,3.05);
 \draw[structure] (0.76,3.05)--(3.58,3.05) (0.76,1.83)--(3.58,1.83);
-\draw[electrode,line width=0.62pt] (0.76,3.19)--(3.58,3.19)
-  (0.76,1.69)--(3.58,1.69);
+\fill[electrode] (0.76,3.05) rectangle (3.58,3.19);
+\fill[electrode] (0.76,1.69) rectangle (3.58,1.83);
 \foreach \x/\y in {1.22/2.34,1.85/2.64,2.51/2.15,3.12/2.50}{
   \draw[dipole] (\x,\y-0.12)--(\x,\y+0.12);
   \fill[cBlue!36] (\x,\y-0.16) circle (0.032);
@@ -73,8 +73,8 @@
 \node[columnTitle,anchor=south] at (5.55,3.45) {Sulfur-rich copolymer};
 \fill[film] (4.02,1.83) rectangle (7.08,3.05);
 \draw[structure] (4.02,3.05)--(7.08,3.05) (4.02,1.83)--(7.08,1.83);
-\draw[electrode,line width=0.62pt] (4.02,3.19)--(7.08,3.19)
-  (4.02,1.69)--(7.08,1.69);
+\fill[electrode] (4.02,3.05) rectangle (7.08,3.19);
+\fill[electrode] (4.02,1.69) rectangle (7.08,1.83);
 % Bounded, smooth host paths read as one amorphous matrix rather than a
 % repeated molecular icon; the red cores are compact, sign-neutral local cues.
 \draw[sulfurTrace] (4.34,2.26) .. controls (4.54,2.02) and (4.76,2.00) ..
