@@ -15,6 +15,7 @@ required_objects:
   - panel_a.transient_readout
   - panel_a.early_window
   - panel_a.late_window
+  - panel_a.early_fit_reference
 
 forbidden_implications:
   - panel_a.quantitative_transient_measurement
@@ -38,7 +39,7 @@ protected_relations:
   - ideal_baseline_shows_bound_dipoles_without_free_carrier_flow
   - sulfur_working_picture_uses_sign_neutral_localized_charge_cues
   - field_is_held_on_throughout_current_acquisition
-  - transient_readout_uses_one_trace_with_two_time_windows
+  - transient_readout_uses_response_trace_with_early_fit_reference
   - early_window_precedes_late_window
   - strip_is_schematic_and_data_panels_are_pipeline_owned
 
@@ -88,6 +89,9 @@ semantic_legibility:
     - object_id: panel_a.late_window
       declared_role: late_fit_window
       forbidden_readings: [exact_fit_result]
+    - object_id: panel_a.early_fit_reference
+      declared_role: qualitative_early_fit_extrapolation
+      forbidden_readings: [calibrated_predictive_trace, measured_control_trace]
   visible_connectors:
     - connector_id: panel_a.held_field_to_ideal
       from_object: panel_a.measurement_context

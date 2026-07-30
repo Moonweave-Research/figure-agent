@@ -33,8 +33,10 @@ is converted into the other:
 - **Sulfur-rich copolymer**: a sign-neutral working picture of localized charge
   states and long-lived relaxation. It must not assign electron/hole polarity,
   trap depth, trap density, or a specific microscopic hopping pathway.
-- **What we read**: one qualitative decay trace split into a solid `2–30 s`
-  window and a dashed `30–300 s` window. It is a readout icon, not data.
+- **What we read**: one qualitative response trace is split into a solid
+  `2–30 s` early-fit window and a dashed `30–300 s` late-response window. A
+  neutral extension of the early fit makes the late-time residual legible. This
+  is a readout icon, not data.
 
 ## §3 Physics invariants
 
@@ -44,7 +46,8 @@ is converted into the other:
   motivates the measured transient contrast; it is not a new proof of a
   microscopic mechanism.
 - The two time windows are independent readout windows: early power-law slope
-  and late-time deviation are related but not the same metric.
+  and late-time residual relative to the early-fit extrapolation are related
+  but not the same metric.
 - Quantitative `I(t)`, exponent, control-band, and normalized-deviation curves
   belong to the data pipeline and must not be approximated by this strip.
 

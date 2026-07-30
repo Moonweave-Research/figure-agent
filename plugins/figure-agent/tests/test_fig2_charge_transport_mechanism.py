@@ -36,8 +36,11 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
 
     assert "held ON during acquisition" in source
-    assert "matched MIM test cells under a held field" in source
+    assert "matched MIM comparison under a held field" in source
     assert "metal / polymer film / metal" in source
+    assert "fitReference/.style" in source
+    assert "early-fit extrapolation" in source
+    assert "{vs.}" not in source
     assert "storyRail" not in source
     assert "material contrast" not in source
     assert "comparisonArrow" not in source
@@ -93,3 +96,6 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
     assert "localizedState/.style={circle,fill=cRed!72!black,draw=none" in source
     assert "stateCore" not in source
     assert "sulfurTrace] (4.34,2.26) .. controls" in source
+    assert "electrode/.style={fill=cGray!24,draw=none}" in source
+    assert "{vs.}" not in source
+    assert "fitReference/.style" in source
