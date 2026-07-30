@@ -109,6 +109,7 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
         "color_and_stroke_economy",
         "print_scale_typography",
         "field_condition_embodiment",
+        "trace_role_grammar",
     }
     assert "rapid polarization" in source
     assert "localized states" in source
@@ -116,3 +117,5 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
     assert "$E_\\mathrm{app}$" in source
     assert "{vs.}" not in source
     assert "charge drains" not in source
+    assert "windowBoundary/.style" in source
+    assert "\\draw[windowBoundary]" in source
