@@ -11,9 +11,9 @@
 \resizebox{166.53mm}{!}{%
 \begin{tikzpicture}[
   every node/.style={font=\sffamily\fontsize{6.0}{7.1}\selectfont},
-  panelTitle/.style={font=\sffamily\bfseries\fontsize{5.9}{7.1}\selectfont,
+  panelTitle/.style={font=\sffamily\bfseries\fontsize{5.7}{6.9}\selectfont,
     text=cGray!84!black},
-  columnTitle/.style={font=\sffamily\bfseries\fontsize{6.15}{7.4}\selectfont,
+  columnTitle/.style={font=\sffamily\bfseries\fontsize{5.9}{7.1}\selectfont,
     text=cGray!87!black},
   labelStd/.style={font=\sffamily\fontsize{5.45}{6.55}\selectfont,
     text=cGray!75!black},
@@ -28,10 +28,9 @@
     line join=round},
   localizedState/.style={circle,fill=cRed!72!black,draw=none,
     minimum size=0.92mm,inner sep=0pt},
-  fieldRail/.style={cGray!48!black,line width=0.42pt,line cap=round},
-  callout/.style={cGray!54!black,line width=0.38pt,line cap=round},
-  storyArrow/.style={-{Stealth[length=3.4pt,width=2.3pt]},cGray!58!black,
-    line width=0.54pt},
+  fieldGuide/.style={cBlue!56!black,line width=0.46pt,line cap=round},
+  storyArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!58!black,
+    line width=0.50pt},
   axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
     line width=0.55pt},
   traceEarly/.style={cRed!76!black,line width=0.96pt,line cap=round},
@@ -47,66 +46,59 @@
 % Shared field-on material comparison
 % --------------------------------------------------------------------------
 % fig-agent:start object=comparison_frame panel=A kind=annotation truth_bearing=false
-\node[panelTitle,anchor=west] at (0.72,4.70)
+\node[panelTitle,anchor=west] at (0.76,4.71)
   {Field-on charge transport};
-\node[labelStd,anchor=east] at (15.70,4.70)
-  {$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$ held ON during acquisition
+\node[labelMute,anchor=east] at (15.66,4.71)
+  {$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$ held during acquisition
   \;\textbar\; 25\,\% RH};
-\draw[cGray!38!black,line width=0.40pt] (0.72,4.43)--(15.70,4.43);
-% The field is intentionally a shared condition rather than a voltage-source
-% cartoon: the experiment defines magnitude and duration, not a polarity story.
-\draw[fieldRail] (0.92,4.05)--(6.92,4.05);
-\draw[fieldRail] (2.17,4.05)--(2.17,3.80) (5.55,4.05)--(5.55,3.80);
-\fill[cGray!48!black] (2.17,3.80) circle (0.035) (5.55,3.80) circle (0.035);
-\node[labelMute,anchor=south] at (3.92,4.10)
-  {matched MIM comparison under a held field};
+% The field is carried by the matched cells themselves rather than by an
+% abstract top rail, so it cannot be mistaken for a serial process arrow.
+\node[labelMute,anchor=south] at (4.18,4.06) {matched MIM cells under a held field};
 % fig-agent:end object=comparison_frame
 
 % fig-agent:start object=ideal_baseline panel=A kind=material_state truth_bearing=true
-\node[columnTitle,anchor=south] at (2.17,3.45) {Ideal dielectric};
-\fill[idealFilm] (0.76,1.83) rectangle (3.58,3.05);
-\draw[structure] (0.76,3.19)--(3.58,3.19) (0.76,3.05)--(3.58,3.05)
-  (0.76,1.83)--(3.58,1.83) (0.76,1.69)--(3.58,1.69);
-\fill[electrode] (0.76,3.05) rectangle (3.58,3.19);
-\fill[electrode] (0.76,1.69) rectangle (3.58,1.83);
-\foreach \x/\y in {1.16/2.30,1.70/2.65,2.18/2.22,2.68/2.72,3.15/2.36}{
-  \draw[dipole] (\x,\y-0.12)--(\x,\y+0.12);
-  \fill[cBlue!36] (\x,\y-0.16) circle (0.032);
-  \fill[cBlue!36] (\x,\y+0.16) circle (0.032);
+\node[columnTitle,anchor=south] at (2.00,3.56) {Ideal dielectric};
+\fill[idealFilm] (0.80,1.91) rectangle (3.20,3.12);
+\draw[structure] (0.80,3.28)--(3.20,3.28) (0.80,3.12)--(3.20,3.12)
+  (0.80,1.91)--(3.20,1.91) (0.80,1.75)--(3.20,1.75);
+\fill[electrode] (0.80,3.12) rectangle (3.20,3.28);
+\fill[electrode] (0.80,1.75) rectangle (3.20,1.91);
+\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}] (0.98,2.06)--(0.98,2.96);
+\node[labelMute,anchor=west] at (1.06,2.98) {$E_\mathrm{app}$};
+\foreach \x/\y in {1.18/2.29,1.72/2.66,2.27/2.25,2.83/2.63}{
+  \draw[dipole,-{Stealth[length=2.6pt,width=1.8pt]}] (\x,\y-0.15)--(\x,\y+0.12);
+  \fill[cBlue!36] (\x,\y-0.17) circle (0.030);
 }
-\node[labelMute,anchor=north] at (2.17,1.38) {rapid bound-polarization response};
+\node[labelMute,anchor=north] at (2.00,1.48) {rapid polarization};
 % fig-agent:end object=ideal_baseline
 
 % fig-agent:start object=sulfur_working_state panel=A kind=material_state truth_bearing=true
 % Whitespace keeps the two lateral states comparable without implying a serial
 % conversion of the ideal baseline into the sulfur-rich material.
 
-\node[columnTitle,anchor=south] at (5.55,3.45) {Sulfur-rich copolymer};
-\fill[film] (4.02,1.83) rectangle (7.08,3.05);
-\draw[structure] (4.02,3.19)--(7.08,3.19) (4.02,3.05)--(7.08,3.05)
-  (4.02,1.83)--(7.08,1.83) (4.02,1.69)--(7.08,1.69);
-\fill[electrode] (4.02,3.05) rectangle (7.08,3.19);
-\fill[electrode] (4.02,1.69) rectangle (7.08,1.83);
-% Bounded, smooth host paths read as one amorphous matrix rather than a
-% repeated molecular icon; the red cores are compact, sign-neutral local cues.
-\draw[sulfurTrace] (4.34,2.26) .. controls (4.54,2.02) and (4.76,2.00) ..
-  (4.98,2.19) .. controls (5.19,2.34) and (5.40,2.08) .. (5.62,2.25);
-\draw[sulfurTrace] (5.82,2.70) .. controls (5.98,2.53) and (6.09,2.35) ..
-  (6.25,2.43) .. controls (6.42,2.54) and (6.58,2.45) .. (6.77,2.31);
-\draw[sulfurTrace] (4.61,2.79) .. controls (4.80,2.60) and (4.99,2.56) ..
-  (5.23,2.75);
-\draw[sulfurTrace] (5.56,2.02) .. controls (5.71,2.16) and (5.87,2.18) ..
-  (6.01,2.06) .. controls (6.15,1.96) and (6.32,1.98) .. (6.48,2.12);
-\foreach \x/\y in {4.98/2.19,6.01/2.06,6.25/2.43,6.44/2.53}{
+\node[columnTitle,anchor=south] at (5.78,3.56) {Sulfur-rich copolymer};
+\fill[film] (4.05,1.91) rectangle (7.51,3.12);
+\draw[structure] (4.05,3.28)--(7.51,3.28) (4.05,3.12)--(7.51,3.12)
+  (4.05,1.91)--(7.51,1.91) (4.05,1.75)--(7.51,1.75);
+\fill[electrode] (4.05,3.12) rectangle (7.51,3.28);
+\fill[electrode] (4.05,1.75) rectangle (7.51,1.91);
+\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}] (4.23,2.06)--(4.23,2.96);
+% Broken, non-periodic host fragments imply an amorphous polymer environment
+% without pretending to assign an unmeasured molecular connectivity.
+\draw[sulfurTrace] (4.55,2.25)--(4.78,2.06)--(5.02,2.10)--(5.25,2.27)
+  --(5.54,2.18)--(6.04,2.29);
+\draw[sulfurTrace] (4.76,2.82)--(4.98,2.57)--(5.24,2.61)--(5.52,2.77);
+\draw[sulfurTrace] (6.18,2.80)--(6.39,2.50)--(6.59,2.29)--(6.83,2.42)
+  --(7.11,2.28);
+\draw[sulfurTrace] (6.03,2.05)--(6.27,2.26)--(6.53,2.18)--(6.78,2.03);
+\foreach \x/\y in {5.25/2.27,6.45/2.23,6.84/2.42}{
   \node[localizedState] at (\x,\y) {};
 }
-\draw[callout] (6.45,2.54)--(6.78,2.80)--(6.97,2.80);
-\node[labelMute,anchor=west] at (7.00,2.80) {localized states};
-\node[labelMute,anchor=north] at (5.55,1.38) {long-lived charge relaxation};
-\node[labelMute,anchor=north] at (5.55,1.12) {amorphous copolymer host};
+\node[labelMute,align=center,anchor=north] at (5.78,1.48)
+  {localized states\\long-lived relaxation};
 
-\coordinate (comparison_out) at (7.30,2.44);
-\coordinate (readout_entry) at (8.09,2.44);
+\coordinate (comparison_out) at (7.70,2.50);
+\coordinate (readout_entry) at (8.72,2.50);
 \draw[storyArrow] (comparison_out)--(readout_entry);
 % fig-agent:end object=sulfur_working_state
 
@@ -114,26 +106,26 @@
 % What we read
 % --------------------------------------------------------------------------
 % fig-agent:start object=qualitative_current_readout panel=A kind=mini_plot truth_bearing=true
-\node[columnTitle,anchor=south west] at (8.10,3.45) {Transient current};
-\draw[axisArrow] (8.09,1.42)--(8.09,3.24);
-\draw[axisArrow] (8.09,1.42)--(15.72,1.42);
-\node[labelMute,anchor=south east] at (8.02,3.30) {$I(t)$};
-\node[labelMute,anchor=north west] at (8.22,1.20) {$t=0$};
-\node[labelMute,anchor=north] at (12.02,1.20) {time};
-\draw[traceEarly] (8.62,3.08) .. controls (9.44,2.86) and (10.44,2.55) ..
-  (11.20,2.43);
+\node[columnTitle,anchor=south west] at (8.72,3.56) {Transient current};
+\draw[axisArrow] (8.72,1.58)--(8.72,3.36);
+\draw[axisArrow] (8.72,1.58)--(15.72,1.58);
+\node[labelMute,anchor=south east] at (8.63,3.40) {$I(t)$};
+\node[labelMute,anchor=north west] at (8.88,1.36) {$t=0$};
+\node[labelMute,anchor=north] at (12.12,1.36) {time};
+\draw[traceEarly] (9.22,3.18) .. controls (9.91,2.97) and (10.72,2.68) ..
+  (11.30,2.55);
 \draw[cGray!43!black,line width=0.40pt,dash pattern=on 1.2pt off 1.2pt]
-  (11.20,1.46)--(11.20,3.16);
+  (11.30,1.62)--(11.30,3.18);
 % A neutral extension makes the late-time residual intelligible while keeping
 % this as a qualitative readout icon rather than a synthetic data panel.
-\draw[fitReference] (11.20,2.43) .. controls (12.45,2.06) and (13.92,1.76) ..
-  (15.33,1.56);
-\draw[traceLate] (11.20,2.43) .. controls (12.44,2.31) and (13.91,2.12) ..
-  (15.33,2.02);
-\node[labelStd,anchor=south west] at (8.72,3.18) {2--30\,s: early power-law fit};
-\node[labelMute,anchor=north] at (11.20,1.20) {$t=30\,\mathrm{s}$};
-\node[labelStd,anchor=south west] at (11.46,2.66) {30--300\,s: late-time residual};
-\node[labelMute,anchor=north west] at (11.62,1.98) {early-fit extrapolation};
+\draw[fitReference] (11.30,2.55) .. controls (12.42,2.18) and (13.83,1.86) ..
+  (15.30,1.72);
+\draw[traceLate] (11.30,2.55) .. controls (12.38,2.44) and (13.78,2.27) ..
+  (15.30,2.17);
+\node[labelStd,anchor=south west] at (9.28,3.31) {early fit \,(2--30\,s)};
+\node[labelMute,anchor=north] at (11.30,1.36) {$t=30\,\mathrm{s}$};
+\node[labelStd,anchor=south west] at (12.05,2.70) {late residual \,(30--300\,s)};
+\node[labelMute,anchor=north west] at (12.14,2.13) {early-fit extrapolation};
 % fig-agent:end object=qualitative_current_readout
 
 \end{tikzpicture}%

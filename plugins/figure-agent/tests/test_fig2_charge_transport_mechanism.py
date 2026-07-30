@@ -35,8 +35,9 @@ def test_fig2_declares_a_parallel_material_comparison_contract() -> None:
 def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() -> None:
     source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
 
-    assert "held ON during acquisition" in source
-    assert "matched MIM comparison under a held field" in source
+    assert "$E_\\mathrm{app}=15\\,\\mathrm{MV\\,m^{-1}}$" in source
+    assert "held during acquisition" in source
+    assert "matched MIM cells under a held field" in source
     assert "fitReference/.style" in source
     assert "early-fit extrapolation" in source
     assert "{vs.}" not in source
@@ -104,10 +105,11 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
         "material_texture_authorship",
         "color_and_stroke_economy",
         "print_scale_typography",
+        "field_condition_embodiment",
     }
-    assert "localizedState/.style={circle,fill=cRed!72!black,draw=none" in source
-    assert "stateCore" not in source
-    assert "sulfurTrace] (4.34,2.26) .. controls" in source
-    assert "electrode/.style={fill=cGray!24,draw=none}" in source
+    assert "rapid polarization" in source
+    assert "localized states" in source
+    assert "long-lived relaxation" in source
+    assert "$E_\\mathrm{app}$" in source
     assert "{vs.}" not in source
-    assert "fitReference/.style" in source
+    assert "charge drains" not in source

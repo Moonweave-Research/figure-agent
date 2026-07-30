@@ -7,6 +7,8 @@ reference_style: mechanism_schematic
 design_principles:
   - id: readout_led_comparison
     instruction: "Make the material comparison visibly lead into the transient-current readout, with the readout receiving the strongest claim-bearing lane."
+  - id: embodied_shared_field
+    instruction: "Show the held field as a matched condition inside each MIM cell; it must read as a physical operating condition, not as a serial process rail above the cells."
   - id: material_not_card
     instruction: "Use a quiet common MIM cross-section grammar; material identity must come from the internal physical cue, not heavy card outlines."
   - id: restrained_analytic_index
@@ -69,6 +71,26 @@ aesthetic_levers:
     forbidden_adjustments:
       - "invent charge polarity, trap magnitude, or phase segregation"
       - "add a covalent network or a specific microscopic transport route"
+    default_route: semantic_backport
+  - id: field_condition_embodiment
+    dimension: causal_legibility
+    intent: "Make the common applied field visible where it acts, while keeping material states as a lateral comparison rather than a two-step process."
+    priority: required
+    positive_signals:
+      - "each matched MIM cell visibly carries the same field-direction cue"
+      - "the numeric field condition remains one quiet shared experimental statement"
+      - "the material comparison remains lateral even when the readout arrow is present"
+    anti_patterns:
+      - "an abstract overhead rail or hanging taps that can be read as a serial process path"
+      - "a decorative voltage-source cartoon or a polarity claim not supported by the experiment"
+      - "duplicated condition banners that compete with material identity"
+    allowed_adjustments:
+      - "redraw the field cue inside the MIM cross-sections"
+      - "move the shared condition into a quieter typographic lane"
+      - "rebalance the field cue against the material texture"
+    forbidden_adjustments:
+      - "imply source-off during current acquisition"
+      - "infer a charge polarity from the held-field cue"
     default_route: semantic_backport
   - id: color_and_stroke_economy
     dimension: color_harmony
