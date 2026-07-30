@@ -6,11 +6,11 @@
 \usetikzlibrary{arrows.meta,calc}
 
 \begin{document}
-\resizebox{163.8mm}{!}{%
+% This shareable panel-content asset intentionally omits the ``a'' marker:
+% the 4-panel data composition owns the common a--d navigation labels.
+\resizebox{166.53mm}{!}{%
 \begin{tikzpicture}[
   every node/.style={font=\sffamily\fontsize{6.0}{7.1}\selectfont},
-  panelLetter/.style={font=\sffamily\bfseries\fontsize{7.6}{9.1}\selectfont,
-    text=cGray!92!black},
   panelTitle/.style={font=\sffamily\bfseries\fontsize{5.9}{7.1}\selectfont,
     text=cGray!84!black},
   columnTitle/.style={font=\sffamily\bfseries\fontsize{6.15}{7.4}\selectfont,
@@ -42,7 +42,6 @@
 ]
 
 \path[use as bounding box] (0.00,0.38) rectangle (16.38,5.02);
-\node[panelLetter,anchor=west] at (0.14,4.86) {a};
 
 % --------------------------------------------------------------------------
 % Shared field-on material comparison
@@ -70,7 +69,6 @@
   (0.76,1.83)--(3.58,1.83) (0.76,1.69)--(3.58,1.69);
 \fill[electrode] (0.76,3.05) rectangle (3.58,3.19);
 \fill[electrode] (0.76,1.69) rectangle (3.58,1.83);
-\node[labelMute,anchor=south] at (2.17,3.21) {metal / polymer film / metal};
 \foreach \x/\y in {1.16/2.30,1.70/2.65,2.18/2.22,2.68/2.72,3.15/2.36}{
   \draw[dipole] (\x,\y-0.12)--(\x,\y+0.12);
   \fill[cBlue!36] (\x,\y-0.16) circle (0.032);

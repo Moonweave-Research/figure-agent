@@ -2,7 +2,9 @@
 
 ## Composition
 
-Use a 163.8 × 46.4 mm wide strip matching the current Fig. 2a slot. Keep one
+Use a 166.53 × 47.20 mm content artboard inside the current Fig. 2a parent slot
+(166.53 × 53.19 mm). The parent data composition owns the figure-wide `a`–`d`
+labels, so this artboard deliberately contains no second panel letter. Keep one
 open white row with a shared field-on rail above two side-by-side material cells
 and one common readout. The two material states must be lateral siblings, not
 two serial stages or vertically stacked UI cards:
@@ -13,10 +15,16 @@ two serial stages or vertically stacked UI cards:
    relaxation, explicitly framed as a working picture.
 4. Readout icon with the early and late time windows.
 
-The header lane carries the panel letter and the held-field condition. One
-continuous rail must span both material cells. The object lane carries matched
-MIM cells and their distinct physical marks; one direct arrow leads from their
-shared right edge to the readout. The bottom lane carries only short labels.
+The parent panel letter sits outside this artboard; its header lane carries the
+held-field condition. One continuous rail must span both material cells. The
+object lane carries matched MIM cells and their distinct physical marks; one
+direct arrow leads from their shared right edge to the readout. The bottom lane
+carries only short labels.
+
+At integration time, the parent composition centers this shorter content
+artboard vertically in its Fig. 2a row. That blank is a shared row gutter for
+the a–d assembly, not an invitation to add filler decoration or unsupported
+mechanism detail.
 
 ## Visual decisions
 

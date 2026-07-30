@@ -37,7 +37,6 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
 
     assert "held ON during acquisition" in source
     assert "matched MIM comparison under a held field" in source
-    assert "metal / polymer film / metal" in source
     assert "fitReference/.style" in source
     assert "early-fit extrapolation" in source
     assert "{vs.}" not in source
@@ -51,6 +50,19 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert "charge drains" not in source
     assert "{$+$}" not in source
     assert "{$-$}" not in source
+
+
+def test_fig2_declares_the_parent_slot_and_a_single_panel_letter_owner() -> None:
+    spec = yaml.safe_load((FIXTURE / "spec.yaml").read_text(encoding="utf-8"))
+    source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
+
+    integration = spec["panel_integration"]
+    assert integration["host_layout"] == "fig2_charge_transport_4panel"
+    assert integration["slot_size_mm"] == [166.53, 53.19]
+    assert integration["panel_content_size_mm"] == spec["final_size_contract"]["natural_size_mm"]
+    assert integration["panel_letter_owner"] == "host_data_pipeline"
+    assert "\\resizebox{166.53mm}{!}{%" in source
+    assert "\\node[panelLetter" not in source
 
 
 def test_fig2_declares_rearrangeable_composition_units() -> None:

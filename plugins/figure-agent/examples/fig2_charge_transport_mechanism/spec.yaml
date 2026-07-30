@@ -13,8 +13,8 @@ aesthetic_intent: aesthetic_intent.yaml
 
 final_size_contract:
   basis: width_limited_nature_family_main_figure
-  natural_size_mm: [163.8, 46.42]
-  target_width_mm: 163.8
+  natural_size_mm: [166.53, 47.20]
+  target_width_mm: 166.53
   max_height_mm: 170.0
   min_print_font_pt: 5.0
   scale_basis: width_limited
@@ -22,6 +22,19 @@ final_size_contract:
     nature_communications: 180.0
     nature_figure_guide: 183.0
   note: Panel a is a full-width schematic row; panels b–d remain evidence-bound quantitative data products.
+
+# The parent 4-panel composition owns the page-level a--d markers and provides
+# a 166.53 × 53.19 mm row. This fixture is the content-only artboard placed
+# flush left and vertically centered in that row; the remaining vertical space
+# is an intentional integration gutter, not unallocated source content.
+panel_integration:
+  host_layout: fig2_charge_transport_4panel
+  host_figure_size_mm: [183.0, 126.0]
+  slot_size_mm: [166.53, 53.19]
+  placement: {horizontal: left, vertical: center}
+  panel_letter_owner: host_data_pipeline
+  panel_content_size_mm: [166.53, 47.20]
+  note: Keep a–d navigation labels in one owner; do not paste a second panel letter into this artboard.
 
 semantic_contract_required: true
 
@@ -59,7 +72,7 @@ semantic_assertions:
 panels:
   - id: A
     caption: Field-on measurement context, ideal-dielectric baseline versus sulfur-rich working comparison, and the two transient-current readouts in panels b–d
-    bbox_pdf_cm: [0.00, 0.00, 16.38, 4.75]
+    bbox_pdf_cm: [0.00, 0.00, 16.653, 4.72]
 
 composition_model:
   panels:
