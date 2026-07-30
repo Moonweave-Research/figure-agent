@@ -28,7 +28,7 @@
     line join=round},
   localizedState/.style={circle,fill=cRed!72!black,draw=none,
     minimum size=0.92mm,inner sep=0pt},
-  fieldGuide/.style={cBlue!56!black,line width=0.46pt,line cap=round},
+  fieldGuide/.style={cGray!60!black,line width=0.46pt,line cap=round},
   storyArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!58!black,
     line width=0.50pt},
   axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
@@ -39,6 +39,13 @@
   fitReference/.style={cGray!52!black,line width=0.54pt,line cap=round,
     dash pattern=on 1.4pt off 1.5pt},
 ]
+
+% Both comparison cells represent the same MIM footprint.  The shared span is
+% a semantic invariant, not a component recipe: their internal material cues
+% may be freely redrawn without changing the comparison geometry.
+\def\mimCellWidth{2.80}
+\def\idealCellLeft{0.80}
+\def\sulfurCellLeft{4.45}
 
 \path[use as bounding box] (0.00,0.38) rectangle (16.38,5.02);
 
@@ -53,51 +60,68 @@
   \;\textbar\; 25\,\% RH};
 % The field is carried by the matched cells themselves rather than by an
 % abstract top rail, so it cannot be mistaken for a serial process arrow.
-\node[labelMute,anchor=south] at (4.18,4.06) {matched MIM cells under a held field};
+\node[labelMute,anchor=south] at (4.02,4.06) {matched MIM cells under a held field};
 % fig-agent:end object=comparison_frame
 
 % fig-agent:start object=ideal_baseline panel=A kind=material_state truth_bearing=true
-\node[columnTitle,anchor=south] at (2.00,3.56) {Ideal dielectric};
-\fill[idealFilm] (0.80,1.91) rectangle (3.20,3.12);
-\draw[structure] (0.80,3.28)--(3.20,3.28) (0.80,3.12)--(3.20,3.12)
-  (0.80,1.91)--(3.20,1.91) (0.80,1.75)--(3.20,1.75);
-\fill[electrode] (0.80,3.12) rectangle (3.20,3.28);
-\fill[electrode] (0.80,1.75) rectangle (3.20,1.91);
-\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}] (0.98,2.06)--(0.98,2.96);
-\node[labelMute,anchor=west] at (1.06,2.98) {$E_\mathrm{app}$};
-\foreach \x/\y in {1.18/2.29,1.72/2.66,2.27/2.25,2.83/2.63}{
+\node[columnTitle,anchor=south] at ({\idealCellLeft+0.5*\mimCellWidth},3.56)
+  {Ideal dielectric};
+\fill[idealFilm] (\idealCellLeft,1.91) rectangle
+  ({\idealCellLeft+\mimCellWidth},3.12);
+\draw[structure] (\idealCellLeft,3.28)--({\idealCellLeft+\mimCellWidth},3.28)
+  (\idealCellLeft,3.12)--({\idealCellLeft+\mimCellWidth},3.12)
+  (\idealCellLeft,1.91)--({\idealCellLeft+\mimCellWidth},1.91)
+  (\idealCellLeft,1.75)--({\idealCellLeft+\mimCellWidth},1.75);
+\fill[electrode] (\idealCellLeft,3.12) rectangle
+  ({\idealCellLeft+\mimCellWidth},3.28);
+\fill[electrode] (\idealCellLeft,1.75) rectangle
+  ({\idealCellLeft+\mimCellWidth},1.91);
+\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
+  ({\idealCellLeft+0.18},2.06)--({\idealCellLeft+0.18},2.96);
+\node[labelMute,anchor=west] at ({\idealCellLeft+0.26},2.98) {$E_\mathrm{app}$};
+\foreach \x/\y in {1.25/2.29,1.85/2.66,2.50/2.25,3.18/2.63}{
   \draw[dipole,-{Stealth[length=2.6pt,width=1.8pt]}] (\x,\y-0.15)--(\x,\y+0.12);
   \fill[cBlue!36] (\x,\y-0.17) circle (0.030);
 }
-\node[labelMute,anchor=north] at (2.00,1.48) {rapid polarization};
+\node[labelMute,anchor=north] at ({\idealCellLeft+0.5*\mimCellWidth},1.48)
+  {rapid polarization};
 % fig-agent:end object=ideal_baseline
 
 % fig-agent:start object=sulfur_working_state panel=A kind=material_state truth_bearing=true
 % Whitespace keeps the two lateral states comparable without implying a serial
 % conversion of the ideal baseline into the sulfur-rich material.
 
-\node[columnTitle,anchor=south] at (5.78,3.56) {Sulfur-rich copolymer};
-\fill[film] (4.05,1.91) rectangle (7.51,3.12);
-\draw[structure] (4.05,3.28)--(7.51,3.28) (4.05,3.12)--(7.51,3.12)
-  (4.05,1.91)--(7.51,1.91) (4.05,1.75)--(7.51,1.75);
-\fill[electrode] (4.05,3.12) rectangle (7.51,3.28);
-\fill[electrode] (4.05,1.75) rectangle (7.51,1.91);
-\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}] (4.23,2.06)--(4.23,2.96);
+\node[columnTitle,anchor=south] at ({\sulfurCellLeft+0.5*\mimCellWidth},3.56)
+  {Sulfur-rich copolymer};
+\fill[film] (\sulfurCellLeft,1.91) rectangle
+  ({\sulfurCellLeft+\mimCellWidth},3.12);
+\draw[structure] (\sulfurCellLeft,3.28)--({\sulfurCellLeft+\mimCellWidth},3.28)
+  (\sulfurCellLeft,3.12)--({\sulfurCellLeft+\mimCellWidth},3.12)
+  (\sulfurCellLeft,1.91)--({\sulfurCellLeft+\mimCellWidth},1.91)
+  (\sulfurCellLeft,1.75)--({\sulfurCellLeft+\mimCellWidth},1.75);
+\fill[electrode] (\sulfurCellLeft,3.12) rectangle
+  ({\sulfurCellLeft+\mimCellWidth},3.28);
+\fill[electrode] (\sulfurCellLeft,1.75) rectangle
+  ({\sulfurCellLeft+\mimCellWidth},1.91);
+\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
+  ({\sulfurCellLeft+0.18},2.06)--({\sulfurCellLeft+0.18},2.96);
 % Broken, non-periodic host fragments imply an amorphous polymer environment
 % without pretending to assign an unmeasured molecular connectivity.
-\draw[sulfurTrace] (4.55,2.25)--(4.78,2.06)--(5.02,2.10)--(5.25,2.27)
-  --(5.54,2.18)--(6.04,2.29);
-\draw[sulfurTrace] (4.76,2.82)--(4.98,2.57)--(5.24,2.61)--(5.52,2.77);
+\draw[sulfurTrace] (4.86,2.25)--(5.08,2.06)--(5.32,2.10)--(5.55,2.27)
+  --(5.84,2.18)--(6.24,2.29);
+\draw[sulfurTrace] (4.98,2.82)--(5.20,2.57)--(5.46,2.61)--(5.74,2.77);
 \draw[sulfurTrace] (6.18,2.80)--(6.39,2.50)--(6.59,2.29)--(6.83,2.42)
   --(7.11,2.28);
 \draw[sulfurTrace] (6.03,2.05)--(6.27,2.26)--(6.53,2.18)--(6.78,2.03);
-\foreach \x/\y in {5.25/2.27,6.45/2.23,6.84/2.42}{
+\foreach \x/\y in {5.55/2.27,6.45/2.23,6.84/2.42}{
   \node[localizedState] at (\x,\y) {};
 }
-\node[labelMute,align=center,anchor=north] at (5.78,1.48)
+\node[labelMute,align=center,anchor=north] at ({\sulfurCellLeft+0.5*\mimCellWidth},1.48)
   {localized states\\long-lived relaxation};
 
-\coordinate (comparison_out) at (7.70,2.50);
+% Keep the public semantic endpoint numeric: the Figure Agent endpoint check
+% resolves named coordinates directly from editable source.
+\coordinate (comparison_out) at (7.45,2.50);
 \coordinate (readout_entry) at (8.72,2.50);
 \draw[storyArrow] (comparison_out)--(readout_entry);
 % fig-agent:end object=sulfur_working_state

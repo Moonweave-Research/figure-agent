@@ -25,6 +25,7 @@ def test_fig2_declares_a_parallel_material_comparison_contract() -> None:
         "panel_a.sulfur_copolymer",
     ]
     assert result["summary"]["parallel_comparison_count"] == 1
+    assert "mim_comparison_uses_matched_footprints" in contract["protected_relations"]
     assert all(
         {connector["from_object"], connector["to_object"]}
         != {"panel_a.ideal_dielectric", "panel_a.sulfur_copolymer"}
@@ -47,6 +48,8 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert "trapAmber" not in source
     assert "localizedState" in source
     assert "sulfurTrace" in source
+    assert "\\def\\mimCellWidth" in source
+    assert source.count("\\mimCellWidth") >= 8
     assert "Conventional dielectric" not in source
     assert "charge drains" not in source
     assert "{$+$}" not in source

@@ -5,7 +5,7 @@
 Use a 166.53 × 47.20 mm content artboard inside the current Fig. 2a parent slot
 (166.53 × 53.19 mm). The parent data composition owns the figure-wide `a`–`d`
 labels, so this artboard deliberately contains no second panel letter. Keep one
-open white row with a shared field-on rail above two side-by-side material cells
+open white row with the shared field-on condition carried inside two side-by-side material cells
 and one common readout. The two material states must be lateral siblings, not
 two serial stages or vertically stacked UI cards:
 
@@ -16,10 +16,11 @@ two serial stages or vertically stacked UI cards:
 4. Readout icon with the early and late time windows.
 
 The parent panel letter sits outside this artboard; its header lane carries the
-held-field condition. One continuous rail must span both material cells. The
-object lane carries matched MIM cells and their distinct physical marks; one
-direct arrow leads from their shared right edge to the readout. The bottom lane
-carries only short labels.
+quiet held-field condition. The two MIM cells must retain the same visible
+footprint; each carries a restrained, neutral field-direction cue so the
+comparison cannot read as a serial rail. The object lane carries their distinct
+physical marks; one direct arrow leads from the sulfur comparison edge to the
+readout. The bottom lane carries only short labels.
 
 At integration time, the parent composition centers this shorter content
 artboard vertically in its Fig. 2a row. That blank is a shared row gutter for
@@ -28,16 +29,17 @@ mechanism detail.
 
 ## Visual decisions
 
-- Use cGray for apparatus, cAmber for the sulfur-rich film, cBlue for the ideal
-  dielectric polarization, and cRed only for a field condition or sign-neutral
-  localized-state outline.
+- Use cGray for apparatus and held-field context, cAmber for the sulfur-rich
+  film, cBlue for ideal-dielectric polarization, and cRed only for
+  sign-neutral localized-state/current-response emphasis.
 - Keep line weights above the reduction threshold and avoid gradients, 3-D
   substrate blocks, or decorative halos.
 - Make the comparison visible with object geometry: bound dipoles and a rapid
   pre-window polarization for the ideal baseline; sulfur-host traces with
   sign-neutral localized-state cues for the sulfur-rich working picture.
-- Draw one continuous held-field rail above the readout. A source-OFF or drain
-  arrow is a semantic failure because the transient is acquired under applied DC.
+- Show the common field where it acts inside each matched MIM cell. An overhead
+  rail that reads as a serial process path, a source-OFF cue, or a drain arrow
+  is a semantic failure because the transient is acquired under applied DC.
 - Do not use a large circular halo, repeated amber/red bead population, or a
   decorative polymer wave; those cues make a localized population read as
   ornament or a second material phase.

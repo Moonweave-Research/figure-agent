@@ -33,6 +33,7 @@ forbidden_implications:
 
 protected_relations:
   - mim_stack_contains_polymer_film_between_electrodes
+  - mim_comparison_uses_matched_footprints
   - held_field_binds_lateral_material_comparison
   - ideal_and_sulfur_are_sibling_comparison_states
   - lateral_material_comparison_feeds_common_readout
