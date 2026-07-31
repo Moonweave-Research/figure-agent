@@ -58,6 +58,9 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert "leakageFading" not in source
     assert "sulfurTrace" in source
     assert "sulfurTraceFaint" in source
+    assert "sulfurBead" in source
+    assert "sulfurStateF" in source
+    assert "sulfurStateA,sulfurStateB,sulfurStateC,sulfurStateD,sulfurStateE,sulfurStateF" in source
     assert "\\def\\mimCellWidth" in source
     assert source.count("\\mimCellWidth") >= 8
     assert "Conventional dielectric" not in source
@@ -140,6 +143,11 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
     assert "dipoleBody" in source
     assert "ellipse [x radius=0.17, y radius=0.25]" in source
     assert "polarizationVector" not in source
+    material_grammar = next(
+        lever for lever in intent["aesthetic_levers"] if lever["id"] == "material_texture_authorship"
+    )
+    assert any("smooth worms" in signal for signal in material_grammar["positive_signals"])
+    assert any("V-shaped scraps" in signal for signal in material_grammar["positive_signals"])
 
 
 def test_fig2_declares_log_log_power_law_grammar_for_the_qualitative_readout() -> None:

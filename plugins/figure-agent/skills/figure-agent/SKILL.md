@@ -594,6 +594,15 @@ or are presented with an unearned height axis/legend that changes their meaning.
 Do not enlarge localized trap envelopes merely to make the host texture look
 busier.
 
+At print reduction, a handful of similarly smooth, sinusoidal in-film traces
+can read as biological worms even when no individual trace is periodic. In that
+case, do not merely add more of the same paths. Redraw the host with compact,
+mixed-angle or otherwise varied structural fragments, then increase the number
+of equal-size embedded state markers only when it improves the qualitative
+distributed-state reading. Marker count and area must remain explicitly
+non-quantitative: irregular placement and uniform categorical size must not
+silently encode trap density, population, or domain size.
+
 Audit the whole host field, not only the immediate trap neighborhoods. Several
 otherwise valid short traces can still read as isolated trap icons when most of
 the specimen is empty and every trace exists only to flank a colored core. Give

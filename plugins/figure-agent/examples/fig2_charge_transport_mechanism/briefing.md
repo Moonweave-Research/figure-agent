@@ -39,9 +39,11 @@ is converted into the other:
   relaxes slowly enough to sustain the qualitative late residual above the
   early-fit extrapolation. It must not assign electron/hole polarity, trap
   depth, trap density, or a specific microscopic hopping pathway. The pale film
-  is the material body; localized states plus a concise causal label may show
-  qualitative leakage suppression, but must not become a literal chemical
-  repeat, continuous hopping route, or arbitrary in-film linework.
+  is the material body; a small, irregular set of equal-size state marks and
+  short linked sulfur-toned fragments plus a concise causal label may show
+  qualitative leakage suppression, but must not become a literal chemical repeat,
+  continuous hopping route, repeated smooth worm-like traces, or an encoded
+  trap-density map.
 - **What we read**: one qualitative **log–log** response trace has a straight
   early power-law segment. Its neutral extrapolation separates from a solid
   later segment with a visibly shallower slope, making the late residual

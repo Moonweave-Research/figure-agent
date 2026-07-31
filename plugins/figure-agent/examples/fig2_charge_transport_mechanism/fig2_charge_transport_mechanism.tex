@@ -32,6 +32,8 @@
     line join=round},
   sulfurTraceFaint/.style={cAmber!36!cGray,line width=0.31pt,line cap=round,
     line join=round},
+  sulfurBead/.style={circle,fill=cAmber!72!cGray,draw=none,
+    minimum size=0.48mm,inner sep=0pt},
   localizedState/.style={circle,fill=cRed!70!black,draw=cAmber!12,line width=0.25pt,
     minimum size=0.66mm,inner sep=0pt},
   fieldGuide/.style={cGray!60!black,line width=0.46pt,line cap=round},
@@ -114,26 +116,26 @@
   ({\sulfurCellLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\sulfurCellLeft+0.18},2.06)--({\sulfurCellLeft+0.18},2.96);
-% A bounded, non-periodic host field gives the sulfur film material presence at
-% reduction. These are local amorphous environments, not literal repeat units,
-% a covalent network, or a carrier trajectory.
-\draw[sulfurTraceFaint] (4.79,2.84) .. controls (4.98,2.67) and (5.15,2.66) ..
-  (5.30,2.77) .. controls (5.47,2.89) and (5.65,2.83) .. (5.82,2.66);
-\draw[sulfurTraceSoft] (5.14,2.53) .. controls (5.34,2.40) and (5.49,2.39) ..
-  (5.67,2.49) .. controls (5.87,2.60) and (6.06,2.55) .. (6.25,2.42);
-\draw[sulfurTrace] (4.86,2.19) .. controls (5.05,2.05) and (5.27,2.07) ..
-  (5.48,2.22) .. controls (5.67,2.35) and (5.86,2.30) .. (6.04,2.34);
-\draw[sulfurTraceSoft] (5.88,2.00) .. controls (6.06,2.13) and (6.19,2.25) ..
-  (6.36,2.21) .. controls (6.54,2.17) and (6.73,2.06) .. (6.94,2.11);
-\draw[sulfurTrace] (6.13,2.87) .. controls (6.28,2.68) and (6.43,2.46) ..
-  (6.62,2.34) .. controls (6.79,2.23) and (6.96,2.28) .. (7.13,2.43);
-% State centres sit directly on their owning local contour; they do not imply
-% a free particle population, a phase-separated inclusion, or a hopping route.
-\coordinate (sulfurStateA) at (5.48,2.22);
-\coordinate (sulfurStateB) at (5.67,2.49);
-\coordinate (sulfurStateC) at (6.36,2.21);
-\coordinate (sulfurStateD) at (6.62,2.34);
-\foreach \state in {sulfurStateA,sulfurStateB,sulfurStateC,sulfurStateD}{
+% Short linked sulfur-toned fragments give the host a material cue without
+% repeating the smooth worm-like contours of a generic polymer cartoon. They
+% remain representative local environments, not literal repeat units, a
+% covalent network, or a carrier trajectory.
+\draw[sulfurTraceFaint] (4.84,2.80)--(5.02,2.70)--(5.22,2.78)--(5.40,2.69);
+\draw[sulfurTraceSoft] (5.32,2.35)--(5.50,2.45)--(5.70,2.35)--(5.89,2.43);
+\draw[sulfurTrace] (4.92,2.12)--(5.12,2.21)--(5.30,2.13)--(5.46,2.23);
+\draw[sulfurTraceSoft] (6.12,2.78)--(6.30,2.65)--(6.48,2.72)--(6.68,2.60);
+\foreach \x/\y in {5.02/2.70,5.22/2.78,5.50/2.45,5.70/2.35,5.12/2.21,5.30/2.13,6.30/2.65,6.48/2.72}{
+  \node[sulfurBead] at (\x,\y) {};
+}
+% Six equal-size state marks give the host a distributed qualitative cue. Their
+% irregular placement is illustrative only, not a trap-density encoding.
+\coordinate (sulfurStateA) at (5.02,2.70);
+\coordinate (sulfurStateB) at (5.40,2.69);
+\coordinate (sulfurStateC) at (5.50,2.45);
+\coordinate (sulfurStateD) at (5.12,2.21);
+\coordinate (sulfurStateE) at (6.30,2.65);
+\coordinate (sulfurStateF) at (6.68,2.60);
+\foreach \state in {sulfurStateA,sulfurStateB,sulfurStateC,sulfurStateD,sulfurStateE,sulfurStateF}{
   \node[localizedState] at (\state) {};
 }
 \node[labelMute,align=center,anchor=north] at ({\sulfurCellLeft+0.5*\mimCellWidth},1.52)

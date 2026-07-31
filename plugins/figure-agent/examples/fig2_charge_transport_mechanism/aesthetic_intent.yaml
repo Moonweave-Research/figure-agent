@@ -64,12 +64,13 @@ aesthetic_levers:
     priority: required
     positive_signals:
       - "ideal polarization remains sparse and quiet"
-      - "sulfur host traces read as a bounded amorphous matrix"
-      - "localized-state marks are compact and directly embedded in host traces"
+      - "short linked sulfur-toned fragments read as a bounded amorphous matrix rather than repeated smooth worms or detached V-shaped scraps"
+      - "six equal-size localized-state marks are irregularly distributed and directly embedded in host fragments without encoding density"
       - "localized states and a concise causal label make reduced mobile leakage legible without asserting a hopping route"
     anti_patterns:
       - "bullseye or winged-dot trap icons"
       - "long periodic or sawtooth host paths"
+      - "multiple similarly smooth in-film curves that read as biological worms"
       - "a continuous conduction wire or carrier-arrow route through the sulfur film"
       - "straight interrupted linework that reads as a molecular chain, worm, or unearned transport path"
       - "heavy apparatus borders doing the work of material identity"
