@@ -43,6 +43,7 @@
     line width=0.55pt},
   traceEarly/.style={cRed!76!black,line width=0.96pt,line cap=round},
   traceLate/.style={cRed!70!black,line width=0.96pt,line cap=round},
+  traceIdeal/.style={cBlue!64!black,line width=0.64pt,line cap=round},
   fitReference/.style={cGray!52!black,line width=0.54pt,line cap=round,
     dash pattern=on 1.4pt off 1.5pt},
 ]
@@ -154,21 +155,26 @@
 % What we read
 % --------------------------------------------------------------------------
 % fig-agent:start object=qualitative_current_readout panel=A kind=mini_plot truth_bearing=true
-\node[columnTitle,anchor=south west] at (8.72,3.56) {Transient current};
+\node[columnTitle,anchor=south west] at (8.72,3.56) {Current response};
 \draw[axisArrow] (8.72,1.58)--(8.72,3.36);
 \draw[axisArrow] (8.72,1.58)--(15.72,1.58);
-% A power law must read as a straight slope in log--log coordinates. The icon
-% deliberately has no exact time ticks: it communicates the early-to-late
-% relationship without borrowing precision from the quantitative data panels.
+% The two qualitative response families compare rapid ideal-dielectric decay
+% with the sulfur-rich delayed response. They deliberately carry no exact ticks
+% or starting-value claim; the quantitative panels own those measurements.
 \node[labelMute,anchor=south east] at (8.63,3.40) {$\log I$};
 \node[labelMute,anchor=north] at (12.22,0.98) {$\log(t/\mathrm{s})$};
+\draw[traceIdeal] (9.22,2.90) .. controls (9.65,2.63) and (10.13,2.15) ..
+  (10.74,1.78);
 \draw[traceEarly] (9.22,3.16)--(12.12,2.50);
 % The neutral early-fit projection is separated from the solid late response;
 % their split makes the delayed late-time response legible without a pseudo-data
 % window divider.
 \draw[fitReference] (12.12,2.50)--(15.30,1.78);
 \draw[traceLate] (12.12,2.50)--(15.30,2.16);
-\node[labelStd,anchor=south west] at (9.18,3.25) {early power-law fit};
+\node[labelStd,text=cRed!70!black,anchor=south west] at (9.18,3.25)
+  {localized-state response};
+\node[labelMute,text=cBlue!64!black,anchor=south west] at (10.82,1.88)
+  {ideal: rapid decay};
 \node[labelStd,text=cRed!70!black,anchor=south west] at (12.56,2.66)
   {late residual};
 \node[labelMute,anchor=north west] at (12.72,1.98) {early-fit projection};

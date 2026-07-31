@@ -15,6 +15,8 @@ required_objects:
   - panel_a.field_held_on
   - panel_a.transient_readout
   - panel_a.log_log_axes
+  - panel_a.ideal_current_decay
+  - panel_a.sulfur_current_response
   - panel_a.early_window
   - panel_a.late_window
   - panel_a.early_fit_reference
@@ -45,6 +47,7 @@ protected_relations:
   - localized_capture_suppresses_mobile_leakage_before_slow_relaxation
   - field_is_held_on_throughout_current_acquisition
   - transient_readout_uses_response_trace_with_early_fit_reference
+  - current_readout_contrasts_rapid_ideal_decay_with_delayed_sulfur_response
   - transient_readout_declares_log_log_power_law_geometry
   - early_window_precedes_late_window
   - localized_state_relaxation_is_the_qualitative_cause_of_the_late_residual
@@ -96,6 +99,12 @@ semantic_legibility:
     - object_id: panel_a.log_log_axes
       declared_role: symbolic_logarithmic_axis_grammar
       forbidden_readings: [linear_time_axis, calibrated_y_axis]
+    - object_id: panel_a.ideal_current_decay
+      declared_role: qualitative_rapid_ideal_polarization_current_decay
+      forbidden_readings: [through_film_free_carrier_path, calibrated_control_trace]
+    - object_id: panel_a.sulfur_current_response
+      declared_role: qualitative_delayed_sulfur_rich_current_response
+      forbidden_readings: [calibrated_sample_trace, shared_starting_current_claim]
     - object_id: panel_a.early_window
       declared_role: early_fit_window
       forbidden_readings: [exact_fit_result]

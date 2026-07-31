@@ -40,7 +40,10 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert "held during acquisition" in source
     assert "matched MIM cells under a held field" in source
     assert "fitReference/.style" in source
+    assert "traceIdeal/.style" in source
     assert "early-fit projection" in source
+    assert "ideal: rapid decay" in source
+    assert "localized-state response" in source
     assert "$\\log I$" in source
     assert "$\\log(t/\\mathrm{s})$" in source
     assert "{9.22/2,12.12/30,15.30/300}" not in source
@@ -163,6 +166,17 @@ def test_fig2_declares_log_log_power_law_grammar_for_the_qualitative_readout() -
         for object_role in contract["semantic_legibility"]["object_roles"]
     }
     assert roles["panel_a.log_log_axes"] == "symbolic_logarithmic_axis_grammar"
+    assert roles["panel_a.ideal_current_decay"] == (
+        "qualitative_rapid_ideal_polarization_current_decay"
+    )
+    assert roles["panel_a.sulfur_current_response"] == (
+        "qualitative_delayed_sulfur_rich_current_response"
+    )
+    assert (
+        "current_readout_contrasts_rapid_ideal_decay_with_delayed_sulfur_response"
+        in contract["protected_relations"]
+    )
+    assert "\\draw[traceIdeal]" in source
     assert "\\draw[traceEarly] (9.22,3.16)--(12.12,2.50);" in source
     assert "\\draw[fitReference] (12.12,2.50)--(15.30,1.78);" in source
     assert "\\draw[traceLate] (12.12,2.50)--(15.30,2.16);" in source

@@ -44,11 +44,13 @@ is converted into the other:
   qualitative leakage suppression, but must not become a literal chemical repeat,
   continuous hopping route, repeated smooth worm-like traces, or an encoded
   trap-density map.
-- **What we read**: one qualitative **log–log** response trace has a straight
-  early power-law segment. Its neutral extrapolation separates from a solid
-  later segment with a visibly shallower slope, making the late residual
-  legible. This is a readout icon, not data; exact analysis times belong to the
-  quantitative panels.
+- **What we read**: a qualitative **log–log** comparison contrasts the ideal
+  dielectric's rapidly disappearing polarization current with the sulfur-rich
+  copolymer's delayed response. The sulfur response has a straight early
+  power-law segment; its neutral extrapolation separates from a solid later
+  segment with a visibly shallower slope, making the late residual legible.
+  These are readout icons, not data; exact starting currents and analysis times
+  belong to the quantitative panels.
 
 ## §3 Physics invariants
 
@@ -61,9 +63,11 @@ is converted into the other:
   slow relaxation, is a qualitative working mechanism for the current decay and
   delayed late-time response; it is not a direct measurement of trap depth,
   density, or carrier pathway.
-- The two readout regimes are independent: early power-law slope and late-time
-  residual relative to the early-fit extrapolation are related but not the same
-  metric. Their exact windows belong to the quantitative panels.
+- The ideal rapid-decay baseline is a qualitative polarization-current contrast,
+  not a claim of a through-film free-carrier path. The sulfur early power-law
+  slope and late-time residual relative to its early-fit extrapolation remain
+  separate readout concepts; their exact windows belong to the quantitative
+  panels.
 - Quantitative `I(t)`, fitted exponent, control-band, and normalized-deviation
   curves belong to the data pipeline and must not be approximated by this strip.
 

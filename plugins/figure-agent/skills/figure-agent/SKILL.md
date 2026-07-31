@@ -424,6 +424,15 @@ any common start point is either declared or left unmarked. A neutral shared anc
 may clarify a declared common initial state, but do not add scatter points, fitted
 values, or a reference curve when the source only supports symbolic slopes.
 
+When a held-field material comparison needs to explain different current
+responses, show the contrast in one qualitative readout rather than inserting
+through-film carrier arrows into the MIM cells. A thin, clearly owned ideal
+polarization-current baseline may rapidly decay while a stronger material-specific
+response shows the delayed component, provided neither trace asserts a numerical
+start value, calibrated magnitude, or carrier polarity. Use the material colors
+consistently and label both traces; the ideal baseline must not turn the ideal
+dielectric into a free-carrier conduction cartoon.
+
 For a multi-stage measurement schematic, trace preparation or excitation, acquisition,
 transformation, and result in order. Flag an unexplained state such as deposited
 charge without a source, and keep process labels/arrows out of data peaks,
