@@ -5,21 +5,16 @@ required_objects:
   - panel_a.measurement_context
   - panel_a.mim_stack
   - panel_a.field_condition
-  - panel_a.ideal_dielectric
+  - panel_a.reference_dielectric
   - panel_a.bound_dipoles
-  - panel_a.fast_polarization
   - panel_a.sulfur_copolymer
   - panel_a.localized_charge_states
-  - panel_a.leakage_suppression
-  - panel_a.long_lived_relaxation
   - panel_a.field_held_on
-  - panel_a.transient_readout
-  - panel_a.log_log_axes
-  - panel_a.ideal_current_decay
-  - panel_a.sulfur_current_response
-  - panel_a.early_window
-  - panel_a.late_window
-  - panel_a.early_fit_reference
+  - panel_a.normalized_readout
+  - panel_a.log_time_axis
+  - panel_a.early_power_law_reference
+  - panel_a.sulfur_late_excess
+  - panel_a.control_late_deficit
 
 forbidden_implications:
   - panel_a.quantitative_transient_measurement
@@ -35,22 +30,21 @@ forbidden_implications:
   - panel_a.source_off_during_transient
   - panel_a.calibrated_trap_depth_or_density
   - panel_a.time_calibrated_mini_graph
+  - panel_a.unmeasured_ideal_current_control
+  - panel_a.direct_mobile_leakage_suppression_claim
 
 protected_relations:
   - mim_stack_contains_polymer_film_between_electrodes
   - mim_comparison_uses_matched_footprints
   - held_field_binds_lateral_material_comparison
-  - ideal_and_sulfur_are_sibling_comparison_states
-  - lateral_material_comparison_feeds_common_readout
-  - ideal_baseline_shows_bound_dipoles_without_free_carrier_flow
+  - reference_and_sulfur_are_sibling_comparison_states
+  - reference_baseline_shows_bound_dipoles_without_free_carrier_flow
   - sulfur_working_picture_uses_sign_neutral_localized_charge_cues
-  - localized_capture_suppresses_mobile_leakage_before_slow_relaxation
   - field_is_held_on_throughout_current_acquisition
-  - transient_readout_uses_response_trace_with_early_fit_reference
-  - current_readout_contrasts_rapid_ideal_decay_with_delayed_sulfur_response
-  - transient_readout_declares_log_log_power_law_geometry
-  - early_window_precedes_late_window
-  - localized_state_relaxation_is_the_qualitative_cause_of_the_late_residual
+  - normalized_readout_compares_each_material_with_its_own_early_power_law
+  - sulfur_70plus_rises_above_its_early_reference_at_late_time
+  - pi_ptfe_fall_below_their_early_reference_at_late_time
+  - localized_states_are_a_qualified_working_model_not_direct_proof
   - strip_is_schematic_and_data_panels_are_pipeline_owned
 
 repair:
@@ -61,130 +55,107 @@ repair:
 semantic_legibility:
   object_roles:
     - object_id: panel_a.measurement_context
-      declared_role: discharge_measurement_context
-      forbidden_readings: [actuation_setup, charging_instrument]
+      declared_role: held_field_charging_current_measurement_context
+      forbidden_readings: [actuation_setup, discharge_measurement, charging_instrument]
     - object_id: panel_a.mim_stack
-      declared_role: metal_insulator_metal_stack
+      declared_role: matched_metal_insulator_metal_cross_section
       forbidden_readings: [cantilever, free_air_gap]
     - object_id: panel_a.field_condition
-      declared_role: applied_field_context
-      forbidden_readings: [exact_voltage_source_schematic]
-    - object_id: panel_a.ideal_dielectric
-      declared_role: conceptual_ideal_dielectric_baseline
-      forbidden_readings: [measured_PI_PTFE_or_PET_control]
+      declared_role: constant_applied_field_condition
+      forbidden_readings: [source_off_or_discharge_interval, exact_voltage_source_schematic]
+    - object_id: panel_a.reference_dielectric
+      declared_role: conceptual_conventional_dielectric_reference
+      forbidden_readings: [ideal_measured_control, measured_PI_PTFE_or_PET_control]
     - object_id: panel_a.bound_dipoles
       declared_role: field_aligned_orientation_polarization_cue
       forbidden_readings: [free_carrier_or_charge_drain]
-    - object_id: panel_a.fast_polarization
-      declared_role: pre_analysis_window_response
-      forbidden_readings: [measured_current_trace]
     - object_id: panel_a.sulfur_copolymer
       declared_role: sulfur_rich_comparison_material
       forbidden_readings: [separate_particle_phase]
     - object_id: panel_a.localized_charge_states
-      declared_role: sign_neutral_working_charge_localization_cue
-      forbidden_readings: [carrier_polarity, calibrated_charge_density, trap_energy_distribution]
-    - object_id: panel_a.leakage_suppression
-      declared_role: qualitative_interrupted_mobile_leakage_cue
-      forbidden_readings: [specific_hopping_route, signed_carrier_current, calibrated_conductance]
-    - object_id: panel_a.long_lived_relaxation
-      declared_role: qualitative_late_time_relaxation_cue
-      forbidden_readings: [direct_trap_depth_or_density_measurement]
+      declared_role: qualified_sign_neutral_localized_state_working_model
+      forbidden_readings: [carrier_polarity, calibrated_charge_density, trap_energy_distribution, direct_leakage_suppression]
     - object_id: panel_a.field_held_on
-      declared_role: constant_applied_field_condition
+      declared_role: acquisition_condition_continuity
       forbidden_readings: [source_off_or_discharge_interval]
-    - object_id: panel_a.transient_readout
-      declared_role: qualitative_log_log_two_window_readout_icon
-      forbidden_readings: [quantitative_data_panel]
-    - object_id: panel_a.log_log_axes
-      declared_role: symbolic_logarithmic_axis_grammar
-      forbidden_readings: [linear_time_axis, calibrated_y_axis]
-    - object_id: panel_a.ideal_current_decay
-      declared_role: qualitative_rapid_ideal_polarization_current_decay
-      forbidden_readings: [through_film_free_carrier_path, calibrated_control_trace]
-    - object_id: panel_a.sulfur_current_response
-      declared_role: qualitative_delayed_sulfur_rich_current_response
-      forbidden_readings: [calibrated_sample_trace, shared_starting_current_claim]
-    - object_id: panel_a.early_window
-      declared_role: early_fit_window
-      forbidden_readings: [exact_fit_result]
-    - object_id: panel_a.late_window
-      declared_role: late_fit_window
-      forbidden_readings: [exact_fit_result]
-    - object_id: panel_a.early_fit_reference
-      declared_role: qualitative_early_fit_extrapolation
-      forbidden_readings: [calibrated_predictive_trace, measured_control_trace]
+    - object_id: panel_a.normalized_readout
+      declared_role: qualitative_normalized_late_time_deviation_readout
+      forbidden_readings: [absolute_current_comparison, quantitative_data_panel]
+    - object_id: panel_a.log_time_axis
+      declared_role: symbolic_logarithmic_time_axis_grammar
+      forbidden_readings: [linear_time_axis, calibrated_time_ticks]
+    - object_id: panel_a.early_power_law_reference
+      declared_role: material_specific_early_power_law_normalization_reference
+      forbidden_readings: [universal_current_law, ideal_dielectric_trace]
+    - object_id: panel_a.sulfur_late_excess
+      declared_role: qualitative_70plus_late_excess_relative_to_own_early_reference
+      forbidden_readings: [absolute_higher_current, calibrated_sample_trace]
+    - object_id: panel_a.control_late_deficit
+      declared_role: qualitative_pi_ptfe_late_deficit_relative_to_own_early_reference
+      forbidden_readings: [universal_control_response, calibrated_control_trace]
   visible_connectors:
-    - connector_id: panel_a.held_field_to_ideal
+    - connector_id: panel_a.held_field_to_reference
       from_object: panel_a.measurement_context
-      to_object: panel_a.ideal_dielectric
-      declared_role: story_stage_transition
+      to_object: panel_a.reference_dielectric
+      declared_role: shared_operating_condition
       render_style: stage_transition
       epistemic_status: derived
     - connector_id: panel_a.held_field_to_sulfur
       from_object: panel_a.measurement_context
       to_object: panel_a.sulfur_copolymer
-      declared_role: story_stage_transition
+      declared_role: shared_operating_condition
       render_style: stage_transition
       epistemic_status: derived
-    - connector_id: panel_a.ideal_to_readout
-      from_object: panel_a.ideal_dielectric
-      to_object: panel_a.transient_readout
-      declared_role: readout_transition
+    - connector_id: panel_a.reference_to_readout
+      from_object: panel_a.reference_dielectric
+      to_object: panel_a.normalized_readout
+      declared_role: comparison_readout_membership
       render_style: stage_transition
       epistemic_status: derived
     - connector_id: panel_a.sulfur_to_readout
       from_object: panel_a.sulfur_copolymer
-      to_object: panel_a.transient_readout
-      declared_role: readout_transition
+      to_object: panel_a.normalized_readout
+      declared_role: comparison_readout_membership
       render_style: stage_transition
       epistemic_status: derived
-    - connector_id: panel_a.localized_relaxation_to_late_window
-      from_object: panel_a.long_lived_relaxation
-      to_object: panel_a.late_window
-      declared_role: qualitative_causal_working_model
+    - connector_id: panel_a.localized_states_to_sulfur_readout
+      from_object: panel_a.localized_charge_states
+      to_object: panel_a.sulfur_late_excess
+      declared_role: qualified_working_model_link
       render_style: stage_transition
-      epistemic_status: derived
-    - connector_id: panel_a.readout_owns_early_window
-      from_object: panel_a.transient_readout
-      to_object: panel_a.early_window
-      declared_role: fit_window_ownership
-      render_style: response_trace
-    - connector_id: panel_a.readout_owns_late_window
-      from_object: panel_a.transient_readout
-      to_object: panel_a.late_window
-      declared_role: fit_window_ownership
-      render_style: response_trace
+      epistemic_status: qualified_inference
   parallel_comparisons:
     - comparison_id: panel_a.material_states
-      members: [panel_a.ideal_dielectric, panel_a.sulfur_copolymer]
+      members: [panel_a.reference_dielectric, panel_a.sulfur_copolymer]
       shared_input: panel_a.measurement_context
-      shared_output: panel_a.transient_readout
+      shared_output: panel_a.normalized_readout
       comparison_basis: schematic_state
       input_connector_ids:
-        - panel_a.held_field_to_ideal
+        - panel_a.held_field_to_reference
         - panel_a.held_field_to_sulfur
       output_connector_ids:
-        - panel_a.ideal_to_readout
+        - panel_a.reference_to_readout
         - panel_a.sulfur_to_readout
   forbidden_connectors:
     - from_object: panel_a.measurement_context
       to_object: panel_a.sulfur_copolymer
       declared_role: actuation_force
     - from_object: panel_a.localized_charge_states
-      to_object: panel_a.transient_readout
+      to_object: panel_a.normalized_readout
       declared_role: calibrated_data_fit
   label_ownership:
     - label_id: panel_a.measurement_header
       owner: panel_a.measurement_context
     - label_id: panel_a.field_label
       owner: panel_a.field_condition
-    - label_id: panel_a.ideal_header
-      owner: panel_a.ideal_dielectric
+    - label_id: panel_a.reference_header
+      owner: panel_a.reference_dielectric
     - label_id: panel_a.sulfur_header
       owner: panel_a.sulfur_copolymer
-    - label_id: panel_a.early_window_label
-      owner: panel_a.early_window
-    - label_id: panel_a.late_window_label
-      owner: panel_a.late_window
+    - label_id: panel_a.early_reference_label
+      owner: panel_a.early_power_law_reference
+    - label_id: panel_a.sulfur_late_label
+      owner: panel_a.sulfur_late_excess
+    - label_id: panel_a.control_late_label
+      owner: panel_a.control_late_deficit
 publication_acceptance: not_claimed

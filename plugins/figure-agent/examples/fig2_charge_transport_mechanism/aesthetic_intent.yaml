@@ -18,7 +18,7 @@ design_principles:
   - id: restrained_analytic_index
     instruction: "Keep the transient curve as a clear qualitative analytic index, never a faux measured plot, a time-calibrated mini-graph, or a generic decorative zig-zag."
   - id: log_log_power_law_grammar
-    instruction: "Show the ideal dielectric's rapid qualitative decay as a thin blue baseline, then use the stronger red sulfur-rich response for the straight early power-law slope and visibly slower late-time departure above its neutral projection."
+    instruction: "Use a symbolic log-time normalized readout: a neutral early-power-law reference at unity, sulfur 70 wt% and above rising above it late in the trace, and PI/PTFE falling below their own references. Do not fabricate an absolute-current or ideal-dielectric trace."
 must_avoid:
   - id: slide_banner_grammar
     pattern: "A large title, long condition banner, and equal-weight columns dominate the mechanism or make the strip read as a presentation slide."
@@ -54,19 +54,19 @@ aesthetic_levers:
       - "reduce condition or title prominence"
       - "redraw the qualitative trace while preserving its early-before-late semantics"
     forbidden_adjustments:
-      - "convert the ideal baseline into a measured material control"
+      - "convert the conceptual dielectric reference into a measured material control"
       - "assign charge sign, trap depth, or a microscopic hopping pathway"
       - "replace the qualitative readout with synthetic data"
     default_route: tikz_patch
   - id: material_texture_authorship
     dimension: component_fidelity
-    intent: "Make ideal polarization and sulfur localized states visually distinct through restrained material cues rather than repeated icon primitives."
+    intent: "Make conventional bound polarization and sulfur localized states visually distinct through restrained material cues rather than repeated icon primitives."
     priority: required
     positive_signals:
-      - "ideal polarization remains sparse and quiet"
+      - "conventional bound polarization remains sparse and quiet"
       - "short linked sulfur-toned fragments read as a bounded amorphous matrix rather than repeated smooth worms or detached V-shaped scraps"
       - "six equal-size localized-state marks are irregularly distributed and directly embedded in host fragments without encoding density"
-      - "localized states and a concise causal label make reduced mobile leakage legible without asserting a hopping route"
+      - "localized states carry an explicitly qualified working-model label without asserting leakage suppression or a hopping route"
     anti_patterns:
       - "bullseye or winged-dot trap icons"
       - "long periodic or sawtooth host paths"
@@ -103,7 +103,7 @@ aesthetic_levers:
     default_route: semantic_backport
   - id: bound_dipole_pairing
     dimension: physics_cue_legibility
-    intent: "Let the ideal baseline read as field-aligned orientation polarization without assigning a mobile carrier sign."
+    intent: "Let the conventional reference read as field-aligned orientation polarization without assigning a mobile carrier sign."
     priority: required
     positive_signals:
       - "each polar unit visibly owns its paired negative and positive poles"
@@ -139,7 +139,7 @@ aesthetic_levers:
     default_route: semantic_backport
   - id: color_and_stroke_economy
     dimension: color_harmony
-    intent: "Reserve blue for the ideal baseline, amber for sulfur host identity, and red for localized-state/current-response emphasis while gray carries apparatus and context."
+    intent: "Reserve blue for the conventional reference/control-response family, amber for sulfur host identity, and red for sulfur late-response emphasis while gray carries apparatus and context."
     priority: required
     positive_signals:
       - "the held-field condition is neutral rather than a competing red claim"
@@ -179,21 +179,20 @@ aesthetic_levers:
     default_route: tikz_patch
   - id: log_log_power_law_grammar
     dimension: semantic_plot_grammar
-    intent: "Make the early power-law and the slower late-time decay readable as plot geometry, not as explanatory copy placed near a generic curve."
+    intent: "Make the material-specific early-reference normalization and the opposite late-time deviations readable as plot geometry, not as explanatory copy placed near a generic curve."
     priority: required
     positive_signals:
-      - "both axes explicitly state the logarithmic transform"
-      - "a thin blue ideal-dielectric baseline rapidly decays without becoming a through-film carrier cartoon"
-      - "the red sulfur-rich response remains visibly above the ideal baseline into the late response"
-      - "the early power-law appears as one straight descending segment"
-      - "the late solid response visibly separates above the neutral early-fit projection"
+      - "the horizontal axis explicitly states logarithmic time while the vertical axis states normalization to the early reference"
+      - "a neutral unity rule visibly owns the early-power-law reference"
+      - "the red sulfur-rich response rises above its own reference into the late response"
+      - "the blue PI/PTFE control response falls below its own reference"
     anti_patterns:
-      - "a curved trace on unlabeled axes offered as a power-law claim"
+      - "an absolute-current comparison or ideal-dielectric trace offered without matched evidence"
       - "a t=0 tick on a logarithmic time axis"
       - "a dotted late response when the dotted mark is not the reference projection"
     allowed_adjustments:
-      - "redraw slopes and labels inside the fixed readout bounds"
-      - "rebalance the symbolic time ticks and late-time annotation lane"
+      - "redraw normalized deviation curves and labels inside the fixed readout bounds"
+      - "rebalance the unity-rule and late-time annotation lanes"
     forbidden_adjustments:
       - "add fitted exponent values, synthetic scatter data, or a Debye reference curve"
       - "turn the qualitative readout into a calibrated data panel"

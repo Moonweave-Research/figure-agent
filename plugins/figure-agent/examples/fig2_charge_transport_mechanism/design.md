@@ -10,10 +10,11 @@ and one common readout. The two material states must be lateral siblings, not
 two serial stages or vertically stacked UI cards:
 
 1. Shared held-DC measurement condition and matched MIM geometry.
-2. Ideal dielectric: bound-dipole alignment and rapid pre-window polarization.
-3. Sulfur-rich copolymer: sign-neutral localized-state cues and long-lived
-   relaxation, explicitly framed as a working picture.
-4. Readout icon with early and later response regimes.
+2. Conventional dielectric reference: bound-dipole alignment.
+3. Sulfur-rich copolymer: sign-neutral localized-state cues, explicitly framed
+   as a working picture.
+4. Normalized readout icon: late current relative to each material's own early
+   power-law reference.
 
 The parent panel letter sits outside this artboard; its header lane carries the
 quiet held-field condition. The two MIM cells must retain the same visible
@@ -34,17 +35,19 @@ mechanism detail.
   sign-neutral localized-state/current-response emphasis.
 - Keep line weights above the reduction threshold and avoid gradients, 3-D
   substrate blocks, or decorative halos.
-- Make the comparison visible with object geometry: bound dipoles and a rapid
-  pre-window polarization for the ideal baseline; sulfur-host traces with
-  sign-neutral localized-state cues for the sulfur-rich working picture.
+- Make the comparison visible with object geometry: bound dipoles for the
+  conventional reference; sulfur-host traces with sign-neutral localized-state
+  cues for the sulfur-rich working picture.
 - Show the common field where it acts inside each matched MIM cell. An overhead
   rail that reads as a serial process path, a source-OFF cue, or a drain arrow
   is a semantic failure because the transient is acquired under applied DC.
 - Do not use a large circular halo, repeated amber/red bead population, or a
   decorative polymer wave; those cues make a localized population read as
   ornament or a second material phase.
-- Keep the readout trace qualitative and number-free. Exact analysis windows
-  belong to the quantitative panels, not this mechanism strip.
+- Keep the normalized readout qualitative and number-free: log time horizontally,
+  an early-reference rule at unity, sulfur late excess above it, and PI/PTFE
+  control deficit below it. Exact analysis windows and ratios belong to the
+  quantitative panels, not this mechanism strip.
 - Do not use full-height column rules or equal framed cards; whitespace and the
   object silhouettes should establish the four lanes.
 

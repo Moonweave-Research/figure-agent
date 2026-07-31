@@ -21,7 +21,7 @@
     text=cGray!60!black},
   structure/.style={cGray!63!black,line width=0.46pt,line cap=round},
   electrode/.style={fill=cGray!22,draw=none},
-  idealFilm/.style={fill=cBlue!6,draw=none},
+  referenceFilm/.style={fill=cBlue!6,draw=none},
   film/.style={fill=cAmber!10,draw=none},
   dipoleBody/.style={fill=white,draw=cBlue!58!black,line width=0.38pt},
   dipoleCharge/.style={inner sep=0pt,text=cBlue!66!black,
@@ -41,10 +41,9 @@
     line width=0.50pt},
   axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
     line width=0.55pt},
-  traceEarly/.style={cRed!76!black,line width=0.96pt,line cap=round},
-  traceLate/.style={cRed!70!black,line width=0.96pt,line cap=round},
-  traceIdeal/.style={cBlue!64!black,line width=0.64pt,line cap=round},
-  fitReference/.style={cGray!52!black,line width=0.54pt,line cap=round,
+  traceSulfur/.style={cRed!76!black,line width=0.96pt,line cap=round},
+  traceControl/.style={cBlue!64!black,line width=0.68pt,line cap=round},
+  referenceRule/.style={cGray!54!black,line width=0.52pt,line cap=round,
     dash pattern=on 1.4pt off 1.5pt},
 ]
 
@@ -52,7 +51,7 @@
 % a semantic invariant, not a component recipe: their internal material cues
 % may be freely redrawn without changing the comparison geometry.
 \def\mimCellWidth{2.80}
-\def\idealCellLeft{0.80}
+\def\referenceCellLeft{0.80}
 \def\sulfurCellLeft{4.45}
 
 \path[use as bounding box] (0.00,0.38) rectangle (16.38,5.02);
@@ -71,22 +70,22 @@
 \node[labelMute,anchor=south] at (4.02,3.88) {matched MIM cells under a held field};
 % fig-agent:end object=comparison_frame
 
-% fig-agent:start object=ideal_baseline panel=A kind=material_state truth_bearing=true
-\node[columnTitle,anchor=south] at ({\idealCellLeft+0.5*\mimCellWidth},3.56)
-  {Ideal dielectric};
-\fill[idealFilm] (\idealCellLeft,1.91) rectangle
-  ({\idealCellLeft+\mimCellWidth},3.12);
-\draw[structure] (\idealCellLeft,3.28)--({\idealCellLeft+\mimCellWidth},3.28)
-  (\idealCellLeft,3.12)--({\idealCellLeft+\mimCellWidth},3.12)
-  (\idealCellLeft,1.91)--({\idealCellLeft+\mimCellWidth},1.91)
-  (\idealCellLeft,1.75)--({\idealCellLeft+\mimCellWidth},1.75);
-\fill[electrode] (\idealCellLeft,3.12) rectangle
-  ({\idealCellLeft+\mimCellWidth},3.28);
-\fill[electrode] (\idealCellLeft,1.75) rectangle
-  ({\idealCellLeft+\mimCellWidth},1.91);
+% fig-agent:start object=reference_dielectric panel=A kind=material_state truth_bearing=true
+\node[columnTitle,anchor=south] at ({\referenceCellLeft+0.5*\mimCellWidth},3.56)
+  {Conventional dielectric};
+\fill[referenceFilm] (\referenceCellLeft,1.91) rectangle
+  ({\referenceCellLeft+\mimCellWidth},3.12);
+\draw[structure] (\referenceCellLeft,3.28)--({\referenceCellLeft+\mimCellWidth},3.28)
+  (\referenceCellLeft,3.12)--({\referenceCellLeft+\mimCellWidth},3.12)
+  (\referenceCellLeft,1.91)--({\referenceCellLeft+\mimCellWidth},1.91)
+  (\referenceCellLeft,1.75)--({\referenceCellLeft+\mimCellWidth},1.75);
+\fill[electrode] (\referenceCellLeft,3.12) rectangle
+  ({\referenceCellLeft+\mimCellWidth},3.28);
+\fill[electrode] (\referenceCellLeft,1.75) rectangle
+  ({\referenceCellLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
-  ({\idealCellLeft+0.18},2.06)--({\idealCellLeft+0.18},2.96);
-\node[labelMute,anchor=west] at ({\idealCellLeft+0.26},2.98) {$E_\mathrm{app}$};
+  ({\referenceCellLeft+0.18},2.06)--({\referenceCellLeft+0.18},2.96);
+\node[labelMute,anchor=west] at ({\referenceCellLeft+0.26},2.98) {$E_\mathrm{app}$};
 % Field-aligned polar units use the standard orientation-polarization grammar:
 % each neutral oval contains its paired poles.  The ellipses, rather than free
 % signs or repeated vector arrows, make the paired-pole ownership clear.
@@ -95,9 +94,9 @@
   \node[dipoleCharge] at (\x,\y+0.10) {$+$};
   \node[dipoleCharge] at (\x,\y-0.10) {$-$};
 }
-\node[labelMute,anchor=north] at ({\idealCellLeft+0.5*\mimCellWidth},1.48)
-  {rapid polarization};
-% fig-agent:end object=ideal_baseline
+\node[labelMute,anchor=north] at ({\referenceCellLeft+0.5*\mimCellWidth},1.48)
+  {bound-polarization reference};
+% fig-agent:end object=reference_dielectric
 
 % fig-agent:start object=sulfur_working_state panel=A kind=material_state truth_bearing=true
 % Whitespace keeps the two lateral states comparable without implying a serial
@@ -140,7 +139,7 @@
   \node[localizedState] at (\state) {};
 }
 \node[labelMute,align=center,anchor=north] at ({\sulfurCellLeft+0.5*\mimCellWidth},1.52)
-  {localized charge capture\\[-0.3ex]reduces mobile leakage};
+  {localized-state working model};
 
 % Keep the public semantic endpoint numeric: the Figure Agent endpoint check
 % resolves named coordinates directly from editable source.
@@ -148,36 +147,32 @@
 \coordinate (readout_entry) at (8.72,2.50);
 \draw[storyArrow] (comparison_out)--(readout_entry);
 \node[labelMute,text=cRed!70!black,anchor=south east] at (8.62,2.58)
-  {slow relaxation};
+  {late-time deviation};
 % fig-agent:end object=sulfur_working_state
 
 % --------------------------------------------------------------------------
 % What we read
 % --------------------------------------------------------------------------
 % fig-agent:start object=qualitative_current_readout panel=A kind=mini_plot truth_bearing=true
-\node[columnTitle,anchor=south west] at (8.72,3.56) {Current response};
+\node[columnTitle,anchor=south west] at (8.72,3.56) {Temporal readout};
 \draw[axisArrow] (8.72,1.58)--(8.72,3.36);
 \draw[axisArrow] (8.72,1.58)--(15.72,1.58);
-% The two qualitative response families compare rapid ideal-dielectric decay
-% with the sulfur-rich delayed response. They deliberately carry no exact ticks
-% or starting-value claim; the quantitative panels own those measurements.
-\node[labelMute,anchor=south east] at (8.63,3.40) {$\log I$};
-\node[labelMute,anchor=north] at (12.22,0.98) {$\log(t/\mathrm{s})$};
-\draw[traceIdeal] (9.22,2.90) .. controls (9.65,2.63) and (10.13,2.15) ..
-  (10.74,1.78);
-\draw[traceEarly] (9.22,3.16)--(12.12,2.50);
-% The neutral early-fit projection is separated from the solid late response;
-% their split makes the delayed late-time response legible without a pseudo-data
-% window divider.
-\draw[fitReference] (12.12,2.50)--(15.30,1.78);
-\draw[traceLate] (12.12,2.50)--(15.30,2.16);
-\node[labelStd,text=cRed!70!black,anchor=south west] at (9.18,3.25)
-  {localized-state response};
-\node[labelMute,text=cBlue!64!black,anchor=south west] at (10.82,1.88)
-  {ideal: rapid decay};
-\node[labelStd,text=cRed!70!black,anchor=south west] at (12.56,2.66)
-  {late residual};
-\node[labelMute,anchor=north west] at (12.72,1.98) {early-fit projection};
+% This readout mirrors the evidence owned by Fig. 2d: each material is compared
+% with its own early-time power-law reference.  It therefore makes no unmeasured
+% absolute-current or ideal-dielectric trace claim.
+\node[labelMute,anchor=south east] at (8.63,3.40)
+  {$I_\mathrm{meas}/I_\mathrm{early}$};
+\node[labelMute,anchor=north] at (12.22,0.98) {log time};
+\draw[referenceRule] (9.10,2.34)--(15.30,2.34);
+\draw[traceSulfur] (9.22,2.34) .. controls (10.18,2.36) and (11.08,2.54) ..
+  (12.12,2.78) .. controls (13.05,2.98) and (14.18,3.06) .. (15.30,3.12);
+\draw[traceControl] (9.22,2.34) .. controls (10.26,2.31) and (11.14,2.15) ..
+  (12.12,1.98) .. controls (13.12,1.85) and (14.16,1.80) .. (15.30,1.76);
+\node[labelStd,text=cRed!70!black,anchor=south west] at (11.04,3.20)
+  {sulfur $\geq70$ wt\%: late excess};
+\node[labelMute,text=cBlue!64!black,anchor=north west] at (12.42,1.92)
+  {PI/PTFE: below reference};
+\node[labelMute,anchor=south west] at (9.17,2.39) {early power-law reference};
 % fig-agent:end object=qualitative_current_readout
 
 \end{tikzpicture}%

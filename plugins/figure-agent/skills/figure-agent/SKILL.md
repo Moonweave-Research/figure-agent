@@ -424,14 +424,17 @@ any common start point is either declared or left unmarked. A neutral shared anc
 may clarify a declared common initial state, but do not add scatter points, fitted
 values, or a reference curve when the source only supports symbolic slopes.
 
-When a held-field material comparison needs to explain different current
-responses, show the contrast in one qualitative readout rather than inserting
-through-film carrier arrows into the MIM cells. A thin, clearly owned ideal
-polarization-current baseline may rapidly decay while a stronger material-specific
-response shows the delayed component, provided neither trace asserts a numerical
-start value, calibrated magnitude, or carrier polarity. Use the material colors
-consistently and label both traces; the ideal baseline must not turn the ideal
-dielectric into a free-carrier conduction cartoon.
+Before a current-response schematic is authored, resolve the manuscript's
+current authority (canonical data manifest, current caption, and claim boundary)
+rather than importing an appealing contrast from a generic theory note or a
+superseded deck. A held-field material comparison may use a qualitative readout
+instead of through-film carrier arrows, but an ideal-dielectric or reference
+trace is allowed only when an evidence source explicitly supports that matched
+comparison. If the data instead normalize each material to its own early-time
+law, draw that normalization grammar (for example, a unity reference with
+opposite late-time deviations) and do not imply an absolute-current ordering.
+Never turn a conceptual dielectric reference into a measured control, a
+free-carrier cartoon, or an unqualified microscopic mechanism.
 
 For a multi-stage measurement schematic, trace preparation or excitation, acquisition,
 transformation, and result in order. Flag an unexplained state such as deposited
@@ -552,14 +555,15 @@ field reads as a particle, inclusion, or droplet unless the source declares that
 morphology. Prefer bounded host geometry, local contact segments, or restrained
 contours that show localization without inventing a second phase.
 
-When a qualitative MIM schematic uses localized capture to explain a falling
-leakage current, make that causal relation reader-visible without asserting a
-specific microscopic transport route. A concise, well-owned causal label beside
-embedded localized states can be sufficient. If an explicit line, segmented
-path, or fading track reads as a molecular chain, worm, or unearned conduction
-route at print reduction, remove it rather than preserving the cue by default.
-Do not turn the explanation into a continuous hopping wire, a row of carrier
-arrows, a signed-current claim, or a calibrated conductance model.
+Treat ``localized states reduce leakage'' as a claim requiring direct support,
+not as a default visual consequence of drawing traps. When the evidence supports
+only a temporal deviation or a qualified localized-state interpretation, label
+the state as a working model and keep the causal endpoint at that evidence level.
+If an explicit line, segmented path, or fading track reads as a molecular chain,
+worm, or unearned conduction route at print reduction, remove it rather than
+preserving the cue by default. Do not turn the explanation into a continuous
+hopping wire, a row of carrier arrows, a signed-current claim, a calibrated
+conductance model, or an unsupported leakage-suppression claim.
 
 When localized-state contours are repeated, keep category size comparable but
 vary orientation and contour asymmetry enough to avoid a row of identical

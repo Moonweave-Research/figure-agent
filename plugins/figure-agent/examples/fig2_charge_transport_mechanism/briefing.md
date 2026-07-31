@@ -9,17 +9,17 @@
 
 Fig. 1 establishes the sulfur-rich copolymer platform and the measurement axes.
 Fig. 2 is the first data-substance figure: it tests whether sulfur-rich
-copolymers show a long-lived charging-current relaxation relative to an ideal
-dielectric baseline and whether the late-time response departs from the early
-power law. Fig. 3 owns the
+copolymers show a composition-dependent charging-current relaxation. For sulfur
+at 70 wt% and above, the late current lies above that material's own early
+power-law extrapolation; PI and PTFE lie below their own references. Fig. 3 owns the
 frequency-domain dielectric response; Fig. 4 owns ISPD trap-distribution
 inference; Fig. 5 owns the floating-clip actuation mechanism.
 
 The strip must read as a causal comparison without implying that one material
 is converted into the other:
 
-`shared field-on MIM context → lateral ideal-baseline-versus-sulfur comparison
-→ the two current-decay windows read in panels b–d`.
+`shared field-on MIM context → lateral reference-versus-sulfur material grammar
+→ each material's early-reference-normalized late-time readout in panels b–d`.
 
 ## §2 Panel content
 
@@ -29,45 +29,38 @@ is converted into the other:
   transient acquisition; `25 %RH` is a shared condition. Each MIM cell is a
   flat metal / polymer film / metal cross-section; it is not a perspective
   device icon or a source-and-wire circuit diagram.
-- **Ideal dielectric**: rapid orientation polarization, shown by field-aligned
-  neutral oval dipoles with paired poles, completed before the early analysis
-  regime. This is a conceptual baseline, not PI, PTFE,
-  PET, or a universal material law; the charge signs belong to each bound dipole
-  and do not declare a mobile carrier polarity.
-- **Sulfur-rich copolymer**: a sign-neutral working picture in which localized
-  charge capture suppresses the mobile through-film leakage contribution, then
-  relaxes slowly enough to sustain the qualitative late residual above the
-  early-fit extrapolation. It must not assign electron/hole polarity, trap
-  depth, trap density, or a specific microscopic hopping pathway. The pale film
-  is the material body; a small, irregular set of equal-size state marks and
-  short linked sulfur-toned fragments plus a concise causal label may show
-  qualitative leakage suppression, but must not become a literal chemical repeat,
-  continuous hopping route, repeated smooth worm-like traces, or an encoded
-  trap-density map.
-- **What we read**: a qualitative **log–log** comparison contrasts the ideal
-  dielectric's rapidly disappearing polarization current with the sulfur-rich
-  copolymer's delayed response. The sulfur response has a straight early
-  power-law segment; its neutral extrapolation separates from a solid later
-  segment with a visibly shallower slope, making the late residual legible.
-  These are readout icons, not data; exact starting currents and analysis times
-  belong to the quantitative panels.
+- **Conventional dielectric reference**: field-aligned neutral oval dipoles with
+  paired poles provide a restrained bound-polarization grammar. This is a
+  conceptual material reference, not an ideal measured control, PI, PTFE, PET,
+  or a universal current law; the charge signs belong to each bound dipole and do
+  not declare a mobile carrier polarity.
+- **Sulfur-rich copolymer**: a sign-neutral localized-state working model. It
+  must not assign electron/hole polarity, trap depth, trap density, a reduction
+  in leakage, or a specific microscopic hopping pathway. The pale film is the
+  material body; a small, irregular set of equal-size state marks and short
+  linked sulfur-toned fragments may indicate disorder without becoming a literal
+  chemical repeat, continuous hopping route, repeated smooth worm-like trace, or
+  encoded trap-density map.
+- **What we read**: a qualitative normalized-time readout. Its horizontal axis
+  is logarithmic time and its vertical axis is the measured current relative to
+  each material's own early power-law reference. Sulfur at 70 wt% and above rises
+  above its reference late in the trace, whereas PI/PTFE fall below theirs. These
+  are readout icons, not data; exact ratios and time windows belong to the
+  quantitative panels.
 
 ## §3 Physics invariants
 
 - The MIM stack and held field condition are measurement context, not a charging
   instrument, source-OFF discharge, or a second actuation setup.
-- The ideal-baseline-versus-sulfur comparison is a working schematic that
-  motivates the measured transient contrast; it is not a new proof of a
-  microscopic mechanism.
-- Localized capture suppressing the mobile leakage contribution, followed by
-  slow relaxation, is a qualitative working mechanism for the current decay and
-  delayed late-time response; it is not a direct measurement of trap depth,
-  density, or carrier pathway.
-- The ideal rapid-decay baseline is a qualitative polarization-current contrast,
-  not a claim of a through-film free-carrier path. The sulfur early power-law
-  slope and late-time residual relative to its early-fit extrapolation remain
-  separate readout concepts; their exact windows belong to the quantitative
-  panels.
+- The conventional-reference-versus-sulfur comparison establishes visual grammar;
+  it is not a matched absolute-current experiment or proof of a microscopic
+  mechanism.
+- Localized states are a qualified working model for the sulfur response, not a
+  direct measurement of trap depth, density, leakage suppression, or carrier
+  pathway.
+- The only material-current contrast drawn here is normalized to each material's
+  own early power-law reference. Its exact windows and ratios belong to the data
+  pipeline.
 - Quantitative `I(t)`, fitted exponent, control-band, and normalized-deviation
   curves belong to the data pipeline and must not be approximated by this strip.
 
