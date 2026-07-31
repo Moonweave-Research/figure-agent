@@ -112,7 +112,22 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
     }
     assert "rapid polarization" in source
     assert "localized states" in source
-    assert "long-lived relaxation" in source
+    assert "slow relaxation" in source
     assert "$E_\\mathrm{app}$" in source
     assert "{vs.}" not in source
     assert "charge drains" not in source
+
+
+def test_fig2_binds_localized_relaxation_to_the_late_readout_as_a_working_model() -> None:
+    contract = yaml.safe_load((FIXTURE / "semantic_contract.yaml").read_text(encoding="utf-8"))
+
+    assert (
+        "localized_state_relaxation_is_the_qualitative_cause_of_the_late_residual"
+        in contract["protected_relations"]
+    )
+    assert any(
+        connector["connector_id"] == "panel_a.localized_relaxation_to_late_window"
+        and connector["from_object"] == "panel_a.long_lived_relaxation"
+        and connector["to_object"] == "panel_a.late_window"
+        for connector in contract["semantic_legibility"]["visible_connectors"]
+    )

@@ -93,7 +93,7 @@ composition_model:
         sulfur_working_state:
           kind: material_state
           truth_bearing: true
-          semantic_claim: sulfur-rich copolymer uses sign-neutral localized-charge cues for long-lived relaxation
+          semantic_claim: sulfur-rich copolymer uses sign-neutral localized-charge cues for slow relaxation that sustains the qualitative late residual
           invariant: sulfur_state_remains_lateral_and_avoids_signed_carrier_or_trap_depth_claims
           allowed_creative_ops: [resize_lateral_cell, redraw_amorphous_host]
         qualitative_current_readout:

@@ -30,8 +30,9 @@ is converted into the other:
 - **Ideal dielectric**: aligned bound dipoles and a rapid polarization response
   completed before the `2–30 s` analysis window. This is a conceptual baseline,
   not PI, PTFE, PET, or a universal material law.
-- **Sulfur-rich copolymer**: a sign-neutral working picture of localized charge
-  states and long-lived relaxation. It must not assign electron/hole polarity,
+- **Sulfur-rich copolymer**: a sign-neutral working picture in which localized
+  charge states relax slowly enough to sustain the qualitative late residual
+  above the early-fit extrapolation. It must not assign electron/hole polarity,
   trap depth, trap density, or a specific microscopic hopping pathway.
 - **What we read**: one qualitative response trace is split into a solid
   `2–30 s` early-fit window and a dashed `30–300 s` late-response window. A
@@ -45,6 +46,9 @@ is converted into the other:
 - The ideal-baseline-versus-sulfur comparison is a working schematic that
   motivates the measured transient contrast; it is not a new proof of a
   microscopic mechanism.
+- The slow-relaxation handoff is a qualitative working mechanism for the
+  delayed late-time decay, not a direct measurement of trap depth, density, or
+  carrier pathway.
 - The two time windows are independent readout windows: early power-law slope
   and late-time residual relative to the early-fit extrapolation are related
   but not the same metric.

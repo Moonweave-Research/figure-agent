@@ -42,6 +42,7 @@ protected_relations:
   - field_is_held_on_throughout_current_acquisition
   - transient_readout_uses_response_trace_with_early_fit_reference
   - early_window_precedes_late_window
+  - localized_state_relaxation_is_the_qualitative_cause_of_the_late_residual
   - strip_is_schematic_and_data_panels_are_pipeline_owned
 
 repair:
@@ -116,6 +117,12 @@ semantic_legibility:
       from_object: panel_a.sulfur_copolymer
       to_object: panel_a.transient_readout
       declared_role: readout_transition
+      render_style: stage_transition
+      epistemic_status: derived
+    - connector_id: panel_a.localized_relaxation_to_late_window
+      from_object: panel_a.long_lived_relaxation
+      to_object: panel_a.late_window
+      declared_role: qualitative_causal_working_model
       render_style: stage_transition
       epistemic_status: derived
     - connector_id: panel_a.readout_owns_early_window
