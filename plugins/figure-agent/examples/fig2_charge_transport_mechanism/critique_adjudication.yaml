@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig2_charge_transport_mechanism
-source_critique_hash: sha256:8ae412450c0fdc24c4a9682a3f87e8d905a1662937540f1fa4380dcb0efc88cd
+source_critique_hash: sha256:9bacd7d58708e83740f156016c5137db3d735f536d3c88fac582ebbb8af0bcb2
 decisions:
 - finding_id: C001
   decision: resolved
