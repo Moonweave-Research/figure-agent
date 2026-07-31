@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_charge_transport_mechanism
-generated_at: '2026-07-31T06:20:00Z'
+generated_at: '2026-07-31T06:43:00Z'
 generator: Codex host vision critique
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:fb820e0d37b7c2160da688df9d4f7b0f02b30aeab19be26d863b23a0be9dced8
+critique_input_hash: sha256:4d9b3a8a94c4622074e22c4034251b6a1648a6e8382a6752cb0b454c7029a835
 verdict: ready
 findings:
   - id: C001
@@ -25,12 +25,12 @@ findings:
     category: component_fidelity
     tex_lines: [140, 202]
     grounded_in_rule: "§4 Must avoid; panel A material-state rendering"
-    observation: "The earlier sulfur cells used circles attached directly to zig-zag traces, which could read as polymer beads rather than localized trap states. The current render replaces those attachments with short disconnected host traces and compact independent pocket contours containing open or occupied markers."
-    suggested_fix: "Applied in the current source: redraw the three sulfur states with sparse disconnected host strokes and pocket-based occupancy symbols; preserve the qualified, sign-neutral working model."
+    observation: "The earlier sulfur cells used circles and then U-shaped contours that could read as polymer beads or smile icons. The current render separates sparse host traces from short red localized-state bars; open and filled dots show categorical empty-to-occupied progression without introducing an energy axis."
+    suggested_fix: "Applied in the current source: redraw the three sulfur states with sparse disconnected host strokes, compact state bars, and categorical occupancy dots; preserve the qualified, sign-neutral working model and leave explicit trap energy to Fig. 4."
     proposed_offset:
       axis: none
       dy_cm: 0
-    target_texts: [available site, occupied site]
+    target_texts: [empty, occupied]
     status: resolved
 panels: []
 audit_enumeration:
@@ -72,15 +72,15 @@ audit_enumeration:
       proposed_fix: ""
     - label: "Sulfur-rich copolymer: progressive trapping"
       nearest_object: "three matched sulfur cells"
-      intended_target: "one specimen progressing from available to occupied sites"
+      intended_target: "one specimen progressing from empty to occupied localized states"
       matches: true
       proposed_fix: ""
-    - label: "available site"
+    - label: "empty"
       nearest_object: "open categorical marker in the legend"
       intended_target: "empty localized state"
       matches: true
       proposed_fix: ""
-    - label: "occupied site"
+    - label: "occupied"
       nearest_object: "filled categorical marker in the legend"
       intended_target: "occupied localized state"
       matches: true
@@ -173,7 +173,7 @@ quality_axes:
   component_fidelity:
     verdict: pass
     confidence: high
-    rationale: "The MIM slabs, paired dipoles, disconnected sulfur traces, pocket-based categorical sites, and readout curves are identifiable at print scale."
+    rationale: "The MIM slabs, paired dipoles, disconnected sulfur traces, short localized-state bars with categorical dots, and readout curves are identifiable at print scale."
     evidence: "current render; flat_mim_layer_hierarchy; bound_dipole_pairing; material_texture_authorship"
     blocking_items: []
     recommended_action: none
