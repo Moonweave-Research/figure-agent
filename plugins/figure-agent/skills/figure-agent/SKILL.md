@@ -543,6 +543,15 @@ field reads as a particle, inclusion, or droplet unless the source declares that
 morphology. Prefer bounded host geometry, local contact segments, or restrained
 contours that show localization without inventing a second phase.
 
+When a qualitative MIM schematic uses localized capture to explain a falling
+leakage current, labels alone are insufficient. Give the reader one or a few
+restrained, sign-neutral through-film cues that visibly terminate or fade at
+embedded local states, then name the qualitative consequence (for example,
+suppressed leakage). Do not turn this into a continuous hopping wire, a row of
+carrier arrows, a signed-current claim, or a calibrated conductance model; the
+cue establishes interrupted mobile contribution, not a microscopic transport
+pathway.
+
 When localized-state contours are repeated, keep category size comparable but
 vary orientation and contour asymmetry enough to avoid a row of identical
 flattened ovals. At print reduction the host must still read as a material

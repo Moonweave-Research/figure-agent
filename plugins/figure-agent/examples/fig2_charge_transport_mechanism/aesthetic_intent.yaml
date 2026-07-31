@@ -66,9 +66,11 @@ aesthetic_levers:
       - "ideal polarization remains sparse and quiet"
       - "sulfur host traces read as a bounded amorphous matrix"
       - "localized-state marks are compact and directly embedded in host traces"
+      - "restrained interrupted through-film cues make localized capture suppressing mobile leakage visible without asserting a hopping route"
     anti_patterns:
       - "bullseye or winged-dot trap icons"
       - "long periodic or sawtooth host paths"
+      - "a continuous conduction wire or carrier-arrow route through the sulfur film"
       - "heavy apparatus borders doing the work of material identity"
     allowed_adjustments:
       - "redraw host paths and local state marks"

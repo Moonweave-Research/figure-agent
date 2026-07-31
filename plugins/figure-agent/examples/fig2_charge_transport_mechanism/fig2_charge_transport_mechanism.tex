@@ -34,6 +34,9 @@
     line join=round},
   localizedState/.style={circle,fill=cRed!70!black,draw=cAmber!12,line width=0.25pt,
     minimum size=0.66mm,inner sep=0pt},
+  leakageSegment/.style={cGray!64!cAmber,line width=0.40pt,line cap=round},
+  leakageFading/.style={cGray!38!cAmber,line width=0.32pt,line cap=round,
+    dash pattern=on 0.9pt off 1.0pt},
   fieldGuide/.style={cGray!60!black,line width=0.46pt,line cap=round},
   storyArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!58!black,
     line width=0.50pt},
@@ -114,6 +117,13 @@
   ({\sulfurCellLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\sulfurCellLeft+0.18},2.06)--({\sulfurCellLeft+0.18},2.96);
+% Representative, arrowless through-film leakage cues terminate at embedded
+% local states and fade below them. They show suppression of the mobile
+% contribution without assigning a carrier sign or a microscopic hopping route.
+\draw[leakageSegment] (5.48,3.06)--(5.48,2.31);
+\draw[leakageFading] (5.48,2.13)--(5.48,1.97);
+\draw[leakageSegment] (6.62,3.06)--(6.62,2.43);
+\draw[leakageFading] (6.62,2.25)--(6.62,1.97);
 % A bounded, non-periodic host field gives the sulfur film material presence at
 % reduction. These are local amorphous environments, not literal repeat units,
 % a covalent network, or a carrier trajectory.
@@ -136,8 +146,8 @@
 \foreach \state in {sulfurStateA,sulfurStateB,sulfurStateC,sulfurStateD}{
   \node[localizedState] at (\state) {};
 }
-\node[labelMute,align=center,anchor=north] at ({\sulfurCellLeft+0.5*\mimCellWidth},1.48)
-  {distributed local states};
+\node[labelMute,align=center,anchor=north] at ({\sulfurCellLeft+0.5*\mimCellWidth},1.52)
+  {localized capture\\[-0.3ex]suppresses leakage};
 
 % Keep the public semantic endpoint numeric: the Figure Agent endpoint check
 % resolves named coordinates directly from editable source.

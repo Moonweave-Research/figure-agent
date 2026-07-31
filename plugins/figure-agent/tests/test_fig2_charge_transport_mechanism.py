@@ -52,6 +52,10 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert "comparisonArrow" not in source
     assert "trapAmber" not in source
     assert "localizedState" in source
+    assert "leakageSegment" in source
+    assert "leakageFading" in source
+    assert "localized capture" in source
+    assert "suppresses leakage" in source
     assert "sulfurTrace" in source
     assert "sulfurTraceFaint" in source
     assert "\\def\\mimCellWidth" in source
@@ -125,7 +129,8 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
         "bound_dipole_pairing",
     }
     assert "rapid polarization" in source
-    assert "distributed local states" in source
+    assert "localized capture" in source
+    assert "suppresses leakage" in source
     assert "slow relaxation" in source
     assert "$E_\\mathrm{app}$" in source
     assert "{vs.}" not in source
@@ -167,4 +172,9 @@ def test_fig2_binds_localized_relaxation_to_the_late_readout_as_a_working_model(
         and connector["from_object"] == "panel_a.long_lived_relaxation"
         and connector["to_object"] == "panel_a.late_window"
         for connector in contract["semantic_legibility"]["visible_connectors"]
+    )
+    assert "panel_a.leakage_suppression" in contract["required_objects"]
+    assert (
+        "localized_capture_suppresses_mobile_leakage_before_slow_relaxation"
+        in contract["protected_relations"]
     )

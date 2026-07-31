@@ -10,6 +10,7 @@ required_objects:
   - panel_a.fast_polarization
   - panel_a.sulfur_copolymer
   - panel_a.localized_charge_states
+  - panel_a.leakage_suppression
   - panel_a.long_lived_relaxation
   - panel_a.field_held_on
   - panel_a.transient_readout
@@ -41,6 +42,7 @@ protected_relations:
   - lateral_material_comparison_feeds_common_readout
   - ideal_baseline_shows_bound_dipoles_without_free_carrier_flow
   - sulfur_working_picture_uses_sign_neutral_localized_charge_cues
+  - localized_capture_suppresses_mobile_leakage_before_slow_relaxation
   - field_is_held_on_throughout_current_acquisition
   - transient_readout_uses_response_trace_with_early_fit_reference
   - transient_readout_declares_log_log_power_law_geometry
@@ -79,6 +81,9 @@ semantic_legibility:
     - object_id: panel_a.localized_charge_states
       declared_role: sign_neutral_working_charge_localization_cue
       forbidden_readings: [carrier_polarity, calibrated_charge_density, trap_energy_distribution]
+    - object_id: panel_a.leakage_suppression
+      declared_role: qualitative_interrupted_mobile_leakage_cue
+      forbidden_readings: [specific_hopping_route, signed_carrier_current, calibrated_conductance]
     - object_id: panel_a.long_lived_relaxation
       declared_role: qualitative_late_time_relaxation_cue
       forbidden_readings: [direct_trap_depth_or_density_measurement]

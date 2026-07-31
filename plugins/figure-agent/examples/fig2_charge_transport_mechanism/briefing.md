@@ -35,12 +35,13 @@ is converted into the other:
   PET, or a universal material law; the charge signs belong to each bound dipole
   and do not declare a mobile carrier polarity.
 - **Sulfur-rich copolymer**: a sign-neutral working picture in which localized
-  charge states relax slowly enough to sustain the qualitative late residual
-  above the early-fit extrapolation. It must not assign electron/hole polarity,
-  trap depth, trap density, or a specific microscopic hopping pathway. The pale
-  film is the material body; at most a few short aperiodic contours may cue
-  amorphous local disorder, without becoming a literal chemical repeat or
-  continuous hopping route.
+  charge capture suppresses the mobile through-film leakage contribution, then
+  relaxes slowly enough to sustain the qualitative late residual above the
+  early-fit extrapolation. It must not assign electron/hole polarity, trap
+  depth, trap density, or a specific microscopic hopping pathway. The pale film
+  is the material body; a few restrained, arrowless interrupted path cues may
+  show qualitative leakage suppression, but must not become a literal chemical
+  repeat or continuous hopping route.
 - **What we read**: one qualitative **log–log** response trace has a straight
   early power-law segment. Its neutral extrapolation separates from a solid
   later segment with a visibly shallower slope, making the late residual
@@ -54,9 +55,10 @@ is converted into the other:
 - The ideal-baseline-versus-sulfur comparison is a working schematic that
   motivates the measured transient contrast; it is not a new proof of a
   microscopic mechanism.
-- The slow-relaxation handoff is a qualitative working mechanism for the
-  delayed late-time decay, not a direct measurement of trap depth, density, or
-  carrier pathway.
+- Localized capture suppressing the mobile leakage contribution, followed by
+  slow relaxation, is a qualitative working mechanism for the current decay and
+  delayed late-time response; it is not a direct measurement of trap depth,
+  density, or carrier pathway.
 - The two readout regimes are independent: early power-law slope and late-time
   residual relative to the early-fit extrapolation are related but not the same
   metric. Their exact windows belong to the quantitative panels.
@@ -65,9 +67,8 @@ is converted into the other:
 
 ## §4 Must avoid
 
-- No fitted exponent, resistivity, sample code, error bar, or quantitative
-  y-axis scale. The symbolic `2`, `30`, and `300 s` x-ticks only establish the
-  declared log-time fit windows.
+- No fitted exponent, resistivity, sample code, error bar, quantitative y-axis
+  scale, or exact time ticks; the data panels own the fit-window calibration.
 - No S–S homolytic-cleavage energy diagram; that meaning is already assigned to
   Fig. 1 / Fig. 4 and would duplicate the manuscript story.
 - No charge sign, carrier type, specific trap hierarchy, or claim that the strip
