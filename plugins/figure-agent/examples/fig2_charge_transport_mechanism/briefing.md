@@ -29,9 +29,9 @@ is converted into the other:
   transient acquisition; `25 %RH` is a shared condition. Each MIM cell is a
   flat metal / polymer film / metal cross-section; it is not a perspective
   device icon or a source-and-wire circuit diagram.
-- **Ideal dielectric**: a rapid bound-polarization response, shown by the
-  field-aligned polarization vector and neutral pair of bound-charge surfaces,
-  completed before the early analysis regime. This is a conceptual baseline, not PI, PTFE,
+- **Ideal dielectric**: rapid orientation polarization, shown by field-aligned
+  neutral oval dipoles with paired poles, completed before the early analysis
+  regime. This is a conceptual baseline, not PI, PTFE,
   PET, or a universal material law; the charge signs belong to each bound dipole
   and do not declare a mobile carrier polarity.
 - **Sulfur-rich copolymer**: a sign-neutral working picture in which localized

@@ -23,10 +23,9 @@
   electrode/.style={fill=cGray!22,draw=none},
   idealFilm/.style={fill=cBlue!6,draw=none},
   film/.style={fill=cAmber!10,draw=none},
-  boundCharge/.style={inner sep=0pt,text=cBlue!66!black,
+  dipoleBody/.style={fill=white,draw=cBlue!58!black,line width=0.38pt},
+  dipoleCharge/.style={inner sep=0pt,text=cBlue!66!black,
     font=\sffamily\bfseries\fontsize{5.0}{5.0}\selectfont},
-  polarizationVector/.style={-{Stealth[length=2.1pt,width=1.45pt]},
-    cBlue!58!black,line width=0.42pt,line cap=round},
   sulfurTrace/.style={cAmber!68!cGray,line width=0.46pt,line cap=round,
     line join=round},
   sulfurTraceSoft/.style={cAmber!48!cGray,line width=0.34pt,line cap=round,
@@ -74,13 +73,6 @@
   {Ideal dielectric};
 \fill[idealFilm] (\idealCellLeft,1.91) rectangle
   ({\idealCellLeft+\mimCellWidth},3.12);
-% A continuum dielectric cue: the held field polarizes the film and leaves
-% bound charge only at its two interfaces. This avoids turning the ideal
-% baseline into a literal molecular or mobile-carrier model.
-\fill[cBlue!12] (\idealCellLeft,3.01) rectangle
-  ({\idealCellLeft+\mimCellWidth},3.12);
-\fill[cBlue!12] (\idealCellLeft,1.91) rectangle
-  ({\idealCellLeft+\mimCellWidth},2.02);
 \draw[structure] (\idealCellLeft,3.28)--({\idealCellLeft+\mimCellWidth},3.28)
   (\idealCellLeft,3.12)--({\idealCellLeft+\mimCellWidth},3.12)
   (\idealCellLeft,1.91)--({\idealCellLeft+\mimCellWidth},1.91)
@@ -92,16 +84,16 @@
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\idealCellLeft+0.18},2.06)--({\idealCellLeft+0.18},2.96);
 \node[labelMute,anchor=west] at ({\idealCellLeft+0.26},2.98) {$E_\mathrm{app}$};
-\foreach \x in {1.68,2.40,3.10}{
-  \node[boundCharge] at (\x,3.065) {$+$};
-  \node[boundCharge] at (\x,1.965) {$-$};
+% Field-aligned polar units use the standard orientation-polarization grammar:
+% each neutral oval contains its paired poles.  The ellipses, rather than free
+% signs or repeated vector arrows, make the paired-pole ownership clear.
+\foreach \x/\y in {1.50/2.30,2.06/2.68,2.66/2.30,3.18/2.68}{
+  \draw[dipoleBody] (\x,\y) ellipse [x radius=0.17, y radius=0.25];
+  \node[dipoleCharge] at (\x,\y+0.10) {$+$};
+  \node[dipoleCharge] at (\x,\y-0.10) {$-$};
 }
-\draw[polarizationVector] ({\idealCellLeft+1.48},2.28)--
-  ({\idealCellLeft+1.48},2.70);
-\node[labelMute,text=cBlue!58!black,anchor=west] at
-  ({\idealCellLeft+1.57},2.49) {$\mathbf{P}$};
 \node[labelMute,anchor=north] at ({\idealCellLeft+0.5*\mimCellWidth},1.48)
-  {rapid bound polarization};
+  {rapid polarization};
 % fig-agent:end object=ideal_baseline
 
 % fig-agent:start object=sulfur_working_state panel=A kind=material_state truth_bearing=true

@@ -409,13 +409,14 @@ Moving a label away from its axis but into a panel separator is a regression,
 not a repair; preserve the interior annotation lane and record the clearance
 constraint in the fixture contract.
 
-When a schematic ideal dielectric only needs to convey the macroscopic response
-rather than a specific molecular structure, prefer a field-aligned polarization
-vector and paired bound-charge surfaces at the dielectric interfaces over a
-repeated dipole icon.  The surface-charge signs must agree with the declared
-polarization direction, remain inside the dielectric-side interfaces, and not
-read as mobile carriers.  Use individual molecular dipoles only when molecular
-orientation or chemistry is part of the stated claim.
+For a schematic ideal dielectric, select the polarization grammar from the
+reader-facing claim.  When the point is orientation polarization, use compact
+neutral oval dipole bodies with paired $+$/$-$ poles aligned to the held field;
+free signs, repeated vector arrows, or circle-pair ion icons can read as mobile
+carrier flow.  Use a field-aligned polarization vector and paired interface
+bound-charge surfaces when the point is macroscopic boundary charge instead.
+In either grammar, the signs must agree with the declared polarization direction
+and must not read as mobile carriers.
 
 For a schematic log--log power-law comparison, verify that the axes are explicitly
 logarithmic, the visible slope ordering matches the stated low/high exponent, and

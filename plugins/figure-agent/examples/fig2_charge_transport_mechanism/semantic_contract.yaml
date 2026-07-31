@@ -6,7 +6,7 @@ required_objects:
   - panel_a.mim_stack
   - panel_a.field_condition
   - panel_a.ideal_dielectric
-  - panel_a.bound_polarization
+  - panel_a.bound_dipoles
   - panel_a.fast_polarization
   - panel_a.sulfur_copolymer
   - panel_a.localized_charge_states
@@ -39,7 +39,7 @@ protected_relations:
   - held_field_binds_lateral_material_comparison
   - ideal_and_sulfur_are_sibling_comparison_states
   - lateral_material_comparison_feeds_common_readout
-  - ideal_baseline_shows_bound_polarization_without_free_carrier_flow
+  - ideal_baseline_shows_bound_dipoles_without_free_carrier_flow
   - sulfur_working_picture_uses_sign_neutral_localized_charge_cues
   - field_is_held_on_throughout_current_acquisition
   - transient_readout_uses_response_trace_with_early_fit_reference
@@ -67,8 +67,8 @@ semantic_legibility:
     - object_id: panel_a.ideal_dielectric
       declared_role: conceptual_ideal_dielectric_baseline
       forbidden_readings: [measured_PI_PTFE_or_PET_control]
-    - object_id: panel_a.bound_polarization
-      declared_role: field_aligned_bound_polarization_cue
+    - object_id: panel_a.bound_dipoles
+      declared_role: field_aligned_orientation_polarization_cue
       forbidden_readings: [free_carrier_or_charge_drain]
     - object_id: panel_a.fast_polarization
       declared_role: pre_analysis_window_response
