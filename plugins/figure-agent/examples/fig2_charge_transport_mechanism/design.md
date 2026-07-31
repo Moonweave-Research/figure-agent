@@ -2,8 +2,9 @@
 
 ## Composition
 
-Use a 166.53 × 47.20 mm content artboard inside the current Fig. 2a parent slot
-(166.53 × 53.19 mm). The parent data composition owns the figure-wide `a`–`d`
+Use a 180.0 × 51.02 mm content artboard inside the current Fig. 2a parent slot
+(180.0 × 53.19 mm). This is the Nature Communications double-column working
+width; the parent data composition owns the figure-wide `a`–`d`
 labels, so this artboard deliberately contains no second panel letter. Keep one
 open white row with a compact idealized reference, three matched states of one
 sulfur-rich MIM, and one compact output readout. The sulfur states are a causal
@@ -28,10 +29,10 @@ must read as continued field exposure, not an automated scan or material
 conversion. The output arrow begins at the late sulfur state and the bottom lane
 uses only short labels.
 
-At integration time, the parent composition centers this shorter content
-artboard vertically in its Fig. 2a row. That blank is a shared row gutter for
-the a–d assembly, not an invitation to add filler decoration or unsupported
-mechanism detail.
+At integration time, the parent composition centers this full-width content
+artboard vertically in its Fig. 2a row. The remaining vertical space is a
+shared row gutter for the a–d assembly, not an invitation to add filler
+decoration or unsupported mechanism detail.
 
 ## Visual decisions
 

@@ -13,8 +13,8 @@ aesthetic_intent: aesthetic_intent.yaml
 
 final_size_contract:
   basis: width_limited_nature_family_main_figure
-  natural_size_mm: [166.53, 47.20]
-  target_width_mm: 166.53
+  natural_size_mm: [180.0, 51.02]
+  target_width_mm: 180.0
   max_height_mm: 170.0
   min_print_font_pt: 5.0
   scale_basis: width_limited
@@ -24,16 +24,16 @@ final_size_contract:
   note: Panel a is a full-width schematic row; panels b–d remain evidence-bound quantitative data products.
 
 # The parent 4-panel composition owns the page-level a--d markers and provides
-# a 166.53 × 53.19 mm row. This fixture is the content-only artboard placed
+# a 180.0 × 53.19 mm row. This fixture is the content-only artboard placed
 # flush left and vertically centered in that row; the remaining vertical space
 # is an intentional integration gutter, not unallocated source content.
 panel_integration:
   host_layout: fig2_charge_transport_4panel
   host_figure_size_mm: [183.0, 126.0]
-  slot_size_mm: [166.53, 53.19]
-  placement: {horizontal: left, vertical: center}
+  slot_size_mm: [180.0, 53.19]
+  placement: {horizontal: center, vertical: center}
   panel_letter_owner: host_data_pipeline
-  panel_content_size_mm: [166.53, 47.20]
+  panel_content_size_mm: [180.0, 51.02]
   note: Keep a–d navigation labels in one owner; do not paste a second panel letter into this artboard.
 
 semantic_contract_required: true
@@ -72,7 +72,7 @@ semantic_assertions:
 panels:
   - id: A
     caption: Field-on measurement context, idealized reference, progressive trapping in one sulfur-rich MIM, and a persistent-relaxation transient readout
-    bbox_pdf_cm: [0.00, 0.00, 16.653, 4.72]
+    bbox_pdf_cm: [0.00, 0.00, 18.00, 5.10]
 
 composition_model:
   panels:
@@ -109,7 +109,7 @@ text_boundary_checks:
     kind: rect
     role: header_band
     mode: contain_text
-    bbox_pdf_cm: [0.00, 0.00, 16.38, 5.02]
+    bbox_pdf_cm: [0.00, 0.00, 17.71, 5.42]
     clearance_pt: 0.0
     text_allowlist: [DC, Idealized, Sulfur-rich, Qualitative, early, progressive, long-lived, persistent, available, occupied]
 
@@ -117,8 +117,8 @@ label_path_proximity_checks:
   - id: persistent-relaxation-annotation-lane
     kind: vertical_line
     role: transient-annotation-lane
-    x_pdf_cm: 12.56
-    y_range_pdf_cm: [2.45, 2.90]
+    x_pdf_cm: 13.58
+    y_range_pdf_cm: [2.65, 3.13]
     clearance_pt: 2.5
     text_phrases:
       - id: persistent-relaxation
