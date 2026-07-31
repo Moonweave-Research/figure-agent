@@ -83,7 +83,7 @@ aesthetic_levers:
       - "add a covalent network or a specific microscopic transport route"
     default_route: semantic_backport
   - id: flat_mim_layer_hierarchy
-    dimension: device_projection
+    dimension: component_fidelity
     intent: "Make both MIM cells read as matched two-terminal cross-sections before the reader interprets the material-specific interior cue."
     priority: required
     positive_signals:
@@ -102,7 +102,7 @@ aesthetic_levers:
       - "introduce a perspective side face or decorative device shadow"
     default_route: semantic_backport
   - id: bound_dipole_pairing
-    dimension: physics_cue_legibility
+    dimension: component_fidelity
     intent: "Let the conventional reference read as field-aligned orientation polarization without assigning a mobile carrier sign."
     priority: required
     positive_signals:
@@ -118,7 +118,7 @@ aesthetic_levers:
       - "use the dipole signs to assert a net carrier polarity or free-charge population"
     default_route: semantic_backport
   - id: field_condition_embodiment
-    dimension: causal_legibility
+    dimension: cross_panel_grammar
     intent: "Make the common applied field visible where it acts, while showing the sulfur states as one held-field sequence rather than a material conversion."
     priority: required
     positive_signals:
@@ -178,7 +178,7 @@ aesthetic_levers:
       - "change variable names or time-window claims"
     default_route: tikz_patch
   - id: log_log_power_law_grammar
-    dimension: semantic_plot_grammar
+    dimension: cross_panel_grammar
     intent: "Make a conventional early power law and its later departure readable as plot geometry, while leaving the material-specific normalized comparison to the quantitative data panels."
     priority: required
     positive_signals:

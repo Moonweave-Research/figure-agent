@@ -39,6 +39,14 @@ figure_roles:
       - source_first_polish
     allowed_variations:
       - may carry one stronger hero panel than downstream figures
+  - fixture: fig2_charge_transport_mechanism
+    role: overview_mechanism
+    must_align_with:
+      - restrained_palette
+      - compact_typography
+      - source_first_polish
+    allowed_variations:
+      - may use a staged material-state sequence before a compact qualitative readout
   - fixture: template_data
     role: data_evidence
     must_align_with:

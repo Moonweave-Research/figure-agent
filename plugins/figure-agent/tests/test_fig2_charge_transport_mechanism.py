@@ -11,6 +11,8 @@ sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
 import composition_scene  # noqa: E402
+import aesthetic_intent  # noqa: E402
+import paper_aesthetic_context  # noqa: E402
 from semantic_legibility_contract import validate_semantic_legibility_contract  # noqa: E402
 
 
@@ -26,6 +28,19 @@ def test_fig2_declares_a_parallel_material_comparison_contract() -> None:
     ]
     assert result["summary"]["parallel_comparison_count"] == 1
     assert "mim_comparison_uses_matched_footprints" in contract["protected_relations"]
+
+
+def test_fig2_critique_inputs_are_loadable_and_registered_in_nc_context() -> None:
+    intent = aesthetic_intent.load_aesthetic_intent(FIXTURE / "aesthetic_intent.yaml")
+    spec = yaml.safe_load((FIXTURE / "spec.yaml").read_text(encoding="utf-8"))
+    context = paper_aesthetic_context.load_optional_paper_aesthetic_context(FIXTURE, spec)
+
+    assert intent["fixture"] == "fig2_charge_transport_mechanism"
+    assert context is not None
+    role = paper_aesthetic_context.matching_figure_role(
+        context, "fig2_charge_transport_mechanism"
+    )
+    assert role["role"] == "overview_mechanism"
 
 
 def test_fig2_uses_progressive_trapping_sequence_and_standard_output() -> None:
