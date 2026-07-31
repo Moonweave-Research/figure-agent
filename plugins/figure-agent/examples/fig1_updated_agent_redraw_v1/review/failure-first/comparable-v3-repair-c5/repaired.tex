@@ -10,18 +10,20 @@
   panel title/.style={font=\sffamily\fontsize{6.2}{7.4}\selectfont, text=cGray!90!black, anchor=west},
   body label/.style={font=\sffamily\fontsize{5.8}{7.0}\selectfont, text=cGray},
   small label/.style={font=\sffamily\fontsize{5.2}{6.2}\selectfont, text=cGray},
-  axis line/.style={-{Stealth[length=2.8pt,width=2.2pt]}, draw=cGray, line width=0.84pt},
-  leader/.style={-{Stealth[length=2.5pt,width=1.9pt]}, draw=cGray, line width=0.84pt},
-  electron/.style={circle, draw=cBlue!80!black, fill=cBlue!55, line width=0.84pt, minimum size=1.15mm, inner sep=0pt}
+  % Fig. 2 establishes the shared thin-line baseline: axes/leaders stay
+  % legible at reduction without overpowering the overview chemistry.
+  axis line/.style={-{Stealth[length=2.8pt,width=2.2pt]}, draw=cGray, line width=0.66pt},
+  leader/.style={-{Stealth[length=2.5pt,width=1.9pt]}, draw=cGray, line width=0.66pt},
+  electron/.style={circle, draw=cBlue!80!black, fill=cBlue!55, line width=0.66pt, minimum size=1.15mm, inner sep=0pt}
 ]
 
 % Open publication canvas: separators organize the reading order without
 % turning each scientific panel into a rounded UI card.
-\draw[cGray!10, line width=0.84pt] (0.12,10.58)--(14.63,10.58);
-\draw[cGray!10, line width=0.84pt] (0.12,5.35)--(14.63,5.35);
-\draw[cGray!10, line width=0.84pt] (7.375,10.95)--(7.375,15.50);
-\draw[cGray!10, line width=0.84pt] (4.875,0.72)--(4.875,5.00);
-\draw[cGray!10, line width=0.84pt] (9.875,0.72)--(9.875,5.00);
+\draw[cGray!10, line width=0.42pt] (0.12,10.58)--(14.63,10.58);
+\draw[cGray!10, line width=0.42pt] (0.12,5.35)--(14.63,5.35);
+\draw[cGray!10, line width=0.42pt] (7.375,10.95)--(7.375,15.50);
+\draw[cGray!10, line width=0.42pt] (4.875,0.72)--(4.875,5.00);
+\draw[cGray!10, line width=0.42pt] (9.875,0.72)--(9.875,5.00);
 
 % Panel A
 \begin{scope}[shift={(0,10.65)}]
@@ -35,7 +37,7 @@
   }
   % Individual shortened bonds meet the atom-label boxes without running behind glyphs.
   \foreach \i/\j in {1/2,2/3,3/4,4/5,5/6,6/7,7/8,8/1} {
-    \draw[cAmber!82!black, line width=0.90pt, line cap=round,
+    \draw[cAmber!82!black, line width=0.74pt, line cap=round,
           shorten >=2.0pt, shorten <=2.0pt] (v\i)--(v\j);
   }
   \foreach \i in {1,...,8} {
@@ -51,29 +53,29 @@
   % --- reactant 2: 1,3-diisopropenylbenzene, with both C=C bonds visible ---
   \coordinate (mc) at (2.55,3.72);
   \foreach \a in {0,60,120,180,240,300} { \coordinate (m\a) at ($(mc)+(\a:0.33)$); }
-  \draw[cGray, line width=0.92pt, line join=round]
+  \draw[cGray, line width=0.76pt, line join=round]
     (m0)--(m60)--(m120)--(m180)--(m240)--(m300)--cycle;
-  \draw[cGray, line width=0.84pt]
+  \draw[cGray, line width=0.66pt]
     ($(m0)!0.22!(m60)!0.14!(mc)$)--($(m0)!0.78!(m60)!0.14!(mc)$)
     ($(m120)!0.22!(m180)!0.14!(mc)$)--($(m120)!0.78!(m180)!0.14!(mc)$)
     ($(m240)!0.22!(m300)!0.14!(mc)$)--($(m240)!0.78!(m300)!0.14!(mc)$);
   % left isopropenyl group: Ar-C(CH3)=CH2
   \coordinate (ma) at ($(m180)+(-0.22,0)$);
   \coordinate (mt) at ($(ma)+(-0.31,0)$);
-  \draw[cGray, line width=0.88pt] (m180)--(ma) (ma)--($(ma)+(0,0.24)$);
+  \draw[cGray, line width=0.72pt] (m180)--(ma) (ma)--($(ma)+(0,0.24)$);
   % enlarged-vector audit: alkene lines remain individually traceable
-  \draw[cGray, line width=0.84pt] (ma)--(mt)
+  \draw[cGray, line width=0.66pt] (ma)--(mt)
     ($(ma)+(0,-0.065)$)--($(mt)+(0,-0.065)$);
   % lower-right meta isopropenyl group: Ar-C(CH3)=CH2
   \coordinate (mb) at ($(m300)+(0.12,-0.19)$);
   \coordinate (mu) at ($(mb)+(0.17,-0.27)$);
-  \draw[cGray, line width=0.88pt] (m300)--(mb) (mb)--($(mb)+(0.22,0.08)$);
-  \draw[cGray, line width=0.84pt] (mb)--(mu)
+  \draw[cGray, line width=0.72pt] (m300)--(mb) (mb)--($(mb)+(0.22,0.08)$);
+  \draw[cGray, line width=0.66pt] (mb)--(mu)
     ($(mb)+(0.050,0.030)$)--($(mu)+(0.050,0.030)$);
   \node[small label, text=cGray!88!black] at (2.18,3.08) {1,3-DIB};
 
   % --- thermally initiated inverse vulcanization ---
-  \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=0.84pt]
+  \draw[-{Stealth[length=3.0pt,width=2.4pt]}, cGray, line width=0.66pt]
     (3.31,3.68) .. controls (3.70,3.65) and (3.98,3.32) .. (4.06,2.82);
   \node[small label, text=cBrown!92!black] at (3.76,4.00) {inverse vulcanization};
   % Reaction conditions belong on the transformation arrow: Δ denotes heat,
@@ -86,18 +88,18 @@
   % variable-rank left polysulfide and chemically continuous bond to left polysulfide
   \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (lsx) at (1.28,1.90) {$\mathrm{S}_{x}$};
   % polymer continuation bond
-  \draw[cAmber!88!black, line width=1.0pt, decorate,
+  \draw[cAmber!88!black, line width=0.82pt, decorate,
         decoration={snake, amplitude=0.22mm, segment length=1.8mm}]
     (0.58,1.90)--(lsx.west);
   % no mid-bond colour seam: the covalent S--C bond stays structural gray
-  \draw[cGray, line width=0.96pt] (lsx.east)--(2.48,1.90);
+  \draw[cGray, line width=0.78pt] (lsx.east)--(2.48,1.90);
 
   % bis-thiocumyl junction: Ar-C(CH3)2-S_x
   \coordinate (bcl) at (2.48,1.90);
   % The tertiary carbon is an implicit skeletal vertex. Do not mark it with a
   % filled dot, which can be misread as a radical centre in a reaction scheme.
   % Tetrahedral projection; avoid orthogonal cross.
-  \draw[cGray, line width=0.96pt]
+  \draw[cGray, line width=0.78pt]
     (bcl)--($(bcl)+(105:0.28)$)
     (bcl)--($(bcl)+(-45:0.28)$)
     (bcl)--(3.20,1.90);
@@ -105,25 +107,25 @@
   % meta-DIB aryl core, conventional Kekule representation
   \coordinate (pc) at (3.73,1.90);
   \foreach \a in {0,60,120,180,240,300} { \coordinate (r\a) at ($(pc)+(\a:0.53)$); }
-  \draw[cGray, line width=1.02pt, line join=round]
+  \draw[cGray, line width=0.84pt, line join=round]
     (r0)--(r60)--(r120)--(r180)--(r240)--(r300)--cycle;
-  \draw[cGray, line width=0.84pt]
+  \draw[cGray, line width=0.66pt]
     ($(r0)!0.20!(r60)!0.14!(pc)$)--($(r0)!0.80!(r60)!0.14!(pc)$)
     ($(r120)!0.20!(r180)!0.14!(pc)$)--($(r120)!0.80!(r180)!0.14!(pc)$)
     ($(r240)!0.20!(r300)!0.14!(pc)$)--($(r240)!0.80!(r300)!0.14!(pc)$);
 
   % bis-thiocumyl junction: Ar-C(CH3)2-S_x
   \coordinate (bcr) at ($(r300)+(0.36,-0.12)$);
-  \draw[cGray, line width=0.96pt] (r300)--(bcr)
+  \draw[cGray, line width=0.78pt] (r300)--(bcr)
     (bcr)--($(bcr)+(75:0.28)$)
     (bcr)--($(bcr)+(-135:0.28)$);
 
   % variable-rank right polysulfide and chemically continuous bond to right polysulfide
   \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (rsy) at ($(bcr)+(0.70,0)$) {$\mathrm{S}_{y}$};
   % no mid-bond colour seam: the covalent C--S bond stays structural gray
-  \draw[cGray, line width=0.96pt] (bcr)--(rsy.west);
+  \draw[cGray, line width=0.78pt] (bcr)--(rsy.west);
   % polymer continuation bond
-  \draw[cAmber!88!black, line width=1.0pt, decorate,
+  \draw[cAmber!88!black, line width=0.82pt, decorate,
         decoration={snake, amplitude=0.22mm, segment length=1.8mm}]
     (rsy.east)--(6.15,1.33);
 
@@ -142,7 +144,7 @@
   % Evidence boundary: S60/S75/S85 are sulfur wt-percent sample names;
   % drawn S-glyph count is a qualitative artistic correlate only,
   % not a measured molecular sulfur rank or literal chain length.
-  \draw[-{Stealth[length=3.4pt,width=2.6pt]}, cAmber!90!black, line width=1.0pt]
+  \draw[-{Stealth[length=3.4pt,width=2.6pt]}, cAmber!90!black, line width=0.82pt]
     (0.66,1.45)--(0.66,3.85);
   \node[small label, rotate=90, anchor=south, text=cBrown] at (0.44,2.65)
     {sulfur content (wt\%)};
@@ -160,9 +162,9 @@
       \foreach \a in {0,60,120,180,240,300} {
         \coordinate (bl\a) at ($(blc)+(\a:0.22)$);
       }
-      \draw[cGray, line width=0.92pt, line join=round]
+      \draw[cGray, line width=0.76pt, line join=round]
         (bl0)--(bl60)--(bl120)--(bl180)--(bl240)--(bl300)--cycle;
-      \draw[cGray, line width=0.84pt]
+      \draw[cGray, line width=0.66pt]
         ($(bl0)!0.24!(bl60)!0.14!(blc)$)--($(bl0)!0.76!(bl60)!0.14!(blc)$)
         ($(bl120)!0.24!(bl180)!0.14!(blc)$)--($(bl120)!0.76!(bl180)!0.14!(blc)$)
         ($(bl240)!0.24!(bl300)!0.14!(blc)$)--($(bl240)!0.76!(bl300)!0.14!(blc)$);
@@ -170,7 +172,7 @@
       % compact left thiocumyl carbon: aryl + S chain + two methyl stubs
       \coordinate (blj) at (1.96,0);
       % Implicit skeletal carbon; a filled junction dot would suggest a radical.
-      \draw[cGray, line width=0.90pt] (bl0)--(blj)
+      \draw[cGray, line width=0.74pt] (bl0)--(blj)
         (blj)--($(blj)+(105:0.14)$)
         (blj)--($(blj)+(-45:0.14)$);
 
@@ -180,29 +182,29 @@
               font=\sffamily\bfseries\fontsize{4.6}{5.4}\selectfont,
               text=cBrown] (bs\k) at ({2.30+0.34*(\k-1)},0) {S};
       }
-      \draw[cGray, line width=0.90pt] (blj)--(bs1.west);
+      \draw[cGray, line width=0.74pt] (blj)--(bs1.west);
       \foreach \k in {2,...,\sc} {
         \pgfmathtruncatemacro{\prev}{\k-1}
-        \draw[cAmber!84!black, line width=0.92pt] (bs\prev.east)--(bs\k.west);
+        \draw[cAmber!84!black, line width=0.76pt] (bs\prev.east)--(bs\k.west);
       }
 
       % compact right thiocumyl carbon and aromatic fragment
       \coordinate (brj) at (\rightJ,0);
       % Implicit skeletal carbon, matching the corrected Panel A convention.
-      \draw[cGray, line width=0.90pt] (bs\sc.east)--(brj)
+      \draw[cGray, line width=0.74pt] (bs\sc.east)--(brj)
         (brj)--($(brj)+(75:0.14)$)
         (brj)--($(brj)+(-135:0.14)$);
       \coordinate (brc) at (\rightRing,0);
       \foreach \a in {0,60,120,180,240,300} {
         \coordinate (br\a) at ($(brc)+(\a:0.22)$);
       }
-      \draw[cGray, line width=0.92pt, line join=round]
+      \draw[cGray, line width=0.76pt, line join=round]
         (br0)--(br60)--(br120)--(br180)--(br240)--(br300)--cycle;
-      \draw[cGray, line width=0.84pt]
+      \draw[cGray, line width=0.66pt]
         ($(br0)!0.24!(br60)!0.14!(brc)$)--($(br0)!0.76!(br60)!0.14!(brc)$)
         ($(br120)!0.24!(br180)!0.14!(brc)$)--($(br120)!0.76!(br180)!0.14!(brc)$)
         ($(br240)!0.24!(br300)!0.14!(brc)$)--($(br240)!0.76!(br300)!0.14!(brc)$);
-      \draw[cGray, line width=0.90pt] (brj)--(br180);
+      \draw[cGray, line width=0.74pt] (brj)--(br180);
       \node[body label, anchor=west, text=cBrown] at ({\rightRing+0.36},0) {\lbl};
     \end{scope}
   }
@@ -228,30 +230,30 @@
   % top-view projection; no bevel, thickness, or perspective is implied.
   \fill[cAmber!8, rounded corners=0.7mm]
     (0.90,1.23) rectangle (6.12,4.30);
-  \draw[cAmber!58!black, line width=0.90pt, rounded corners=0.7mm]
+  \draw[cAmber!58!black, line width=0.74pt, rounded corners=0.7mm]
     (0.90,1.23) rectangle (6.12,4.30);
   % Five low-contrast irregular traces overlap in visual range to read as one
   % sparse, entangled, specimen-spanning amorphous host rather than four
   % trap-specific support strokes or surface-wrinkle decoration. They stay
   % subordinate to the trap/DOS encoding; structural cues, not literal chain topology.
   % They are not measured roughness.
-  \draw[cGray!36, opacity=0.68, line width=0.72pt, line cap=round] plot[smooth] coordinates
+  \draw[cGray!36, opacity=0.68, line width=0.60pt, line cap=round] plot[smooth] coordinates
     {(1.06,4.02) (1.45,3.70) (1.95,3.55) (2.38,3.72)
      (2.72,3.64) (3.02,3.22) (2.78,2.82) (2.18,2.55)
      (1.62,2.68) (1.12,2.52)};
-  \draw[cGray!34, opacity=0.66, line width=0.72pt, line cap=round] plot[smooth] coordinates
+  \draw[cGray!34, opacity=0.66, line width=0.60pt, line cap=round] plot[smooth] coordinates
     {(0.98,1.42) (1.18,1.86) (1.55,1.63) (1.90,1.48)
      (2.30,1.70) (2.75,2.12) (3.20,2.00) (3.58,2.28)};
-  \draw[cGray!32, opacity=0.64, line width=0.70pt, line cap=round] plot[smooth] coordinates
+  \draw[cGray!32, opacity=0.64, line width=0.58pt, line cap=round] plot[smooth] coordinates
     {(3.16,3.82) (3.48,3.46) (3.98,3.05) (4.64,2.84)
      (5.08,3.14) (5.42,2.94) (5.76,3.28) (5.94,3.62)};
-  \draw[cGray!31, opacity=0.64, line width=0.70pt, line cap=round] plot[smooth] coordinates
+  \draw[cGray!31, opacity=0.64, line width=0.58pt, line cap=round] plot[smooth] coordinates
     {(3.46,1.45) (3.88,1.82) (4.36,2.22) (4.86,2.05)
      (5.42,1.64) (5.76,1.90) (5.94,2.24)};
   % A trap-free cross-field trace prevents the texture from decomposing into
   % one decorative stroke per colored site and fills the otherwise empty
   % upper-left lane without creating a regular lamellar rhythm.
-  \draw[cGray!24, opacity=0.58, line width=0.66pt, line cap=round] plot[smooth] coordinates
+  \draw[cGray!24, opacity=0.58, line width=0.54pt, line cap=round] plot[smooth] coordinates
     {(1.08,3.02) (1.48,2.86) (1.98,3.02) (2.62,2.74)
      (3.30,2.54) (3.90,2.72) (4.52,2.38) (5.20,2.58)
      (5.78,2.28)};
@@ -271,25 +273,25 @@
   \node[small label, text=cGray!82!black, anchor=north east] at (6.03,4.12) {poly(S-\emph{r}-DIB) film};
 
   % Energy-space view: continuous shallow/deep trap DOS below the mobility edge.
-  \draw[cGray!18, line width=0.84pt] (6.72,0.52)--(6.72,4.88);
+  \draw[cGray!18, line width=0.42pt] (6.72,0.52)--(6.72,4.88);
   % Cross-representation correspondence: these are the same trap populations,
   % not transport trajectories or separate phases.
-  \draw[cBlue!32, dash pattern=on 2pt off 2pt, line width=0.84pt]
+  \draw[cBlue!32, dash pattern=on 2pt off 2pt, line width=0.56pt]
     (4.695,2.84)--(7.40,2.88);
-  \draw[cRed!32, dash pattern=on 2pt off 2pt, line width=0.84pt]
+  \draw[cRed!32, dash pattern=on 2pt off 2pt, line width=0.56pt]
     (5.495,1.62)--(7.40,1.68);
   \node[small label, text=cGray!78!black, anchor=west] at (7.72,4.84) {energy diagram};
   \draw[axis line] (7.48,0.72)--(7.48,4.52);
-  \draw[cBlue!78!black, line width=0.84pt] (7.42,2.88)--(7.54,2.88);
-  \draw[cRed!78!black, line width=0.84pt] (7.42,1.68)--(7.54,1.68);
+  \draw[cBlue!78!black, line width=0.66pt] (7.42,2.88)--(7.54,2.88);
+  \draw[cRed!78!black, line width=0.66pt] (7.42,1.68)--(7.54,1.68);
   \node[body label, rotate=90] at (7.10,2.28) {energy};
 
-  \draw[cGray!62, dash pattern=on 3pt off 2pt, line width=0.84pt] (7.72,4.25)--(12.98,4.25);
+  \draw[cGray!62, dash pattern=on 3pt off 2pt, line width=0.58pt] (7.72,4.25)--(12.98,4.25);
   \node[small label, anchor=west] at (13.10,4.25) {vacuum};
-  \draw[cGray!88!black, line width=1.0pt] (7.72,3.78)--(12.98,3.78);
+  \draw[cGray!88!black, line width=0.80pt] (7.72,3.78)--(12.98,3.78);
   \node[body label, anchor=west] at (13.10,3.78) {$E_C$};
   \node[small label, anchor=north west] at (8.05,3.72) {mobility edge};
-  \draw[cGray!88!black, line width=1.0pt] (7.72,0.86)--(12.98,0.86);
+  \draw[cGray!88!black, line width=0.80pt] (7.72,0.86)--(12.98,0.86);
   \node[body label, anchor=west] at (13.10,0.86) {$E_V$};
 
   % Sample true sideways Gaussians; hand-shaped lens/cusp silhouettes are not DOS.
@@ -301,23 +303,23 @@
     plot[domain=2.48:3.28, samples=36, smooth]
       ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x)
     -- (7.82,3.28) -- (7.82,2.48) -- cycle;
-  \draw[cBlue!84!black, line width=1.0pt]
+  \draw[cBlue!84!black, line width=0.82pt]
     plot[domain=2.48:3.28, samples=36, smooth]
       ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x);
   \fill[cRed!20, opacity=0.58]
     plot[domain=1.02:2.34, samples=42, smooth]
       ({7.82 + 1.50*exp(-((\x-1.68)*(\x-1.68))/0.135)},\x)
     -- (7.82,2.34) -- (7.82,1.02) -- cycle;
-  \draw[cRed!84!black, line width=1.0pt]
+  \draw[cRed!84!black, line width=0.82pt]
     plot[domain=1.02:2.34, samples=42, smooth]
       ({7.82 + 1.50*exp(-((\x-1.68)*(\x-1.68))/0.135)},\x);
 
   \foreach \y in {2.72,3.04} {
-    \draw[cBlue!82!black, line width=0.90pt] (9.18,\y)--(10.15,\y);
+    \draw[cBlue!82!black, line width=0.74pt] (9.18,\y)--(10.15,\y);
     \fill[cBlue!80] (9.62,\y) circle (0.070);
   }
   \foreach \y in {1.46,1.88} {
-    \draw[cRed!82!black, line width=0.90pt] (9.42,\y)--(10.38,\y);
+    \draw[cRed!82!black, line width=0.74pt] (9.42,\y)--(10.38,\y);
     \fill[cRed!80] (9.88,\y) circle (0.070);
   }
   \node[body label, font=\sffamily\bfseries\fontsize{6.0}{7.2}\selectfont,
@@ -326,21 +328,21 @@
         text=cGray!92!black, anchor=west] at (10.62,1.68) {deep};
 
   \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cBlue!78!black,
-        line width=0.84pt, dashed]
+        line width=0.66pt, dashed]
     (9.62,3.11) .. controls (9.48,3.30) and (9.59,3.58) .. (9.73,3.78);
   \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cRed!76!black,
-        line width=0.84pt, dashed]
+        line width=0.66pt, dashed]
     (9.88,1.95) .. controls (10.33,2.35) and (10.43,3.10) .. (10.22,3.78);
   \node[small label, anchor=west, text=cGray!85!black] at (10.48,3.58) {thermal escape};
   % Trap-depth caliper: E_C to a representative deep trap level. The upper
   % endpoint lies on E_C; the lower endpoint owns a visible projection from
   % the selected deep state instead of floating in the right margin.
-  \draw[cRed!45!black, opacity=0.56, line width=0.84pt,
+  \draw[cRed!45!black, opacity=0.56, line width=0.66pt,
         dash pattern=on 1.5pt off 1.4pt] (10.38,1.88)--(12.20,1.88);
   \draw[{Stealth[length=2.7pt,width=2.0pt]}-{Stealth[length=2.7pt,width=2.0pt]},
-        cRed!72!black, line width=0.90pt] (12.20,1.88)--(12.20,3.78);
+        cRed!72!black, line width=0.74pt] (12.20,1.88)--(12.20,3.78);
   \node[body label, rotate=90, text=cGray!92!black] at (12.52,2.83) {$\Delta E_t$};
-  \draw[-{Stealth[length=2.5pt,width=1.9pt]}, cGray!82!black, line width=0.84pt]
+  \draw[-{Stealth[length=2.5pt,width=1.9pt]}, cGray!82!black, line width=0.66pt]
     (7.82,0.50)--(9.08,0.50);
   \node[small label, text=cGray!82!black] at (8.45,0.30) {DOS};
   \end{scope}
@@ -354,30 +356,30 @@
   % Constant-voltage transient-current measurement across a MIM stack.
   % Flat SMU faceplate: one chassis boundary, display, terminals and cable exits.
   \fill[cGray!13] (0.48,2.62) rectangle (1.47,3.44);
-  \draw[cGray!82!black, line width=0.90pt] (0.48,2.62) rectangle (1.47,3.44);
+  \draw[cGray!82!black, line width=0.74pt] (0.48,2.62) rectangle (1.47,3.44);
   \fill[cGray!78!black] (0.62,3.08) rectangle (1.29,3.27);
-  \draw[cGray!92!black, line width=0.84pt] (0.62,3.08) rectangle (1.29,3.27);
+  \draw[cGray!92!black, line width=0.66pt] (0.62,3.08) rectangle (1.29,3.27);
   \node[font=\sffamily\bfseries\fontsize{4.6}{5.4}\selectfont, text=white] at (0.955,3.175) {$V/A$};
   \node[font=\sffamily\bfseries\fontsize{4.6}{5.4}\selectfont, text=cGray!85!black] at (0.83,2.86) {SMU};
   \fill[cGray!72!black] (1.27,2.90) circle (0.055);
   \fill[cGray!58!black] (1.27,2.74) circle (0.055);
 
   % Two independent leads make the top/bottom electrode ownership explicit.
-  \draw[cGray!76!black, line width=0.84pt]
+  \draw[cGray!76!black, line width=0.66pt]
     (1.32,2.90) .. controls (1.58,2.91) and (1.60,3.27) .. (1.91,3.27);
-  \draw[cGray!68!black, line width=0.84pt]
+  \draw[cGray!68!black, line width=0.66pt]
     (1.32,2.74) .. controls (1.56,2.73) and (1.62,2.66) .. (1.91,2.66);
 
   % MIM specimen, drawn as layered material rather than a generic container.
   \fill[cGray!24] (1.91,3.16) rectangle (3.96,3.32);
-  \draw[cGray!84!black, line width=0.84pt] (1.91,3.16) rectangle (3.96,3.32);
-  \draw[cAmber!82!black, fill=cAmber!10, line width=0.90pt] (1.91,2.77) rectangle (3.96,3.16);
+  \draw[cGray!84!black, line width=0.66pt] (1.91,3.16) rectangle (3.96,3.32);
+  \draw[cAmber!82!black, fill=cAmber!10, line width=0.74pt] (1.91,2.77) rectangle (3.96,3.16);
   \fill[cGray!18] (1.91,2.61) rectangle (3.96,2.77);
-  \draw[cGray!84!black, line width=0.84pt] (1.91,2.61) rectangle (3.96,2.77);
+  \draw[cGray!84!black, line width=0.66pt] (1.91,2.61) rectangle (3.96,2.77);
   \node[small label, text=cGray!88!black] at (2.94,2.97) {polymer film};
-  \draw[cGray!80!black, line width=0.84pt] (3.96,2.68)--(4.22,2.68)--(4.22,2.57);
+  \draw[cGray!80!black, line width=0.66pt] (3.96,2.68)--(4.22,2.68)--(4.22,2.57);
   % Use the shared three-bar tapered ground grammar used by the measurement panels.
-  \draw[cGray, line width=0.84pt]
+  \draw[cGray, line width=0.66pt]
     (4.09,2.57)--(4.35,2.57)
     (4.13,2.51)--(4.31,2.51)
     (4.17,2.46)--(4.27,2.46);
@@ -391,11 +393,11 @@
   \draw[axis line] (0.66,0.47)--(4.28,0.47);
   \node[body label, rotate=90] at (0.28,1.28) {$\log I$};
   \node[body label, anchor=north east] at (4.26,0.34) {$\log t$};
-  \foreach \y in {0.84,1.26,1.68} {\draw[cGray!65, line width=0.84pt] (0.66,\y)--(0.75,\y);}
-  \foreach \x in {1.46,2.38,3.30} {\draw[cGray!65, line width=0.84pt] (\x,0.47)--(\x,0.56);}
+  \foreach \y in {0.84,1.26,1.68} {\draw[cGray!65, line width=0.66pt] (0.66,\y)--(0.75,\y);}
+  \foreach \x in {1.46,2.38,3.30} {\draw[cGray!65, line width=0.66pt] (\x,0.47)--(\x,0.56);}
 
-  \draw[cBlue!82!black, line width=1.10pt] (0.86,1.88)--(4.02,1.12);
-  \draw[cRed!82!black, line width=1.10pt] (0.86,1.88)--(4.02,0.66);
+  \draw[cBlue!82!black, line width=0.90pt] (0.86,1.88)--(4.02,1.12);
+  \draw[cRed!82!black, line width=0.90pt] (0.86,1.88)--(4.02,0.66);
   % The shared neutral anchor marks the common initial state without inventing
   % measurement-like data points; only the symbolic slope contrast is claimed.
   \fill[cGray!72!black] (0.86,1.88) circle (0.045);
@@ -416,16 +418,16 @@
   % manual relocation to the adjacent non-contact ESVM station at right.
   % Charging state: flat side-view specimen on the counter electrode.
   \fill[cGray!22] (0.82,2.70) rectangle (1.72,2.84);
-  \draw[cGray!82!black, line width=0.84pt] (0.82,2.70) rectangle (1.72,2.84);
+  \draw[cGray!82!black, line width=0.66pt] (0.82,2.70) rectangle (1.72,2.84);
   \fill[cAmber!10] (0.90,2.84) rectangle (1.64,2.99);
-  \draw[cAmber!82!black, line width=0.84pt] (0.90,2.84) rectangle (1.64,2.99);
+  \draw[cAmber!82!black, line width=0.66pt] (0.90,2.84) rectangle (1.64,2.99);
   \node[small label, anchor=west, text=cGray!88!black] at (1.66,3.06) {film};
   % Measurement state: an explicit second state of the same hand-moved sample.
   \fill[cGray!22] (2.30,2.70) rectangle (3.20,2.84);
-  \draw[cGray!82!black, line width=0.84pt] (2.30,2.70) rectangle (3.20,2.84);
+  \draw[cGray!82!black, line width=0.66pt] (2.30,2.70) rectangle (3.20,2.84);
   \fill[cAmber!10] (2.38,2.84) rectangle (3.12,2.99);
-  \draw[cAmber!82!black, line width=0.84pt] (2.38,2.84) rectangle (3.12,2.99);
-  \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cTeal!78!black, line width=0.84pt]
+  \draw[cAmber!82!black, line width=0.66pt] (2.38,2.84) rectangle (3.12,2.99);
+  \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cTeal!78!black, line width=0.66pt]
     (1.78,2.77)--(2.24,2.77);
   \node[small label, font=\sffamily\fontsize{5.0}{5.8}\selectfont,
         text=cGray!88!black, anchor=north, align=center]
@@ -444,40 +446,40 @@
   % Keep the electrical path neutral gray; red surface markers remain the
   % declared charge cue, not an invented terminal polarity.
   \fill[cGray!13] (0.40,3.57) rectangle (0.78,3.88);
-  \draw[cGray!82!black, line width=0.84pt] (0.40,3.57) rectangle (0.78,3.88);
+  \draw[cGray!82!black, line width=0.66pt] (0.40,3.57) rectangle (0.78,3.88);
   \node[font=\sffamily\fontsize{4.6}{5.4}\selectfont, text=cGray!88!black]
     at (0.59,3.725) {HV};
   \fill[cGray!82!black] (0.78,3.80) circle (0.027);
   \fill[cGray!82!black] (0.40,3.64) circle (0.027);
-  \draw[cGray!82!black, line width=0.84pt]
+  \draw[cGray!82!black, line width=0.66pt]
     (0.78,3.80)--(1.10,3.80)--(1.10,3.93)--(1.27,3.93);
-  \draw[cGray!82!black, line width=0.84pt]
+  \draw[cGray!82!black, line width=0.66pt]
     (0.40,3.64)--(0.28,3.64)--(0.28,2.77)--(0.82,2.77);
 
   % Needle electrode and corona discharge; no grid electrode is present.
-  \draw[cGray!82!black, line width=0.84pt] (1.27,3.93)--(1.49,3.93);
-  \draw[cGray!82!black, line width=0.84pt] (1.27,3.93)--(1.27,3.40);
+  \draw[cGray!82!black, line width=0.66pt] (1.27,3.93)--(1.49,3.93);
+  \draw[cGray!82!black, line width=0.66pt] (1.27,3.93)--(1.27,3.40);
   \fill[cGray!82!black] (1.23,3.40)--(1.31,3.40)--(1.27,3.19)--cycle;
   \draw[-{Stealth[length=2.4pt,width=1.8pt]}, cGray!68!black,
-        dash pattern=on 1.2pt off 1.1pt, line width=0.84pt]
+        dash pattern=on 1.2pt off 1.1pt, line width=0.66pt]
     (1.27,3.15)--(1.27,3.08);
   % SK-family elongated bar head: only the confirmed family-level silhouette
   % is retained. Its short end face points toward the specimen across a clear
   % non-contact standoff; no mechanical modulation is implied.
   \fill[cGray!18] (2.68,3.22) rectangle (2.86,3.96);
-  \draw[cGray!82!black, line width=0.84pt] (2.68,3.22) rectangle (2.86,3.96);
+  \draw[cGray!82!black, line width=0.66pt] (2.68,3.22) rectangle (2.86,3.96);
   \fill[cGray!82!black] (2.69,3.22) rectangle (2.85,3.27);
-  \draw[cGray!92!black, line width=0.84pt] (2.69,3.22) rectangle (2.85,3.27);
-  \draw[cGray!88!black, line width=0.84pt] (2.77,3.96)
+  \draw[cGray!92!black, line width=0.66pt] (2.69,3.22) rectangle (2.85,3.27);
+  \draw[cGray!88!black, line width=0.66pt] (2.77,3.96)
     .. controls (2.98,3.94) and (3.16,3.79) .. (3.38,3.68);
   \node[small label, anchor=south] at (2.77,3.99) {ESVM head};
 
   % Schematic ESVM readout; controls remain model-agnostic.
   \fill[cGray!13] (3.38,3.13) rectangle (4.34,3.83);
-  \draw[cGray!80!black, line width=0.90pt] (3.38,3.13) rectangle (4.34,3.83);
-  \draw[cGray!42!black, line width=0.84pt] (3.45,3.20) rectangle (4.27,3.76);
+  \draw[cGray!80!black, line width=0.74pt] (3.38,3.13) rectangle (4.34,3.83);
+  \draw[cGray!42!black, line width=0.66pt] (3.45,3.20) rectangle (4.27,3.76);
   \fill[cGray!76!black] (3.53,3.45) rectangle (4.19,3.68);
-  \draw[cGray!92!black, line width=0.84pt] (3.53,3.45) rectangle (4.19,3.68);
+  \draw[cGray!92!black, line width=0.66pt] (3.53,3.45) rectangle (4.19,3.68);
   \node[font=\sffamily\fontsize{4.7}{5.6}\selectfont, text=white] at (3.86,3.565) {$V_s$};
   \fill[cGray!82!black] (3.38,3.68) circle (0.032);
   \fill[cTeal!72!black] (3.56,3.28) circle (0.032);
@@ -485,10 +487,10 @@
         anchor=north] at (3.86,3.08) {ESVM};
   \node[small label, anchor=south] at (3.86,3.86) {$V_s$ meter};
 
-  \draw[cGray!72, line width=0.84pt] (3.20,2.77)--(3.30,2.77);
+  \draw[cGray!72, line width=0.66pt] (3.20,2.77)--(3.30,2.77);
   \node[small label, anchor=north west, align=left] at (3.40,2.76) {grounded\\substrate};
-  \draw[cGray, line width=0.84pt] (3.30,2.77)--(3.30,2.50);
-  \draw[cGray, line width=0.84pt]
+  \draw[cGray, line width=0.66pt] (3.30,2.77)--(3.30,2.50);
+  \draw[cGray, line width=0.66pt]
     (3.17,2.50)--(3.43,2.50)
     (3.21,2.44)--(3.39,2.44)
     (3.25,2.39)--(3.35,2.39);
@@ -498,14 +500,14 @@
   \draw[axis line] (0.66,1.52)--(4.24,1.52);
   \node[body label, rotate=90] at (0.28,2.02) {$V_s(t)$};
   \node[body label, anchor=west] at (4.29,1.52) {$t$};
-  \draw[cRed!76!black, line width=1.0pt]
+  \draw[cRed!76!black, line width=0.82pt]
     (0.88,2.37) .. controls (1.36,2.04) and (1.86,1.70) .. (2.72,1.62)
                 .. controls (3.20,1.59) and (3.66,1.58) .. (4.02,1.58);
   % No point markers are shown: this overview binds the monotonic decay shape,
   % not sampled surface-potential coordinates or a quantitative fit.
 
   % Explicit raw-to-derived transformation.
-  \draw[-{Stealth[length=3.0pt,width=2.2pt]}, cGray!72!black, line width=0.84pt]
+  \draw[-{Stealth[length=3.0pt,width=2.2pt]}, cGray!72!black, line width=0.66pt]
     (4.08,1.52)--(4.08,1.08);
   \node[small label, anchor=west, text=cGray!78!black] at (4.13,1.30) {derive};
 
@@ -520,14 +522,14 @@
     plot[domain=0.96:2.16, samples=36, smooth]
       (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)})
     -- (2.16,0.36) -- (0.96,0.36) -- cycle;
-  \draw[cBlue!84!black, line width=1.0pt]
+  \draw[cBlue!84!black, line width=0.82pt]
     plot[domain=0.96:2.16, samples=36, smooth]
       (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)});
   \fill[cRed!14]
     plot[domain=2.28:3.76, samples=42, smooth]
       (\x,{0.36 + 0.79*exp(-((\x-3.02)*(\x-3.02))/0.1800)})
     -- (3.76,0.36) -- (2.28,0.36) -- cycle;
-  \draw[cRed!84!black, line width=1.0pt]
+  \draw[cRed!84!black, line width=0.82pt]
     plot[domain=2.28:3.76, samples=42, smooth]
       (\x,{0.36 + 0.79*exp(-((\x-3.02)*(\x-3.02))/0.1800)});
   % No point markers are shown on the derived DOS: without source-bound data,
@@ -535,12 +537,12 @@
   % Paper-local authority defines tau_d as the energy-domain interval between
   % the shallow and deep Gaussian peak positions. Keep both peak projections
   % long enough to remain distinct from the bracket caps at print reduction.
-  \draw[cGray!38, dash pattern=on 1.3pt off 1.3pt, line width=0.84pt]
+  \draw[cGray!38, dash pattern=on 1.3pt off 1.3pt, line width=0.66pt]
     (1.56,0.78)--(1.56,1.31)
     (3.02,1.15)--(3.02,1.31);
-  \draw[cGray!68!black, line width=0.84pt]
+  \draw[cGray!68!black, line width=0.66pt]
     (1.56,1.35)--(3.02,1.35);
-  \draw[cGray!68!black, line width=0.84pt]
+  \draw[cGray!68!black, line width=0.66pt]
     (1.56,1.31)--(1.56,1.39) (3.02,1.31)--(3.02,1.39);
   \node[small label, text=cGray!72!black, fill=white,
         inner xsep=1.2pt, inner ysep=0.45pt]
@@ -556,24 +558,24 @@
 
   % Fixed clamp: dark structural lines, light metal fill.
   \fill[cGray!10] (1.78,3.21) rectangle (2.22,3.33);
-  \draw[cGray!78!black, line width=0.90pt] (1.78,3.21) rectangle (2.22,3.33);
-  \draw[cGray!66!black, line width=0.90pt] (1.67,3.46)--(2.33,3.46);
+  \draw[cGray!78!black, line width=0.74pt] (1.78,3.21) rectangle (2.22,3.33);
+  \draw[cGray!66!black, line width=0.74pt] (1.67,3.46)--(2.33,3.46);
   \foreach \dx in {0.06,0.24,0.42,0.60} {
-    \draw[cGray!40!black, line width=0.84pt]
+    \draw[cGray!40!black, line width=0.66pt]
       ({1.68+\dx},3.46)--({1.61+\dx},3.54);
   }
-  \draw[cGray!76!black, line width=0.90pt] (2.00,3.33)--(2.00,3.46);
+  \draw[cGray!76!black, line width=0.74pt] (2.00,3.33)--(2.00,3.46);
 
   % Bespoke floating polymer cantilever, visibly deflected toward the left.
   \fill[cAmber!7, rounded corners=0.45mm]
     (1.91,3.21) .. controls (1.93,2.48) and (1.53,1.52) ..
     (0.82,0.82) -- (0.96,0.67) .. controls (1.75,1.39) and
     (2.12,2.46) .. (2.09,3.21) -- cycle;
-  \draw[cAmber!72!black, line width=1.0pt, rounded corners=0.45mm]
+  \draw[cAmber!72!black, line width=0.82pt, rounded corners=0.45mm]
     (1.91,3.21) .. controls (1.93,2.48) and (1.53,1.52) ..
     (0.82,0.82) -- (0.96,0.67) .. controls (1.75,1.39) and
     (2.12,2.46) .. (2.09,3.21) -- cycle;
-  \draw[cAmber!52!black, line width=0.84pt, opacity=0.30]
+  \draw[cAmber!52!black, line width=0.66pt, opacity=0.30]
     (1.97,3.08) .. controls (1.98,2.48) and (1.61,1.55) .. (0.91,0.78);
 
   % Trapped-charge family follows the active face of the polymer. Use compact
@@ -600,26 +602,26 @@
   % the sample and cantilever remain electrically floating.
   \fill[cGray!20]
     (3.54,0.66) rectangle (3.76,3.02);
-  \draw[cGray!84!black, line width=1.0pt] (3.54,0.66) rectangle (3.76,3.02);
+  \draw[cGray!84!black, line width=0.82pt] (3.54,0.66) rectangle (3.76,3.02);
   \foreach \hy in {0.90,1.38,1.86,2.34,2.82} {
-    \draw[cGray!42!black, line width=0.84pt] (3.76,\hy)--(3.54,{\hy-0.06});
+    \draw[cGray!42!black, line width=0.66pt] (3.76,\hy)--(3.54,{\hy-0.06});
   }
   % Keep the bias circuit neutral gray: cBlue/cRed remain reserved for the
   % shallow/deep scientific categories and the claimed Coulomb result.
   \fill[cGray!5, rounded corners=0.7mm] (3.00,3.34) rectangle (3.50,3.72);
-  \draw[cGray!66!black, line width=0.84pt, rounded corners=0.7mm]
+  \draw[cGray!66!black, line width=0.66pt, rounded corners=0.7mm]
     (3.00,3.34) rectangle (3.50,3.72);
   \node[font=\sffamily\bfseries\fontsize{4.6}{5.4}\selectfont,
         text=cGray!92!black] at (3.25,3.53) {HV};
   \node[small label, anchor=south, text=cGray!88!black]
     at (3.25,3.76) {$V_{\mathrm{app}}$};
-  \draw[cGray!66!black, line width=0.84pt, rounded corners=0.35mm]
+  \draw[cGray!66!black, line width=0.66pt, rounded corners=0.35mm]
     (3.50,3.58)--(3.65,3.58)--(3.65,3.02);
-  \draw[cGray!58!black, line width=0.84pt]
+  \draw[cGray!58!black, line width=0.66pt]
     (3.00,3.45)--(2.76,3.45)--(2.76,3.30);
-  \draw[cGray!58!black, line width=0.84pt] (2.64,3.30)--(2.88,3.30);
-  \draw[cGray!58!black, line width=0.84pt] (2.68,3.24)--(2.84,3.24);
-  \draw[cGray!58!black, line width=0.84pt] (2.72,3.18)--(2.80,3.18);
+  \draw[cGray!58!black, line width=0.66pt] (2.64,3.30)--(2.88,3.30);
+  \draw[cGray!58!black, line width=0.66pt] (2.68,3.24)--(2.84,3.24);
+  \draw[cGray!58!black, line width=0.66pt] (2.72,3.18)--(2.80,3.18);
 
   % Mechanism-first annotations. The named Maxwell baseline and Coulomb result
   % already carry the force contrast; redundant pale field curves read as
@@ -651,18 +653,18 @@
   % The result arrow begins on the trapped-charge perimeter and points away
   % from the driven electrode. It is intentionally stronger than the Maxwell
   % baseline so the panel reads as a Coulomb-response claim first.
-  \draw[-{Stealth[length=4.8pt,width=3.5pt]}, cRed!88!black, line width=0.96pt]
+  \draw[-{Stealth[length=4.8pt,width=3.5pt]}, cRed!88!black, line width=0.86pt]
     (1.325,1.43)--(0.34,1.43);
   \node[font=\sffamily\fontsize{5.1}{5.9}\selectfont,
         text=cRed!82!black, anchor=south west, align=left,
         inner sep=0.4pt]
     at (0.30,1.50) {\bfseries Coulomb\\[-0.6pt]\mdseries repulsion};
 
-  \draw[cGray!30, line width=0.84pt]
+  \draw[cGray!30, line width=0.42pt]
     (0.96,0.67)--(0.96,0.61)
     (3.54,0.66)--(3.54,0.61);
   \draw[<->, >={Stealth[length=3.0pt,width=2.2pt]},
-        cGray!54!black, line width=0.84pt]
+        cGray!54!black, line width=0.66pt]
     (1.00,0.61)--(3.50,0.61);
   \node[small label, fill=white, inner sep=1.2pt, anchor=north]
     at (2.30,0.54) {air gap};

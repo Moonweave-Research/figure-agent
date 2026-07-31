@@ -275,7 +275,7 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     assert "bias circuit neutral gray" in panel_f
     assert "cBlue!66!black" not in panel_f
     assert "cBlue!58!black" not in panel_f
-    assert "cGray!54!black, line width=0.84pt" in panel_f
+    assert "cGray!54!black, line width=0.66pt" in panel_f
     assert "cAmber!7, rounded corners=0.45mm" in panel_f
     assert r"(1.325,1.43)--(0.34,1.43)" in panel_f
     assert r"{\bfseries Coulomb\\[-0.6pt]\mdseries repulsion}" in panel_f
@@ -343,9 +343,9 @@ def test_repaired_panel_e_uses_colour_for_measurement_marks_not_text() -> None:
     for colored_text in ("text=cBrown", "text=cTeal", "text=cBlue", "text=cRed"):
         assert colored_text not in panel_e
     assert panel_e.count("text=cGray!88!black") >= 4
-    assert "cTeal!78!black, line width=0.84pt" in panel_e
-    assert "cBlue!84!black, line width=1.0pt" in panel_e
-    assert "cRed!84!black, line width=1.0pt" in panel_e
+    assert "cTeal!78!black, line width=0.66pt" in panel_e
+    assert "cBlue!84!black, line width=0.82pt" in panel_e
+    assert "cRed!84!black, line width=0.82pt" in panel_e
 
 
 def test_repaired_panel_e_preserves_a_visible_noncontact_esvm_gap() -> None:
@@ -471,7 +471,7 @@ def test_repaired_panel_separators_remain_subordinate_to_scientific_marks() -> N
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     separators = source.split("% Panel A", 1)[0]
 
-    assert separators.count("cGray!10, line width=0.84pt") == 5
+    assert separators.count("cGray!10, line width=0.42pt") == 5
     assert "cGray!18, line width=0.84pt" not in separators
 
 
@@ -509,10 +509,15 @@ def test_repaired_panel_a_strokes_survive_declared_final_scale() -> None:
         )
     ]
 
-    # The source is about 150 mm wide and audits against a declared
-    # height-limited final width, so 0.84 pt stays close to a 1 pt print stroke.
+    # Overview structure now follows the thinner Fig. 2 baseline; separators
+    # are intentionally lighter and are checked separately below.
     assert widths
-    assert min(widths) >= 0.84
+    assert min(
+        float(value)
+        for value in re.findall(
+            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_a
+        )
+    ) >= 0.66
 
 
 def test_repaired_panel_b_strokes_survive_declared_final_scale() -> None:
@@ -526,7 +531,7 @@ def test_repaired_panel_b_strokes_survive_declared_final_scale() -> None:
     ]
 
     assert widths
-    assert min(widths) >= 0.84
+    assert min(widths) >= 0.66
 
 
 def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
@@ -543,10 +548,10 @@ def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
     # Claim-bearing DOS, edge, and correspondence strokes keep the publication
     # floor; low-contrast host texture and tiny marker outlines are intentional
     # supporting marks and must not be judged by a raw minimum-width check.
-    assert "cBlue!84!black, line width=1.0pt" in panel_c
-    assert "cRed!84!black, line width=1.0pt" in panel_c
-    assert "cAmber!58!black, line width=0.90pt" in panel_c
-    assert "line width=0.84pt" in panel_c
+    assert "cBlue!84!black, line width=0.82pt" in panel_c
+    assert "cRed!84!black, line width=0.82pt" in panel_c
+    assert "cAmber!58!black, line width=0.74pt" in panel_c
+    assert "line width=0.66pt" in panel_c
     assert "circle (0.040);\n    \\draw" not in panel_c
     assert "cBlue!32, dash pattern" in panel_c
     assert "cRed!32, dash pattern" in panel_c
@@ -599,7 +604,7 @@ def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
     # neutral and nearly white rather than reusing the sulfur palette.
     assert "\\fill[cAmber!8" in panel_c
     assert "\\fill[cGray!3]" not in panel_c
-    assert "\\draw[cAmber!58!black, line width=0.90pt, rounded corners" in panel_c
+    assert "\\draw[cAmber!58!black, line width=0.74pt, rounded corners" in panel_c
     # Colour encodes the trap populations in marks and curves, not in text;
     # neutral labels remain readable in grayscale and colour-blind viewing.
     assert "text=cBlue" not in panel_c
@@ -614,7 +619,7 @@ def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
         assert fill
         assert int(fill.group(1)) <= 20
         assert float(fill.group(2)) <= 0.60
-        assert f"c{color}!84!black, line width=1.0pt" in panel_c
+        assert f"c{color}!84!black, line width=0.82pt" in panel_c
     assert "rectangular population wash" in panel_c
     assert "(7.72,2.42) rectangle (11.80,3.34)" not in panel_c
     assert "(7.72,0.98) rectangle (11.80,2.38)" not in panel_c
@@ -635,7 +640,7 @@ def test_repaired_shared_semantic_lines_survive_nature_scale() -> None:
             r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", declaration
         )
         assert width is not None
-        assert float(width.group(1)) >= 0.84
+        assert float(width.group(1)) >= 0.66
 
 
 def test_repaired_panel_d_strokes_survive_declared_final_scale() -> None:
@@ -649,8 +654,8 @@ def test_repaired_panel_d_strokes_survive_declared_final_scale() -> None:
     ]
 
     assert widths
-    assert "line width=1.10pt" in panel_d
-    assert "line width=0.84pt" in panel_d
+    assert "line width=0.90pt" in panel_d
+    assert "line width=0.66pt" in panel_d
     assert "line width=0.25pt" in panel_d  # neutral shared-anchor outline
     assert "{low $n$}" in panel_d
     assert "{high $n$}" in panel_d
@@ -707,8 +712,8 @@ def test_repaired_panel_e_strokes_survive_declared_final_scale() -> None:
     ]
 
     assert widths
-    assert "line width=1.0pt" in panel_e
-    assert "line width=0.84pt" in panel_e
+    assert "line width=0.82pt" in panel_e
+    assert "line width=0.66pt" in panel_e
     assert "ESVM head" in panel_e
     assert r"manual sample\\[-0.5pt]transfer" in panel_e
     assert "anchor=north, align=center" in panel_e
@@ -754,9 +759,9 @@ def test_repaired_panel_f_and_full_figure_keep_role_appropriate_strokes() -> Non
     ]
 
     assert widths
-    assert "line width=1.0pt" in panel_f
-    assert "line width=0.96pt" in panel_f
-    assert "line width=0.84pt" in panel_f
+    assert "line width=0.82pt" in panel_f
+    assert "line width=0.86pt" in panel_f
+    assert "line width=0.66pt" in panel_f
     assert "line width=0.42pt" in panel_f  # low-contrast Maxwell baseline
     assert "text=cRed!82!black" in panel_f
     assert r"{mechanical\\clamp}" in panel_f
