@@ -158,7 +158,8 @@ def test_fig2_declares_material_and_readout_grammar() -> None:
         "bound_dipole_pairing",
     }
     assert "dipoleBody" in source
-    assert "ellipse [x radius=0.17, y radius=0.25]" in source
+    assert "ellipse [x radius=0.15, y radius=0.22]" in source
+    assert "circle [radius=0.042]" in source
     assert "trapState" in source
     assert "currentDot" in source
     assert "captureCue" in source
