@@ -13,8 +13,8 @@ design_principles:
     instruction: "Use a quiet common MIM cross-section grammar; material identity must come from the internal physical cue, not heavy card outlines."
   - id: flat_mim_layer_hierarchy
     instruction: "Render matched MIM cells as flat metal / polymer-film / metal sections; the film fill is the material body, while sparse interior cues must remain subordinate."
-  - id: bound_dipole_pairing
-    instruction: "In the ideal-dielectric baseline, draw compact sign-paired bound dipoles rather than bare arrows that can be mistaken for carrier flow."
+  - id: bound_polarization_surfaces
+    instruction: "When molecular identity is not claimed, show the ideal-dielectric baseline as a field-aligned polarization vector with neutral paired bound-charge surfaces rather than repeated dipole icons that can be mistaken for carrier flow or a literal molecular model."
   - id: restrained_analytic_index
     instruction: "Keep the transient curve as a clear qualitative analytic index, never a faux measured plot, a time-calibrated mini-graph, or a generic decorative zig-zag."
   - id: log_log_power_law_grammar
@@ -97,18 +97,19 @@ aesthetic_levers:
       - "invent a specific electrode metal, carrier polarity, or hopping pathway"
       - "introduce a perspective side face or decorative device shadow"
     default_route: semantic_backport
-  - id: bound_dipole_pairing
+  - id: bound_polarization_surfaces
     dimension: physics_cue_legibility
-    intent: "Let the ideal baseline read as field-aligned bound polarization without assigning a mobile carrier sign."
+    intent: "Let the ideal baseline read as continuum bound polarization without assigning a mobile carrier sign or a literal molecular structure."
     priority: required
     positive_signals:
-      - "each polarization cue has paired negative and positive poles"
-      - "the dipole moment points from the negative pole to the positive pole along the held field"
+      - "paired bound-charge surfaces stay inside the dielectric at opposite interfaces"
+      - "one polarization vector aligns with the held field without competing with it"
     anti_patterns:
       - "isolated arrows that can read as charge-carrier transport"
       - "unpaired signed carriers dispersed through the ideal film"
+      - "a repeated molecular dipole icon that asserts unearned microscopic structure"
     allowed_adjustments:
-      - "adjust dipole size, spacing, and restrained blue contrast"
+      - "adjust the bound-charge surface contrast, polarization-vector position, and restrained blue role"
     forbidden_adjustments:
       - "use the dipole signs to assert a net carrier polarity or free-charge population"
     default_route: semantic_backport

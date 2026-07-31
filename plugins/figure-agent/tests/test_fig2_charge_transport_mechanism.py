@@ -122,9 +122,9 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
         "field_condition_embodiment",
         "log_log_power_law_grammar",
         "flat_mim_layer_hierarchy",
-        "bound_dipole_pairing",
+        "bound_polarization_surfaces",
     }
-    assert "rapid polarization" in source
+    assert "rapid bound polarization" in source
     assert "distributed local states" in source
     assert "slow relaxation" in source
     assert "$E_\\mathrm{app}$" in source
@@ -132,8 +132,9 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
     assert "charge drains" not in source
     assert "top color=" not in source
     assert "bottom color=" not in source
-    assert "dipolePositive" in source
-    assert "dipoleNegative" in source
+    assert "boundCharge" in source
+    assert "polarizationVector" in source
+    assert "dipolePole" not in source
 
 
 def test_fig2_declares_log_log_power_law_grammar_for_the_qualitative_readout() -> None:

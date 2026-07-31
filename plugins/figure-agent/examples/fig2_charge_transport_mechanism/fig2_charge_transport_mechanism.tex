@@ -23,11 +23,10 @@
   electrode/.style={fill=cGray!22,draw=none},
   idealFilm/.style={fill=cBlue!6,draw=none},
   film/.style={fill=cAmber!10,draw=none},
-  dipoleStem/.style={cBlue!53!black,line width=0.34pt,line cap=round},
-  dipoleCharge/.style={inner sep=0pt,
+  boundCharge/.style={inner sep=0pt,text=cBlue!66!black,
     font=\sffamily\bfseries\fontsize{5.0}{5.0}\selectfont},
-  dipolePositive/.style={dipoleCharge,text=cBlue!66!black},
-  dipoleNegative/.style={dipoleCharge,text=cBlue!66!black},
+  polarizationVector/.style={-{Stealth[length=2.1pt,width=1.45pt]},
+    cBlue!58!black,line width=0.42pt,line cap=round},
   sulfurTrace/.style={cAmber!68!cGray,line width=0.46pt,line cap=round,
     line join=round},
   sulfurTraceSoft/.style={cAmber!48!cGray,line width=0.34pt,line cap=round,
@@ -75,6 +74,13 @@
   {Ideal dielectric};
 \fill[idealFilm] (\idealCellLeft,1.91) rectangle
   ({\idealCellLeft+\mimCellWidth},3.12);
+% A continuum dielectric cue: the held field polarizes the film and leaves
+% bound charge only at its two interfaces. This avoids turning the ideal
+% baseline into a literal molecular or mobile-carrier model.
+\fill[cBlue!12] (\idealCellLeft,3.01) rectangle
+  ({\idealCellLeft+\mimCellWidth},3.12);
+\fill[cBlue!12] (\idealCellLeft,1.91) rectangle
+  ({\idealCellLeft+\mimCellWidth},2.02);
 \draw[structure] (\idealCellLeft,3.28)--({\idealCellLeft+\mimCellWidth},3.28)
   (\idealCellLeft,3.12)--({\idealCellLeft+\mimCellWidth},3.12)
   (\idealCellLeft,1.91)--({\idealCellLeft+\mimCellWidth},1.91)
@@ -86,16 +92,16 @@
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\idealCellLeft+0.18},2.06)--({\idealCellLeft+0.18},2.96);
 \node[labelMute,anchor=west] at ({\idealCellLeft+0.26},2.98) {$E_\mathrm{app}$};
-% Bound dipoles, not drifting carrier arrows: negative and positive poles are
-% paired and the dipole moment aligns with the applied field.
-\foreach \x/\y in {1.25/2.29,1.85/2.66,2.50/2.25,3.18/2.63}{
-  \draw[dipoleStem,-{Stealth[length=1.9pt,width=1.35pt]}]
-    (\x,\y-0.12)--(\x,\y+0.12);
-  \node[dipoleNegative] at (\x,\y-0.16) {$-$};
-  \node[dipolePositive] at (\x,\y+0.16) {$+$};
+\foreach \x in {1.68,2.40,3.10}{
+  \node[boundCharge] at (\x,3.065) {$+$};
+  \node[boundCharge] at (\x,1.965) {$-$};
 }
+\draw[polarizationVector] ({\idealCellLeft+1.48},2.28)--
+  ({\idealCellLeft+1.48},2.70);
+\node[labelMute,text=cBlue!58!black,anchor=west] at
+  ({\idealCellLeft+1.57},2.49) {$\mathbf{P}$};
 \node[labelMute,anchor=north] at ({\idealCellLeft+0.5*\mimCellWidth},1.48)
-  {rapid polarization};
+  {rapid bound polarization};
 % fig-agent:end object=ideal_baseline
 
 % fig-agent:start object=sulfur_working_state panel=A kind=material_state truth_bearing=true
