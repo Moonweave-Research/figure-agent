@@ -40,7 +40,10 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert "held during acquisition" in source
     assert "matched MIM cells under a held field" in source
     assert "fitReference/.style" in source
-    assert "early-fit extrapolation" in source
+    assert "early-fit projection" in source
+    assert "$\\log I$" in source
+    assert "$\\log(t/\\mathrm{s})$" in source
+    assert "{$t=0$}" not in source
     assert "{vs.}" not in source
     assert "storyRail" not in source
     assert "material contrast" not in source
@@ -109,6 +112,7 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
         "color_and_stroke_economy",
         "print_scale_typography",
         "field_condition_embodiment",
+        "log_log_power_law_grammar",
     }
     assert "rapid polarization" in source
     assert "localized states" in source
@@ -116,6 +120,23 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
     assert "$E_\\mathrm{app}$" in source
     assert "{vs.}" not in source
     assert "charge drains" not in source
+
+
+def test_fig2_declares_log_log_power_law_grammar_for_the_qualitative_readout() -> None:
+    contract = yaml.safe_load((FIXTURE / "semantic_contract.yaml").read_text(encoding="utf-8"))
+    source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
+
+    assert "transient_readout_declares_log_log_power_law_geometry" in contract[
+        "protected_relations"
+    ]
+    roles = {
+        object_role["object_id"]: object_role["declared_role"]
+        for object_role in contract["semantic_legibility"]["object_roles"]
+    }
+    assert roles["panel_a.log_log_axes"] == "symbolic_logarithmic_axis_grammar"
+    assert "\\draw[traceEarly] (9.22,3.16)--(12.12,2.50);" in source
+    assert "\\draw[fitReference] (12.12,2.50)--(15.30,1.78);" in source
+    assert "\\draw[traceLate] (12.12,2.50)--(15.30,2.16);" in source
 
 
 def test_fig2_binds_localized_relaxation_to_the_late_readout_as_a_working_model() -> None:

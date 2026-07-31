@@ -13,6 +13,8 @@ design_principles:
     instruction: "Use a quiet common MIM cross-section grammar; material identity must come from the internal physical cue, not heavy card outlines."
   - id: restrained_analytic_index
     instruction: "Keep the transient curve as a clear qualitative analytic index, never a faux measured plot or a generic decorative zig-zag."
+  - id: log_log_power_law_grammar
+    instruction: "When the strip invokes a power law, state log--log axes, use a straight early slope, and show a visibly slower late-time departure above its neutral projection."
 must_avoid:
   - id: slide_banner_grammar
     pattern: "A large title, long condition banner, and equal-weight columns dominate the mechanism or make the strip read as a presentation slide."
@@ -132,3 +134,22 @@ aesthetic_levers:
       - "remove field, humidity, or readout-window meaning"
       - "change variable names or time-window claims"
     default_route: tikz_patch
+  - id: log_log_power_law_grammar
+    dimension: semantic_plot_grammar
+    intent: "Make the early power-law and the slower late-time decay readable as plot geometry, not as explanatory copy placed near a generic curve."
+    priority: required
+    positive_signals:
+      - "both axes explicitly state the logarithmic transform"
+      - "the early power-law appears as one straight descending segment"
+      - "the late solid response visibly separates above the neutral early-fit projection"
+    anti_patterns:
+      - "a curved trace on unlabeled axes offered as a power-law claim"
+      - "a t=0 tick on a logarithmic time axis"
+      - "a dotted late response when the dotted mark is not the reference projection"
+    allowed_adjustments:
+      - "redraw slopes and labels inside the fixed readout bounds"
+      - "rebalance the symbolic time ticks and late-time annotation lane"
+    forbidden_adjustments:
+      - "add fitted exponent values, synthetic scatter data, or a Debye reference curve"
+      - "turn the qualitative readout into a calibrated data panel"
+    default_route: semantic_backport

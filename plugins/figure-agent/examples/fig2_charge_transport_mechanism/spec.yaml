@@ -100,8 +100,8 @@ composition_model:
           kind: mini_plot
           truth_bearing: true
           anchor_target: sulfur_working_state
-          semantic_claim: qualitative two-window current readout follows the sulfur working picture
-          invariant: readout_remains_schematic_not_measured_and_keeps_early_before_late_window
+          semantic_claim: qualitative log-log current readout shows a late-time departure above the early power-law projection
+          invariant: readout_remains_schematic_not_measured_uses_log_log_axis_grammar_and_keeps_early_before_late_window
           allowed_creative_ops: [resize_readout_lane, reshape_qualitative_curve, consolidate_annotation]
 
 text_boundary_checks:
@@ -117,12 +117,12 @@ label_path_proximity_checks:
   - id: readout-window-divider
     kind: vertical_line
     role: fit-window-divider
-    x_pdf_cm: 12.90
+    x_pdf_cm: 12.32
     y_range_pdf_cm: [1.95, 3.64]
     clearance_pt: 2.5
     text_phrases:
       - id: late-window
-        words: ["30–300"]
+        words: ["slower", "late", "decay"]
 
 notes: |
   This fixture is intentionally schematic-only. The canonical Fig. 2 data

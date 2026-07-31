@@ -13,6 +13,7 @@ required_objects:
   - panel_a.long_lived_relaxation
   - panel_a.field_held_on
   - panel_a.transient_readout
+  - panel_a.log_log_axes
   - panel_a.early_window
   - panel_a.late_window
   - panel_a.early_fit_reference
@@ -41,6 +42,7 @@ protected_relations:
   - sulfur_working_picture_uses_sign_neutral_localized_charge_cues
   - field_is_held_on_throughout_current_acquisition
   - transient_readout_uses_response_trace_with_early_fit_reference
+  - transient_readout_declares_log_log_power_law_geometry
   - early_window_precedes_late_window
   - localized_state_relaxation_is_the_qualitative_cause_of_the_late_residual
   - strip_is_schematic_and_data_panels_are_pipeline_owned
@@ -83,8 +85,11 @@ semantic_legibility:
       declared_role: constant_applied_field_condition
       forbidden_readings: [source_off_or_discharge_interval]
     - object_id: panel_a.transient_readout
-      declared_role: qualitative_two_window_readout_icon
+      declared_role: qualitative_log_log_two_window_readout_icon
       forbidden_readings: [quantitative_data_panel]
+    - object_id: panel_a.log_log_axes
+      declared_role: symbolic_logarithmic_axis_grammar
+      forbidden_readings: [linear_time_axis, calibrated_y_axis]
     - object_id: panel_a.early_window
       declared_role: early_fit_window
       forbidden_readings: [exact_fit_result]

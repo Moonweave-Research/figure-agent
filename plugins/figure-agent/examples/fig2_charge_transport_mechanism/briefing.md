@@ -34,10 +34,10 @@ is converted into the other:
   charge states relax slowly enough to sustain the qualitative late residual
   above the early-fit extrapolation. It must not assign electron/hole polarity,
   trap depth, trap density, or a specific microscopic hopping pathway.
-- **What we read**: one qualitative response trace is split into a solid
-  `2–30 s` early-fit window and a dashed `30–300 s` late-response window. A
-  neutral extension of the early fit makes the late-time residual legible. This
-  is a readout icon, not data.
+- **What we read**: one qualitative **log–log** response trace has a straight
+  `2–30 s` early power-law segment. Its neutral extrapolation separates from a
+  solid `30–300 s` late segment with a visibly shallower slope, making the
+  slower late-time decay legible. This is a readout icon, not data.
 
 ## §3 Physics invariants
 
@@ -52,12 +52,14 @@ is converted into the other:
 - The two time windows are independent readout windows: early power-law slope
   and late-time residual relative to the early-fit extrapolation are related
   but not the same metric.
-- Quantitative `I(t)`, exponent, control-band, and normalized-deviation curves
-  belong to the data pipeline and must not be approximated by this strip.
+- Quantitative `I(t)`, fitted exponent, control-band, and normalized-deviation
+  curves belong to the data pipeline and must not be approximated by this strip.
 
 ## §4 Must avoid
 
-- No exact exponent, resistivity, sample code, error bar, or axis tick.
+- No fitted exponent, resistivity, sample code, error bar, or quantitative
+  y-axis scale. The symbolic `2`, `30`, and `300 s` x-ticks only establish the
+  declared log-time fit windows.
 - No S–S homolytic-cleavage energy diagram; that meaning is already assigned to
   Fig. 1 / Fig. 4 and would duplicate the manuscript story.
 - No charge sign, carrier type, specific trap hierarchy, or claim that the strip
