@@ -13,7 +13,7 @@ two serial stages or vertically stacked UI cards:
 2. Ideal dielectric: bound-dipole alignment and rapid pre-window polarization.
 3. Sulfur-rich copolymer: sign-neutral localized-state cues and long-lived
    relaxation, explicitly framed as a working picture.
-4. Readout icon with the early and late time windows.
+4. Readout icon with early and later response regimes.
 
 The parent panel letter sits outside this artboard; its header lane carries the
 quiet held-field condition. The two MIM cells must retain the same visible
@@ -43,8 +43,8 @@ mechanism detail.
 - Do not use a large circular halo, repeated amber/red bead population, or a
   decorative polymer wave; those cues make a localized population read as
   ornament or a second material phase.
-- Keep the readout trace qualitative and number-free except for the two declared
-  window labels.
+- Keep the readout trace qualitative and number-free. Exact analysis windows
+  belong to the quantitative panels, not this mechanism strip.
 - Do not use full-height column rules or equal framed cards; whitespace and the
   object silhouettes should establish the four lanes.
 

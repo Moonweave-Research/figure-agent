@@ -16,7 +16,7 @@ design_principles:
   - id: bound_dipole_pairing
     instruction: "In the ideal-dielectric baseline, draw compact sign-paired bound dipoles rather than bare arrows that can be mistaken for carrier flow."
   - id: restrained_analytic_index
-    instruction: "Keep the transient curve as a clear qualitative analytic index, never a faux measured plot or a generic decorative zig-zag."
+    instruction: "Keep the transient curve as a clear qualitative analytic index, never a faux measured plot, a time-calibrated mini-graph, or a generic decorative zig-zag."
   - id: log_log_power_law_grammar
     instruction: "When the strip invokes a power law, state log--log axes, use a straight early slope, and show a visibly slower late-time departure above its neutral projection."
 must_avoid:

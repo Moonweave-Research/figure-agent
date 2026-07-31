@@ -31,6 +31,7 @@ forbidden_implications:
   - panel_a.signed_carrier_inference
   - panel_a.source_off_during_transient
   - panel_a.calibrated_trap_depth_or_density
+  - panel_a.time_calibrated_mini_graph
 
 protected_relations:
   - mim_stack_contains_polymer_film_between_electrodes

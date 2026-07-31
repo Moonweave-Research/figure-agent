@@ -32,6 +32,8 @@
     line join=round},
   sulfurTraceSoft/.style={cAmber!48!cGray,line width=0.34pt,line cap=round,
     line join=round},
+  sulfurTraceFaint/.style={cAmber!36!cGray,line width=0.31pt,line cap=round,
+    line join=round},
   localizedState/.style={circle,fill=cRed!70!black,draw=cAmber!12,line width=0.25pt,
     minimum size=0.66mm,inner sep=0pt},
   fieldGuide/.style={cGray!60!black,line width=0.46pt,line cap=round},
@@ -43,8 +45,6 @@
   traceLate/.style={cRed!70!black,line width=0.96pt,line cap=round},
   fitReference/.style={cGray!52!black,line width=0.54pt,line cap=round,
     dash pattern=on 1.4pt off 1.5pt},
-  windowBoundary/.style={cGray!43!black,line width=0.38pt},
-  axisTick/.style={cGray!60!black,line width=0.38pt},
 ]
 
 % Both comparison cells represent the same MIM footprint.  The shared span is
@@ -116,25 +116,30 @@
   ({\sulfurCellLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\sulfurCellLeft+0.18},2.06)--({\sulfurCellLeft+0.18},2.96);
-% Two sparse, aperiodic local contours cue an amorphous host. They are neither
-% a literal molecular repeat nor a hopping route; the pale film remains the
-% material body and the red centres remain embedded localized-state cues.
-\draw[sulfurTraceSoft] (4.93,2.73) .. controls (5.12,2.54) and (5.29,2.55) ..
-  (5.45,2.65) .. controls (5.62,2.75) and (5.77,2.67) .. (5.93,2.56);
-\draw[sulfurTrace] (4.94,2.25) .. controls (5.12,2.08) and (5.31,2.09) ..
-  (5.48,2.22) .. controls (5.66,2.34) and (5.85,2.28) .. (6.04,2.34);
-\draw[sulfurTrace] (6.16,2.82) .. controls (6.34,2.61) and (6.49,2.42) ..
-  (6.65,2.31) .. controls (6.82,2.20) and (6.97,2.25) .. (7.10,2.39);
-% State centres sit on their owning contours; no free-floating particle
-% population or covalent network is implied.
+% A bounded, non-periodic host field gives the sulfur film material presence at
+% reduction. These are local amorphous environments, not literal repeat units,
+% a covalent network, or a carrier trajectory.
+\draw[sulfurTraceFaint] (4.79,2.84) .. controls (4.98,2.67) and (5.15,2.66) ..
+  (5.30,2.77) .. controls (5.47,2.89) and (5.65,2.83) .. (5.82,2.66);
+\draw[sulfurTraceSoft] (5.14,2.53) .. controls (5.34,2.40) and (5.49,2.39) ..
+  (5.67,2.49) .. controls (5.87,2.60) and (6.06,2.55) .. (6.25,2.42);
+\draw[sulfurTrace] (4.86,2.19) .. controls (5.05,2.05) and (5.27,2.07) ..
+  (5.48,2.22) .. controls (5.67,2.35) and (5.86,2.30) .. (6.04,2.34);
+\draw[sulfurTraceSoft] (5.88,2.00) .. controls (6.06,2.13) and (6.19,2.25) ..
+  (6.36,2.21) .. controls (6.54,2.17) and (6.73,2.06) .. (6.94,2.11);
+\draw[sulfurTrace] (6.13,2.87) .. controls (6.28,2.68) and (6.43,2.46) ..
+  (6.62,2.34) .. controls (6.79,2.23) and (6.96,2.28) .. (7.13,2.43);
+% State centres sit directly on their owning local contour; they do not imply
+% a free particle population, a phase-separated inclusion, or a hopping route.
 \coordinate (sulfurStateA) at (5.48,2.22);
-\coordinate (sulfurStateB) at (6.65,2.31);
-\coordinate (sulfurStateC) at (6.89,2.22);
-\foreach \state in {sulfurStateA,sulfurStateB,sulfurStateC}{
+\coordinate (sulfurStateB) at (5.67,2.49);
+\coordinate (sulfurStateC) at (6.36,2.21);
+\coordinate (sulfurStateD) at (6.62,2.34);
+\foreach \state in {sulfurStateA,sulfurStateB,sulfurStateC,sulfurStateD}{
   \node[localizedState] at (\state) {};
 }
 \node[labelMute,align=center,anchor=north] at ({\sulfurCellLeft+0.5*\mimCellWidth},1.48)
-  {localized states};
+  {distributed local states};
 
 % Keep the public semantic endpoint numeric: the Figure Agent endpoint check
 % resolves named coordinates directly from editable source.
@@ -152,25 +157,20 @@
 \node[columnTitle,anchor=south west] at (8.72,3.56) {Transient current};
 \draw[axisArrow] (8.72,1.58)--(8.72,3.36);
 \draw[axisArrow] (8.72,1.58)--(15.72,1.58);
-% A power law must read as a straight slope in log--log coordinates. The
-% symbolic ticks establish the scale without synthesizing a measured data plot;
-% t=0 is intentionally absent because log time is undefined there.
+% A power law must read as a straight slope in log--log coordinates. The icon
+% deliberately has no exact time ticks: it communicates the early-to-late
+% relationship without borrowing precision from the quantitative data panels.
 \node[labelMute,anchor=south east] at (8.63,3.40) {$\log I$};
 \node[labelMute,anchor=north] at (12.22,0.98) {$\log(t/\mathrm{s})$};
-\foreach \x/\t in {9.22/2,12.12/30,15.30/300}{
-  \draw[axisTick] (\x,1.58)--(\x,1.65);
-  \node[labelMute,anchor=north] at (\x,1.36) {$\t$};
-}
 \draw[traceEarly] (9.22,3.16)--(12.12,2.50);
-% The analysis-window boundary is a reference rule, not a response trend.
-\draw[windowBoundary] (12.12,1.66)--(12.12,3.15);
-% The neutral early-fit projection is separated from the solid late response:
-% the vertical offset makes the slower late-time decay legible.
+% The neutral early-fit projection is separated from the solid late response;
+% their split makes the delayed late-time response legible without a pseudo-data
+% window divider.
 \draw[fitReference] (12.12,2.50)--(15.30,1.78);
 \draw[traceLate] (12.12,2.50)--(15.30,2.16);
 \node[labelStd,anchor=south west] at (9.18,3.25) {early power-law fit};
 \node[labelStd,text=cRed!70!black,anchor=south west] at (12.56,2.66)
-  {slower late decay};
+  {late residual};
 \node[labelMute,anchor=north west] at (12.72,1.98) {early-fit projection};
 % fig-agent:end object=qualitative_current_readout
 

@@ -42,9 +42,10 @@ is converted into the other:
   amorphous local disorder, without becoming a literal chemical repeat or
   continuous hopping route.
 - **What we read**: one qualitative **log–log** response trace has a straight
-  `2–30 s` early power-law segment. Its neutral extrapolation separates from a
-  solid `30–300 s` late segment with a visibly shallower slope, making the
-  slower late-time decay legible. This is a readout icon, not data.
+  early power-law segment. Its neutral extrapolation separates from a solid
+  later segment with a visibly shallower slope, making the late residual
+  legible. This is a readout icon, not data; exact analysis times belong to the
+  quantitative panels.
 
 ## §3 Physics invariants
 
@@ -56,9 +57,9 @@ is converted into the other:
 - The slow-relaxation handoff is a qualitative working mechanism for the
   delayed late-time decay, not a direct measurement of trap depth, density, or
   carrier pathway.
-- The two time windows are independent readout windows: early power-law slope
-  and late-time residual relative to the early-fit extrapolation are related
-  but not the same metric.
+- The two readout regimes are independent: early power-law slope and late-time
+  residual relative to the early-fit extrapolation are related but not the same
+  metric. Their exact windows belong to the quantitative panels.
 - Quantitative `I(t)`, fitted exponent, control-band, and normalized-deviation
   curves belong to the data pipeline and must not be approximated by this strip.
 

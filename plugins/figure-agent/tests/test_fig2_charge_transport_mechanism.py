@@ -43,6 +43,8 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert "early-fit projection" in source
     assert "$\\log I$" in source
     assert "$\\log(t/\\mathrm{s})$" in source
+    assert "{9.22/2,12.12/30,15.30/300}" not in source
+    assert "windowBoundary" not in source
     assert "{$t=0$}" not in source
     assert "{vs.}" not in source
     assert "storyRail" not in source
@@ -51,6 +53,7 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert "trapAmber" not in source
     assert "localizedState" in source
     assert "sulfurTrace" in source
+    assert "sulfurTraceFaint" in source
     assert "\\def\\mimCellWidth" in source
     assert source.count("\\mimCellWidth") >= 8
     assert "Conventional dielectric" not in source
@@ -122,7 +125,7 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
         "bound_dipole_pairing",
     }
     assert "rapid polarization" in source
-    assert "localized states" in source
+    assert "distributed local states" in source
     assert "slow relaxation" in source
     assert "$E_\\mathrm{app}$" in source
     assert "{vs.}" not in source
@@ -140,6 +143,7 @@ def test_fig2_declares_log_log_power_law_grammar_for_the_qualitative_readout() -
     assert "transient_readout_declares_log_log_power_law_geometry" in contract[
         "protected_relations"
     ]
+    assert "panel_a.time_calibrated_mini_graph" in contract["forbidden_implications"]
     roles = {
         object_role["object_id"]: object_role["declared_role"]
         for object_role in contract["semantic_legibility"]["object_roles"]
