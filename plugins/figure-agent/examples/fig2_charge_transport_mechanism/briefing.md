@@ -38,15 +38,18 @@ the material-specific comparison`.
   not declare a mobile carrier polarity.
 - **Sulfur-rich copolymer**: a sign-neutral localized-state working model shown
   as one specimen at three successive held-field states: early field-on,
-  progressive trapping, and a long-lived occupied state. Empty and occupied
-  markers are categorical only. Short capture cues may terminate at a site, but
-  no continuous hopping path or molecular repeat is drawn.
+  progressive trapping, and a long-lived occupied state. Short horizontal
+  state bars with open or filled occupancy markers are categorical only; they
+  are not an energy axis. Short capture cues may terminate at a site, but no
+  continuous hopping path or molecular repeat is drawn.
 - **Mobile-current contribution**: early state shows a stronger qualitative
   through-film current cue; later states show a reduced cue as occupancy grows.
   This means reduced mobile-current contribution, not complete current blockage
   or zero current.
-- A compact key identifies open markers as available sites and filled markers as
-  occupied sites; the marks remain categorical rather than a trap-count scale.
+- A compact key identifies open bars as empty localized states and filled bars
+  as occupied localized states; the marks remain categorical rather than a
+  trap-count scale. State bars stay horizontal; diagonal strokes belong only to
+  amorphous host texture or capture cues.
 - **What we read**: a compact qualitative log--log output. A straight early
   segment and a later persistent-relaxation tail are secondary to the MIM
   sequence. Composition-specific normalized deviations, exact ratios, and time
