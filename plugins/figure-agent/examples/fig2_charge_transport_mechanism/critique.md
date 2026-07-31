@@ -5,7 +5,7 @@ generated_at: '2026-07-31T06:43:00Z'
 generator: Codex host vision critique
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:4d9b3a8a94c4622074e22c4034251b6a1648a6e8382a6752cb0b454c7029a835
+critique_input_hash: sha256:cc991844bd8e7f77b6cd570db1fcaed42a183aa19bb9ad3413beb73b38c627cc
 verdict: ready
 findings:
   - id: C001
@@ -339,7 +339,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:4d9b3a8a94c4622074e22c4034251b6a1648a6e8382a6752cb0b454c7029a835
+  assessed_artifact_hash: sha256:cc991844bd8e7f77b6cd570db1fcaed42a183aa19bb9ad3413beb73b38c627cc
   benchmark_level: solid_manuscript
   confidence: medium
   blockers: [human_protocol_validation]
