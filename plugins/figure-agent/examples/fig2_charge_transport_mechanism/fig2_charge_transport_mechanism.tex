@@ -190,6 +190,13 @@
 }
 \draw[currentSoft] (10.16,2.02)--(10.16,2.44);
 
+% A compact marker key prevents the categorical occupancy marks from being
+% mistaken for a quantitative trap-count legend at print reduction.
+\node[trapEmpty] at (6.48,1.48) {};
+\node[labelMute,anchor=west] at (6.60,1.48) {available site};
+\node[trapOccupied] at (8.34,1.48) {};
+\node[labelMute,anchor=west] at (8.46,1.48) {occupied site};
+
 % Discrete state connectors make the causal order visible without inventing a
 % calibrated time axis or an automated measurement process.
 \coordinate (early_state_out) at (5.64,3.47);

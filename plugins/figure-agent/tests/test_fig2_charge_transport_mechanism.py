@@ -46,6 +46,8 @@ def test_fig2_uses_progressive_trapping_sequence_and_standard_output() -> None:
     assert "captureCue" in source
     assert "currentStrong" in source
     assert "currentSoft" in source
+    assert "available site" in source
+    assert "occupied site" in source
     assert "Qualitative output" in source
     assert "$\\log I$" in source
     assert "$\\log t$" in source

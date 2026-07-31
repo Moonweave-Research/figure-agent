@@ -208,6 +208,8 @@ semantic_legibility:
       owner: panel_a.progressive_trapping_state
     - label_id: panel_a.long_lived_state_label
       owner: panel_a.long_lived_occupied_state
+    - label_id: panel_a.state_marker_key
+      owner: panel_a.sulfur_trap_sequence
     - label_id: panel_a.persistent_relaxation_label
       owner: panel_a.persistent_relaxation_readout
     - label_id: panel_a.early_power_law_label

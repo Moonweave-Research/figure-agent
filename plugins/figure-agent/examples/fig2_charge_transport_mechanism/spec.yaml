@@ -111,7 +111,7 @@ text_boundary_checks:
     mode: contain_text
     bbox_pdf_cm: [0.00, 0.00, 16.38, 5.02]
     clearance_pt: 0.0
-    text_allowlist: [DC, Idealized, Sulfur-rich, Qualitative, early, progressive, long-lived, persistent]
+    text_allowlist: [DC, Idealized, Sulfur-rich, Qualitative, early, progressive, long-lived, persistent, available, occupied]
 
 label_path_proximity_checks:
   - id: persistent-relaxation-annotation-lane

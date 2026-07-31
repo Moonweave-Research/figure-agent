@@ -45,6 +45,8 @@ the material-specific comparison`.
   through-film current cue; later states show a reduced cue as occupancy grows.
   This means reduced mobile-current contribution, not complete current blockage
   or zero current.
+- A compact key identifies open markers as available sites and filled markers as
+  occupied sites; the marks remain categorical rather than a trap-count scale.
 - **What we read**: a compact qualitative log--log output. A straight early
   segment and a later persistent-relaxation tail are secondary to the MIM
   sequence. Composition-specific normalized deviations, exact ratios, and time

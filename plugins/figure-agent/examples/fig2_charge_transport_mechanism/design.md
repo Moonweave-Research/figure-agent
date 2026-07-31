@@ -18,6 +18,8 @@ sequence, not three different samples or vertically stacked UI cards:
 5. Long-lived occupied state: occupied sites dominate qualitatively, a weak
    mobile-current cue remains, and persistent relaxation is indicated.
 6. Compact standard transient icon: early power law and persistent late tail.
+7. A small open/filled marker key makes the occupancy grammar explicit without
+   turning the illustrative sites into a quantitative legend.
 
 The parent panel letter sits outside this artboard; its header lane carries the
 quiet held-field condition. The reference and all sulfur MIM states must retain
