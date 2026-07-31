@@ -26,12 +26,6 @@
   dipoleBody/.style={fill=white,draw=cBlue!58!black,line width=0.38pt},
   dipoleCharge/.style={inner sep=0pt,text=cBlue!66!black,
     font=\sffamily\bfseries\fontsize{5.0}{5.0}\selectfont},
-  sulfurTrace/.style={cAmber!60!cGray,line width=0.36pt,line cap=round,
-    line join=round},
-  sulfurTraceSoft/.style={cAmber!42!cGray,line width=0.29pt,line cap=round,
-    line join=round},
-  sulfurTraceFaint/.style={cAmber!30!cGray,line width=0.27pt,line cap=round,
-    line join=round},
   trapState/.style={cRed!58!black,line width=0.42pt,line cap=round},
   currentStrong/.style={-{Stealth[length=2.5pt,width=1.8pt]},cGray!78!black,
     line width=0.58pt,line cap=round},
@@ -112,10 +106,10 @@
   {Sulfur-rich copolymer: progressive trapping};
 
 % Early state: field-on, distributed empty sites, and a strong mobile-current cue.
-% The host is deliberately sparse and disconnected. Localized states are drawn
-% as short state bars embedded in the film, rather than beads or potential-well
-% icons. This keeps the real-space material cue separate from Fig. 4's explicit
-% energy landscape while the dot marks categorical occupancy.
+% The sulfur-rich film is identified by its amber-tinted matrix. No molecular
+% chain or hand-drawn texture is needed here: localized states are short bars
+% with categorical occupancy dots, keeping the real-space cue separate from
+% Fig. 4's explicit energy landscape.
 \node[labelMute,anchor=south] at ({\stateEarlyLeft+0.5*\mimCellWidth},3.56)
   {early field-on};
 \fill[film] (\stateEarlyLeft,1.91) rectangle
@@ -130,9 +124,6 @@
   ({\stateEarlyLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\stateEarlyLeft+0.18},2.06)--({\stateEarlyLeft+0.18},2.96);
-\draw[sulfurTraceSoft] (3.62,2.82)--(3.86,2.72);
-\draw[sulfurTrace] (4.10,2.34)--(4.42,2.42);
-\draw[sulfurTraceFaint] (4.66,2.78)--(5.10,2.68);
 \draw[trapState] (3.72,2.68)--(4.02,2.68);
 \draw[cRed!70!black,line width=0.30pt] (3.87,2.68) circle [radius=0.035];
 \draw[trapState] (4.30,2.20)--(4.58,2.20);
@@ -141,7 +132,7 @@
 \draw[currentStrong] (5.02,2.02)--(5.02,2.86);
 
 % Progressive state: capture cues terminate on sites, while the mobile cue is
-% visibly reduced. The short fragments remain matrix texture, not a hopping wire.
+% visibly reduced.
 \node[labelMute,anchor=south] at ({\stateProgressLeft+0.5*\mimCellWidth},3.56)
   {progressive trapping};
 \fill[film] (\stateProgressLeft,1.91) rectangle
@@ -156,9 +147,6 @@
   ({\stateProgressLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\stateProgressLeft+0.18},2.06)--({\stateProgressLeft+0.18},2.96);
-\draw[sulfurTraceSoft] (6.26,2.80)--(6.52,2.70);
-\draw[sulfurTrace] (6.76,2.34)--(7.06,2.42);
-\draw[sulfurTraceFaint] (7.28,2.74)--(7.78,2.62);
 \draw[trapState] (6.38,2.66)--(6.68,2.66);
 \fill[cRed!70!black] (6.58,2.64) circle [radius=0.035];
 \draw[trapState] (7.10,2.30)--(7.42,2.30);
@@ -183,9 +171,6 @@
   ({\stateLateLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\stateLateLeft+0.18},2.06)--({\stateLateLeft+0.18},2.96);
-\draw[sulfurTraceSoft] (8.86,2.80)--(9.12,2.70);
-\draw[sulfurTrace] (9.28,2.34)--(9.58,2.42);
-\draw[sulfurTraceFaint] (9.84,2.76)--(10.40,2.64);
 \draw[trapState] (8.98,2.66)--(9.28,2.66);
 \fill[cRed!70!black] (9.18,2.64) circle [radius=0.035];
 \draw[trapState] (9.82,2.30)--(10.10,2.30);

@@ -5,7 +5,7 @@ generated_at: '2026-07-31T06:43:00Z'
 generator: Codex host vision critique
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:079d2574d1e578cac12e1165b41df953162e274ad190b24f9337b699087f3f44
+critique_input_hash: sha256:1b6e29bce470d03933d36c6fdb2128db5288a6f980ef2968b9248fb23c52a69e
 verdict: ready
 findings:
   - id: C001
@@ -25,8 +25,8 @@ findings:
     category: component_fidelity
     tex_lines: [140, 202]
     grounded_in_rule: "§4 Must avoid; panel A material-state rendering"
-    observation: "The earlier sulfur cells used circles and then U-shaped contours that could read as polymer beads or smile icons. The current render separates sparse host traces from short red localized-state bars; open and filled dots show categorical empty-to-occupied progression without introducing an energy axis."
-    suggested_fix: "Applied in the current source: redraw the three sulfur states with sparse disconnected host strokes, compact state bars, and categorical occupancy dots; preserve the qualified, sign-neutral working model and leave explicit trap energy to Fig. 4."
+    observation: "The earlier sulfur cells used circles, U-shaped contours, and then sparse slanted host strokes that could read as beads, smile icons, or arbitrary trap lines. The current render uses only the amber-tinted film matrix plus short red localized-state bars; open and filled dots show categorical empty-to-occupied progression without introducing an energy axis."
+    suggested_fix: "Applied in the current source: remove hand-drawn host texture, retain compact horizontal state bars and categorical occupancy dots, and leave explicit trap energy to Fig. 4."
     proposed_offset:
       axis: none
       dy_cm: 0
@@ -173,7 +173,7 @@ quality_axes:
   component_fidelity:
     verdict: pass
     confidence: high
-    rationale: "The MIM slabs, paired dipoles, disconnected sulfur traces, short localized-state bars with categorical dots, and readout curves are identifiable at print scale."
+    rationale: "The MIM slabs, paired dipoles, amber-tinted sulfur films, short localized-state bars with categorical dots, and readout curves are identifiable at print scale."
     evidence: "current render; flat_mim_layer_hierarchy; bound_dipole_pairing; material_texture_authorship"
     blocking_items: []
     recommended_action: none
@@ -339,7 +339,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:079d2574d1e578cac12e1165b41df953162e274ad190b24f9337b699087f3f44
+  assessed_artifact_hash: sha256:1b6e29bce470d03933d36c6fdb2128db5288a6f980ef2968b9248fb23c52a69e
   benchmark_level: solid_manuscript
   confidence: medium
   blockers: [human_protocol_validation]
@@ -375,7 +375,7 @@ aesthetic_gate_audit:
     linked_evidence: []
 aesthetic_lever_audit:
   - {lever_id: causal_hierarchy, dimension: hero_hierarchy, verdict: pass, confidence: high, observed_positive_signals: ["current render gives the sulfur sequence the claim-bearing lane"], observed_anti_patterns: [], route: none, linked_evidence: [], allowed_next_adjustment: '', forbidden_adjustment_guard: "do not replace the qualified sequence with synthetic data", evidence: "current render; causal_hierarchy", rationale: "The sulfur sequence and readout carry the mechanism."}
-  - {lever_id: material_texture_authorship, dimension: component_fidelity, verdict: pass, confidence: high, observed_positive_signals: ["current render uses bounded traces and categorical sites"], observed_anti_patterns: [], route: none, linked_evidence: [], allowed_next_adjustment: '', forbidden_adjustment_guard: "do not invent a microscopic transport path", evidence: "current render; material_texture_authorship", rationale: "Bounded traces and categorical sites remain subordinate to the film body."}
+  - {lever_id: material_texture_authorship, dimension: component_fidelity, verdict: pass, confidence: high, observed_positive_signals: ["current render keeps the film body quiet and the state glyphs categorical"], observed_anti_patterns: [], route: none, linked_evidence: [], allowed_next_adjustment: '', forbidden_adjustment_guard: "do not invent a microscopic transport path or decorative host texture", evidence: "current render; material_texture_authorship", rationale: "The amber film body and categorical state glyphs carry the material distinction without a misleading molecular sketch."}
   - {lever_id: flat_mim_layer_hierarchy, dimension: component_fidelity, verdict: pass, confidence: high, observed_positive_signals: ["current render shows matched flat slabs"], observed_anti_patterns: [], route: none, linked_evidence: [], allowed_next_adjustment: '', forbidden_adjustment_guard: "do not introduce perspective device faces", evidence: "current render; flat_mim_layer_hierarchy", rationale: "Matched slabs and quiet films read as MIM cross-sections."}
   - {lever_id: bound_dipole_pairing, dimension: component_fidelity, verdict: pass, confidence: high, observed_positive_signals: ["current render shows paired poles inside neutral ovals"], observed_anti_patterns: [], route: none, linked_evidence: [], allowed_next_adjustment: '', forbidden_adjustment_guard: "do not assign a mobile carrier polarity", evidence: "current render; bound_dipole_pairing", rationale: "Neutral oval dipoles own their paired poles."}
   - {lever_id: field_condition_embodiment, dimension: cross_panel_grammar, verdict: pass, confidence: high, observed_positive_signals: ["current render places the field cue inside each cell"], observed_anti_patterns: [], route: none, linked_evidence: [], allowed_next_adjustment: '', forbidden_adjustment_guard: "do not imply source-off during acquisition", evidence: "current render; embodied_shared_field", rationale: "The held field is shown where it acts."}

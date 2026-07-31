@@ -48,8 +48,8 @@ the material-specific comparison`.
   or zero current.
 - A compact key identifies open bars as empty localized states and filled bars
   as occupied localized states; the marks remain categorical rather than a
-  trap-count scale. State bars stay horizontal; diagonal strokes belong only to
-  amorphous host texture or capture cues.
+  trap-count scale. State bars stay horizontal; this strip does not draw a
+  molecular host texture, and diagonal strokes are reserved for capture cues.
 - **What we read**: a compact qualitative log--log output. A straight early
   segment and a later persistent-relaxation tail are secondary to the MIM
   sequence. Composition-specific normalized deviations, exact ratios, and time
