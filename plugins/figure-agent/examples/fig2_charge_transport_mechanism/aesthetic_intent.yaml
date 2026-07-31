@@ -11,6 +11,8 @@ design_principles:
     instruction: "Show the held field as a matched condition inside each MIM cell; it must read as a physical operating condition, not as a serial process rail above the cells."
   - id: material_not_card
     instruction: "Use a quiet common MIM cross-section grammar; material identity must come from the internal physical cue, not heavy card outlines."
+  - id: flat_mim_layer_hierarchy
+    instruction: "Render matched MIM cells as flat metal / polymer-film / metal sections; the film fill is the material body, while sparse interior cues must remain subordinate."
   - id: restrained_analytic_index
     instruction: "Keep the transient curve as a clear qualitative analytic index, never a faux measured plot or a generic decorative zig-zag."
   - id: log_log_power_law_grammar
@@ -73,6 +75,25 @@ aesthetic_levers:
     forbidden_adjustments:
       - "invent charge polarity, trap magnitude, or phase segregation"
       - "add a covalent network or a specific microscopic transport route"
+    default_route: semantic_backport
+  - id: flat_mim_layer_hierarchy
+    dimension: device_projection
+    intent: "Make both MIM cells read as matched two-terminal cross-sections before the reader interprets the material-specific interior cue."
+    priority: required
+    positive_signals:
+      - "top and bottom electrodes have identical flat slab grammar"
+      - "the polymer film is a continuous quiet region bounded by the two interfaces"
+      - "interior traces are visibly subordinate to the film and electrode boundaries"
+    anti_patterns:
+      - "beveled or pseudo-3D electrode bars"
+      - "interior polymer traces that read as a free particle path or covalent network"
+      - "duplicated layer labels that overwhelm the matched comparison"
+    allowed_adjustments:
+      - "redraw layer fills, interfaces, and sparse local material cues"
+      - "adjust local state scale and trace contrast"
+    forbidden_adjustments:
+      - "invent a specific electrode metal, carrier polarity, or hopping pathway"
+      - "introduce a perspective side face or decorative device shadow"
     default_route: semantic_backport
   - id: field_condition_embodiment
     dimension: causal_legibility

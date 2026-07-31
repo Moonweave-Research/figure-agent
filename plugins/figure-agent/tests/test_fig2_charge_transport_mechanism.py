@@ -113,6 +113,7 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
         "print_scale_typography",
         "field_condition_embodiment",
         "log_log_power_law_grammar",
+        "flat_mim_layer_hierarchy",
     }
     assert "rapid polarization" in source
     assert "localized states" in source
@@ -120,6 +121,8 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
     assert "$E_\\mathrm{app}$" in source
     assert "{vs.}" not in source
     assert "charge drains" not in source
+    assert "top color=" not in source
+    assert "bottom color=" not in source
 
 
 def test_fig2_declares_log_log_power_law_grammar_for_the_qualitative_readout() -> None:

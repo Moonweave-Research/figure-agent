@@ -19,17 +19,17 @@
     text=cGray!75!black},
   labelMute/.style={font=\sffamily\itshape\fontsize{5.05}{6.1}\selectfont,
     text=cGray!60!black},
-  structure/.style={cGray!66!black,line width=0.55pt,line cap=round},
-  electrode/.style={top color=cGray!14,bottom color=cGray!30,draw=none},
-  idealFilm/.style={top color=cBlue!3,bottom color=cBlue!10,draw=none},
-  film/.style={top color=cAmber!7,bottom color=cAmber!15,draw=none},
-  dipole/.style={cBlue!62!black,line width=0.54pt,line cap=round},
-  sulfurTrace/.style={cAmber!76!black,line width=0.58pt,line cap=round,
+  structure/.style={cGray!63!black,line width=0.46pt,line cap=round},
+  electrode/.style={fill=cGray!22,draw=none},
+  idealFilm/.style={fill=cBlue!6,draw=none},
+  film/.style={fill=cAmber!10,draw=none},
+  dipole/.style={cBlue!62!black,line width=0.48pt,line cap=round},
+  sulfurTrace/.style={cAmber!68!cGray,line width=0.46pt,line cap=round,
     line join=round},
-  sulfurTraceSoft/.style={cAmber!57!black,line width=0.40pt,line cap=round,
+  sulfurTraceSoft/.style={cAmber!48!cGray,line width=0.34pt,line cap=round,
     line join=round},
-  localizedState/.style={circle,fill=cRed!72!black,draw=white,line width=0.25pt,
-    minimum size=0.78mm,inner sep=0pt},
+  localizedState/.style={circle,fill=cRed!70!black,draw=cAmber!12,line width=0.25pt,
+    minimum size=0.66mm,inner sep=0pt},
   fieldGuide/.style={cGray!60!black,line width=0.46pt,line cap=round},
   storyArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!58!black,
     line width=0.50pt},
@@ -69,15 +69,15 @@
 % fig-agent:start object=ideal_baseline panel=A kind=material_state truth_bearing=true
 \node[columnTitle,anchor=south] at ({\idealCellLeft+0.5*\mimCellWidth},3.56)
   {Ideal dielectric};
-\shade[idealFilm] (\idealCellLeft,1.91) rectangle
+\fill[idealFilm] (\idealCellLeft,1.91) rectangle
   ({\idealCellLeft+\mimCellWidth},3.12);
 \draw[structure] (\idealCellLeft,3.28)--({\idealCellLeft+\mimCellWidth},3.28)
   (\idealCellLeft,3.12)--({\idealCellLeft+\mimCellWidth},3.12)
   (\idealCellLeft,1.91)--({\idealCellLeft+\mimCellWidth},1.91)
   (\idealCellLeft,1.75)--({\idealCellLeft+\mimCellWidth},1.75);
-\shade[electrode] (\idealCellLeft,3.12) rectangle
+\fill[electrode] (\idealCellLeft,3.12) rectangle
   ({\idealCellLeft+\mimCellWidth},3.28);
-\shade[electrode] (\idealCellLeft,1.75) rectangle
+\fill[electrode] (\idealCellLeft,1.75) rectangle
   ({\idealCellLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\idealCellLeft+0.18},2.06)--({\idealCellLeft+0.18},2.96);
@@ -95,35 +95,32 @@
 
 \node[columnTitle,anchor=south] at ({\sulfurCellLeft+0.5*\mimCellWidth},3.56)
   {Sulfur-rich copolymer};
-\shade[film] (\sulfurCellLeft,1.91) rectangle
+\fill[film] (\sulfurCellLeft,1.91) rectangle
   ({\sulfurCellLeft+\mimCellWidth},3.12);
 \draw[structure] (\sulfurCellLeft,3.28)--({\sulfurCellLeft+\mimCellWidth},3.28)
   (\sulfurCellLeft,3.12)--({\sulfurCellLeft+\mimCellWidth},3.12)
   (\sulfurCellLeft,1.91)--({\sulfurCellLeft+\mimCellWidth},1.91)
   (\sulfurCellLeft,1.75)--({\sulfurCellLeft+\mimCellWidth},1.75);
-\shade[electrode] (\sulfurCellLeft,3.12) rectangle
+\fill[electrode] (\sulfurCellLeft,3.12) rectangle
   ({\sulfurCellLeft+\mimCellWidth},3.28);
-\shade[electrode] (\sulfurCellLeft,1.75) rectangle
+\fill[electrode] (\sulfurCellLeft,1.75) rectangle
   ({\sulfurCellLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\sulfurCellLeft+0.18},2.06)--({\sulfurCellLeft+0.18},2.96);
-% A few short, aperiodic backbone fragments imply a disordered host without
-% asserting a covalent network or drawing a decorative sine-wave texture.
-\draw[sulfurTraceSoft] (4.92,2.74) .. controls (5.10,2.60) and (5.28,2.57) ..
-  (5.45,2.67) -- (5.70,2.80);
-\draw[sulfurTrace] (4.86,2.28) .. controls (5.04,2.10) and (5.22,2.10) ..
-  (5.39,2.18) -- (5.61,2.31) .. controls (5.81,2.35) and (6.02,2.26) ..
-  (6.21,2.31);
-\draw[sulfurTrace] (6.12,2.82) .. controls (6.29,2.62) and (6.47,2.41) ..
-  (6.63,2.31) -- (6.86,2.43) .. controls (6.97,2.48) and (7.06,2.41) ..
-  (7.13,2.31);
-\draw[sulfurTraceSoft] (5.98,2.04) .. controls (6.18,2.18) and (6.39,2.21) ..
-  (6.56,2.13) -- (6.78,2.02);
-% State centres sit on their owning host trace; no free-floating particle
-% population is implied by the red marks.
-\coordinate (sulfurStateA) at (5.61,2.31);
-\coordinate (sulfurStateB) at (6.63,2.31);
-\coordinate (sulfurStateC) at (6.86,2.43);
+% Two sparse, aperiodic local contours cue an amorphous host. They are neither
+% a literal molecular repeat nor a hopping route; the pale film remains the
+% material body and the red centres remain embedded localized-state cues.
+\draw[sulfurTraceSoft] (4.93,2.73) .. controls (5.12,2.54) and (5.29,2.55) ..
+  (5.45,2.65) .. controls (5.62,2.75) and (5.77,2.67) .. (5.93,2.56);
+\draw[sulfurTrace] (4.94,2.25) .. controls (5.12,2.08) and (5.31,2.09) ..
+  (5.48,2.22) .. controls (5.66,2.34) and (5.85,2.28) .. (6.04,2.34);
+\draw[sulfurTrace] (6.16,2.82) .. controls (6.34,2.61) and (6.49,2.42) ..
+  (6.65,2.31) .. controls (6.82,2.20) and (6.97,2.25) .. (7.10,2.39);
+% State centres sit on their owning contours; no free-floating particle
+% population or covalent network is implied.
+\coordinate (sulfurStateA) at (5.48,2.22);
+\coordinate (sulfurStateB) at (6.65,2.31);
+\coordinate (sulfurStateC) at (6.89,2.22);
 \foreach \state in {sulfurStateA,sulfurStateB,sulfurStateC}{
   \node[localizedState] at (\state) {};
 }

@@ -26,14 +26,19 @@ is converted into the other:
 - **Comparison frame**: one shared held-field rail, with matched lateral MIM
   cells for the ideal baseline and sulfur-rich copolymer. The declared field
   `$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$` remains on during the whole
-  transient acquisition; `25 %RH` is a shared condition.
+  transient acquisition; `25 %RH` is a shared condition. Each MIM cell is a
+  flat metal / polymer film / metal cross-section; it is not a perspective
+  device icon or a source-and-wire circuit diagram.
 - **Ideal dielectric**: aligned bound dipoles and a rapid polarization response
   completed before the `2–30 s` analysis window. This is a conceptual baseline,
   not PI, PTFE, PET, or a universal material law.
 - **Sulfur-rich copolymer**: a sign-neutral working picture in which localized
   charge states relax slowly enough to sustain the qualitative late residual
   above the early-fit extrapolation. It must not assign electron/hole polarity,
-  trap depth, trap density, or a specific microscopic hopping pathway.
+  trap depth, trap density, or a specific microscopic hopping pathway. The pale
+  film is the material body; at most a few short aperiodic contours may cue
+  amorphous local disorder, without becoming a literal chemical repeat or
+  continuous hopping route.
 - **What we read**: one qualitative **log–log** response trace has a straight
   `2–30 s` early power-law segment. Its neutral extrapolation separates from a
   solid `30–300 s` late segment with a visibly shallower slope, making the
