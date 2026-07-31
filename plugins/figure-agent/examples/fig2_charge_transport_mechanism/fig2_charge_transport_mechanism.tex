@@ -20,9 +20,9 @@
   labelMute/.style={font=\sffamily\itshape\fontsize{5.05}{6.1}\selectfont,
     text=cGray!60!black},
   structure/.style={cGray!66!black,line width=0.55pt,line cap=round},
-  electrode/.style={fill=cGray!24,draw=none},
-  idealFilm/.style={fill=cBlue!6,draw=none},
-  film/.style={fill=cAmber!11,draw=none},
+  electrode/.style={top color=cGray!14,bottom color=cGray!30,draw=none},
+  idealFilm/.style={top color=cBlue!3,bottom color=cBlue!10,draw=none},
+  film/.style={top color=cAmber!7,bottom color=cAmber!15,draw=none},
   dipole/.style={cBlue!62!black,line width=0.54pt,line cap=round},
   sulfurTrace/.style={cAmber!76!black,line width=0.58pt,line cap=round,
     line join=round},
@@ -63,28 +63,27 @@
   \;\textbar\; 25\,\% RH};
 % The field is carried by the matched cells themselves rather than by an
 % abstract top rail, so it cannot be mistaken for a serial process arrow.
-\node[labelMute,anchor=south] at (4.02,4.06) {matched MIM cells under a held field};
+\node[labelMute,anchor=south] at (4.02,3.88) {matched MIM cells under a held field};
 % fig-agent:end object=comparison_frame
 
 % fig-agent:start object=ideal_baseline panel=A kind=material_state truth_bearing=true
 \node[columnTitle,anchor=south] at ({\idealCellLeft+0.5*\mimCellWidth},3.56)
   {Ideal dielectric};
-\fill[idealFilm] (\idealCellLeft,1.91) rectangle
+\shade[idealFilm] (\idealCellLeft,1.91) rectangle
   ({\idealCellLeft+\mimCellWidth},3.12);
 \draw[structure] (\idealCellLeft,3.28)--({\idealCellLeft+\mimCellWidth},3.28)
   (\idealCellLeft,3.12)--({\idealCellLeft+\mimCellWidth},3.12)
   (\idealCellLeft,1.91)--({\idealCellLeft+\mimCellWidth},1.91)
   (\idealCellLeft,1.75)--({\idealCellLeft+\mimCellWidth},1.75);
-\fill[electrode] (\idealCellLeft,3.12) rectangle
+\shade[electrode] (\idealCellLeft,3.12) rectangle
   ({\idealCellLeft+\mimCellWidth},3.28);
-\fill[electrode] (\idealCellLeft,1.75) rectangle
+\shade[electrode] (\idealCellLeft,1.75) rectangle
   ({\idealCellLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\idealCellLeft+0.18},2.06)--({\idealCellLeft+0.18},2.96);
 \node[labelMute,anchor=west] at ({\idealCellLeft+0.26},2.98) {$E_\mathrm{app}$};
 \foreach \x/\y in {1.25/2.29,1.85/2.66,2.50/2.25,3.18/2.63}{
-  \draw[dipole,-{Stealth[length=2.6pt,width=1.8pt]}] (\x,\y-0.15)--(\x,\y+0.12);
-  \fill[cBlue!36] (\x,\y-0.17) circle (0.030);
+  \draw[dipole,-{Stealth[length=2.6pt,width=1.8pt]}] (\x,\y-0.16)--(\x,\y+0.14);
 }
 \node[labelMute,anchor=north] at ({\idealCellLeft+0.5*\mimCellWidth},1.48)
   {rapid polarization};
@@ -96,15 +95,15 @@
 
 \node[columnTitle,anchor=south] at ({\sulfurCellLeft+0.5*\mimCellWidth},3.56)
   {Sulfur-rich copolymer};
-\fill[film] (\sulfurCellLeft,1.91) rectangle
+\shade[film] (\sulfurCellLeft,1.91) rectangle
   ({\sulfurCellLeft+\mimCellWidth},3.12);
 \draw[structure] (\sulfurCellLeft,3.28)--({\sulfurCellLeft+\mimCellWidth},3.28)
   (\sulfurCellLeft,3.12)--({\sulfurCellLeft+\mimCellWidth},3.12)
   (\sulfurCellLeft,1.91)--({\sulfurCellLeft+\mimCellWidth},1.91)
   (\sulfurCellLeft,1.75)--({\sulfurCellLeft+\mimCellWidth},1.75);
-\fill[electrode] (\sulfurCellLeft,3.12) rectangle
+\shade[electrode] (\sulfurCellLeft,3.12) rectangle
   ({\sulfurCellLeft+\mimCellWidth},3.28);
-\fill[electrode] (\sulfurCellLeft,1.75) rectangle
+\shade[electrode] (\sulfurCellLeft,1.75) rectangle
   ({\sulfurCellLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\sulfurCellLeft+0.18},2.06)--({\sulfurCellLeft+0.18},2.96);
@@ -133,7 +132,7 @@
 
 % Keep the public semantic endpoint numeric: the Figure Agent endpoint check
 % resolves named coordinates directly from editable source.
-\coordinate (comparison_out) at (7.45,2.50);
+\coordinate (comparison_out) at (7.25,2.50);
 \coordinate (readout_entry) at (8.72,2.50);
 \draw[storyArrow] (comparison_out)--(readout_entry);
 % fig-agent:end object=sulfur_working_state
