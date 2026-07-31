@@ -28,7 +28,7 @@ def test_fig2_declares_a_parallel_material_comparison_contract() -> None:
     assert "mim_comparison_uses_matched_footprints" in contract["protected_relations"]
 
 
-def test_fig2_uses_evidence_bound_normalized_readout_without_ideal_trace() -> None:
+def test_fig2_uses_standard_log_log_transient_without_ideal_trace() -> None:
     source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
     contract = yaml.safe_load((FIXTURE / "semantic_contract.yaml").read_text(encoding="utf-8"))
 
@@ -38,19 +38,25 @@ def test_fig2_uses_evidence_bound_normalized_readout_without_ideal_trace() -> No
     assert "Conventional dielectric" in source
     assert "bound-polarization reference" in source
     assert "localized-state working model" in source
-    assert "$I_\\mathrm{meas}/I_\\mathrm{early}$" in source
-    assert "log time" in source
-    assert "early power-law reference" in source
-    assert "sulfur $\\geq70$ wt\\%: late excess" in source
-    assert "PI/PTFE: below reference" in source
+    assert "Transient-current readout" in source
+    assert "$\\log I$" in source
+    assert "$\\log t$" in source
+    assert "early power law" in source
+    assert "late departure" in source
+    assert "traceEarly" in source
+    assert "traceLate" in source
+    assert "fitReference" in source
     assert "ideal: rapid decay" not in source
     assert "localized charge capture" not in source
     assert "reduces mobile leakage" not in source
     assert "traceIdeal" not in source
-    assert "fitReference" not in source
+    assert "traceControl" not in source
+    assert "referenceRule" not in source
+    assert "$I_\\mathrm{meas}/I_\\mathrm{early}$" not in source
+    assert "PI/PTFE: below reference" not in source
     assert "panel_a.unmeasured_ideal_current_control" in contract["forbidden_implications"]
     assert "panel_a.direct_mobile_leakage_suppression_claim" in contract["forbidden_implications"]
-    assert "normalized_readout_compares_each_material_with_its_own_early_power_law" in contract[
+    assert "transient_readout_uses_standard_log_log_current_grammar" in contract[
         "protected_relations"
     ]
 
@@ -123,7 +129,7 @@ def test_fig2_declares_material_and_readout_grammar() -> None:
     assert "bottom color=" not in source
 
 
-def test_fig2_binds_qualified_localized_state_model_to_late_excess() -> None:
+def test_fig2_binds_qualified_localized_state_model_to_late_departure() -> None:
     contract = yaml.safe_load((FIXTURE / "semantic_contract.yaml").read_text(encoding="utf-8"))
 
     assert "localized_states_are_a_qualified_working_model_not_direct_proof" in contract[
@@ -132,7 +138,7 @@ def test_fig2_binds_qualified_localized_state_model_to_late_excess() -> None:
     assert any(
         connector["connector_id"] == "panel_a.localized_states_to_sulfur_readout"
         and connector["from_object"] == "panel_a.localized_charge_states"
-        and connector["to_object"] == "panel_a.sulfur_late_excess"
+        and connector["to_object"] == "panel_a.late_departure"
         and connector["epistemic_status"] == "qualified_inference"
         for connector in contract["semantic_legibility"]["visible_connectors"]
     )

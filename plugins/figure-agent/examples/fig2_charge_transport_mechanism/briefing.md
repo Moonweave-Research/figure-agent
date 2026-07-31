@@ -19,7 +19,7 @@ The strip must read as a causal comparison without implying that one material
 is converted into the other:
 
 `shared field-on MIM context → lateral reference-versus-sulfur material grammar
-→ each material's early-reference-normalized late-time readout in panels b–d`.
+→ conventional transient-current grammar; panels b–d own the material-specific comparison`.
 
 ## §2 Panel content
 
@@ -41,12 +41,11 @@ is converted into the other:
   linked sulfur-toned fragments may indicate disorder without becoming a literal
   chemical repeat, continuous hopping route, repeated smooth worm-like trace, or
   encoded trap-density map.
-- **What we read**: a qualitative normalized-time readout. Its horizontal axis
-  is logarithmic time and its vertical axis is the measured current relative to
-  each material's own early power-law reference. Sulfur at 70 wt% and above rises
-  above its reference late in the trace, whereas PI/PTFE fall below theirs. These
-  are readout icons, not data; exact ratios and time windows belong to the
-  quantitative panels.
+- **What we read**: one qualitative standard log--log current transient. A
+  straight early segment provides the power-law grammar; its neutral dashed
+  extrapolation makes a later solid departure legible. This is a readout icon,
+  not data. Composition-specific normalized deviations, exact ratios, and time
+  windows belong to the quantitative panels.
 
 ## §3 Physics invariants
 
@@ -58,9 +57,9 @@ is converted into the other:
 - Localized states are a qualified working model for the sulfur response, not a
   direct measurement of trap depth, density, leakage suppression, or carrier
   pathway.
-- The only material-current contrast drawn here is normalized to each material's
-  own early power-law reference. Its exact windows and ratios belong to the data
-  pipeline.
+- The readout establishes only a conventional early-power-law-to-late-departure
+  grammar. Its dashed projection is an early-fit extrapolation, not a measured
+  ideal-dielectric/control trace or a universal current law.
 - Quantitative `I(t)`, fitted exponent, control-band, and normalized-deviation
   curves belong to the data pipeline and must not be approximated by this strip.
 

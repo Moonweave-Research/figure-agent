@@ -430,11 +430,14 @@ rather than importing an appealing contrast from a generic theory note or a
 superseded deck. A held-field material comparison may use a qualitative readout
 instead of through-film carrier arrows, but an ideal-dielectric or reference
 trace is allowed only when an evidence source explicitly supports that matched
-comparison. If the data instead normalize each material to its own early-time
-law, draw that normalization grammar (for example, a unity reference with
-opposite late-time deviations) and do not imply an absolute-current ordering.
-Never turn a conceptual dielectric reference into a measured control, a
-free-carrier cartoon, or an unqualified microscopic mechanism.
+comparison. A panel-specific normalization metric may be scientifically correct
+but is not automatically the right grammar for a conceptual schematic: when an
+adjacent quantitative panel already owns that metric, use an evidence-bounded
+conventional readout such as a standard $\\log I$--$\\log t$ early slope and
+late departure, and leave the normalized comparison to the data panel. Never
+turn a special analysis ratio into a generic material icon, a conceptual
+dielectric reference into a measured control, or a qualitative state model into
+a free-carrier cartoon or unqualified microscopic mechanism.
 
 For a multi-stage measurement schematic, trace preparation or excitation, acquisition,
 transformation, and result in order. Flag an unexplained state such as deposited

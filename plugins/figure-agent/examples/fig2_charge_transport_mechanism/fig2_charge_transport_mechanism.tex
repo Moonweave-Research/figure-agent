@@ -41,9 +41,9 @@
     line width=0.50pt},
   axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
     line width=0.55pt},
-  traceSulfur/.style={cRed!76!black,line width=0.96pt,line cap=round},
-  traceControl/.style={cBlue!64!black,line width=0.68pt,line cap=round},
-  referenceRule/.style={cGray!54!black,line width=0.52pt,line cap=round,
+  traceEarly/.style={cRed!76!black,line width=0.82pt,line cap=round},
+  traceLate/.style={cRed!76!black,line width=0.96pt,line cap=round},
+  fitReference/.style={cGray!54!black,line width=0.52pt,line cap=round,
     dash pattern=on 1.4pt off 1.5pt},
 ]
 
@@ -146,33 +146,29 @@
 \coordinate (comparison_out) at (7.25,2.50);
 \coordinate (readout_entry) at (8.72,2.50);
 \draw[storyArrow] (comparison_out)--(readout_entry);
-\node[labelMute,text=cRed!70!black,anchor=south east] at (8.62,2.58)
-  {late-time deviation};
 % fig-agent:end object=sulfur_working_state
 
 % --------------------------------------------------------------------------
 % What we read
 % --------------------------------------------------------------------------
 % fig-agent:start object=qualitative_current_readout panel=A kind=mini_plot truth_bearing=true
-\node[columnTitle,anchor=south west] at (8.72,3.56) {Temporal readout};
+\node[columnTitle,anchor=south west] at (8.72,3.56) {Transient-current readout};
 \draw[axisArrow] (8.72,1.58)--(8.72,3.36);
 \draw[axisArrow] (8.72,1.58)--(15.72,1.58);
-% This readout mirrors the evidence owned by Fig. 2d: each material is compared
-% with its own early-time power-law reference.  It therefore makes no unmeasured
-% absolute-current or ideal-dielectric trace claim.
+% This is deliberately a conventional qualitative log--log transient, rather
+% than a compact copy of panel d's material-specific normalized metric.  The
+% early fit is extrapolated as a neutral reference; the solid late segment
+% departs above it without asserting an absolute control comparison.
 \node[labelMute,anchor=south east] at (8.63,3.40)
-  {$I_\mathrm{meas}/I_\mathrm{early}$};
-\node[labelMute,anchor=north] at (12.22,0.98) {log time};
-\draw[referenceRule] (9.10,2.34)--(15.30,2.34);
-\draw[traceSulfur] (9.22,2.34) .. controls (10.18,2.36) and (11.08,2.54) ..
-  (12.12,2.78) .. controls (13.05,2.98) and (14.18,3.06) .. (15.30,3.12);
-\draw[traceControl] (9.22,2.34) .. controls (10.26,2.31) and (11.14,2.15) ..
-  (12.12,1.98) .. controls (13.12,1.85) and (14.16,1.80) .. (15.30,1.76);
-\node[labelStd,text=cRed!70!black,anchor=south west] at (11.04,3.20)
-  {sulfur $\geq70$ wt\%: late excess};
-\node[labelMute,text=cBlue!64!black,anchor=north west] at (12.42,1.92)
-  {PI/PTFE: below reference};
-\node[labelMute,anchor=south west] at (9.17,2.39) {early power-law reference};
+  {$\log I$};
+\node[labelMute,anchor=north] at (12.22,0.98) {$\log t$};
+\draw[traceEarly] (9.22,3.14)--(12.12,2.50);
+\draw[fitReference] (12.12,2.50)--(15.30,1.78);
+\draw[traceLate] (12.12,2.50) .. controls (13.02,2.47) and (14.20,2.30) ..
+  (15.30,2.16);
+\node[labelMute,anchor=north west] at (9.24,2.88) {early power law};
+\node[labelStd,text=cRed!70!black,anchor=south west] at (12.56,2.67)
+  {late departure};
 % fig-agent:end object=qualitative_current_readout
 
 \end{tikzpicture}%

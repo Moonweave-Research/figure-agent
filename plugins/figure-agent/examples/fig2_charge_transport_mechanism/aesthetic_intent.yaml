@@ -18,7 +18,7 @@ design_principles:
   - id: restrained_analytic_index
     instruction: "Keep the transient curve as a clear qualitative analytic index, never a faux measured plot, a time-calibrated mini-graph, or a generic decorative zig-zag."
   - id: log_log_power_law_grammar
-    instruction: "Use a symbolic log-time normalized readout: a neutral early-power-law reference at unity, sulfur 70 wt% and above rising above it late in the trace, and PI/PTFE falling below their own references. Do not fabricate an absolute-current or ideal-dielectric trace."
+    instruction: "Use a standard symbolic log I--log t transient: a straight early power-law segment, a neutral dashed early-fit extrapolation, and a solid late departure above it. Do not turn panel d's material-specific normalization into the mechanism-strip readout or fabricate an ideal-dielectric trace."
 must_avoid:
   - id: slide_banner_grammar
     pattern: "A large title, long condition banner, and equal-weight columns dominate the mechanism or make the strip read as a presentation slide."
@@ -179,20 +179,21 @@ aesthetic_levers:
     default_route: tikz_patch
   - id: log_log_power_law_grammar
     dimension: semantic_plot_grammar
-    intent: "Make the material-specific early-reference normalization and the opposite late-time deviations readable as plot geometry, not as explanatory copy placed near a generic curve."
+    intent: "Make a conventional early power law and its later departure readable as plot geometry, while leaving the material-specific normalized comparison to the quantitative data panels."
     priority: required
     positive_signals:
-      - "the horizontal axis explicitly states logarithmic time while the vertical axis states normalization to the early reference"
-      - "a neutral unity rule visibly owns the early-power-law reference"
-      - "the red sulfur-rich response rises above its own reference into the late response"
-      - "the blue PI/PTFE control response falls below its own reference"
+      - "the axes explicitly state log I and log t without numerical ticks"
+      - "a straight early segment visibly establishes the power-law grammar"
+      - "a neutral dashed continuation is visibly distinct from the solid response"
+      - "the red late response departs above the early-fit extrapolation"
     anti_patterns:
       - "an absolute-current comparison or ideal-dielectric trace offered without matched evidence"
+      - "a panel-specific normalization metric presented as a generic material icon"
       - "a t=0 tick on a logarithmic time axis"
       - "a dotted late response when the dotted mark is not the reference projection"
     allowed_adjustments:
-      - "redraw normalized deviation curves and labels inside the fixed readout bounds"
-      - "rebalance the unity-rule and late-time annotation lanes"
+      - "redraw the early and late trace segments inside the fixed readout bounds"
+      - "rebalance the extrapolation and late-departure annotation lanes"
     forbidden_adjustments:
       - "add fitted exponent values, synthetic scatter data, or a Debye reference curve"
       - "turn the qualitative readout into a calibrated data panel"

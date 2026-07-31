@@ -13,8 +13,8 @@ two serial stages or vertically stacked UI cards:
 2. Conventional dielectric reference: bound-dipole alignment.
 3. Sulfur-rich copolymer: sign-neutral localized-state cues, explicitly framed
    as a working picture.
-4. Normalized readout icon: late current relative to each material's own early
-   power-law reference.
+4. Standard transient icon: early power-law segment and later departure from
+   its dashed early-fit extrapolation.
 
 The parent panel letter sits outside this artboard; its header lane carries the
 quiet held-field condition. The two MIM cells must retain the same visible
@@ -44,10 +44,11 @@ mechanism detail.
 - Do not use a large circular halo, repeated amber/red bead population, or a
   decorative polymer wave; those cues make a localized population read as
   ornament or a second material phase.
-- Keep the normalized readout qualitative and number-free: log time horizontally,
-  an early-reference rule at unity, sulfur late excess above it, and PI/PTFE
-  control deficit below it. Exact analysis windows and ratios belong to the
-  quantitative panels, not this mechanism strip.
+- Keep the transient readout qualitative and number-free: $\log I$ vertically,
+  $\log t$ horizontally, a straight early power-law segment, and a solid late
+  departure above a neutral early-fit extrapolation. Exact analysis windows,
+  ratios, and cross-material comparisons belong to the quantitative panels, not
+  this mechanism strip.
 - Do not use full-height column rules or equal framed cards; whitespace and the
   object silhouettes should establish the four lanes.
 

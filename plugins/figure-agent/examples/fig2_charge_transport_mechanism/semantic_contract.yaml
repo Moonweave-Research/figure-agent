@@ -10,11 +10,11 @@ required_objects:
   - panel_a.sulfur_copolymer
   - panel_a.localized_charge_states
   - panel_a.field_held_on
-  - panel_a.normalized_readout
-  - panel_a.log_time_axis
-  - panel_a.early_power_law_reference
-  - panel_a.sulfur_late_excess
-  - panel_a.control_late_deficit
+  - panel_a.transient_readout
+  - panel_a.log_log_axes
+  - panel_a.early_power_law
+  - panel_a.early_fit_extrapolation
+  - panel_a.late_departure
 
 forbidden_implications:
   - panel_a.quantitative_transient_measurement
@@ -30,6 +30,7 @@ forbidden_implications:
   - panel_a.source_off_during_transient
   - panel_a.calibrated_trap_depth_or_density
   - panel_a.time_calibrated_mini_graph
+  - panel_a.normalized_deviation_metric
   - panel_a.unmeasured_ideal_current_control
   - panel_a.direct_mobile_leakage_suppression_claim
 
@@ -41,9 +42,10 @@ protected_relations:
   - reference_baseline_shows_bound_dipoles_without_free_carrier_flow
   - sulfur_working_picture_uses_sign_neutral_localized_charge_cues
   - field_is_held_on_throughout_current_acquisition
-  - normalized_readout_compares_each_material_with_its_own_early_power_law
-  - sulfur_70plus_rises_above_its_early_reference_at_late_time
-  - pi_ptfe_fall_below_their_early_reference_at_late_time
+  - transient_readout_uses_standard_log_log_current_grammar
+  - sulfur_trace_has_early_power_law_and_late_departure
+  - late_departure_is_shown_against_early_fit_extrapolation
+  - quantitative_cross_material_comparison_is_pipeline_owned
   - localized_states_are_a_qualified_working_model_not_direct_proof
   - strip_is_schematic_and_data_panels_are_pipeline_owned
 
@@ -78,21 +80,21 @@ semantic_legibility:
     - object_id: panel_a.field_held_on
       declared_role: acquisition_condition_continuity
       forbidden_readings: [source_off_or_discharge_interval]
-    - object_id: panel_a.normalized_readout
-      declared_role: qualitative_normalized_late_time_deviation_readout
-      forbidden_readings: [absolute_current_comparison, quantitative_data_panel]
-    - object_id: panel_a.log_time_axis
-      declared_role: symbolic_logarithmic_time_axis_grammar
-      forbidden_readings: [linear_time_axis, calibrated_time_ticks]
-    - object_id: panel_a.early_power_law_reference
-      declared_role: material_specific_early_power_law_normalization_reference
-      forbidden_readings: [universal_current_law, ideal_dielectric_trace]
-    - object_id: panel_a.sulfur_late_excess
-      declared_role: qualitative_70plus_late_excess_relative_to_own_early_reference
-      forbidden_readings: [absolute_higher_current, calibrated_sample_trace]
-    - object_id: panel_a.control_late_deficit
-      declared_role: qualitative_pi_ptfe_late_deficit_relative_to_own_early_reference
-      forbidden_readings: [universal_control_response, calibrated_control_trace]
+    - object_id: panel_a.transient_readout
+      declared_role: qualitative_log_log_current_readout
+      forbidden_readings: [normalized_deviation_metric, quantitative_data_panel]
+    - object_id: panel_a.log_log_axes
+      declared_role: symbolic_logarithmic_current_and_time_axis_grammar
+      forbidden_readings: [linear_time_axis, calibrated_time_ticks, calibrated_current_ticks]
+    - object_id: panel_a.early_power_law
+      declared_role: qualitative_early_power_law_segment
+      forbidden_readings: [exact_exponent_value, calibrated_sample_trace]
+    - object_id: panel_a.early_fit_extrapolation
+      declared_role: qualitative_early_fit_extrapolation
+      forbidden_readings: [measured_control_trace, calibrated_predictive_trace]
+    - object_id: panel_a.late_departure
+      declared_role: qualitative_late_time_departure_from_early_fit
+      forbidden_readings: [material_wide_effect, calibrated_sample_trace]
   visible_connectors:
     - connector_id: panel_a.held_field_to_reference
       from_object: panel_a.measurement_context
@@ -108,19 +110,19 @@ semantic_legibility:
       epistemic_status: derived
     - connector_id: panel_a.reference_to_readout
       from_object: panel_a.reference_dielectric
-      to_object: panel_a.normalized_readout
+      to_object: panel_a.transient_readout
       declared_role: comparison_readout_membership
       render_style: stage_transition
       epistemic_status: derived
     - connector_id: panel_a.sulfur_to_readout
       from_object: panel_a.sulfur_copolymer
-      to_object: panel_a.normalized_readout
+      to_object: panel_a.transient_readout
       declared_role: comparison_readout_membership
       render_style: stage_transition
       epistemic_status: derived
     - connector_id: panel_a.localized_states_to_sulfur_readout
       from_object: panel_a.localized_charge_states
-      to_object: panel_a.sulfur_late_excess
+      to_object: panel_a.late_departure
       declared_role: qualified_working_model_link
       render_style: stage_transition
       epistemic_status: qualified_inference
@@ -128,7 +130,7 @@ semantic_legibility:
     - comparison_id: panel_a.material_states
       members: [panel_a.reference_dielectric, panel_a.sulfur_copolymer]
       shared_input: panel_a.measurement_context
-      shared_output: panel_a.normalized_readout
+      shared_output: panel_a.transient_readout
       comparison_basis: schematic_state
       input_connector_ids:
         - panel_a.held_field_to_reference
@@ -141,7 +143,7 @@ semantic_legibility:
       to_object: panel_a.sulfur_copolymer
       declared_role: actuation_force
     - from_object: panel_a.localized_charge_states
-      to_object: panel_a.normalized_readout
+      to_object: panel_a.transient_readout
       declared_role: calibrated_data_fit
   label_ownership:
     - label_id: panel_a.measurement_header
@@ -152,10 +154,8 @@ semantic_legibility:
       owner: panel_a.reference_dielectric
     - label_id: panel_a.sulfur_header
       owner: panel_a.sulfur_copolymer
-    - label_id: panel_a.early_reference_label
-      owner: panel_a.early_power_law_reference
-    - label_id: panel_a.sulfur_late_label
-      owner: panel_a.sulfur_late_excess
-    - label_id: panel_a.control_late_label
-      owner: panel_a.control_late_deficit
+    - label_id: panel_a.early_power_law_label
+      owner: panel_a.early_power_law
+    - label_id: panel_a.late_departure_label
+      owner: panel_a.late_departure
 publication_acceptance: not_claimed
