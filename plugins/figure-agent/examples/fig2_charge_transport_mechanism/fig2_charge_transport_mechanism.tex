@@ -38,6 +38,7 @@
     dash pattern=on 2pt off 1.3pt},
   fitReference/.style={cGray!52!black,line width=0.54pt,line cap=round,
     dash pattern=on 1.4pt off 1.5pt},
+  windowBoundary/.style={cGray!43!black,line width=0.38pt},
 ]
 
 % Both comparison cells represent the same MIM footprint.  The shared span is
@@ -138,8 +139,8 @@
 \node[labelMute,anchor=north] at (12.12,1.36) {time};
 \draw[traceEarly] (9.22,3.18) .. controls (9.91,2.97) and (10.72,2.68) ..
   (11.30,2.55);
-\draw[cGray!43!black,line width=0.40pt,dash pattern=on 1.2pt off 1.2pt]
-  (11.30,1.62)--(11.30,3.18);
+% The analysis-window boundary is a reference rule, not a response trend.
+\draw[windowBoundary] (11.30,1.62)--(11.30,3.18);
 % A neutral extension makes the late-time residual intelligible while keeping
 % this as a qualitative readout icon rather than a synthetic data panel.
 \draw[fitReference] (11.30,2.55) .. controls (12.42,2.18) and (13.83,1.86) ..
