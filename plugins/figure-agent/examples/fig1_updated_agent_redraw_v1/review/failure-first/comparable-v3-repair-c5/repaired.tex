@@ -37,7 +37,7 @@
   }
   % Individual shortened bonds meet the atom-label boxes without running behind glyphs.
   \foreach \i/\j in {1/2,2/3,3/4,4/5,5/6,6/7,7/8,8/1} {
-    \draw[cAmber!82!black, line width=0.74pt, line cap=round,
+    \draw[cAmber!82!black, line width=0.68pt, line cap=round,
           shorten >=2.0pt, shorten <=2.0pt] (v\i)--(v\j);
   }
   \foreach \i in {1,...,8} {
@@ -53,7 +53,7 @@
   % --- reactant 2: 1,3-diisopropenylbenzene, with both C=C bonds visible ---
   \coordinate (mc) at (2.55,3.72);
   \foreach \a in {0,60,120,180,240,300} { \coordinate (m\a) at ($(mc)+(\a:0.33)$); }
-  \draw[cGray, line width=0.76pt, line join=round]
+  \draw[cGray, line width=0.70pt, line join=round]
     (m0)--(m60)--(m120)--(m180)--(m240)--(m300)--cycle;
   \draw[cGray, line width=0.66pt]
     ($(m0)!0.22!(m60)!0.14!(mc)$)--($(m0)!0.78!(m60)!0.14!(mc)$)
@@ -62,14 +62,14 @@
   % left isopropenyl group: Ar-C(CH3)=CH2
   \coordinate (ma) at ($(m180)+(-0.22,0)$);
   \coordinate (mt) at ($(ma)+(-0.31,0)$);
-  \draw[cGray, line width=0.72pt] (m180)--(ma) (ma)--($(ma)+(0,0.24)$);
+  \draw[cGray, line width=0.68pt] (m180)--(ma) (ma)--($(ma)+(0,0.24)$);
   % enlarged-vector audit: alkene lines remain individually traceable
   \draw[cGray, line width=0.66pt] (ma)--(mt)
     ($(ma)+(0,-0.065)$)--($(mt)+(0,-0.065)$);
   % lower-right meta isopropenyl group: Ar-C(CH3)=CH2
   \coordinate (mb) at ($(m300)+(0.12,-0.19)$);
   \coordinate (mu) at ($(mb)+(0.17,-0.27)$);
-  \draw[cGray, line width=0.72pt] (m300)--(mb) (mb)--($(mb)+(0.22,0.08)$);
+  \draw[cGray, line width=0.68pt] (m300)--(mb) (mb)--($(mb)+(0.22,0.08)$);
   \draw[cGray, line width=0.66pt] (mb)--(mu)
     ($(mb)+(0.050,0.030)$)--($(mu)+(0.050,0.030)$);
   \node[small label, text=cGray!88!black] at (2.18,3.08) {1,3-DIB};
@@ -88,18 +88,18 @@
   % variable-rank left polysulfide and chemically continuous bond to left polysulfide
   \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (lsx) at (1.28,1.90) {$\mathrm{S}_{x}$};
   % polymer continuation bond
-  \draw[cAmber!88!black, line width=0.82pt, decorate,
+  \draw[cAmber!88!black, line width=0.74pt, decorate,
         decoration={snake, amplitude=0.22mm, segment length=1.8mm}]
     (0.58,1.90)--(lsx.west);
   % no mid-bond colour seam: the covalent S--C bond stays structural gray
-  \draw[cGray, line width=0.78pt] (lsx.east)--(2.48,1.90);
+  \draw[cGray, line width=0.70pt] (lsx.east)--(2.48,1.90);
 
   % bis-thiocumyl junction: Ar-C(CH3)2-S_x
   \coordinate (bcl) at (2.48,1.90);
   % The tertiary carbon is an implicit skeletal vertex. Do not mark it with a
   % filled dot, which can be misread as a radical centre in a reaction scheme.
   % Tetrahedral projection; avoid orthogonal cross.
-  \draw[cGray, line width=0.78pt]
+  \draw[cGray, line width=0.70pt]
     (bcl)--($(bcl)+(105:0.28)$)
     (bcl)--($(bcl)+(-45:0.28)$)
     (bcl)--(3.20,1.90);
@@ -107,7 +107,7 @@
   % meta-DIB aryl core, conventional Kekule representation
   \coordinate (pc) at (3.73,1.90);
   \foreach \a in {0,60,120,180,240,300} { \coordinate (r\a) at ($(pc)+(\a:0.53)$); }
-  \draw[cGray, line width=0.84pt, line join=round]
+  \draw[cGray, line width=0.76pt, line join=round]
     (r0)--(r60)--(r120)--(r180)--(r240)--(r300)--cycle;
   \draw[cGray, line width=0.66pt]
     ($(r0)!0.20!(r60)!0.14!(pc)$)--($(r0)!0.80!(r60)!0.14!(pc)$)
@@ -116,16 +116,16 @@
 
   % bis-thiocumyl junction: Ar-C(CH3)2-S_x
   \coordinate (bcr) at ($(r300)+(0.36,-0.12)$);
-  \draw[cGray, line width=0.78pt] (r300)--(bcr)
+  \draw[cGray, line width=0.70pt] (r300)--(bcr)
     (bcr)--($(bcr)+(75:0.28)$)
     (bcr)--($(bcr)+(-135:0.28)$);
 
   % variable-rank right polysulfide and chemically continuous bond to right polysulfide
   \node[font=\sffamily\bfseries\fontsize{7.0}{8.2}\selectfont, text=cBrown] (rsy) at ($(bcr)+(0.70,0)$) {$\mathrm{S}_{y}$};
   % no mid-bond colour seam: the covalent C--S bond stays structural gray
-  \draw[cGray, line width=0.78pt] (bcr)--(rsy.west);
+  \draw[cGray, line width=0.70pt] (bcr)--(rsy.west);
   % polymer continuation bond
-  \draw[cAmber!88!black, line width=0.82pt, decorate,
+  \draw[cAmber!88!black, line width=0.74pt, decorate,
         decoration={snake, amplitude=0.22mm, segment length=1.8mm}]
     (rsy.east)--(6.15,1.33);
 
@@ -144,7 +144,7 @@
   % Evidence boundary: S60/S75/S85 are sulfur wt-percent sample names;
   % drawn S-glyph count is a qualitative artistic correlate only,
   % not a measured molecular sulfur rank or literal chain length.
-  \draw[-{Stealth[length=3.4pt,width=2.6pt]}, cAmber!90!black, line width=0.82pt]
+  \draw[-{Stealth[length=3.4pt,width=2.6pt]}, cAmber!90!black, line width=0.74pt]
     (0.66,1.45)--(0.66,3.85);
   \node[small label, rotate=90, anchor=south, text=cBrown] at (0.44,2.65)
     {sulfur content (wt\%)};
@@ -162,7 +162,7 @@
       \foreach \a in {0,60,120,180,240,300} {
         \coordinate (bl\a) at ($(blc)+(\a:0.22)$);
       }
-      \draw[cGray, line width=0.76pt, line join=round]
+      \draw[cGray, line width=0.70pt, line join=round]
         (bl0)--(bl60)--(bl120)--(bl180)--(bl240)--(bl300)--cycle;
       \draw[cGray, line width=0.66pt]
         ($(bl0)!0.24!(bl60)!0.14!(blc)$)--($(bl0)!0.76!(bl60)!0.14!(blc)$)
@@ -172,7 +172,7 @@
       % compact left thiocumyl carbon: aryl + S chain + two methyl stubs
       \coordinate (blj) at (1.96,0);
       % Implicit skeletal carbon; a filled junction dot would suggest a radical.
-      \draw[cGray, line width=0.74pt] (bl0)--(blj)
+      \draw[cGray, line width=0.68pt] (bl0)--(blj)
         (blj)--($(blj)+(105:0.14)$)
         (blj)--($(blj)+(-45:0.14)$);
 
@@ -182,29 +182,29 @@
               font=\sffamily\bfseries\fontsize{4.6}{5.4}\selectfont,
               text=cBrown] (bs\k) at ({2.30+0.34*(\k-1)},0) {S};
       }
-      \draw[cGray, line width=0.74pt] (blj)--(bs1.west);
+      \draw[cGray, line width=0.68pt] (blj)--(bs1.west);
       \foreach \k in {2,...,\sc} {
         \pgfmathtruncatemacro{\prev}{\k-1}
-        \draw[cAmber!84!black, line width=0.76pt] (bs\prev.east)--(bs\k.west);
+        \draw[cAmber!84!black, line width=0.70pt] (bs\prev.east)--(bs\k.west);
       }
 
       % compact right thiocumyl carbon and aromatic fragment
       \coordinate (brj) at (\rightJ,0);
       % Implicit skeletal carbon, matching the corrected Panel A convention.
-      \draw[cGray, line width=0.74pt] (bs\sc.east)--(brj)
+      \draw[cGray, line width=0.68pt] (bs\sc.east)--(brj)
         (brj)--($(brj)+(75:0.14)$)
         (brj)--($(brj)+(-135:0.14)$);
       \coordinate (brc) at (\rightRing,0);
       \foreach \a in {0,60,120,180,240,300} {
         \coordinate (br\a) at ($(brc)+(\a:0.22)$);
       }
-      \draw[cGray, line width=0.76pt, line join=round]
+      \draw[cGray, line width=0.70pt, line join=round]
         (br0)--(br60)--(br120)--(br180)--(br240)--(br300)--cycle;
       \draw[cGray, line width=0.66pt]
         ($(br0)!0.24!(br60)!0.14!(brc)$)--($(br0)!0.76!(br60)!0.14!(brc)$)
         ($(br120)!0.24!(br180)!0.14!(brc)$)--($(br120)!0.76!(br180)!0.14!(brc)$)
         ($(br240)!0.24!(br300)!0.14!(brc)$)--($(br240)!0.76!(br300)!0.14!(brc)$);
-      \draw[cGray, line width=0.74pt] (brj)--(br180);
+      \draw[cGray, line width=0.68pt] (brj)--(br180);
       \node[body label, anchor=west, text=cBrown] at ({\rightRing+0.36},0) {\lbl};
     \end{scope}
   }

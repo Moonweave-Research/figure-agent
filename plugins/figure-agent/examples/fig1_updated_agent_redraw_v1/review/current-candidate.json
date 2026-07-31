@@ -4,7 +4,7 @@
   "candidate_id": "comparable-v3-repair-c5",
   "candidate_root": "review/failure-first/comparable-v3-repair-c5",
   "source_path": "repaired.tex",
-  "source_sha256": "sha256:5f0bbbed278e753348a7887f0d1b7278d8cba6f87a0e62d4c58f4f5facb0632f",
+  "source_sha256": "sha256:11476b64a5bb1faea15f7f7c713f90b3edd11cf7daf07cf4945cb2fbf9daf223",
   "evidence": {
     "render_pdf": "build/repaired.pdf",
     "render_png": "build/repaired.png",
