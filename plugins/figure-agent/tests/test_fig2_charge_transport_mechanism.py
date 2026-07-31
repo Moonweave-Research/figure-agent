@@ -12,6 +12,7 @@ sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
 import composition_scene  # noqa: E402
 import aesthetic_intent  # noqa: E402
+from briefing_grounding import has_reference_free_grounding_context  # noqa: E402
 import paper_aesthetic_context  # noqa: E402
 from semantic_legibility_contract import validate_semantic_legibility_contract  # noqa: E402
 
@@ -41,6 +42,11 @@ def test_fig2_critique_inputs_are_loadable_and_registered_in_nc_context() -> Non
         context, "fig2_charge_transport_mechanism"
     )
     assert role["role"] == "overview_mechanism"
+
+
+def test_fig2_briefing_requires_host_critique_when_reference_is_absent() -> None:
+    """Reference-free intent/rules must still make the critique gate explicit."""
+    assert has_reference_free_grounding_context(FIXTURE)
 
 
 def test_fig2_uses_progressive_trapping_sequence_and_standard_output() -> None:

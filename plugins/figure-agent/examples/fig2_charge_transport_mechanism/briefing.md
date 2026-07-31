@@ -5,7 +5,7 @@
 > the charge-transport data pipeline; Figure Agent draws this reader-facing
 > schematic only.
 
-## §1 Story slot
+## §1. Story slot
 
 Fig. 1 establishes the sulfur-rich copolymer platform and the measurement axes.
 Fig. 2 is the first data-substance figure: it tests whether sulfur-rich
@@ -22,7 +22,7 @@ is converted into the other:
 → reduced mobile-current contribution → persistent relaxation; panels b–d own
 the material-specific comparison`.
 
-## §2 Panel content
+## §2. Panel content
 
 - **Comparison frame**: one shared held-field condition, with a compact
   idealized-dielectric reference and three identical MIM states of one
@@ -52,7 +52,7 @@ the material-specific comparison`.
   sequence. Composition-specific normalized deviations, exact ratios, and time
   windows belong to the quantitative panels.
 
-## §3 Physics invariants
+## §3. Physics invariants
 
 - The MIM stack and held field condition are measurement context, not a charging
   instrument, source-OFF discharge, or a second actuation setup.
@@ -68,7 +68,7 @@ the material-specific comparison`.
 - Quantitative `I(t)`, fitted exponent, control-band, and normalized-deviation
   curves belong to the data pipeline and must not be approximated by this strip.
 
-## §4 Must avoid
+## §4. Must avoid
 
 - No fitted exponent, resistivity, sample code, error bar, quantitative y-axis
   scale, or exact time ticks; the data panels own the fit-window calibration.
