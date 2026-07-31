@@ -22,27 +22,35 @@ def test_fig2_declares_a_parallel_material_comparison_contract() -> None:
 
     assert comparison["members"] == [
         "panel_a.reference_dielectric",
-        "panel_a.sulfur_copolymer",
+        "panel_a.sulfur_trap_sequence",
     ]
     assert result["summary"]["parallel_comparison_count"] == 1
     assert "mim_comparison_uses_matched_footprints" in contract["protected_relations"]
 
 
-def test_fig2_uses_standard_log_log_transient_without_ideal_trace() -> None:
+def test_fig2_uses_progressive_trapping_sequence_and_standard_output() -> None:
     source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
     contract = yaml.safe_load((FIXTURE / "semantic_contract.yaml").read_text(encoding="utf-8"))
 
     assert "$E_\\mathrm{app}=15\\,\\mathrm{MV\\,m^{-1}}$" in source
     assert "held during acquisition" in source
-    assert "matched MIM cells under a held field" in source
-    assert "Conventional dielectric" in source
-    assert "bound-polarization reference" in source
-    assert "localized-state working model" in source
-    assert "Transient-current readout" in source
+    assert "same MIM geometry; held field and time progress left to right" in source
+    assert "Idealized dielectric" in source
+    assert "bound polarization reference" in source
+    assert "Sulfur-rich copolymer: progressive trapping" in source
+    assert "early field-on" in source
+    assert "progressive trapping" in source
+    assert "long-lived occupied state" in source
+    assert "trapEmpty" in source
+    assert "trapOccupied" in source
+    assert "captureCue" in source
+    assert "currentStrong" in source
+    assert "currentSoft" in source
+    assert "Qualitative output" in source
     assert "$\\log I$" in source
     assert "$\\log t$" in source
     assert "early power law" in source
-    assert "late departure" in source
+    assert "persistent relaxation" in source
     assert "traceEarly" in source
     assert "traceLate" in source
     assert "fitReference" in source
@@ -54,6 +62,7 @@ def test_fig2_uses_standard_log_log_transient_without_ideal_trace() -> None:
     assert "referenceRule" not in source
     assert "$I_\\mathrm{meas}/I_\\mathrm{early}$" not in source
     assert "PI/PTFE: below reference" not in source
+    assert "complete current blockage" not in source
     assert "panel_a.unmeasured_ideal_current_control" in contract["forbidden_implications"]
     assert "panel_a.direct_mobile_leakage_suppression_claim" in contract["forbidden_implications"]
     assert "transient_readout_uses_standard_log_log_current_grammar" in contract[
@@ -121,24 +130,36 @@ def test_fig2_declares_material_and_readout_grammar() -> None:
     assert "dipoleBody" in source
     assert "ellipse [x radius=0.17, y radius=0.25]" in source
     assert "sulfurTrace" in source
-    assert "sulfurBead" in source
-    assert "localizedState" in source
+    assert "trapEmpty" in source
+    assert "trapOccupied" in source
+    assert "captureCue" in source
     assert "leakageSegment" not in source
     assert "leakageFading" not in source
     assert "top color=" not in source
     assert "bottom color=" not in source
 
 
-def test_fig2_binds_qualified_localized_state_model_to_late_departure() -> None:
+def test_fig2_binds_qualified_localized_state_model_to_progressive_output() -> None:
     contract = yaml.safe_load((FIXTURE / "semantic_contract.yaml").read_text(encoding="utf-8"))
 
     assert "localized_states_are_a_qualified_working_model_not_direct_proof" in contract[
         "protected_relations"
     ]
     assert any(
-        connector["connector_id"] == "panel_a.localized_states_to_sulfur_readout"
+        connector["connector_id"] == "panel_a.localized_states_to_mobile_current"
         and connector["from_object"] == "panel_a.localized_charge_states"
-        and connector["to_object"] == "panel_a.late_departure"
+        and connector["to_object"] == "panel_a.mobile_current_cue"
         and connector["epistemic_status"] == "qualified_inference"
         for connector in contract["semantic_legibility"]["visible_connectors"]
     )
+
+
+def test_fig2_progressive_trapping_rule_is_preserved_in_figure_agent_skill() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "do not let one static trap field stand in for time" in skill
+    assert "repeated matched MIM states" in skill
+    assert "mobile-current contribution visibly weaken" in skill
+    assert "qualified working model" in skill

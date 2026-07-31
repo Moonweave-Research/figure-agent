@@ -32,10 +32,16 @@
     line join=round},
   sulfurTraceFaint/.style={cAmber!36!cGray,line width=0.31pt,line cap=round,
     line join=round},
-  sulfurBead/.style={circle,fill=cAmber!72!cGray,draw=none,
-    minimum size=0.48mm,inner sep=0pt},
-  localizedState/.style={circle,fill=cRed!70!black,draw=cAmber!12,line width=0.25pt,
-    minimum size=0.66mm,inner sep=0pt},
+  trapEmpty/.style={circle,fill=white,draw=cRed!70!black,line width=0.36pt,
+    minimum size=0.72mm,inner sep=0pt},
+  trapOccupied/.style={circle,fill=cRed!70!black,draw=none,
+    minimum size=0.72mm,inner sep=0pt},
+  currentStrong/.style={-{Stealth[length=2.5pt,width=1.8pt]},cGray!78!black,
+    line width=0.58pt,line cap=round},
+  currentSoft/.style={-{Stealth[length=2.2pt,width=1.6pt]},cGray!54!black,
+    line width=0.38pt,line cap=round},
+  captureCue/.style={-{Stealth[length=2.2pt,width=1.6pt]},cRed!62!black,
+    line width=0.36pt,line cap=round},
   fieldGuide/.style={cGray!60!black,line width=0.46pt,line cap=round},
   storyArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!58!black,
     line width=0.50pt},
@@ -47,12 +53,14 @@
     dash pattern=on 1.4pt off 1.5pt},
 ]
 
-% Both comparison cells represent the same MIM footprint.  The shared span is
-% a semantic invariant, not a component recipe: their internal material cues
-% may be freely redrawn without changing the comparison geometry.
-\def\mimCellWidth{2.80}
-\def\referenceCellLeft{0.80}
-\def\sulfurCellLeft{4.45}
+% The reference and all sulfur states share one MIM footprint.  Repeating the
+% frame is intentional: only the qualitative internal state changes with held
+% field exposure, never the device geometry.
+\def\mimCellWidth{2.25}
+\def\referenceCellLeft{0.45}
+\def\stateEarlyLeft{3.28}
+\def\stateProgressLeft{5.92}
+\def\stateLateLeft{8.56}
 
 \path[use as bounding box] (0.00,0.38) rectangle (16.38,5.02);
 
@@ -67,12 +75,13 @@
   \;\textbar\; 25\,\% RH};
 % The field is carried by the matched cells themselves rather than by an
 % abstract top rail, so it cannot be mistaken for a serial process arrow.
-\node[labelMute,anchor=south] at (4.02,3.88) {matched MIM cells under a held field};
+\node[labelMute,anchor=south] at (6.95,3.88)
+  {same MIM geometry; held field and time progress left to right};
 % fig-agent:end object=comparison_frame
 
 % fig-agent:start object=reference_dielectric panel=A kind=material_state truth_bearing=true
 \node[columnTitle,anchor=south] at ({\referenceCellLeft+0.5*\mimCellWidth},3.56)
-  {Conventional dielectric};
+  {Idealized dielectric};
 \fill[referenceFilm] (\referenceCellLeft,1.91) rectangle
   ({\referenceCellLeft+\mimCellWidth},3.12);
 \draw[structure] (\referenceCellLeft,3.28)--({\referenceCellLeft+\mimCellWidth},3.28)
@@ -89,62 +98,108 @@
 % Field-aligned polar units use the standard orientation-polarization grammar:
 % each neutral oval contains its paired poles.  The ellipses, rather than free
 % signs or repeated vector arrows, make the paired-pole ownership clear.
-\foreach \x/\y in {1.50/2.30,2.06/2.68,2.66/2.30,3.18/2.68}{
+\foreach \x/\y in {0.98/2.30,1.42/2.68,1.88/2.30,2.32/2.68}{
   \draw[dipoleBody] (\x,\y) ellipse [x radius=0.17, y radius=0.25];
   \node[dipoleCharge] at (\x,\y+0.10) {$+$};
   \node[dipoleCharge] at (\x,\y-0.10) {$-$};
 }
 \node[labelMute,anchor=north] at ({\referenceCellLeft+0.5*\mimCellWidth},1.48)
-  {bound-polarization reference};
+  {bound polarization reference};
 % fig-agent:end object=reference_dielectric
 
 % fig-agent:start object=sulfur_working_state panel=A kind=material_state truth_bearing=true
-% Whitespace keeps the two lateral states comparable without implying a serial
-% conversion of the ideal baseline into the sulfur-rich material.
+% The three cells below are one sulfur-rich specimen at successive held-field
+% states. Empty/occupied sites and the mobile-current cue change; the MIM frame
+% does not. Marker count is illustrative, not a trap-density measurement.
+\node[columnTitle,anchor=south] at ({\stateProgressLeft+0.5*\mimCellWidth},4.02)
+  {Sulfur-rich copolymer: progressive trapping};
 
-\node[columnTitle,anchor=south] at ({\sulfurCellLeft+0.5*\mimCellWidth},3.56)
-  {Sulfur-rich copolymer};
-\fill[film] (\sulfurCellLeft,1.91) rectangle
-  ({\sulfurCellLeft+\mimCellWidth},3.12);
-\draw[structure] (\sulfurCellLeft,3.28)--({\sulfurCellLeft+\mimCellWidth},3.28)
-  (\sulfurCellLeft,3.12)--({\sulfurCellLeft+\mimCellWidth},3.12)
-  (\sulfurCellLeft,1.91)--({\sulfurCellLeft+\mimCellWidth},1.91)
-  (\sulfurCellLeft,1.75)--({\sulfurCellLeft+\mimCellWidth},1.75);
-\fill[electrode] (\sulfurCellLeft,3.12) rectangle
-  ({\sulfurCellLeft+\mimCellWidth},3.28);
-\fill[electrode] (\sulfurCellLeft,1.75) rectangle
-  ({\sulfurCellLeft+\mimCellWidth},1.91);
+% Early state: field-on, distributed empty sites, and a strong mobile-current cue.
+\node[labelMute,anchor=south] at ({\stateEarlyLeft+0.5*\mimCellWidth},3.56)
+  {early field-on};
+\fill[film] (\stateEarlyLeft,1.91) rectangle
+  ({\stateEarlyLeft+\mimCellWidth},3.12);
+\draw[structure] (\stateEarlyLeft,3.28)--({\stateEarlyLeft+\mimCellWidth},3.28)
+  (\stateEarlyLeft,3.12)--({\stateEarlyLeft+\mimCellWidth},3.12)
+  (\stateEarlyLeft,1.91)--({\stateEarlyLeft+\mimCellWidth},1.91)
+  (\stateEarlyLeft,1.75)--({\stateEarlyLeft+\mimCellWidth},1.75);
+\fill[electrode] (\stateEarlyLeft,3.12) rectangle
+  ({\stateEarlyLeft+\mimCellWidth},3.28);
+\fill[electrode] (\stateEarlyLeft,1.75) rectangle
+  ({\stateEarlyLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
-  ({\sulfurCellLeft+0.18},2.06)--({\sulfurCellLeft+0.18},2.96);
-% Short linked sulfur-toned fragments give the host a material cue without
-% repeating the smooth worm-like contours of a generic polymer cartoon. They
-% remain representative local environments, not literal repeat units, a
-% covalent network, or a carrier trajectory.
-\draw[sulfurTraceFaint] (4.84,2.80)--(5.02,2.70)--(5.22,2.78)--(5.40,2.69);
-\draw[sulfurTraceSoft] (5.32,2.35)--(5.50,2.45)--(5.70,2.35)--(5.89,2.43);
-\draw[sulfurTrace] (4.92,2.12)--(5.12,2.21)--(5.30,2.13)--(5.46,2.23);
-\draw[sulfurTraceSoft] (6.12,2.78)--(6.30,2.65)--(6.48,2.72)--(6.68,2.60);
-\foreach \x/\y in {5.02/2.70,5.22/2.78,5.50/2.45,5.70/2.35,5.12/2.21,5.30/2.13,6.30/2.65,6.48/2.72}{
-  \node[sulfurBead] at (\x,\y) {};
+  ({\stateEarlyLeft+0.18},2.06)--({\stateEarlyLeft+0.18},2.96);
+\draw[sulfurTraceSoft] (3.66,2.80)--(3.88,2.68)--(4.08,2.76)--(4.30,2.64);
+\draw[sulfurTrace] (3.62,2.22)--(3.86,2.32)--(4.08,2.20)--(4.32,2.30);
+\draw[sulfurTraceFaint] (4.44,2.48)--(4.64,2.58)--(4.84,2.46)--(5.18,2.56);
+\foreach \x/\y in {3.88/2.68,4.30/2.64,3.86/2.32,4.08/2.20,4.64/2.58}{
+  \node[trapEmpty] at (\x,\y) {};
 }
-% Six equal-size state marks give the host a distributed qualitative cue. Their
-% irregular placement is illustrative only, not a trap-density encoding.
-\coordinate (sulfurStateA) at (5.02,2.70);
-\coordinate (sulfurStateB) at (5.40,2.69);
-\coordinate (sulfurStateC) at (5.50,2.45);
-\coordinate (sulfurStateD) at (5.12,2.21);
-\coordinate (sulfurStateE) at (6.30,2.65);
-\coordinate (sulfurStateF) at (6.68,2.60);
-\foreach \state in {sulfurStateA,sulfurStateB,sulfurStateC,sulfurStateD,sulfurStateE,sulfurStateF}{
-  \node[localizedState] at (\state) {};
-}
-\node[labelMute,align=center,anchor=north] at ({\sulfurCellLeft+0.5*\mimCellWidth},1.52)
-  {localized-state working model};
+\draw[currentStrong] (4.62,2.02)--(4.62,2.86);
+\draw[currentStrong] (5.02,2.02)--(5.02,2.86);
 
-% Keep the public semantic endpoint numeric: the Figure Agent endpoint check
-% resolves named coordinates directly from editable source.
-\coordinate (comparison_out) at (7.25,2.50);
-\coordinate (readout_entry) at (8.72,2.50);
+% Progressive state: capture cues terminate on sites, while the mobile cue is
+% visibly reduced. The short fragments remain matrix texture, not a hopping wire.
+\node[labelMute,anchor=south] at ({\stateProgressLeft+0.5*\mimCellWidth},3.56)
+  {progressive trapping};
+\fill[film] (\stateProgressLeft,1.91) rectangle
+  ({\stateProgressLeft+\mimCellWidth},3.12);
+\draw[structure] (\stateProgressLeft,3.28)--({\stateProgressLeft+\mimCellWidth},3.28)
+  (\stateProgressLeft,3.12)--({\stateProgressLeft+\mimCellWidth},3.12)
+  (\stateProgressLeft,1.91)--({\stateProgressLeft+\mimCellWidth},1.91)
+  (\stateProgressLeft,1.75)--({\stateProgressLeft+\mimCellWidth},1.75);
+\fill[electrode] (\stateProgressLeft,3.12) rectangle
+  ({\stateProgressLeft+\mimCellWidth},3.28);
+\fill[electrode] (\stateProgressLeft,1.75) rectangle
+  ({\stateProgressLeft+\mimCellWidth},1.91);
+\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
+  ({\stateProgressLeft+0.18},2.06)--({\stateProgressLeft+0.18},2.96);
+\draw[sulfurTraceSoft] (6.30,2.78)--(6.52,2.68)--(6.74,2.76)--(6.96,2.64);
+\draw[sulfurTrace] (6.24,2.22)--(6.48,2.32)--(6.72,2.20)--(6.96,2.30);
+\draw[sulfurTraceFaint] (7.18,2.48)--(7.38,2.58)--(7.58,2.46)--(7.90,2.56);
+\node[trapOccupied] at (6.52,2.68) {};
+\node[trapOccupied] at (6.96,2.64) {};
+\node[trapEmpty] at (6.48,2.32) {};
+\node[trapOccupied] at (6.72,2.20) {};
+\node[trapEmpty] at (7.38,2.58) {};
+\draw[captureCue] (6.36,2.98)--(6.52,2.70);
+\draw[captureCue] (7.10,2.42)--(6.72,2.20);
+\draw[currentSoft] (7.72,2.02)--(7.72,2.70);
+
+% Late state: occupied sites dominate qualitatively and only a weak mobile cue
+% remains. The state is persistent/slow, not a claim of complete blockage.
+\node[labelMute,anchor=south] at ({\stateLateLeft+0.5*\mimCellWidth},3.56)
+  {long-lived occupied state};
+\fill[film] (\stateLateLeft,1.91) rectangle
+  ({\stateLateLeft+\mimCellWidth},3.12);
+\draw[structure] (\stateLateLeft,3.28)--({\stateLateLeft+\mimCellWidth},3.28)
+  (\stateLateLeft,3.12)--({\stateLateLeft+\mimCellWidth},3.12)
+  (\stateLateLeft,1.91)--({\stateLateLeft+\mimCellWidth},1.91)
+  (\stateLateLeft,1.75)--({\stateLateLeft+\mimCellWidth},1.75);
+\fill[electrode] (\stateLateLeft,3.12) rectangle
+  ({\stateLateLeft+\mimCellWidth},3.28);
+\fill[electrode] (\stateLateLeft,1.75) rectangle
+  ({\stateLateLeft+\mimCellWidth},1.91);
+\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
+  ({\stateLateLeft+0.18},2.06)--({\stateLateLeft+0.18},2.96);
+\draw[sulfurTraceSoft] (8.88,2.78)--(9.10,2.68)--(9.32,2.76)--(9.54,2.64);
+\draw[sulfurTrace] (8.84,2.22)--(9.08,2.32)--(9.32,2.20)--(9.54,2.30);
+\draw[sulfurTraceFaint] (9.74,2.48)--(9.94,2.58)--(10.14,2.46)--(10.46,2.56);
+\foreach \x/\y in {9.10/2.68,9.54/2.64,9.08/2.32,9.32/2.20,9.94/2.58,10.46/2.56}{
+  \node[trapOccupied] at (\x,\y) {};
+}
+\draw[currentSoft] (10.16,2.02)--(10.16,2.44);
+
+% Discrete state connectors make the causal order visible without inventing a
+% calibrated time axis or an automated measurement process.
+\coordinate (early_state_out) at (5.64,3.47);
+\coordinate (progress_state_in) at (5.86,3.47);
+\coordinate (progress_state_out) at (8.28,3.47);
+\coordinate (late_state_in) at (8.50,3.47);
+\draw[storyArrow] (early_state_out)--(progress_state_in);
+\draw[storyArrow] (progress_state_out)--(late_state_in);
+\coordinate (comparison_out) at (10.90,2.50);
+\coordinate (readout_entry) at (11.62,2.50);
 \draw[storyArrow] (comparison_out)--(readout_entry);
 % fig-agent:end object=sulfur_working_state
 
@@ -152,23 +207,23 @@
 % What we read
 % --------------------------------------------------------------------------
 % fig-agent:start object=qualitative_current_readout panel=A kind=mini_plot truth_bearing=true
-\node[columnTitle,anchor=south west] at (8.72,3.56) {Transient-current readout};
-\draw[axisArrow] (8.72,1.58)--(8.72,3.36);
-\draw[axisArrow] (8.72,1.58)--(15.72,1.58);
+\node[columnTitle,anchor=south west] at (11.72,3.56) {Qualitative output};
+\draw[axisArrow] (11.72,1.58)--(11.72,3.36);
+\draw[axisArrow] (11.72,1.58)--(16.20,1.58);
 % This is deliberately a conventional qualitative log--log transient, rather
 % than a compact copy of panel d's material-specific normalized metric.  The
 % early fit is extrapolated as a neutral reference; the solid late segment
 % departs above it without asserting an absolute control comparison.
-\node[labelMute,anchor=south east] at (8.63,3.40)
+\node[labelMute,anchor=south east] at (11.63,3.40)
   {$\log I$};
-\node[labelMute,anchor=north] at (12.22,0.98) {$\log t$};
-\draw[traceEarly] (9.22,3.14)--(12.12,2.50);
-\draw[fitReference] (12.12,2.50)--(15.30,1.78);
-\draw[traceLate] (12.12,2.50) .. controls (13.02,2.47) and (14.20,2.30) ..
-  (15.30,2.16);
-\node[labelMute,anchor=north west] at (9.24,2.88) {early power law};
-\node[labelStd,text=cRed!70!black,anchor=south west] at (12.56,2.67)
-  {late departure};
+\node[labelMute,anchor=north] at (14.02,0.98) {$\log t$};
+\draw[traceEarly] (12.18,3.14)--(13.62,2.50);
+\draw[fitReference] (13.62,2.50)--(15.86,1.86);
+\draw[traceLate] (13.62,2.50) .. controls (14.24,2.47) and (15.06,2.30) ..
+  (15.86,2.18);
+\node[labelMute,anchor=north west] at (12.20,2.88) {early power law};
+\node[labelStd,text=cRed!70!black,anchor=south west] at (14.05,2.70)
+  {persistent relaxation};
 % fig-agent:end object=qualitative_current_readout
 
 \end{tikzpicture}%

@@ -5,23 +5,26 @@
 Use a 166.53 × 47.20 mm content artboard inside the current Fig. 2a parent slot
 (166.53 × 53.19 mm). The parent data composition owns the figure-wide `a`–`d`
 labels, so this artboard deliberately contains no second panel letter. Keep one
-open white row with the shared field-on condition carried inside two side-by-side material cells
-and one common readout. The two material states must be lateral siblings, not
-two serial stages or vertically stacked UI cards:
+open white row with a compact idealized reference, three matched states of one
+sulfur-rich MIM, and one compact output readout. The sulfur states are a causal
+sequence, not three different samples or vertically stacked UI cards:
 
 1. Shared held-DC measurement condition and matched MIM geometry.
-2. Conventional dielectric reference: bound-dipole alignment.
-3. Sulfur-rich copolymer: sign-neutral localized-state cues, explicitly framed
-   as a working picture.
-4. Standard transient icon: early power-law segment and later departure from
-   its dashed early-fit extrapolation.
+2. Idealized dielectric reference: bound-dipole alignment.
+3. Sulfur-rich early field-on MIM state: empty localized sites and stronger
+   mobile-current cue.
+4. Progressive trapping state: capture cues terminate at partly occupied sites
+   and the mobile-current cue is reduced.
+5. Long-lived occupied state: occupied sites dominate qualitatively, a weak
+   mobile-current cue remains, and persistent relaxation is indicated.
+6. Compact standard transient icon: early power law and persistent late tail.
 
 The parent panel letter sits outside this artboard; its header lane carries the
-quiet held-field condition. The two MIM cells must retain the same visible
-footprint; each carries a restrained, neutral field-direction cue so the
-comparison cannot read as a serial rail. The object lane carries their distinct
-physical marks; one direct arrow leads from the sulfur comparison edge to the
-readout. The bottom lane carries only short labels.
+quiet held-field condition. The reference and all sulfur MIM states must retain
+the same visible footprint, electrode spacing, and field cue. State connectors
+must read as continued field exposure, not an automated scan or material
+conversion. The output arrow begins at the late sulfur state and the bottom lane
+uses only short labels.
 
 At integration time, the parent composition centers this shorter content
 artboard vertically in its Fig. 2a row. That blank is a shared row gutter for
@@ -35,20 +38,20 @@ mechanism detail.
   sign-neutral localized-state/current-response emphasis.
 - Keep line weights above the reduction threshold and avoid gradients, 3-D
   substrate blocks, or decorative halos.
-- Make the comparison visible with object geometry: bound dipoles for the
-  conventional reference; sulfur-host traces with sign-neutral localized-state
-  cues for the sulfur-rich working picture.
+- Make the mechanism visible with object geometry: bound dipoles for the
+  idealized reference; repeated sulfur host geometry with empty-to-occupied
+  localized states, capture cues, and a diminishing mobile-current cue.
 - Show the common field where it acts inside each matched MIM cell. An overhead
   rail that reads as a serial process path, a source-OFF cue, or a drain arrow
   is a semantic failure because the transient is acquired under applied DC.
-- Do not use a large circular halo, repeated amber/red bead population, or a
-  decorative polymer wave; those cues make a localized population read as
-  ornament or a second material phase.
+- Do not use a large circular halo, repeated amber/red bead population, a
+  decorative polymer wave, or an insulating wall; those cues make the state
+  read as ornament, a second material phase, or complete current blockage.
 - Keep the transient readout qualitative and number-free: $\log I$ vertically,
-  $\log t$ horizontally, a straight early power-law segment, and a solid late
-  departure above a neutral early-fit extrapolation. Exact analysis windows,
-  ratios, and cross-material comparisons belong to the quantitative panels, not
-  this mechanism strip.
+  $\log t$ horizontally, a straight early power-law segment, and a solid
+  persistent-relaxation tail above a neutral early-fit extrapolation. It is
+  secondary to the MIM state sequence. Exact analysis windows, ratios, and
+  cross-material comparisons belong to the quantitative panels.
 - Do not use full-height column rules or equal framed cards; whitespace and the
   object silhouettes should establish the four lanes.
 

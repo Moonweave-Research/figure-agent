@@ -18,7 +18,7 @@ design_principles:
   - id: restrained_analytic_index
     instruction: "Keep the transient curve as a clear qualitative analytic index, never a faux measured plot, a time-calibrated mini-graph, or a generic decorative zig-zag."
   - id: log_log_power_law_grammar
-    instruction: "Use a standard symbolic log I--log t transient: a straight early power-law segment, a neutral dashed early-fit extrapolation, and a solid late departure above it. Do not turn panel d's material-specific normalization into the mechanism-strip readout or fabricate an ideal-dielectric trace."
+    instruction: "Use a compact standard symbolic log I--log t output: a straight early power-law segment, a neutral dashed early-fit extrapolation, and a solid persistent-relaxation tail above it. Keep the MIM state sequence visually primary; do not turn panel d's material-specific normalization into the mechanism-strip readout."
 must_avoid:
   - id: slide_banner_grammar
     pattern: "A large title, long condition banner, and equal-weight columns dominate the mechanism or make the strip read as a presentation slide."
@@ -39,18 +39,18 @@ polish_triggers:
 aesthetic_levers:
   - id: causal_hierarchy
     dimension: hero_hierarchy
-    intent: "The eye should travel from matched material states to the sulfur-owned transient-current readout without treating the readout as a detached third card."
+    intent: "The eye should travel from the idealized reference through one sulfur MIM's progressive trapping states to the compact persistent-relaxation output."
     priority: required
     positive_signals:
       - "the shared condition is a quiet header, not a visual rail competing with the mechanism"
-      - "the sulfur working state has enough visual occupancy to own the interpretation"
-      - "the readout is the clear destination of the comparison and has a dedicated open lane"
+      - "the sulfur sequence has enough visual occupancy to own the interpretation"
+      - "early, progressive, and long-lived states are legible before the compact output"
     anti_patterns:
-      - "equal-width illustrated cards and a visually orphaned mini-plot"
-      - "a handoff arrow that terminates in whitespace rather than the readout boundary"
+      - "equal-width cards that hide the causal state progression"
+      - "a handoff arrow that terminates in whitespace rather than the next state or output boundary"
       - "a text banner receives the first fixation"
     allowed_adjustments:
-      - "rebalance material and readout lane widths"
+      - "rebalance the sulfur sequence and output lane widths"
       - "reduce condition or title prominence"
       - "redraw the qualitative trace while preserving its early-before-late semantics"
     forbidden_adjustments:
@@ -60,13 +60,13 @@ aesthetic_levers:
     default_route: tikz_patch
   - id: material_texture_authorship
     dimension: component_fidelity
-    intent: "Make conventional bound polarization and sulfur localized states visually distinct through restrained material cues rather than repeated icon primitives."
+    intent: "Make the idealized reference and sulfur sequence visually distinct through restrained material cues, explicit empty-to-occupied state change, and a reduced mobile-current cue rather than repeated icon primitives."
     priority: required
     positive_signals:
-      - "conventional bound polarization remains sparse and quiet"
-      - "short linked sulfur-toned fragments read as a bounded amorphous matrix rather than repeated smooth worms or detached V-shaped scraps"
-      - "six equal-size localized-state marks are irregularly distributed and directly embedded in host fragments without encoding density"
-      - "localized states carry an explicitly qualified working-model label without asserting leakage suppression or a hopping route"
+      - "idealized bound polarization remains sparse and quiet"
+      - "the three sulfur states reuse one bounded amorphous host grammar"
+      - "empty and occupied equal-size markers are embedded in host fragments without encoding density"
+      - "capture cues terminate at sites and later mobile-current cues are visibly reduced"
     anti_patterns:
       - "bullseye or winged-dot trap icons"
       - "long periodic or sawtooth host paths"
@@ -119,12 +119,12 @@ aesthetic_levers:
     default_route: semantic_backport
   - id: field_condition_embodiment
     dimension: causal_legibility
-    intent: "Make the common applied field visible where it acts, while keeping material states as a lateral comparison rather than a two-step process."
+    intent: "Make the common applied field visible where it acts, while showing the sulfur states as one held-field sequence rather than a material conversion."
     priority: required
     positive_signals:
       - "each matched MIM cell visibly carries the same field-direction cue"
       - "the numeric field condition remains one quiet shared experimental statement"
-      - "the material comparison remains lateral even when the readout arrow is present"
+      - "the repeated MIM geometry remains fixed while only internal state cues change"
     anti_patterns:
       - "an abstract overhead rail or hanging taps that can be read as a serial process path"
       - "a decorative voltage-source cartoon or a polarity claim not supported by the experiment"

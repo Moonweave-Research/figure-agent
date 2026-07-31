@@ -8,13 +8,19 @@ required_objects:
   - panel_a.reference_dielectric
   - panel_a.bound_dipoles
   - panel_a.sulfur_copolymer
+  - panel_a.sulfur_trap_sequence
+  - panel_a.early_field_on_state
+  - panel_a.progressive_trapping_state
+  - panel_a.long_lived_occupied_state
   - panel_a.localized_charge_states
+  - panel_a.mobile_current_cue
   - panel_a.field_held_on
   - panel_a.transient_readout
   - panel_a.log_log_axes
   - panel_a.early_power_law
   - panel_a.early_fit_extrapolation
   - panel_a.late_departure
+  - panel_a.persistent_relaxation_readout
 
 forbidden_implications:
   - panel_a.quantitative_transient_measurement
@@ -47,6 +53,12 @@ protected_relations:
   - late_departure_is_shown_against_early_fit_extrapolation
   - quantitative_cross_material_comparison_is_pipeline_owned
   - localized_states_are_a_qualified_working_model_not_direct_proof
+  - repeated_sulfur_mim_geometry_is_invariant
+  - early_state_has_strong_mobile_current_cue
+  - progressive_state_shows_capture_to_occupied_sites
+  - late_state_has_reduced_mobile_current_cue
+  - occupied_state_markers_are_nonquantitative
+  - persistent_relaxation_is_the_qualitative_output
   - strip_is_schematic_and_data_panels_are_pipeline_owned
 
 repair:
@@ -66,7 +78,7 @@ semantic_legibility:
       declared_role: constant_applied_field_condition
       forbidden_readings: [source_off_or_discharge_interval, exact_voltage_source_schematic]
     - object_id: panel_a.reference_dielectric
-      declared_role: conceptual_conventional_dielectric_reference
+      declared_role: conceptual_idealized_dielectric_reference
       forbidden_readings: [ideal_measured_control, measured_PI_PTFE_or_PET_control]
     - object_id: panel_a.bound_dipoles
       declared_role: field_aligned_orientation_polarization_cue
@@ -74,9 +86,24 @@ semantic_legibility:
     - object_id: panel_a.sulfur_copolymer
       declared_role: sulfur_rich_comparison_material
       forbidden_readings: [separate_particle_phase]
+    - object_id: panel_a.sulfur_trap_sequence
+      declared_role: same_sulfur_specimen_progressive_held_field_sequence
+      forbidden_readings: [serial_material_conversion, separate_samples, automated_scan]
+    - object_id: panel_a.early_field_on_state
+      declared_role: early_field_on_state_with_empty_localized_sites
+      forbidden_readings: [source_off_state, calibrated_initial_current]
+    - object_id: panel_a.progressive_trapping_state
+      declared_role: qualitative_progressive_capture_and_partial_site_occupancy
+      forbidden_readings: [exact_capture_rate, exact_trap_density, complete_blockage]
+    - object_id: panel_a.long_lived_occupied_state
+      declared_role: qualitative_persistent_occupied_state_with_slow_relaxation
+      forbidden_readings: [fully_frozen_charge, zero_current, calibrated_retention_time]
     - object_id: panel_a.localized_charge_states
       declared_role: qualified_sign_neutral_localized_state_working_model
       forbidden_readings: [carrier_polarity, calibrated_charge_density, trap_energy_distribution, direct_leakage_suppression]
+    - object_id: panel_a.mobile_current_cue
+      declared_role: qualitative_mobile_current_contribution_cue
+      forbidden_readings: [microscopic_carrier_trajectory, signed_carrier_identity, calibrated_current_magnitude]
     - object_id: panel_a.field_held_on
       declared_role: acquisition_condition_continuity
       forbidden_readings: [source_off_or_discharge_interval]
@@ -95,6 +122,9 @@ semantic_legibility:
     - object_id: panel_a.late_departure
       declared_role: qualitative_late_time_departure_from_early_fit
       forbidden_readings: [material_wide_effect, calibrated_sample_trace]
+    - object_id: panel_a.persistent_relaxation_readout
+      declared_role: qualitative_long_lived_current_relaxation_output
+      forbidden_readings: [normalized_deviation_metric, calibrated_lifetime, direct_trap_density_measurement]
   visible_connectors:
     - connector_id: panel_a.held_field_to_reference
       from_object: panel_a.measurement_context
@@ -104,10 +134,28 @@ semantic_legibility:
       epistemic_status: derived
     - connector_id: panel_a.held_field_to_sulfur
       from_object: panel_a.measurement_context
-      to_object: panel_a.sulfur_copolymer
+      to_object: panel_a.sulfur_trap_sequence
       declared_role: shared_operating_condition
       render_style: stage_transition
       epistemic_status: derived
+    - connector_id: panel_a.early_to_progressive_trapping
+      from_object: panel_a.early_field_on_state
+      to_object: panel_a.progressive_trapping_state
+      declared_role: continued_field_exposure_and_capture_progression
+      render_style: stage_transition
+      epistemic_status: qualified_inference
+    - connector_id: panel_a.progressive_to_long_lived_state
+      from_object: panel_a.progressive_trapping_state
+      to_object: panel_a.long_lived_occupied_state
+      declared_role: continued_occupancy_and_slow_relaxation
+      render_style: stage_transition
+      epistemic_status: qualified_inference
+    - connector_id: panel_a.localized_states_to_mobile_current
+      from_object: panel_a.localized_charge_states
+      to_object: panel_a.mobile_current_cue
+      declared_role: qualified_mobile_contribution_reduction
+      render_style: stage_transition
+      epistemic_status: qualified_inference
     - connector_id: panel_a.reference_to_readout
       from_object: panel_a.reference_dielectric
       to_object: panel_a.transient_readout
@@ -115,7 +163,7 @@ semantic_legibility:
       render_style: stage_transition
       epistemic_status: derived
     - connector_id: panel_a.sulfur_to_readout
-      from_object: panel_a.sulfur_copolymer
+      from_object: panel_a.sulfur_trap_sequence
       to_object: panel_a.transient_readout
       declared_role: comparison_readout_membership
       render_style: stage_transition
@@ -128,7 +176,7 @@ semantic_legibility:
       epistemic_status: qualified_inference
   parallel_comparisons:
     - comparison_id: panel_a.material_states
-      members: [panel_a.reference_dielectric, panel_a.sulfur_copolymer]
+      members: [panel_a.reference_dielectric, panel_a.sulfur_trap_sequence]
       shared_input: panel_a.measurement_context
       shared_output: panel_a.transient_readout
       comparison_basis: schematic_state
@@ -140,10 +188,10 @@ semantic_legibility:
         - panel_a.sulfur_to_readout
   forbidden_connectors:
     - from_object: panel_a.measurement_context
-      to_object: panel_a.sulfur_copolymer
+      to_object: panel_a.sulfur_trap_sequence
       declared_role: actuation_force
     - from_object: panel_a.localized_charge_states
-      to_object: panel_a.transient_readout
+      to_object: panel_a.persistent_relaxation_readout
       declared_role: calibrated_data_fit
   label_ownership:
     - label_id: panel_a.measurement_header
@@ -154,6 +202,14 @@ semantic_legibility:
       owner: panel_a.reference_dielectric
     - label_id: panel_a.sulfur_header
       owner: panel_a.sulfur_copolymer
+    - label_id: panel_a.early_state_label
+      owner: panel_a.early_field_on_state
+    - label_id: panel_a.progressive_state_label
+      owner: panel_a.progressive_trapping_state
+    - label_id: panel_a.long_lived_state_label
+      owner: panel_a.long_lived_occupied_state
+    - label_id: panel_a.persistent_relaxation_label
+      owner: panel_a.persistent_relaxation_readout
     - label_id: panel_a.early_power_law_label
       owner: panel_a.early_power_law
     - label_id: panel_a.late_departure_label

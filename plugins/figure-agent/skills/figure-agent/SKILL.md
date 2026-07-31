@@ -439,6 +439,18 @@ turn a special analysis ratio into a generic material icon, a conceptual
 dielectric reference into a measured control, or a qualitative state model into
 a free-carrier cartoon or unqualified microscopic mechanism.
 
+When progressive trapping is the explanatory story in a held-field charge-
+transport schematic, do not let one static trap field stand in for time. Use
+repeated matched MIM states (or another equally explicit reader-facing
+progression), keep the device geometry invariant, distinguish empty from
+occupied localized sites, and terminate capture cues on the occupied sites
+they explain. Make the mobile-current contribution visibly weaken without
+encoding complete blockage, a calibrated trap density, or a microscopic carrier
+identity that the evidence does not establish. Keep the persistent slow tail as
+a qualitative output and call the causal link a qualified working model unless
+direct evidence supports stronger wording. This is a semantic guard, not a
+prescribed primitive or coordinate recipe.
+
 For a multi-stage measurement schematic, trace preparation or excitation, acquisition,
 transformation, and result in order. Flag an unexplained state such as deposited
 charge without a source, and keep process labels/arrows out of data peaks,
