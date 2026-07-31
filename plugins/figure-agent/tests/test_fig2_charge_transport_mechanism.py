@@ -52,10 +52,10 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert "comparisonArrow" not in source
     assert "trapAmber" not in source
     assert "localizedState" in source
-    assert "leakageSegment" in source
-    assert "leakageFading" in source
-    assert "localized capture" in source
-    assert "suppresses leakage" in source
+    assert "localized charge capture" in source
+    assert "reduces mobile leakage" in source
+    assert "leakageSegment" not in source
+    assert "leakageFading" not in source
     assert "sulfurTrace" in source
     assert "sulfurTraceFaint" in source
     assert "\\def\\mimCellWidth" in source
@@ -129,8 +129,8 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
         "bound_dipole_pairing",
     }
     assert "rapid polarization" in source
-    assert "localized capture" in source
-    assert "suppresses leakage" in source
+    assert "localized charge capture" in source
+    assert "reduces mobile leakage" in source
     assert "slow relaxation" in source
     assert "$E_\\mathrm{app}$" in source
     assert "{vs.}" not in source

@@ -544,13 +544,13 @@ morphology. Prefer bounded host geometry, local contact segments, or restrained
 contours that show localization without inventing a second phase.
 
 When a qualitative MIM schematic uses localized capture to explain a falling
-leakage current, labels alone are insufficient. Give the reader one or a few
-restrained, sign-neutral through-film cues that visibly terminate or fade at
-embedded local states, then name the qualitative consequence (for example,
-suppressed leakage). Do not turn this into a continuous hopping wire, a row of
-carrier arrows, a signed-current claim, or a calibrated conductance model; the
-cue establishes interrupted mobile contribution, not a microscopic transport
-pathway.
+leakage current, make that causal relation reader-visible without asserting a
+specific microscopic transport route. A concise, well-owned causal label beside
+embedded localized states can be sufficient. If an explicit line, segmented
+path, or fading track reads as a molecular chain, worm, or unearned conduction
+route at print reduction, remove it rather than preserving the cue by default.
+Do not turn the explanation into a continuous hopping wire, a row of carrier
+arrows, a signed-current claim, or a calibrated conductance model.
 
 When localized-state contours are repeated, keep category size comparable but
 vary orientation and contour asymmetry enough to avoid a row of identical
