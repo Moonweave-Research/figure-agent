@@ -55,8 +55,13 @@ def test_fig2_redraw_uses_lateral_shared_field_comparison_without_legacy_copy() 
     assert source.count("\\mimCellWidth") >= 8
     assert "Conventional dielectric" not in source
     assert "charge drains" not in source
-    assert "{$+$}" not in source
-    assert "{$-$}" not in source
+    sulfur_block = source.split("object=sulfur_working_state", 1)[1].split(
+        "fig-agent:end object=sulfur_working_state", 1
+    )[0]
+    assert "{$+$}" in source
+    assert "{$-$}" in source
+    assert "{$+$}" not in sulfur_block
+    assert "{$-$}" not in sulfur_block
 
 
 def test_fig2_declares_the_parent_slot_and_a_single_panel_letter_owner() -> None:
@@ -114,6 +119,7 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
         "field_condition_embodiment",
         "log_log_power_law_grammar",
         "flat_mim_layer_hierarchy",
+        "bound_dipole_pairing",
     }
     assert "rapid polarization" in source
     assert "localized states" in source
@@ -123,6 +129,8 @@ def test_fig2_declares_and_uses_an_editorial_material_grammar() -> None:
     assert "charge drains" not in source
     assert "top color=" not in source
     assert "bottom color=" not in source
+    assert "dipolePositive" in source
+    assert "dipoleNegative" in source
 
 
 def test_fig2_declares_log_log_power_law_grammar_for_the_qualitative_readout() -> None:

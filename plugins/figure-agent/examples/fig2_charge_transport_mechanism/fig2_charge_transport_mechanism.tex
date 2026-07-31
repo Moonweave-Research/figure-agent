@@ -23,7 +23,11 @@
   electrode/.style={fill=cGray!22,draw=none},
   idealFilm/.style={fill=cBlue!6,draw=none},
   film/.style={fill=cAmber!10,draw=none},
-  dipole/.style={cBlue!62!black,line width=0.48pt,line cap=round},
+  dipoleStem/.style={cBlue!53!black,line width=0.34pt,line cap=round},
+  dipoleCharge/.style={inner sep=0pt,
+    font=\sffamily\bfseries\fontsize{5.0}{5.0}\selectfont},
+  dipolePositive/.style={dipoleCharge,text=cBlue!66!black},
+  dipoleNegative/.style={dipoleCharge,text=cBlue!66!black},
   sulfurTrace/.style={cAmber!68!cGray,line width=0.46pt,line cap=round,
     line join=round},
   sulfurTraceSoft/.style={cAmber!48!cGray,line width=0.34pt,line cap=round,
@@ -82,8 +86,13 @@
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\idealCellLeft+0.18},2.06)--({\idealCellLeft+0.18},2.96);
 \node[labelMute,anchor=west] at ({\idealCellLeft+0.26},2.98) {$E_\mathrm{app}$};
+% Bound dipoles, not drifting carrier arrows: negative and positive poles are
+% paired and the dipole moment aligns with the applied field.
 \foreach \x/\y in {1.25/2.29,1.85/2.66,2.50/2.25,3.18/2.63}{
-  \draw[dipole,-{Stealth[length=2.6pt,width=1.8pt]}] (\x,\y-0.16)--(\x,\y+0.14);
+  \draw[dipoleStem,-{Stealth[length=1.9pt,width=1.35pt]}]
+    (\x,\y-0.12)--(\x,\y+0.12);
+  \node[dipoleNegative] at (\x,\y-0.16) {$-$};
+  \node[dipolePositive] at (\x,\y+0.16) {$+$};
 }
 \node[labelMute,anchor=north] at ({\idealCellLeft+0.5*\mimCellWidth},1.48)
   {rapid polarization};
