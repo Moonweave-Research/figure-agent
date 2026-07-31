@@ -36,6 +36,10 @@
     minimum size=0.72mm,inner sep=0pt},
   trapOccupied/.style={circle,fill=cRed!70!black,draw=none,
     minimum size=0.72mm,inner sep=0pt},
+  trapPocketEmpty/.style={draw=cRed!56!black,fill=white,
+    line width=0.34pt},
+  trapPocketOccupied/.style={draw=cRed!52!black,fill=cRed!10,
+    line width=0.34pt},
   currentStrong/.style={-{Stealth[length=2.5pt,width=1.8pt]},cGray!78!black,
     line width=0.58pt,line cap=round},
   currentSoft/.style={-{Stealth[length=2.2pt,width=1.6pt]},cGray!54!black,
@@ -115,6 +119,10 @@
   {Sulfur-rich copolymer: progressive trapping};
 
 % Early state: field-on, distributed empty sites, and a strong mobile-current cue.
+% The host is deliberately sparse and disconnected. Localized states are drawn
+% as independent pocket contours rather than beads attached to a polymer trace;
+% this is the spatial analogue of an energy-localized state without asserting a
+% trap depth or a molecular repeat unit.
 \node[labelMute,anchor=south] at ({\stateEarlyLeft+0.5*\mimCellWidth},3.56)
   {early field-on};
 \fill[film] (\stateEarlyLeft,1.91) rectangle
@@ -129,12 +137,12 @@
   ({\stateEarlyLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\stateEarlyLeft+0.18},2.06)--({\stateEarlyLeft+0.18},2.96);
-\draw[sulfurTraceSoft] (3.66,2.80)--(3.88,2.68)--(4.08,2.76)--(4.30,2.64);
-\draw[sulfurTrace] (3.62,2.22)--(3.86,2.32)--(4.08,2.20)--(4.32,2.30);
-\draw[sulfurTraceFaint] (4.44,2.48)--(4.64,2.58)--(4.84,2.46)--(5.18,2.56);
-\foreach \x/\y in {3.88/2.68,4.30/2.64,3.86/2.32,4.08/2.20,4.64/2.58}{
-  \node[trapEmpty] at (\x,\y) {};
-}
+\draw[sulfurTraceSoft] (3.62,2.82)--(3.86,2.72);
+\draw[sulfurTrace] (4.10,2.34)--(4.42,2.42);
+\draw[sulfurTraceFaint] (4.66,2.78)--(5.10,2.68);
+\draw[trapPocketEmpty] (3.96,2.66) ellipse [x radius=0.13, y radius=0.075];
+\draw[trapPocketEmpty] (4.54,2.36) ellipse [x radius=0.13, y radius=0.075];
+\draw[trapPocketEmpty] (4.92,2.54) ellipse [x radius=0.13, y radius=0.075];
 \draw[currentStrong] (4.62,2.02)--(4.62,2.86);
 \draw[currentStrong] (5.02,2.02)--(5.02,2.86);
 
@@ -154,16 +162,16 @@
   ({\stateProgressLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\stateProgressLeft+0.18},2.06)--({\stateProgressLeft+0.18},2.96);
-\draw[sulfurTraceSoft] (6.30,2.78)--(6.52,2.68)--(6.74,2.76)--(6.96,2.64);
-\draw[sulfurTrace] (6.24,2.22)--(6.48,2.32)--(6.72,2.20)--(6.96,2.30);
-\draw[sulfurTraceFaint] (7.18,2.48)--(7.38,2.58)--(7.58,2.46)--(7.90,2.56);
-\node[trapOccupied] at (6.52,2.68) {};
-\node[trapOccupied] at (6.96,2.64) {};
-\node[trapEmpty] at (6.48,2.32) {};
-\node[trapOccupied] at (6.72,2.20) {};
-\node[trapEmpty] at (7.38,2.58) {};
-\draw[captureCue] (6.36,2.98)--(6.52,2.70);
-\draw[captureCue] (7.10,2.42)--(6.72,2.20);
+\draw[sulfurTraceSoft] (6.26,2.80)--(6.52,2.70);
+\draw[sulfurTrace] (6.76,2.34)--(7.06,2.42);
+\draw[sulfurTraceFaint] (7.28,2.74)--(7.78,2.62);
+\draw[trapPocketOccupied] (6.60,2.64) ellipse [x radius=0.13, y radius=0.075];
+\fill[cRed!70!black] (6.60,2.64) circle [radius=0.035];
+\draw[trapPocketOccupied] (7.04,2.30) ellipse [x radius=0.13, y radius=0.075];
+\fill[cRed!70!black] (7.04,2.30) circle [radius=0.035];
+\draw[trapPocketEmpty] (7.46,2.58) ellipse [x radius=0.13, y radius=0.075];
+\draw[captureCue] (6.40,2.98)--(6.60,2.68);
+\draw[captureCue] (7.28,2.48)--(7.04,2.32);
 \draw[currentSoft] (7.72,2.02)--(7.72,2.70);
 
 % Late state: occupied sites dominate qualitatively and only a weak mobile cue
@@ -182,12 +190,17 @@
   ({\stateLateLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\stateLateLeft+0.18},2.06)--({\stateLateLeft+0.18},2.96);
-\draw[sulfurTraceSoft] (8.88,2.78)--(9.10,2.68)--(9.32,2.76)--(9.54,2.64);
-\draw[sulfurTrace] (8.84,2.22)--(9.08,2.32)--(9.32,2.20)--(9.54,2.30);
-\draw[sulfurTraceFaint] (9.74,2.48)--(9.94,2.58)--(10.14,2.46)--(10.46,2.56);
-\foreach \x/\y in {9.10/2.68,9.54/2.64,9.08/2.32,9.32/2.20,9.94/2.58,10.46/2.56}{
-  \node[trapOccupied] at (\x,\y) {};
-}
+\draw[sulfurTraceSoft] (8.86,2.80)--(9.12,2.70);
+\draw[sulfurTrace] (9.28,2.34)--(9.58,2.42);
+\draw[sulfurTraceFaint] (9.84,2.76)--(10.40,2.64);
+\draw[trapPocketOccupied] (9.22,2.64) ellipse [x radius=0.13, y radius=0.075];
+\fill[cRed!70!black] (9.22,2.64) circle [radius=0.035];
+\draw[trapPocketOccupied] (9.66,2.30) ellipse [x radius=0.13, y radius=0.075];
+\fill[cRed!70!black] (9.66,2.30) circle [radius=0.035];
+\draw[trapPocketOccupied] (10.12,2.58) ellipse [x radius=0.13, y radius=0.075];
+\fill[cRed!70!black] (10.12,2.58) circle [radius=0.035];
+\draw[trapPocketOccupied] (10.46,2.52) ellipse [x radius=0.13, y radius=0.075];
+\fill[cRed!70!black] (10.46,2.52) circle [radius=0.035];
 \draw[currentSoft] (10.16,2.02)--(10.16,2.44);
 
 % A compact marker key prevents the categorical occupancy marks from being

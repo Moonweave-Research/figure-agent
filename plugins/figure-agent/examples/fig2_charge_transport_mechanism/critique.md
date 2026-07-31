@@ -5,13 +5,13 @@ generated_at: '2026-07-31T06:20:00Z'
 generator: Codex host vision critique
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:0cd1d8012ee7a51762eb0c65ac33993db6a62dfc01286d44cc9d5be914822312
+critique_input_hash: sha256:fb820e0d37b7c2160da688df9d4f7b0f02b30aeab19be26d863b23a0be9dced8
 verdict: ready
 findings:
   - id: C001
     severity: MINOR
     category: label_placement
-    tex_lines: [233, 234]
+    tex_lines: [244, 246]
     grounded_in_rule: "§3 Physics invariants; visual_clash detector review"
     observation: "The earlier power-law annotation crossed the red response curve in the first render; the current crop places the label in a dedicated lower lane and the curve remains unobstructed."
     suggested_fix: "Applied in the current source: moved early power law to y=2.35 and recompiled the 180 mm candidate."
@@ -19,6 +19,18 @@ findings:
       axis: y
       dy_cm: -0.53
     target_texts: [early power law]
+    status: resolved
+  - id: C002
+    severity: MINOR
+    category: component_fidelity
+    tex_lines: [140, 202]
+    grounded_in_rule: "§4 Must avoid; panel A material-state rendering"
+    observation: "The earlier sulfur cells used circles attached directly to zig-zag traces, which could read as polymer beads rather than localized trap states. The current render replaces those attachments with short disconnected host traces and compact independent pocket contours containing open or occupied markers."
+    suggested_fix: "Applied in the current source: redraw the three sulfur states with sparse disconnected host strokes and pocket-based occupancy symbols; preserve the qualified, sign-neutral working model."
+    proposed_offset:
+      axis: none
+      dy_cm: 0
+    target_texts: [available site, occupied site]
     status: resolved
 panels: []
 audit_enumeration:
@@ -161,7 +173,7 @@ quality_axes:
   component_fidelity:
     verdict: pass
     confidence: high
-    rationale: "The MIM slabs, paired dipoles, bounded sulfur traces, categorical sites, and readout curves are identifiable at print scale."
+    rationale: "The MIM slabs, paired dipoles, disconnected sulfur traces, pocket-based categorical sites, and readout curves are identifiable at print scale."
     evidence: "current render; flat_mim_layer_hierarchy; bound_dipole_pairing; material_texture_authorship"
     blocking_items: []
     recommended_action: none
@@ -327,7 +339,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:0cd1d8012ee7a51762eb0c65ac33993db6a62dfc01286d44cc9d5be914822312
+  assessed_artifact_hash: sha256:fb820e0d37b7c2160da688df9d4f7b0f02b30aeab19be26d863b23a0be9dced8
   benchmark_level: solid_manuscript
   confidence: medium
   blockers: [human_protocol_validation]
