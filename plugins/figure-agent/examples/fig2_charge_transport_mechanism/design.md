@@ -45,9 +45,6 @@ mechanism detail.
   ornament or a second material phase.
 - Keep the readout trace qualitative and number-free except for the two declared
   window labels.
-- Keep dashed strokes exclusively for the late-response trajectory and the
-  early-fit extrapolation. The `t=30 s` analysis boundary is a thin solid rule,
-  because it is a window delimiter rather than a third trend.
 - Do not use full-height column rules or equal framed cards; whitespace and the
   object silhouettes should establish the four lanes.
 

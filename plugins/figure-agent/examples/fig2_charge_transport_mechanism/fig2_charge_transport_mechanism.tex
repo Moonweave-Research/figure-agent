@@ -38,15 +38,14 @@
     dash pattern=on 2pt off 1.3pt},
   fitReference/.style={cGray!52!black,line width=0.54pt,line cap=round,
     dash pattern=on 1.4pt off 1.5pt},
-  windowBoundary/.style={cGray!43!black,line width=0.38pt},
 ]
 
 % Both comparison cells represent the same MIM footprint.  The shared span is
 % a semantic invariant, not a component recipe: their internal material cues
 % may be freely redrawn without changing the comparison geometry.
-\def\mimCellWidth{3.40}
+\def\mimCellWidth{2.80}
 \def\idealCellLeft{0.80}
-\def\sulfurCellLeft{4.90}
+\def\sulfurCellLeft{4.45}
 
 \path[use as bounding box] (0.00,0.38) rectangle (16.38,5.02);
 
@@ -61,7 +60,7 @@
   \;\textbar\; 25\,\% RH};
 % The field is carried by the matched cells themselves rather than by an
 % abstract top rail, so it cannot be mistaken for a serial process arrow.
-\node[labelMute,anchor=south] at (4.50,4.06) {matched MIM cells under a held field};
+\node[labelMute,anchor=south] at (4.02,4.06) {matched MIM cells under a held field};
 % fig-agent:end object=comparison_frame
 
 % fig-agent:start object=ideal_baseline panel=A kind=material_state truth_bearing=true
@@ -80,7 +79,7 @@
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\idealCellLeft+0.18},2.06)--({\idealCellLeft+0.18},2.96);
 \node[labelMute,anchor=west] at ({\idealCellLeft+0.26},2.98) {$E_\mathrm{app}$};
-\foreach \x/\y in {1.30/2.29,2.05/2.66,2.78/2.25,3.58/2.63}{
+\foreach \x/\y in {1.25/2.29,1.85/2.66,2.50/2.25,3.18/2.63}{
   \draw[dipole,-{Stealth[length=2.6pt,width=1.8pt]}] (\x,\y-0.15)--(\x,\y+0.12);
   \fill[cBlue!36] (\x,\y-0.17) circle (0.030);
 }
@@ -108,13 +107,13 @@
   ({\sulfurCellLeft+0.18},2.06)--({\sulfurCellLeft+0.18},2.96);
 % Broken, non-periodic host fragments imply an amorphous polymer environment
 % without pretending to assign an unmeasured molecular connectivity.
-\draw[sulfurTrace] (5.35,2.25)--(5.60,2.05)--(5.85,2.10)--(6.10,2.28)
-  --(6.40,2.18)--(6.75,2.27);
-\draw[sulfurTrace] (5.45,2.85)--(5.68,2.58)--(5.95,2.63)--(6.24,2.78);
-\draw[sulfurTrace] (6.80,2.82)--(7.02,2.50)--(7.25,2.29)--(7.50,2.43)
-  --(8.05,2.28);
-\draw[sulfurTrace] (6.72,2.05)--(6.97,2.26)--(7.23,2.18)--(7.50,2.03);
-\foreach \x/\y in {6.10/2.28,7.23/2.18,7.50/2.43}{
+\draw[sulfurTrace] (4.86,2.25)--(5.08,2.06)--(5.32,2.10)--(5.55,2.27)
+  --(5.84,2.18)--(6.24,2.29);
+\draw[sulfurTrace] (4.98,2.82)--(5.20,2.57)--(5.46,2.61)--(5.74,2.77);
+\draw[sulfurTrace] (6.18,2.80)--(6.39,2.50)--(6.59,2.29)--(6.83,2.42)
+  --(7.11,2.28);
+\draw[sulfurTrace] (6.03,2.05)--(6.27,2.26)--(6.53,2.18)--(6.78,2.03);
+\foreach \x/\y in {5.55/2.27,6.45/2.23,6.84/2.42}{
   \node[localizedState] at (\x,\y) {};
 }
 \node[labelMute,align=center,anchor=north] at ({\sulfurCellLeft+0.5*\mimCellWidth},1.48)
@@ -122,8 +121,8 @@
 
 % Keep the public semantic endpoint numeric: the Figure Agent endpoint check
 % resolves named coordinates directly from editable source.
-\coordinate (comparison_out) at (8.50,2.50);
-\coordinate (readout_entry) at (9.75,2.50);
+\coordinate (comparison_out) at (7.45,2.50);
+\coordinate (readout_entry) at (8.72,2.50);
 \draw[storyArrow] (comparison_out)--(readout_entry);
 % fig-agent:end object=sulfur_working_state
 
@@ -131,26 +130,26 @@
 % What we read
 % --------------------------------------------------------------------------
 % fig-agent:start object=qualitative_current_readout panel=A kind=mini_plot truth_bearing=true
-\node[columnTitle,anchor=south west] at (9.75,3.56) {Transient current};
-\draw[axisArrow] (9.75,1.58)--(9.75,3.36);
-\draw[axisArrow] (9.75,1.58)--(15.55,1.58);
-\node[labelMute,anchor=south east] at (9.66,3.40) {$I(t)$};
-\node[labelMute,anchor=north west] at (9.91,1.36) {$t=0$};
-\node[labelMute,anchor=north] at (12.86,1.36) {time};
-\draw[traceEarly] (10.18,3.18) .. controls (10.78,2.99) and (11.50,2.69) ..
-  (12.20,2.55);
-% This is a window boundary, not a fitted trend: keep it a quiet solid rule.
-\draw[windowBoundary] (12.20,1.62)--(12.20,3.18);
+\node[columnTitle,anchor=south west] at (8.72,3.56) {Transient current};
+\draw[axisArrow] (8.72,1.58)--(8.72,3.36);
+\draw[axisArrow] (8.72,1.58)--(15.72,1.58);
+\node[labelMute,anchor=south east] at (8.63,3.40) {$I(t)$};
+\node[labelMute,anchor=north west] at (8.88,1.36) {$t=0$};
+\node[labelMute,anchor=north] at (12.12,1.36) {time};
+\draw[traceEarly] (9.22,3.18) .. controls (9.91,2.97) and (10.72,2.68) ..
+  (11.30,2.55);
+\draw[cGray!43!black,line width=0.40pt,dash pattern=on 1.2pt off 1.2pt]
+  (11.30,1.62)--(11.30,3.18);
 % A neutral extension makes the late-time residual intelligible while keeping
 % this as a qualitative readout icon rather than a synthetic data panel.
-\draw[fitReference] (12.20,2.55) .. controls (13.14,2.22) and (14.26,1.88) ..
-  (15.35,1.72);
-\draw[traceLate] (12.20,2.55) .. controls (13.06,2.45) and (14.20,2.29) ..
-  (15.35,2.18);
-\node[labelStd,anchor=south west] at (10.15,3.31) {early fit \,(2--30\,s)};
-\node[labelMute,anchor=north] at (12.20,1.36) {$t=30\,\mathrm{s}$};
-\node[labelStd,anchor=south west] at (12.70,2.70) {late residual \,(30--300\,s)};
-\node[labelMute,anchor=north west] at (12.72,2.13) {early-fit extrapolation};
+\draw[fitReference] (11.30,2.55) .. controls (12.42,2.18) and (13.83,1.86) ..
+  (15.30,1.72);
+\draw[traceLate] (11.30,2.55) .. controls (12.38,2.44) and (13.78,2.27) ..
+  (15.30,2.17);
+\node[labelStd,anchor=south west] at (9.28,3.31) {early fit \,(2--30\,s)};
+\node[labelMute,anchor=north] at (11.30,1.36) {$t=30\,\mathrm{s}$};
+\node[labelStd,anchor=south west] at (12.05,2.70) {late residual \,(30--300\,s)};
+\node[labelMute,anchor=north west] at (12.14,2.13) {early-fit extrapolation};
 % fig-agent:end object=qualitative_current_readout
 
 \end{tikzpicture}%

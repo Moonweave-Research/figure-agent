@@ -6,11 +6,9 @@ density: balanced
 reference_style: mechanism_schematic
 design_principles:
   - id: readout_led_comparison
-    instruction: "Make the material comparison visibly lead into a compact transient-current readout; the readout must be claim-bearing without visually consuming the two material lanes."
+    instruction: "Make the material comparison visibly lead into the transient-current readout, with the readout receiving the strongest claim-bearing lane."
   - id: embodied_shared_field
     instruction: "Show the held field as a matched condition inside each MIM cell; it must read as a physical operating condition, not as a serial process rail above the cells."
-  - id: trace_role_grammar
-    instruction: "Reserve dashed strokes for response trends or model extrapolations; use a thin solid rule for a non-trend analysis-window boundary."
   - id: material_not_card
     instruction: "Use a quiet common MIM cross-section grammar; material identity must come from the internal physical cue, not heavy card outlines."
   - id: restrained_analytic_index
@@ -40,9 +38,9 @@ aesthetic_levers:
     positive_signals:
       - "the shared condition is a quiet header, not a visual rail competing with the mechanism"
       - "the sulfur working state has enough visual occupancy to own the interpretation"
-      - "the readout is the clear destination of the comparison and remains narrower than the combined material comparison"
+      - "the readout is the clear destination of the comparison and has a dedicated open lane"
     anti_patterns:
-      - "a readout lane that consumes the visual width of both comparison states"
+      - "equal-width illustrated cards and a visually orphaned mini-plot"
       - "a handoff arrow that terminates in whitespace rather than the readout boundary"
       - "a text banner receives the first fixation"
     allowed_adjustments:
@@ -94,26 +92,6 @@ aesthetic_levers:
       - "imply source-off during current acquisition"
       - "infer a charge polarity from the held-field cue"
     default_route: semantic_backport
-  - id: trace_role_grammar
-    dimension: visual_semantics
-    intent: "Make the early fit, late response, extrapolation, and the analysis-window boundary visually distinguishable without a legend."
-    priority: required
-    positive_signals:
-      - "dashed strokes only belong to a response trajectory or fitted extrapolation"
-      - "the window boundary is a quiet solid reference rule"
-      - "the line hierarchy keeps the response trace stronger than its extrapolation"
-    anti_patterns:
-      - "a dashed divider that reads as another data trend"
-      - "a boundary weight or color that competes with the response trace"
-      - "multiple unrelated dash grammars in one compact readout"
-    allowed_adjustments:
-      - "redraw the symbolic current trace while preserving the two declared windows"
-      - "thin or reposition the analysis-window boundary"
-      - "rebalance response and extrapolation stroke weights"
-    forbidden_adjustments:
-      - "turn the schematic trace into measured data"
-      - "remove either declared readout window"
-    default_route: tikz_patch
   - id: color_and_stroke_economy
     dimension: color_harmony
     intent: "Reserve blue for the ideal baseline, amber for sulfur host identity, and red for localized-state/current-response emphasis while gray carries apparatus and context."
