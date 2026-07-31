@@ -228,7 +228,9 @@
 \draw[fitReference] (13.62,2.50)--(15.86,1.86);
 \draw[traceLate] (13.62,2.50) .. controls (14.24,2.47) and (15.06,2.30) ..
   (15.86,2.18);
-\node[labelMute,anchor=north west] at (12.20,2.88) {early power law};
+% Keep the annotation below the descending early segment; placing it on the
+% curve makes the symbolic readout look like a measured trace crossing text.
+\node[labelMute,anchor=north west] at (12.20,2.35) {early power law};
 \node[labelStd,text=cRed!70!black,anchor=south west] at (14.05,2.70)
   {persistent relaxation};
 % fig-agent:end object=qualitative_current_readout

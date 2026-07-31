@@ -77,6 +77,7 @@ def test_fig2_uses_progressive_trapping_sequence_and_standard_output() -> None:
     assert "traceEarly" in source
     assert "traceLate" in source
     assert "fitReference" in source
+    assert "at (12.20,2.35)" in source
     assert "ideal: rapid decay" not in source
     assert "localized charge capture" not in source
     assert "reduces mobile leakage" not in source
