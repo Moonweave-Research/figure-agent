@@ -62,13 +62,13 @@ def test_fig2_uses_progressive_trapping_sequence_and_standard_output() -> None:
     assert "early field-on" in source
     assert "progressive trapping" in source
     assert "long-lived occupied state" in source
-    assert "trapEmpty" in source
-    assert "trapOccupied" in source
+    assert "trapState" in source
+    assert "currentDot" in source
     assert "captureCue" in source
     assert "currentStrong" in source
     assert "currentSoft" in source
-    assert "available site" in source
-    assert "occupied site" in source
+    assert "{empty}" in source
+    assert "{occupied}" in source
     assert "Qualitative output" in source
     assert "$\\log I$" in source
     assert "$\\log t$" in source
@@ -87,6 +87,7 @@ def test_fig2_uses_progressive_trapping_sequence_and_standard_output() -> None:
     assert "$I_\\mathrm{meas}/I_\\mathrm{early}$" not in source
     assert "PI/PTFE: below reference" not in source
     assert "complete current blockage" not in source
+    assert "panel_a.source_polarity_claim" in contract["forbidden_implications"]
     assert "panel_a.unmeasured_ideal_current_control" in contract["forbidden_implications"]
     assert "panel_a.direct_mobile_leakage_suppression_claim" in contract["forbidden_implications"]
     assert "transient_readout_uses_standard_log_log_current_grammar" in contract[
@@ -158,9 +159,8 @@ def test_fig2_declares_material_and_readout_grammar() -> None:
     }
     assert "dipoleBody" in source
     assert "ellipse [x radius=0.17, y radius=0.25]" in source
-    assert "sulfurTrace" in source
-    assert "trapEmpty" in source
-    assert "trapOccupied" in source
+    assert "trapState" in source
+    assert "currentDot" in source
     assert "captureCue" in source
     assert "leakageSegment" not in source
     assert "leakageFading" not in source

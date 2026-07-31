@@ -34,6 +34,7 @@ forbidden_implications:
   - panel_a.actuation_charging_setup
   - panel_a.second_electrical_measurement_instrument
   - panel_a.signed_carrier_inference
+  - panel_a.source_polarity_claim
   - panel_a.source_off_during_transient
   - panel_a.calibrated_trap_depth_or_density
   - panel_a.time_calibrated_mini_graph
@@ -81,7 +82,7 @@ semantic_legibility:
       forbidden_readings: [source_off_or_discharge_interval, charging_instrument]
     - object_id: panel_a.applied_voltage_source
       declared_role: compact_held_voltage_source_cue
-      forbidden_readings: [charging_instrument, source_off_interval, calibrated_source_output]
+      forbidden_readings: [charging_instrument, source_off_interval, calibrated_source_output, source_polarity_claim]
     - object_id: panel_a.reference_dielectric
       declared_role: conceptual_idealized_dielectric_reference
       forbidden_readings: [ideal_measured_control, measured_PI_PTFE_or_PET_control]

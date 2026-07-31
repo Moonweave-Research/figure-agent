@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_charge_transport_mechanism
-generated_at: '2026-07-31T06:43:00Z'
+generated_at: '2026-07-31T12:33:08Z'
 generator: Codex host vision critique
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:4c37b2a522b7674e98fc2acc63c7f94288b2f39bb04bdaf9375d2339df5fb273
+critique_input_hash: sha256:7b2b45e5fb3b430042c43dc8c638a65bb0553fafa5dd7bd903973d098c840a8b
 verdict: ready
 findings:
   - id: C001
@@ -42,7 +42,7 @@ audit_enumeration:
         connections: "The cell establishes the quiet reference before the sulfur sequence."
       - component: compact held-voltage source cue
         mount_support: yes
-        rationale: "The left source symbol binds plus/minus feeds to the reference electrode pair without becoming an instrument drawing."
+        rationale: "The left neutral two-terminal source symbol binds the held-voltage boundary to the reference electrode pair without becoming an instrument drawing."
         connections: "The source makes the held-field boundary condition explicit for the matched MIM sequence."
       - component: progressive sulfur-rich MIM sequence
         mount_support: yes
@@ -109,7 +109,7 @@ audit_enumeration:
       finding: "Top and bottom slabs are flat and repeated; the cells read as cross-sections rather than perspective device icons."
       verdict: convention_acceptable
     - check: held_field
-      finding: "A compact V_app source binds plus/minus reference electrodes; blue dashed field cues repeat inside each MIM cell and remain held during acquisition."
+      finding: "A compact neutral two-terminal V_app source binds the reference electrode pair; blue dashed field cues repeat inside each MIM cell and remain held during acquisition without asserting source polarity."
       verdict: convention_acceptable
     - check: current_field_separation
       finding: "Blue dashed E_app arrows span the film, while shorter solid charcoal J_mob arrows with sparse dots reduce across the sulfur sequence."
@@ -178,7 +178,7 @@ quality_axes:
   subregion_integration:
     verdict: pass
     confidence: high
-    rationale: "Matched cell widths, quiet separators, and the dedicated output lane preserve one continuous mechanism strip."
+    rationale: "Matched cell widths, a quiet idealized-versus-sulfur divider, and the dedicated output lane preserve one continuous mechanism strip."
     evidence: "current render; print_178mm; whitespace_breathing"
     blocking_items: []
     recommended_action: none
@@ -351,7 +351,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:4c37b2a522b7674e98fc2acc63c7f94288b2f39bb04bdaf9375d2339df5fb273
+  assessed_artifact_hash: sha256:7b2b45e5fb3b430042c43dc8c638a65bb0553fafa5dd7bd903973d098c840a8b
   benchmark_level: solid_manuscript
   confidence: medium
   blockers: [human_protocol_validation]
@@ -463,4 +463,4 @@ crop_audit_log:
 
 # Vision Critique — fig2_charge_transport_mechanism
 
-The current 180 mm render passes the host visual review after the bounded C001 label repair. The strip communicates an explicit held-voltage MIM boundary, a distinct applied field, progressive sulfur-state occupancy, reduced mobile-current contribution, and a persistent late relaxation. Detector candidates VC001–VC013 were inspected in their crops and are accepted as false-positive or intentional schematic near-misses; no text-boundary, label-path, or undeclared-geometry candidate is present. This is a report-only critique: it does not assert experimental validation, human acceptance, or publication-final status.
+The current 180 mm render passes the host visual review after the bounded C001 label repair. The strip communicates a neutral held-voltage MIM boundary, a distinct applied field, progressive sulfur-state occupancy, reduced mobile-current contribution, and a persistent late relaxation. A subtle divider separates the idealized dielectric reference from the sulfur mechanism without becoming a third electrical object. Detector candidates VC001–VC013 were inspected in their crops and are accepted as false-positive or intentional schematic near-misses; no text-boundary, label-path, or undeclared-geometry candidate is present. This is a report-only critique: it does not assert experimental validation, human acceptance, or publication-final status.

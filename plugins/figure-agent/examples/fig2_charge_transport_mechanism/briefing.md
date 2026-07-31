@@ -32,6 +32,8 @@ the material-specific comparison`.
   transient acquisition; `25 %RH` is a shared condition. Each MIM cell is a
   flat metal / polymer film / metal cross-section; the source cue is a held
   boundary condition, not a charging instrument or perspective circuit diagram.
+  Its two leads are schematic neutral terminals: the strip makes no source
+  polarity or mobile-carrier sign claim.
 - **Idealized dielectric reference**: field-aligned neutral oval dipoles with
   paired poles provide a restrained bound-polarization grammar. This is a
   conceptual material reference, not an ideal measured control, PI, PTFE, PET,
