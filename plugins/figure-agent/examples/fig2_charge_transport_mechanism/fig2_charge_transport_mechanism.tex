@@ -24,10 +24,12 @@
   idealFilm/.style={fill=cBlue!6,draw=none},
   film/.style={fill=cAmber!11,draw=none},
   dipole/.style={cBlue!62!black,line width=0.54pt,line cap=round},
-  sulfurTrace/.style={cAmber!76!black,line width=0.62pt,line cap=round,
+  sulfurTrace/.style={cAmber!76!black,line width=0.58pt,line cap=round,
     line join=round},
-  localizedState/.style={circle,fill=cRed!72!black,draw=none,
-    minimum size=0.92mm,inner sep=0pt},
+  sulfurTraceSoft/.style={cAmber!57!black,line width=0.40pt,line cap=round,
+    line join=round},
+  localizedState/.style={circle,fill=cRed!72!black,draw=white,line width=0.25pt,
+    minimum size=0.78mm,inner sep=0pt},
   fieldGuide/.style={cGray!60!black,line width=0.46pt,line cap=round},
   storyArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!58!black,
     line width=0.50pt},
@@ -106,16 +108,25 @@
   ({\sulfurCellLeft+\mimCellWidth},1.91);
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\sulfurCellLeft+0.18},2.06)--({\sulfurCellLeft+0.18},2.96);
-% Broken, non-periodic host fragments imply an amorphous polymer environment
-% without pretending to assign an unmeasured molecular connectivity.
-\draw[sulfurTrace] (4.86,2.25)--(5.08,2.06)--(5.32,2.10)--(5.55,2.27)
-  --(5.84,2.18)--(6.24,2.29);
-\draw[sulfurTrace] (4.98,2.82)--(5.20,2.57)--(5.46,2.61)--(5.74,2.77);
-\draw[sulfurTrace] (6.18,2.80)--(6.39,2.50)--(6.59,2.29)--(6.83,2.42)
-  --(7.11,2.28);
-\draw[sulfurTrace] (6.03,2.05)--(6.27,2.26)--(6.53,2.18)--(6.78,2.03);
-\foreach \x/\y in {5.55/2.27,6.45/2.23,6.84/2.42}{
-  \node[localizedState] at (\x,\y) {};
+% A few short, aperiodic backbone fragments imply a disordered host without
+% asserting a covalent network or drawing a decorative sine-wave texture.
+\draw[sulfurTraceSoft] (4.92,2.74) .. controls (5.10,2.60) and (5.28,2.57) ..
+  (5.45,2.67) -- (5.70,2.80);
+\draw[sulfurTrace] (4.86,2.28) .. controls (5.04,2.10) and (5.22,2.10) ..
+  (5.39,2.18) -- (5.61,2.31) .. controls (5.81,2.35) and (6.02,2.26) ..
+  (6.21,2.31);
+\draw[sulfurTrace] (6.12,2.82) .. controls (6.29,2.62) and (6.47,2.41) ..
+  (6.63,2.31) -- (6.86,2.43) .. controls (6.97,2.48) and (7.06,2.41) ..
+  (7.13,2.31);
+\draw[sulfurTraceSoft] (5.98,2.04) .. controls (6.18,2.18) and (6.39,2.21) ..
+  (6.56,2.13) -- (6.78,2.02);
+% State centres sit on their owning host trace; no free-floating particle
+% population is implied by the red marks.
+\coordinate (sulfurStateA) at (5.61,2.31);
+\coordinate (sulfurStateB) at (6.63,2.31);
+\coordinate (sulfurStateC) at (6.86,2.43);
+\foreach \state in {sulfurStateA,sulfurStateB,sulfurStateC}{
+  \node[localizedState] at (\state) {};
 }
 \node[labelMute,align=center,anchor=north] at ({\sulfurCellLeft+0.5*\mimCellWidth},1.48)
   {localized states\\long-lived relaxation};
