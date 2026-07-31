@@ -339,7 +339,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:fb820e0d37b7c2160da688df9d4f7b0f02b30aeab19be26d863b23a0be9dced8
+  assessed_artifact_hash: sha256:4d9b3a8a94c4622074e22c4034251b6a1648a6e8382a6752cb0b454c7029a835
   benchmark_level: solid_manuscript
   confidence: medium
   blockers: [human_protocol_validation]
