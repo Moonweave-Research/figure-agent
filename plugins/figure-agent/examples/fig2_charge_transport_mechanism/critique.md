@@ -5,7 +5,7 @@ generated_at: '2026-07-31T06:43:00Z'
 generator: Codex host vision critique
 generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:1b6e29bce470d03933d36c6fdb2128db5288a6f980ef2968b9248fb23c52a69e
+critique_input_hash: sha256:4c37b2a522b7674e98fc2acc63c7f94288b2f39bb04bdaf9375d2339df5fb273
 verdict: ready
 findings:
   - id: C001
@@ -40,6 +40,10 @@ audit_enumeration:
         mount_support: yes
         rationale: "The left matched cell contains flat electrodes, a polymer-film region, aligned neutral dipole pairs, and one shared field cue."
         connections: "The cell establishes the quiet reference before the sulfur sequence."
+      - component: compact held-voltage source cue
+        mount_support: yes
+        rationale: "The left source symbol binds plus/minus feeds to the reference electrode pair without becoming an instrument drawing."
+        connections: "The source makes the held-field boundary condition explicit for the matched MIM sequence."
       - component: progressive sulfur-rich MIM sequence
         mount_support: yes
         rationale: "Three repeated cells show early field-on, progressive trapping, and long-lived occupied states in the same geometry."
@@ -68,6 +72,11 @@ audit_enumeration:
     - label: "ideal dielectric"
       nearest_object: "left MIM film with paired dipoles"
       intended_target: "idealized bound-polarization reference"
+      matches: true
+      proposed_fix: ""
+    - label: "V_app"
+      nearest_object: "compact two-terminal source symbol at the reference cell"
+      intended_target: "held applied voltage across the reference electrodes"
       matches: true
       proposed_fix: ""
     - label: "Sulfur-rich copolymer: progressive trapping"
@@ -100,7 +109,10 @@ audit_enumeration:
       finding: "Top and bottom slabs are flat and repeated; the cells read as cross-sections rather than perspective device icons."
       verdict: convention_acceptable
     - check: held_field
-      finding: "The field cue is inside each MIM cell and the briefing states that it remains on during transient acquisition."
+      finding: "A compact V_app source binds plus/minus reference electrodes; blue dashed field cues repeat inside each MIM cell and remain held during acquisition."
+      verdict: convention_acceptable
+    - check: current_field_separation
+      finding: "Blue dashed E_app arrows span the film, while shorter solid charcoal J_mob arrows with sparse dots reduce across the sulfur sequence."
       verdict: convention_acceptable
     - check: state_progression
       finding: "Only categorical site occupancy and the qualitative mobile-current cue change across the sulfur cells."
@@ -112,7 +124,7 @@ audit_enumeration:
       finding: "The axes use log I and log t without zero-time ticks; the solid late response departs above the dashed early projection."
       verdict: convention_acceptable
     - check: material_distinction
-      finding: "Blue dipoles, amber sulfur traces, red occupied/readout emphasis, and gray scaffolding retain distinct roles."
+      finding: "Blue field/dipoles, amber film tint, red localized-state/readout emphasis, and charcoal mobile-current cues retain distinct roles."
       verdict: convention_acceptable
   conceptual_completeness:
     - element: matched idealized reference cell
@@ -339,7 +351,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:1b6e29bce470d03933d36c6fdb2128db5288a6f980ef2968b9248fb23c52a69e
+  assessed_artifact_hash: sha256:4c37b2a522b7674e98fc2acc63c7f94288b2f39bb04bdaf9375d2339df5fb273
   benchmark_level: solid_manuscript
   confidence: medium
   blockers: [human_protocol_validation]
@@ -423,7 +435,10 @@ micro_defects:
   - {id: MD-VC007, crop: examples/fig2_charge_transport_mechanism/build/audit_crops/visual_clash/VC007_to.png, kind: label_path_near_miss, severity: NIT, observation: "VC007 marks the connector word to; the connector remains in whitespace between state and output.", linked_finding_id: '', visual_clash_ref: VC007, text_boundary_ref: '', label_path_ref: '', undeclared_geometry_ref: '', status: accept_simplification, accept_simplification_reason: false_positive, accept_simplification_rationale: "VC007 is a false positive: the connector word sits in the handoff whitespace and does not cross a state boundary or curve."}
   - {id: MD-VC008, crop: examples/fig2_charge_transport_mechanism/build/audit_crops/visual_clash/VC008_right.png, kind: label_path_near_miss, severity: NIT, observation: "VC008 marks right in the output descriptor; the descriptor is clear of the plotted trace.", linked_finding_id: '', visual_clash_ref: VC008, text_boundary_ref: '', label_path_ref: '', undeclared_geometry_ref: '', status: accept_simplification, accept_simplification_reason: false_positive, accept_simplification_rationale: "VC008 is a false positive: right is part of a directional descriptor in clear whitespace, not a curve annotation collision."}
   - {id: MD-VC009, crop: examples/fig2_charge_transport_mechanism/build/audit_crops/visual_clash/VC009_E.png, kind: label_path_near_miss, severity: NIT, observation: "VC009 marks a second E glyph; the field label remains readable inside the matched-cell context.", linked_finding_id: '', visual_clash_ref: VC009, text_boundary_ref: '', label_path_ref: '', undeclared_geometry_ref: '', status: accept_simplification, accept_simplification_reason: false_positive, accept_simplification_rationale: "VC009 is a false positive: the E glyph is the local field label and remains distinct from the film and electrode strokes."}
-  - {id: MD-VC010, crop: examples/fig2_charge_transport_mechanism/build/audit_crops/visual_clash/VC010_crop.png, kind: label_path_near_miss, severity: NIT, observation: "VC010 marks a minus glyph in the dipole legend; it remains paired inside its oval marker.", linked_finding_id: '', visual_clash_ref: VC010, text_boundary_ref: '', label_path_ref: '', undeclared_geometry_ref: '', status: accept_simplification, accept_simplification_reason: convention_acceptable, accept_simplification_rationale: "VC010 is convention acceptable: the minus glyph is an intentional pole inside a neutral paired dipole, not stray linework."}
+  - {id: MD-VC010, crop: examples/fig2_charge_transport_mechanism/build/audit_crops/visual_clash/VC010_V.png, kind: label_path_near_miss, severity: NIT, observation: "VC010 marks the V glyph inside the compact held-voltage source symbol; the source label remains readable and owned by the source circle.", linked_finding_id: '', visual_clash_ref: VC010, text_boundary_ref: '', label_path_ref: '', undeclared_geometry_ref: '', status: accept_simplification, accept_simplification_reason: intentional_schematic, accept_simplification_rationale: "VC010 is an intentional schematic enclosure: V_app is deliberately centered inside its two-terminal source symbol."}
+  - {id: MD-VC011, crop: examples/fig2_charge_transport_mechanism/build/audit_crops/visual_clash/VC011_app.png, kind: label_path_near_miss, severity: NIT, observation: "VC011 marks the app subscript inside the held-voltage source symbol; the complete V_app label remains legible.", linked_finding_id: '', visual_clash_ref: VC011, text_boundary_ref: '', label_path_ref: '', undeclared_geometry_ref: '', status: accept_simplification, accept_simplification_reason: intentional_schematic, accept_simplification_rationale: "VC011 is an intentional schematic enclosure: the app subscript belongs to the centered V_app source label."}
+  - {id: MD-VC012, crop: examples/fig2_charge_transport_mechanism/build/audit_crops/visual_clash/VC012_J.png, kind: label_path_near_miss, severity: NIT, observation: "VC012 marks the J glyph in the mobile-current label; it is separated from the current arrow and remains readable.", linked_finding_id: '', visual_clash_ref: VC012, text_boundary_ref: '', label_path_ref: '', undeclared_geometry_ref: '', status: accept_simplification, accept_simplification_reason: false_positive, accept_simplification_rationale: "VC012 is a false positive: J_mob is a nearby variable label, not text crossing the current cue."}
+  - {id: MD-VC013, crop: examples/fig2_charge_transport_mechanism/build/audit_crops/visual_clash/VC013_crop.png, kind: label_path_near_miss, severity: NIT, observation: "VC013 marks a minus glyph in a neutral dipole; it remains paired inside its oval marker.", linked_finding_id: '', visual_clash_ref: VC013, text_boundary_ref: '', label_path_ref: '', undeclared_geometry_ref: '', status: accept_simplification, accept_simplification_reason: convention_acceptable, accept_simplification_rationale: "VC013 is convention acceptable: the minus glyph is an intentional pole inside a neutral paired dipole, not stray linework."}
 crop_audit_log:
   - {crop_id: VC001_E, path: build/audit_crops/visual_clash/VC001_E.png, source: visual_clash:VC001, inspected: true, verdict: no_defect, linked_micro_defect_id: MD-VC001, rationale: "E glyph is legible and separate from the local field cue.", observed_objects: [E glyph, field cue], local_relationship: "Label is adjacent but not crossed.", candidate_refs: [VC001], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
   - {crop_id: VC002_Sulfur-rich, path: build/audit_crops/visual_clash/VC002_Sulfur-rich.png, source: visual_clash:VC002, inspected: true, verdict: no_defect, linked_micro_defect_id: MD-VC002, rationale: "Sulfur-rich heading is clear of the matched cell.", observed_objects: [Sulfur-rich heading, cell], local_relationship: "Heading occupies its own lane.", candidate_refs: [VC002], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
@@ -434,7 +449,10 @@ crop_audit_log:
   - {crop_id: VC007_to, path: build/audit_crops/visual_clash/VC007_to.png, source: visual_clash:VC007, inspected: true, verdict: no_defect, linked_micro_defect_id: MD-VC007, rationale: "Connector word is legible in handoff whitespace.", observed_objects: [connector word, state boundary], local_relationship: "No line or boundary is crossed.", candidate_refs: [VC007], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
   - {crop_id: VC008_right, path: build/audit_crops/visual_clash/VC008_right.png, source: visual_clash:VC008, inspected: true, verdict: no_defect, linked_micro_defect_id: MD-VC008, rationale: "Directional descriptor is clear of the response curve.", observed_objects: [right label, output trace], local_relationship: "Descriptor sits in a separate annotation lane.", candidate_refs: [VC008], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
   - {crop_id: VC009_E, path: build/audit_crops/visual_clash/VC009_E.png, source: visual_clash:VC009, inspected: true, verdict: no_defect, linked_micro_defect_id: MD-VC009, rationale: "Local E label remains readable inside the reference context.", observed_objects: [E glyph, film region], local_relationship: "Label is not fused with the film boundary.", candidate_refs: [VC009], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
-  - {crop_id: VC010_crop, path: build/audit_crops/visual_clash/VC010_crop.png, source: visual_clash:VC010, inspected: true, verdict: no_defect, linked_micro_defect_id: MD-VC010, rationale: "Minus glyph remains paired inside its dipole marker.", observed_objects: [minus glyph, dipole oval], local_relationship: "Glyph belongs to the neutral marker.", candidate_refs: [VC010], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
+  - {crop_id: VC010_V, path: build/audit_crops/visual_clash/VC010_V.png, source: visual_clash:VC010, inspected: true, verdict: no_defect, linked_micro_defect_id: MD-VC010, rationale: "V_app is legible inside the compact source symbol.", observed_objects: [V_app label, source circle], local_relationship: "Label is intentionally enclosed by its source symbol.", candidate_refs: [VC010], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
+  - {crop_id: VC011_app, path: build/audit_crops/visual_clash/VC011_app.png, source: visual_clash:VC011, inspected: true, verdict: no_defect, linked_micro_defect_id: MD-VC011, rationale: "The app subscript remains legible within V_app.", observed_objects: [app subscript, source circle], local_relationship: "Subscript belongs to the source label.", candidate_refs: [VC011], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
+  - {crop_id: VC012_J, path: build/audit_crops/visual_clash/VC012_J.png, source: visual_clash:VC012, inspected: true, verdict: no_defect, linked_micro_defect_id: MD-VC012, rationale: "J_mob label is clear of the current arrow.", observed_objects: [J label, current arrow], local_relationship: "Variable label occupies a separate upper lane.", candidate_refs: [VC012], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
+  - {crop_id: VC013_crop, path: build/audit_crops/visual_clash/VC013_crop.png, source: visual_clash:VC013, inspected: true, verdict: no_defect, linked_micro_defect_id: MD-VC013, rationale: "Minus glyph remains paired inside its dipole marker.", observed_objects: [minus glyph, dipole oval], local_relationship: "Glyph belongs to the neutral marker.", candidate_refs: [VC013], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
   - {crop_id: full_q1, path: build/audit_crops/full_q1.png, source: full_render, inspected: true, verdict: no_defect, linked_micro_defect_id: '', rationale: "Reference MIM cell and paired dipoles read cleanly.", observed_objects: [reference cell, dipoles], local_relationship: "Cell boundaries and field label are separated.", candidate_refs: [], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
   - {crop_id: full_q2, path: build/audit_crops/full_q2.png, source: full_render, inspected: true, verdict: no_defect, linked_micro_defect_id: '', rationale: "Early and progressive sulfur states remain matched and distinct.", observed_objects: [early state, progressive state], local_relationship: "Repeated stack geometry supports sequence reading.", candidate_refs: [], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
   - {crop_id: full_q3, path: build/audit_crops/full_q3.png, source: full_render, inspected: true, verdict: no_defect, linked_micro_defect_id: '', rationale: "Late occupied state and legend remain readable.", observed_objects: [late state, legend], local_relationship: "Occupied and empty markers are distinct.", candidate_refs: [], unintended_visible_anomaly: none, anomaly_rationale: "No anomaly visible.", anomaly_link: ''}
@@ -445,4 +463,4 @@ crop_audit_log:
 
 # Vision Critique — fig2_charge_transport_mechanism
 
-The current 180 mm render passes the host visual review after the bounded C001 label repair. The strip communicates a held-field MIM comparison, progressive sulfur-state occupancy, reduced mobile-current contribution, and a persistent late relaxation. Detector candidates VC001–VC010 were inspected in their crops and are accepted as false-positive or intentional schematic near-misses; no text-boundary, label-path, or undeclared-geometry candidate is present. This is a report-only critique: it does not assert experimental validation, human acceptance, or publication-final status.
+The current 180 mm render passes the host visual review after the bounded C001 label repair. The strip communicates an explicit held-voltage MIM boundary, a distinct applied field, progressive sulfur-state occupancy, reduced mobile-current contribution, and a persistent late relaxation. Detector candidates VC001–VC013 were inspected in their crops and are accepted as false-positive or intentional schematic near-misses; no text-boundary, label-path, or undeclared-geometry candidate is present. This is a report-only critique: it does not assert experimental validation, human acceptance, or publication-final status.

@@ -5,6 +5,7 @@ required_objects:
   - panel_a.measurement_context
   - panel_a.mim_stack
   - panel_a.field_condition
+  - panel_a.applied_voltage_source
   - panel_a.reference_dielectric
   - panel_a.bound_dipoles
   - panel_a.sulfur_copolymer
@@ -44,6 +45,7 @@ protected_relations:
   - mim_stack_contains_polymer_film_between_electrodes
   - mim_comparison_uses_matched_footprints
   - held_field_binds_lateral_material_comparison
+  - applied_source_binds_reference_electrode_pair
   - reference_and_sulfur_are_sibling_comparison_states
   - reference_baseline_shows_bound_dipoles_without_free_carrier_flow
   - sulfur_working_picture_uses_sign_neutral_localized_charge_cues
@@ -76,7 +78,10 @@ semantic_legibility:
       forbidden_readings: [cantilever, free_air_gap]
     - object_id: panel_a.field_condition
       declared_role: constant_applied_field_condition
-      forbidden_readings: [source_off_or_discharge_interval, exact_voltage_source_schematic]
+      forbidden_readings: [source_off_or_discharge_interval, charging_instrument]
+    - object_id: panel_a.applied_voltage_source
+      declared_role: compact_held_voltage_source_cue
+      forbidden_readings: [charging_instrument, source_off_interval, calibrated_source_output]
     - object_id: panel_a.reference_dielectric
       declared_role: conceptual_idealized_dielectric_reference
       forbidden_readings: [ideal_measured_control, measured_PI_PTFE_or_PET_control]
@@ -131,6 +136,12 @@ semantic_legibility:
       to_object: panel_a.reference_dielectric
       declared_role: shared_operating_condition
       render_style: stage_transition
+      epistemic_status: derived
+    - connector_id: panel_a.applied_source_to_mim
+      from_object: panel_a.applied_voltage_source
+      to_object: panel_a.mim_stack
+      declared_role: held_applied_voltage_across_reference_electrodes
+      render_style: electrical_feed
       epistemic_status: derived
     - connector_id: panel_a.held_field_to_sulfur
       from_object: panel_a.measurement_context
@@ -198,6 +209,8 @@ semantic_legibility:
       owner: panel_a.measurement_context
     - label_id: panel_a.field_label
       owner: panel_a.field_condition
+    - label_id: panel_a.source_label
+      owner: panel_a.applied_voltage_source
     - label_id: panel_a.reference_header
       owner: panel_a.reference_dielectric
     - label_id: panel_a.sulfur_header

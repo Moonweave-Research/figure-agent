@@ -25,12 +25,13 @@ the material-specific comparison`.
 ## §2. Panel content
 
 - **Comparison frame**: one shared held-field condition, with a compact
-  idealized-dielectric reference and three identical MIM states of one
+  two-terminal $V_\mathrm{app}$ source cue binding the reference electrode pair,
+  an idealized-dielectric reference, and three identical MIM states of one
   sulfur-rich specimen. The declared field
   `$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$` remains on during the whole
   transient acquisition; `25 %RH` is a shared condition. Each MIM cell is a
-  flat metal / polymer film / metal cross-section; it is not a perspective
-  device icon or a source-and-wire circuit diagram.
+  flat metal / polymer film / metal cross-section; the source cue is a held
+  boundary condition, not a charging instrument or perspective circuit diagram.
 - **Idealized dielectric reference**: field-aligned neutral oval dipoles with
   paired poles provide a restrained bound-polarization grammar. This is a
   conceptual material reference, not an ideal measured control, PI, PTFE, PET,
@@ -43,7 +44,9 @@ the material-specific comparison`.
   are not an energy axis. Short capture cues may terminate at a site, but no
   continuous hopping path or molecular repeat is drawn.
 - **Mobile-current contribution**: early state shows a stronger qualitative
-  through-film current cue; later states show a reduced cue as occupancy grows.
+  through-film current cue. The long blue dashed arrows denote $E_\mathrm{app}$;
+  shorter solid charcoal arrows with sparse dots denote $J_\mathrm{mob}$, and
+  those current cues reduce as occupancy grows.
   This means reduced mobile-current contribution, not complete current blockage
   or zero current.
 - A compact key identifies open bars as empty localized states and filled bars

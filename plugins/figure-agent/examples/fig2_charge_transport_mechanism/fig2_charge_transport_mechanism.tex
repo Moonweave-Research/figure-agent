@@ -23,17 +23,23 @@
   electrode/.style={fill=cGray!22,draw=none},
   referenceFilm/.style={fill=cBlue!6,draw=none},
   film/.style={fill=cAmber!10,draw=none},
+  sourceWire/.style={cGray!68!black,line width=0.42pt,line cap=round},
+  sourceOutline/.style={draw=cGray!76!black,fill=white,line width=0.42pt},
+  sourceLabel/.style={font=\sffamily\fontsize{5.0}{5.0}\selectfont,
+    text=cGray!76!black},
   dipoleBody/.style={fill=white,draw=cBlue!58!black,line width=0.38pt},
   dipoleCharge/.style={inner sep=0pt,text=cBlue!66!black,
     font=\sffamily\bfseries\fontsize{5.0}{5.0}\selectfont},
   trapState/.style={cRed!58!black,line width=0.42pt,line cap=round},
-  currentStrong/.style={-{Stealth[length=2.5pt,width=1.8pt]},cGray!78!black,
-    line width=0.58pt,line cap=round},
-  currentSoft/.style={-{Stealth[length=2.2pt,width=1.6pt]},cGray!54!black,
-    line width=0.38pt,line cap=round},
+  currentStrong/.style={-{Stealth[length=2.6pt,width=1.9pt]},cGray!88!black,
+    line width=0.64pt,line cap=round},
+  currentSoft/.style={-{Stealth[length=2.3pt,width=1.6pt]},cGray!62!black,
+    line width=0.44pt,line cap=round},
+  currentDot/.style={fill=cGray!78!black,draw=none},
   captureCue/.style={-{Stealth[length=2.2pt,width=1.6pt]},cRed!62!black,
     line width=0.36pt,line cap=round},
-  fieldGuide/.style={cGray!60!black,line width=0.46pt,line cap=round},
+  fieldGuide/.style={cBlue!66!black,line width=0.42pt,line cap=round,
+    dash pattern=on 1.35pt off 1.25pt},
   storyArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!58!black,
     line width=0.50pt},
   axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
@@ -48,7 +54,7 @@
 % frame is intentional: only the qualitative internal state changes with held
 % field exposure, never the device geometry.
 \def\mimCellWidth{2.25}
-\def\referenceCellLeft{0.45}
+\def\referenceCellLeft{0.55}
 \def\stateEarlyLeft{3.28}
 \def\stateProgressLeft{5.92}
 \def\stateLateLeft{8.56}
@@ -83,13 +89,25 @@
   ({\referenceCellLeft+\mimCellWidth},3.28);
 \fill[electrode] (\referenceCellLeft,1.75) rectangle
   ({\referenceCellLeft+\mimCellWidth},1.91);
+% A compact two-terminal source makes the held field boundary condition
+% explicit without turning the strip into an instrument diagram. The same
+% source is shared by the matched sulfur cells to the right.
+\draw[sourceWire] (0.30,3.28)--(\referenceCellLeft,3.28);
+\draw[sourceWire] (0.30,1.75)--(\referenceCellLeft,1.75);
+\draw[sourceWire] (0.30,3.28)--(0.30,2.72);
+\draw[sourceWire] (0.30,2.28)--(0.30,1.75);
+\draw[sourceOutline] (0.30,2.50) circle [radius=0.22];
+\node[sourceLabel] at (0.30,2.50) {$V_\mathrm{app}$};
+\node[labelMute,anchor=west,text=cGray!78!black] at (0.44,3.40) {$+$};
+\node[labelMute,anchor=west,text=cGray!78!black] at (0.44,1.63) {$-$};
 \draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
   ({\referenceCellLeft+0.18},2.06)--({\referenceCellLeft+0.18},2.96);
-\node[labelMute,anchor=west] at ({\referenceCellLeft+0.26},2.98) {$E_\mathrm{app}$};
+\node[labelMute,anchor=west,text=cBlue!70!black]
+  at ({\referenceCellLeft+0.26},2.98) {$E_\mathrm{app}$};
 % Field-aligned polar units use the standard orientation-polarization grammar:
 % each neutral oval contains its paired poles.  The ellipses, rather than free
 % signs or repeated vector arrows, make the paired-pole ownership clear.
-\foreach \x/\y in {0.98/2.30,1.42/2.68,1.88/2.30,2.32/2.68}{
+\foreach \x/\y in {1.08/2.30,1.52/2.68,1.98/2.30,2.42/2.68}{
   \draw[dipoleBody] (\x,\y) ellipse [x radius=0.17, y radius=0.25];
   \node[dipoleCharge] at (\x,\y+0.10) {$+$};
   \node[dipoleCharge] at (\x,\y-0.10) {$-$};
@@ -128,8 +146,12 @@
 \draw[cRed!70!black,line width=0.30pt] (3.87,2.68) circle [radius=0.035];
 \draw[trapState] (4.30,2.20)--(4.58,2.20);
 \draw[cRed!70!black,line width=0.30pt] (4.44,2.20) circle [radius=0.035];
-\draw[currentStrong] (4.62,2.02)--(4.62,2.86);
-\draw[currentStrong] (5.02,2.02)--(5.02,2.86);
+\draw[currentStrong] (4.62,2.08)--(4.62,2.56);
+\draw[currentStrong] (5.02,2.18)--(5.02,2.88);
+\fill[currentDot] (4.62,2.30) circle [radius=0.035];
+\fill[currentDot] (5.02,2.48) circle [radius=0.035];
+\node[labelMute,anchor=west,text=cGray!86!black] at (5.10,2.92)
+  {$J_\mathrm{mob}$};
 
 % Progressive state: capture cues terminate on sites, while the mobile cue is
 % visibly reduced.
@@ -153,7 +175,8 @@
 \draw[cRed!70!black,line width=0.30pt] (7.26,2.30) circle [radius=0.035];
 \draw[captureCue] (6.40,2.98)--(6.58,2.66);
 \draw[captureCue] (7.02,2.82)--(7.30,2.30);
-\draw[currentSoft] (7.72,2.02)--(7.72,2.70);
+\draw[currentSoft] (7.72,2.10)--(7.72,2.50);
+\fill[currentDot] (7.72,2.28) circle [radius=0.028];
 
 % Late state: occupied sites dominate qualitatively and only a weak mobile cue
 % remains. The state is persistent/slow, not a claim of complete blockage.
@@ -175,7 +198,8 @@
 \fill[cRed!70!black] (9.18,2.64) circle [radius=0.035];
 \draw[trapState] (9.82,2.30)--(10.10,2.30);
 \fill[cRed!70!black] (10.02,2.28) circle [radius=0.035];
-\draw[currentSoft] (10.16,2.02)--(10.16,2.44);
+\draw[currentSoft] (10.16,2.10)--(10.16,2.34);
+\fill[currentDot] (10.16,2.22) circle [radius=0.026];
 
 % A compact marker key prevents the categorical occupancy marks from being
 % mistaken for a quantitative trap-count legend at print reduction.
