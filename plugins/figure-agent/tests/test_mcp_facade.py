@@ -232,16 +232,14 @@ def _assert_common_envelope(payload: dict) -> None:
         assert isinstance(payload["error"]["message"], str)
 
 
-def test_mcp_json_starts_server_with_pinned_uv_project() -> None:
+def test_mcp_json_starts_server_from_its_plugin_root() -> None:
     config = json.loads((PLUGIN_ROOT / ".mcp.json").read_text(encoding="utf-8"))
     server = config["mcpServers"]["figure-agent"]
 
     assert server["command"] == "uv"
-    assert server["args"][:4] == ["run", "--project", "${CLAUDE_PLUGIN_ROOT}", "python3"]
-    assert "${CLAUDE_PLUGIN_ROOT}/mcp/figure_agent_server.py" in server["args"]
-    assert server["cwd"] == "${CLAUDE_PLUGIN_ROOT}"
-    assert server["env"]["FIGURE_AGENT_PLUGIN_ROOT"] == "${CLAUDE_PLUGIN_ROOT}"
-    assert "FIGURE_AGENT_WORKSPACE" not in server["env"]
+    assert server["args"] == ["run", "--project", ".", "python3", "mcp/figure_agent_server.py"]
+    assert server["cwd"] == "."
+    assert "env" not in server
 
 
 def test_mcp_tool_subprocesses_do_not_create_plugin_root_uv_venv() -> None:

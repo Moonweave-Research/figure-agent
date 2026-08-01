@@ -1,0 +1,37 @@
+{
+  "name": "figure-agent",
+  "version": "0.9.3+codex.local-20260801-1028",
+  "description": "Paper-figure quality kernel for semantic TikZ compile, visual QA, reproducible exports, and fail-closed readiness checks.",
+  "author": {
+    "name": "Moon Choe",
+    "email": "choimoonyoung3631@gmail.com"
+  },
+  "license": "Proprietary",
+  "keywords": [
+    "scientific-figures",
+    "tikz",
+    "publication-quality",
+    "visual-qa",
+    "reproducibility"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Figure Agent",
+    "shortDescription": "Compile, inspect, and guard scientific schematics",
+    "longDescription": "Figure Agent keeps scientific schematic authoring free while enforcing style, semantic, compile, export, and visual-QA contracts. It does not claim publication acceptance: human review remains an explicit gate.",
+    "developerName": "Moon Choe",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Inspect this scientific schematic and route the next safe Figure Agent action.",
+      "Compile this figure and report semantic or visual QA blockers.",
+      "Prepare a reproducible figure status and human-review handoff."
+    ],
+    "brandColor": "#A36A2D",
+    "screenshots": []
+  }
+}
