@@ -61,6 +61,7 @@ def test_visual_clash_budget_summary_reports_pass_state(tmp_path: Path) -> None:
             "over_by": 0,
             "status": "within_budget",
             "source": "canonical",
+            "accepted_simplification_count": 0,
             "accepted_false_positive_count": 0,
         },
     }
@@ -80,6 +81,7 @@ def test_visual_clash_budget_summary_reports_over_budget(tmp_path: Path) -> None
         "over_by": 3,
         "status": "over_budget",
         "source": "canonical",
+        "accepted_simplification_count": 0,
         "accepted_false_positive_count": 0,
     }
 
@@ -100,8 +102,27 @@ def test_visual_clash_budget_summary_reports_missing_report(tmp_path: Path) -> N
         "over_by": None,
         "status": "missing_report",
         "source": "canonical",
+        "accepted_simplification_count": None,
         "accepted_false_positive_count": None,
     }
+
+
+def test_visual_clash_budget_excludes_all_explicitly_reviewed_nondefects(
+    tmp_path: Path,
+) -> None:
+    fixture = _write_fixture(tmp_path, cap=0, total=5)
+
+    result = budget.summarize_fixture(
+        fixture,
+        accepted_false_positive_count=1,
+        accepted_simplification_count=5,
+    )
+
+    assert result["state"] == "pass"
+    assert result["visual_clash"]["raw_total"] == 5
+    assert result["visual_clash"]["total"] == 0
+    assert result["visual_clash"]["accepted_simplification_count"] == 5
+    assert result["visual_clash"]["accepted_false_positive_count"] == 1
 
 
 def test_visual_clash_budget_defaults_missing_cap_to_zero(tmp_path: Path) -> None:

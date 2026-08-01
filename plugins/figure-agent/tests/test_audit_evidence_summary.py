@@ -427,12 +427,14 @@ def test_summary_reports_detector_feedback_for_false_positive_and_defect_refs(
     summary = summarize_audit_evidence(fig_dir)
 
     feedback = summary["detector_feedback"]
+    assert feedback["visual_clash"]["accepted_simplification_count"] == 1
     assert feedback["visual_clash"]["accepted_false_positive_count"] == 1
     assert feedback["visual_clash"]["linked_defect_count"] == 0
     assert feedback["text_boundary"]["accepted_false_positive_count"] == 0
     assert feedback["text_boundary"]["linked_defect_count"] == 1
     assert feedback["unlinked_micro_defect_count"] == 0
-    assert "1 accepted false positive" in feedback["summary"]
+    assert "1 accepted reviewed non-defect" in feedback["summary"]
+    assert "1 false positive" in feedback["summary"]
     assert "1 detector-linked defect" in feedback["summary"]
 
 

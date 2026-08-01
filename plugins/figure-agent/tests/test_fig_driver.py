@@ -816,8 +816,33 @@ def test_final_mode_blocks_complete_when_warning_budget_exceeds_cap(
         "over_by": 3,
         "status": "over_budget",
         "source": "canonical",
+        "accepted_simplification_count": 0,
         "accepted_false_positive_count": 0,
     }
+
+
+def test_final_warning_budget_excludes_all_reviewed_nondefects(tmp_path: Path) -> None:
+    fixture = _write_basic_fixture(tmp_path)
+    _write_visual_clash_report(fixture, total=3)
+    status = {
+        "audit_evidence": {
+            "detector_feedback": {
+                "visual_clash": {
+                    "accepted_simplification_count": 3,
+                    "accepted_false_positive_count": 1,
+                }
+            }
+        }
+    }
+
+    summary = fig_driver._final_warning_budget(
+        fixture, "final", "FRESH", status
+    )
+
+    assert summary is not None
+    assert summary["state"] == "pass"
+    assert summary["visual_clash"]["total"] == 0
+    assert summary["visual_clash"]["accepted_simplification_count"] == 3
 
 
 def test_final_mode_requests_strict_compile_when_warning_budget_report_missing(

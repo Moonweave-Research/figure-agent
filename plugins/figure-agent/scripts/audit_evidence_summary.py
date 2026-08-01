@@ -314,11 +314,13 @@ def _detector_feedback(frontmatter: dict[str, Any], summary: dict[str, Any]) -> 
         source: {
             "candidate_count": int(summary.get(source, {}).get("candidate_count", 0)),
             "accounted_count": int(summary.get(source, {}).get("accounted_count", 0)),
+            "accepted_simplification_count": 0,
             "accepted_false_positive_count": 0,
             "linked_defect_count": 0,
         }
         for source in detector_refs
     }
+    accepted_refs: dict[str, set[str]] = {source: set() for source in detector_refs}
     false_positive_refs: dict[str, set[str]] = {source: set() for source in detector_refs}
     linked_defect_refs: dict[str, set[str]] = {source: set() for source in detector_refs}
     unlinked_ids: list[str] = []
@@ -333,11 +335,10 @@ def _detector_feedback(frontmatter: dict[str, Any], summary: dict[str, Any]) -> 
                 continue
             has_detector_ref = True
             ref_id = ref.strip()
-            if (
-                status == "accept_simplification"
-                and item.get("accept_simplification_reason") == "false_positive"
-            ):
-                false_positive_refs[source].add(ref_id)
+            if status == "accept_simplification":
+                accepted_refs[source].add(ref_id)
+                if item.get("accept_simplification_reason") == "false_positive":
+                    false_positive_refs[source].add(ref_id)
             else:
                 linked_defect_refs[source].add(ref_id)
         if not has_detector_ref and status != "accept_simplification":
@@ -345,17 +346,20 @@ def _detector_feedback(frontmatter: dict[str, Any], summary: dict[str, Any]) -> 
                 unlinked_ids.append(item_id.strip())
 
     for source in detector_refs:
+        feedback[source]["accepted_simplification_count"] = len(accepted_refs[source])
         feedback[source]["accepted_false_positive_count"] = len(false_positive_refs[source])
         feedback[source]["linked_defect_count"] = len(linked_defect_refs[source])
 
     unique_unlinked_ids = sorted(dict.fromkeys(unlinked_ids))
+    accepted_count = sum(item["accepted_simplification_count"] for item in feedback.values())
     false_positive_count = sum(item["accepted_false_positive_count"] for item in feedback.values())
     linked_defect_count = sum(item["linked_defect_count"] for item in feedback.values())
     unlinked_count = len(unique_unlinked_ids)
     feedback["unlinked_micro_defect_count"] = unlinked_count
     feedback["unlinked_micro_defect_ids"] = unique_unlinked_ids
     feedback["summary"] = (
-        f"{false_positive_count} accepted false positive(s); "
+        f"{accepted_count} accepted reviewed non-defect(s), including "
+        f"{false_positive_count} false positive(s); "
         f"{linked_defect_count} detector-linked defect(s); "
         f"{unlinked_count} unlinked micro defect(s)"
     )

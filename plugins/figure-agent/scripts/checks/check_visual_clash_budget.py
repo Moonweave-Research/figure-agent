@@ -69,6 +69,7 @@ def summarize_fixture(
     report_path: Path | None = None,
     report_source: str = "canonical",
     accepted_false_positive_count: int = 0,
+    accepted_simplification_count: int | None = None,
 ) -> dict[str, Any]:
     spec_path = example_dir / "spec.yaml"
     if not spec_path.is_file():
@@ -145,6 +146,7 @@ def summarize_fixture(
                 "cap": cap,
                 "over_by": None,
                 "status": "missing_report", "source": report_source,
+                "accepted_simplification_count": None,
                 "accepted_false_positive_count": None,
             },
         }
@@ -165,10 +167,14 @@ def summarize_fixture(
                 "accepted_false_positive_count": None,
             },
         }
+    if accepted_simplification_count is None:
+        accepted_simplification_count = accepted_false_positive_count
     if (
         not isinstance(accepted_false_positive_count, int)
         or accepted_false_positive_count < 0
-        or accepted_false_positive_count > total
+        or not isinstance(accepted_simplification_count, int)
+        or accepted_simplification_count < accepted_false_positive_count
+        or accepted_simplification_count > total
     ):
         return {
             "schema": SUMMARY_SCHEMA, "fixture": name, "state": "invalid",
@@ -181,10 +187,11 @@ def summarize_fixture(
                 "over_by": None,
                 "status": "invalid_accounting",
                 "source": report_source,
+                "accepted_simplification_count": accepted_simplification_count,
                 "accepted_false_positive_count": accepted_false_positive_count,
             },
         }
-    effective_total = total - accepted_false_positive_count
+    effective_total = total - accepted_simplification_count
     over_by = max(0, effective_total - cap)
     if over_by:
         return {
@@ -198,6 +205,7 @@ def summarize_fixture(
                 "cap": cap,
                 "over_by": over_by,
                 "status": "over_budget", "source": report_source,
+                "accepted_simplification_count": accepted_simplification_count,
                 "accepted_false_positive_count": accepted_false_positive_count,
             },
         }
@@ -212,6 +220,7 @@ def summarize_fixture(
             "cap": cap,
             "over_by": 0,
             "status": "within_budget", "source": report_source,
+            "accepted_simplification_count": accepted_simplification_count,
             "accepted_false_positive_count": accepted_false_positive_count,
         },
     }

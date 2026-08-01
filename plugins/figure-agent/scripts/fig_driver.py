@@ -624,13 +624,18 @@ def _final_warning_budget(
         if isinstance(detector_feedback, dict)
         else None
     )
-    accepted = (
-        visual_feedback.get("accepted_false_positive_count", 0)
-        if isinstance(visual_feedback, dict)
-        else 0
-    )
+    accepted = 0
+    accepted_false_positives = 0
+    if isinstance(visual_feedback, dict):
+        accepted = visual_feedback.get(
+            "accepted_simplification_count",
+            visual_feedback.get("accepted_false_positive_count", 0),
+        )
+        accepted_false_positives = visual_feedback.get("accepted_false_positive_count", 0)
     return warning_budget_mod.summarize_fixture(
-        example_dir, accepted_false_positive_count=accepted
+        example_dir,
+        accepted_false_positive_count=accepted_false_positives,
+        accepted_simplification_count=accepted,
     )
 
 
