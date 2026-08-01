@@ -166,6 +166,14 @@ host, human, or repair boundary. `/fig_improve` remains a compatibility wrapper
 over `/fig_run`; it is not a separate default workflow and does not reactivate
 autonomous quality search.
 
+When an LLM or human directly changes the `.tex` source outside the candidate
+pipeline, do not retrofit a candidate outcome or infer a win from compile
+success. After a fresh strict compile, use `fig-agent record-manual-edit <name>
+--edit-family <free-description> --target-panel <panel> --target-subregion
+<free-description> --rationale <why>`; add `--decision accept|reject --reviewer
+<name>` only for a real human verdict. This preserves free redraw while keeping
+learning evidence auditable and reward truth conservative.
+
 If the user asks to proceed autonomously across multiple fixtures, start with
 the queue:
 
@@ -228,6 +236,11 @@ polish backport, or actions the current mode forbids.
 /fig_compile <name>      Style Lock + PDF/PNG build + collision/clash + drift check
                          + perception data pack (extract.yaml + overlay.png)
                          (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
+/fig_record_manual_edit <name>
+                         append direct-source-edit provenance only after strict,
+                         semantic-hash, and 100%/50%/33% render evidence agree;
+                         compile success is never a reward. Pass a human verdict
+                         only after a human reviewed these exact source bytes.
 /fig_critique <name>     required before export when usable reference grounding exists
 /fig_ground <name>       author tex/semantic assertions from briefing §6/§7 so a
                          reversed force/bend direction is fail-loud (Layer 2)

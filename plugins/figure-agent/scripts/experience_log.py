@@ -16,6 +16,7 @@ import runtime_paths
 
 SCHEMA = "figure-agent.experience-record.v1"
 CLOSED_LOOP_TERMINAL_SCHEMA = "figure-agent.closed-loop-terminal-experience.v1"
+MANUAL_DIRECT_EDIT_KIND = "manual_direct_edit"
 
 
 class ExperienceLogError(ValueError):
@@ -98,6 +99,176 @@ def _fixture_relative(example_dir: Path, path: Path) -> str:
             return path.resolve().relative_to(example_dir.parent.parent.resolve()).as_posix()
         except ValueError as exc:
             raise ExperienceLogError("path_escape") from exc
+
+
+def _regular_fixture_path(example_dir: Path, relative: Path, *, label: str) -> Path:
+    """Resolve one regular, fixture-contained direct-edit evidence file."""
+    if relative.is_absolute() or ".." in relative.parts:
+        raise ExperienceLogError(f"{label}_path_escape")
+    lexical = example_dir / relative
+    if lexical.is_symlink() or not lexical.is_file():
+        raise ExperienceLogError(f"{label}_missing")
+    try:
+        resolved = lexical.resolve(strict=True)
+        resolved.relative_to(example_dir.resolve())
+    except (OSError, ValueError) as exc:
+        raise ExperienceLogError(f"{label}_path_escape") from exc
+    current = example_dir.resolve()
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ExperienceLogError(f"{label}_symlink")
+    return resolved
+
+
+def _regular_fixture_dir(example_dir: Path, relative: Path, *, label: str) -> Path:
+    if relative.is_absolute() or ".." in relative.parts:
+        raise ExperienceLogError(f"{label}_path_escape")
+    lexical = example_dir / relative
+    if lexical.is_symlink() or not lexical.is_dir():
+        raise ExperienceLogError(f"{label}_missing")
+    try:
+        resolved = lexical.resolve(strict=True)
+        resolved.relative_to(example_dir.resolve())
+    except (OSError, ValueError) as exc:
+        raise ExperienceLogError(f"{label}_path_escape") from exc
+    current = example_dir.resolve()
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ExperienceLogError(f"{label}_symlink")
+    return resolved
+
+
+def _direct_edit_text(value: str, *, label: str) -> str:
+    normalized = value.strip()
+    if not normalized or any(ord(char) < 32 for char in normalized):
+        raise ExperienceLogError(f"{label}_invalid")
+    return normalized
+
+
+def _direct_edit_artifact(
+    build_dir: Path,
+    relative: object,
+    *,
+    label: str,
+) -> Path:
+    if not isinstance(relative, str) or not relative.strip():
+        raise ExperienceLogError(f"{label}_missing")
+    path = Path(relative)
+    if path.is_absolute() or ".." in path.parts:
+        raise ExperienceLogError(f"{label}_path_escape")
+    return _regular_fixture_path(
+        build_dir,
+        path,
+        label=label,
+    )
+
+
+def _manual_direct_edit_evidence(
+    *,
+    example_dir: Path,
+    source_relative: Path,
+    build_relative: Path,
+) -> tuple[Path, dict[str, Any]]:
+    """Verify that a direct source edit has current strict and render evidence.
+
+    A strict status receipt has no source hash itself.  Semantic assertions bind
+    the source bytes and review-scale manifest binds the rendered previews, so
+    all three are required before a manual edit can be retained as experience.
+    """
+    source = _regular_fixture_path(example_dir, source_relative, label="manual_source")
+    build_dir = _regular_fixture_dir(example_dir, build_relative, label="manual_build")
+    strict = _regular_fixture_path(build_dir, Path("strict_status.json"), label="strict_status")
+    strict_payload = _load_json(strict, "strict_status")
+    if (
+        strict_payload.get("schema") != "figure-agent.strict-status.v1"
+        or strict_payload.get("strict_requested") is not True
+        or strict_payload.get("detector_failed") is not False
+        or strict_payload.get("state") != "passed"
+    ):
+        raise ExperienceLogError("strict_status_not_passed")
+
+    semantic = _regular_fixture_path(
+        build_dir,
+        Path("semantic_assertions.json"),
+        label="semantic_assertions",
+    )
+    semantic_payload = _load_json(semantic, "semantic_assertions")
+    source_hash = _sha256_file(source)
+    source_hashes = semantic_payload.get("source_hashes")
+    if (
+        semantic_payload.get("schema") != "figure-agent.semantic-assertions.v1"
+        or not isinstance(source_hashes, dict)
+        or source_hash not in source_hashes.values()
+    ):
+        raise ExperienceLogError("semantic_assertions_source_hash_mismatch")
+
+    preview_manifest = _regular_fixture_path(
+        build_dir,
+        Path(f"{source.stem}_review_scale_previews.json"),
+        label="review_scale_previews",
+    )
+    preview_payload = _load_json(preview_manifest, "review_scale_previews")
+    render = preview_payload.get("render")
+    previews = preview_payload.get("previews")
+    if (
+        preview_payload.get("schema") != "figure-agent.review-scale-preview-manifest.v1"
+        or not isinstance(render, dict)
+        or not isinstance(previews, list)
+    ):
+        raise ExperienceLogError("review_scale_previews_invalid")
+    render_path = _direct_edit_artifact(build_dir, render.get("path"), label="render_png")
+    if render.get("sha256") != _sha256_file(render_path):
+        raise ExperienceLogError("render_png_hash_mismatch")
+    preview_paths: dict[str, Path] = {}
+    for preview in previews:
+        if not isinstance(preview, dict):
+            continue
+        label = preview.get("label")
+        if label not in {"100pct", "50pct", "33pct"}:
+            continue
+        preview_path = _direct_edit_artifact(
+            build_dir,
+            preview.get("path"),
+            label=f"preview_{label}",
+        )
+        if preview.get("sha256") != _sha256_file(preview_path):
+            raise ExperienceLogError(f"preview_{label}_hash_mismatch")
+        preview_paths[str(label)] = preview_path
+    if set(preview_paths) != {"100pct", "50pct", "33pct"}:
+        raise ExperienceLogError("review_scale_previews_incomplete")
+    pdf = _regular_fixture_path(build_dir, Path(f"{source.stem}.pdf"), label="render_pdf")
+    return source, {
+        "source_sha256": source_hash,
+        "strict_status": {
+            "path": _fixture_relative(example_dir, strict),
+            "sha256": _sha256_file(strict),
+        },
+        "semantic_assertions": {
+            "path": _fixture_relative(example_dir, semantic),
+            "sha256": _sha256_file(semantic),
+        },
+        "review_scale_previews": {
+            "path": _fixture_relative(example_dir, preview_manifest),
+            "sha256": _sha256_file(preview_manifest),
+        },
+        "render_pdf": {
+            "path": _fixture_relative(example_dir, pdf),
+            "sha256": _sha256_file(pdf),
+        },
+        "render_png": {
+            "path": _fixture_relative(example_dir, render_path),
+            "sha256": _sha256_file(render_path),
+        },
+        "print_previews": {
+            label: {
+                "path": _fixture_relative(example_dir, path),
+                "sha256": _sha256_file(path),
+            }
+            for label, path in sorted(preview_paths.items())
+        },
+    }
 
 
 def _candidate_sandbox(example_dir: Path, candidate_id: str) -> Path:
@@ -1030,6 +1201,156 @@ def append_closed_loop_terminal_record(
         "fixture": fixture,
         "record": record,
         "writes": [f"docs/experience-log/{fixture}.jsonl"],
+    }
+
+
+def build_manual_direct_edit_record(
+    name: str,
+    *,
+    edit_family: str,
+    target_panel: str,
+    target_subregion: str,
+    rationale: str,
+    human_label: str | None = None,
+    reviewer: str | None = None,
+    source_path: Path | None = None,
+    build_dir: Path | None = None,
+    workspace_root: Path | None = None,
+    plugin_root: Path | None = None,
+) -> dict[str, Any]:
+    """Build a provenance-bound receipt for an LLM's direct source edit.
+
+    Direct TikZ edits are allowed, but cannot inherit a candidate outcome that
+    they never produced.  This record carries only an explicit human verdict as
+    a reward signal; strict compile is verification provenance, never a reward.
+    """
+    fixture_identity.validate_fixture_name(name)
+    if human_label not in {None, "accept", "reject"}:
+        raise ExperienceLogError("manual_human_label_invalid")
+    if (human_label is None) != (reviewer is None):
+        raise ExperienceLogError("manual_reviewer_decision_mismatch")
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=workspace_root,
+        plugin_root=plugin_root,
+    )
+    example_dir = paths.examples_dir / name
+    source_relative = source_path or Path(f"{name}.tex")
+    build_relative = build_dir or Path("build")
+    source, evidence = _manual_direct_edit_evidence(
+        example_dir=example_dir,
+        source_relative=source_relative,
+        build_relative=build_relative,
+    )
+    family = _direct_edit_text(edit_family, label="manual_edit_family")
+    panel = _direct_edit_text(target_panel, label="manual_target_panel")
+    subregion = _direct_edit_text(target_subregion, label="manual_target_subregion")
+    note = _direct_edit_text(rationale, label="manual_rationale")
+    reviewer_name = (
+        _direct_edit_text(reviewer, label="manual_reviewer") if reviewer is not None else None
+    )
+    source_hash = str(evidence["source_sha256"])
+    target_key = "sha256:" + sha256(f"{panel}\0{subregion}".encode()).hexdigest()
+    record = {
+        "schema": SCHEMA,
+        "fixture": name,
+        "created_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "state": {
+            # No pre-edit source is available here.  Reporting the current hash
+            # as a baseline would fabricate a before/after comparison.
+            "base_tex_hash": None,
+            "target": {"panel": panel, "subregion_key": target_key},
+            "pre_apply_defects": [],
+            "critique_finding_id": None,
+        },
+        "action": {
+            "candidate_id": f"manual-{source_hash.removeprefix('sha256:')[:16]}",
+            "candidate_hash": source_hash,
+            "edit_family": family,
+            "params": {
+                "authoring_mode": MANUAL_DIRECT_EDIT_KIND,
+                "source_path": _fixture_relative(example_dir, source),
+                "target_subregion": subregion,
+                "rationale": note,
+            },
+            "rank_score": None,
+            "rank": None,
+            "n_candidates": 1,
+        },
+        "outcome": {
+            "pipeline_ok": True,
+            "apply_status": MANUAL_DIRECT_EDIT_KIND,
+            "quality_movement": None,
+            "verifiers": {
+                "strict_compile": "pass",
+                "semantic_assertions_fresh": "pass",
+                "review_scale_previews_fresh": "pass",
+            },
+            "detector_recheck": {},
+            "pixel_delta": {"changed_pixel_ratio": None},
+            "human_label": human_label,
+            "human_decision_kind": (
+                f"human_{MANUAL_DIRECT_EDIT_KIND}_{human_label}"
+                if human_label is not None
+                else "unreviewed_manual_direct_edit"
+            ),
+            "reviewer": reviewer_name,
+            "automation_boundary": "manual_authoring",
+        },
+        "manual_edit_evidence": evidence,
+        "source_artifacts": [
+            _fixture_relative(example_dir, source),
+            *[
+                str(item["path"])
+                for item in evidence.values()
+                if isinstance(item, dict) and isinstance(item.get("path"), str)
+            ],
+            *[
+                str(item["path"])
+                for item in evidence["print_previews"].values()
+                if isinstance(item, dict) and isinstance(item.get("path"), str)
+            ],
+        ],
+    }
+    return _record_with_id(record)
+
+
+def append_manual_direct_edit_record(
+    name: str,
+    **kwargs: Any,
+) -> dict[str, Any] | None:
+    """Append one idempotent direct-edit receipt and never infer a reward."""
+    record = build_manual_direct_edit_record(name, **kwargs)
+    paths = runtime_paths.resolve_runtime_paths(
+        workspace_root=kwargs.get("workspace_root"),
+        plugin_root=kwargs.get("plugin_root"),
+    )
+    action = record["action"]
+    outcome = record["outcome"]
+    for existing in load_experience_records(paths.plugin_root, name):
+        existing_action = existing.get("action") if isinstance(existing.get("action"), dict) else {}
+        existing_outcome = (
+            existing.get("outcome") if isinstance(existing.get("outcome"), dict) else {}
+        )
+        existing_params = (
+            existing_action.get("params")
+            if isinstance(existing_action.get("params"), dict)
+            else {}
+        )
+        if (
+            existing_action.get("candidate_hash") == action["candidate_hash"]
+            and existing_action.get("edit_family") == action["edit_family"]
+            and existing_params.get("authoring_mode") == MANUAL_DIRECT_EDIT_KIND
+            and existing_outcome.get("human_label") == outcome["human_label"]
+        ):
+            return None
+    output = _experience_log_path(name, paths.plugin_root)
+    with output.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, sort_keys=True) + "\n")
+    return {
+        "schema": "figure-agent.experience-log-write.v1",
+        "fixture": name,
+        "record": record,
+        "writes": [f"docs/experience-log/{name}.jsonl"],
     }
 
 

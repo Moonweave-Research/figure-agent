@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import sys
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +13,71 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import experience_log  # noqa: E402
+import quality_memory_index  # noqa: E402
 from test_evidence_index import _fixture  # noqa: E402
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + sha256(path.read_bytes()).hexdigest()
+
+
+def _manual_edit_fixture(workspace: Path) -> Path:
+    fixture = workspace / "examples" / "direct_demo"
+    build = fixture / "build"
+    build.mkdir(parents=True)
+    source = fixture / "direct_demo.tex"
+    source.write_text("% Panel A\nmanual direct edit\n", encoding="utf-8")
+    (build / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": True,
+                "detector_failed": False,
+                "state": "passed",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (build / "semantic_assertions.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.semantic-assertions.v1",
+                "source_hashes": {"examples/direct_demo/direct_demo.tex": _sha256(source)},
+            }
+        ),
+        encoding="utf-8",
+    )
+    for filename in (
+        "direct_demo.pdf",
+        "direct_demo.png",
+        "direct_demo_100pct.png",
+        "direct_demo_50pct.png",
+        "direct_demo_33pct.png",
+    ):
+        (build / filename).write_bytes(filename.encode("utf-8"))
+    previews = []
+    for label, filename, scale in (
+        ("100pct", "direct_demo_100pct.png", 1.0),
+        ("50pct", "direct_demo_50pct.png", 0.5),
+        ("33pct", "direct_demo_33pct.png", 0.33),
+    ):
+        path = build / filename
+        previews.append({"label": label, "path": filename, "scale": scale, "sha256": _sha256(path)})
+    render = build / "direct_demo.png"
+    (build / "direct_demo_review_scale_previews.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.review-scale-preview-manifest.v1",
+                "render": {"path": render.name, "sha256": _sha256(render)},
+                "previews": previews,
+            }
+        ),
+        encoding="utf-8",
+    )
+    return fixture
 
 
 def test_append_apply_experience_record_joins_existing_artifacts(tmp_path: Path) -> None:
@@ -105,6 +172,152 @@ def test_append_apply_record_refuses_symlinked_experience_log(tmp_path: Path) ->
             workspace_root=workspace,
             plugin_root=plugin_root,
         )
+
+
+def test_manual_direct_edit_receipt_keeps_compile_out_of_reward(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    _manual_edit_fixture(workspace)
+
+    result = experience_log.append_manual_direct_edit_record(
+        "direct_demo",
+        edit_family="mechanism_redraw",
+        target_panel="A",
+        target_subregion="sulfur-trap-route",
+        rationale="replace an ambiguous trap indication",
+        workspace_root=workspace,
+        plugin_root=plugin_root,
+    )
+
+    assert result is not None
+    row = result["record"]
+    assert row["action"]["params"]["authoring_mode"] == "manual_direct_edit"
+    assert row["outcome"]["pipeline_ok"] is True
+    assert row["outcome"]["quality_movement"] is None
+    assert row["outcome"]["human_label"] is None
+    assert row["manual_edit_evidence"]["source_sha256"] == _sha256(
+        workspace / "examples" / "direct_demo" / "direct_demo.tex"
+    )
+    event = quality_memory_index._event_from_experience_record(row)  # type: ignore[attr-defined]
+    index = quality_memory_index.build_memory_index([event])
+    assert index["families"]["mechanism_redraw"]["attempts"] == 0
+    assert index["families"]["mechanism_redraw"]["unknown"] == 1
+
+
+def test_manual_direct_edit_human_accept_becomes_the_only_positive_signal(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    _manual_edit_fixture(workspace)
+    common = {
+        "edit_family": "mechanism_redraw",
+        "target_panel": "A",
+        "target_subregion": "sulfur-trap-route",
+        "rationale": "replace an ambiguous trap indication",
+        "workspace_root": workspace,
+        "plugin_root": plugin_root,
+    }
+
+    unreviewed = experience_log.append_manual_direct_edit_record("direct_demo", **common)
+    accepted = experience_log.append_manual_direct_edit_record(
+        "direct_demo",
+        human_label="accept",
+        reviewer="figure-owner",
+        **common,
+    )
+    repeated = experience_log.append_manual_direct_edit_record(
+        "direct_demo",
+        human_label="accept",
+        reviewer="figure-owner",
+        **common,
+    )
+
+    assert unreviewed is not None
+    assert accepted is not None
+    assert repeated is None
+    events = [
+        quality_memory_index._event_from_experience_record(unreviewed["record"]),  # type: ignore[attr-defined]
+        quality_memory_index._event_from_experience_record(accepted["record"]),  # type: ignore[attr-defined]
+    ]
+    index = quality_memory_index.build_memory_index(events)
+    bucket = index["families"]["mechanism_redraw"]
+    assert bucket["attempts"] == 1
+    assert bucket["improved"] == 1
+
+
+def test_manual_direct_edit_rejects_stale_semantic_evidence(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    fixture = _manual_edit_fixture(workspace)
+    source = fixture / "direct_demo.tex"
+    source.write_text("% Panel A\nsource drift\n", encoding="utf-8")
+
+    with pytest.raises(
+        experience_log.ExperienceLogError,
+        match="semantic_assertions_source_hash_mismatch",
+    ):
+        experience_log.build_manual_direct_edit_record(
+            "direct_demo",
+            edit_family="mechanism_redraw",
+            target_panel="A",
+            target_subregion="sulfur-trap-route",
+            rationale="replace an ambiguous trap indication",
+            workspace_root=workspace,
+            plugin_root=plugin_root,
+        )
+
+
+def test_record_manual_edit_cli_writes_receipt_and_rebuilds_memory_index(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    exp_dir = tmp_path / "experience-log"
+    _manual_edit_fixture(workspace)
+    env = os.environ.copy()
+    env.update(
+        {
+            "FIGURE_AGENT_PLUGIN_ROOT": str(PLUGIN_ROOT),
+            "FIGURE_AGENT_WORKSPACE": str(workspace),
+            "FIG_AGENT_EXPERIENCE_LOG_DIR": str(exp_dir),
+        }
+    )
+
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(FIG_AGENT),
+            "record-manual-edit",
+            "direct_demo",
+            "--edit-family",
+            "mechanism_redraw",
+            "--target-panel",
+            "A",
+            "--target-subregion",
+            "sulfur-trap-route",
+            "--rationale",
+            "replace an ambiguous trap indication",
+            "--decision",
+            "accept",
+            "--reviewer",
+            "figure-owner",
+        ],
+        cwd=workspace,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["idempotent"] is False
+    assert payload["receipt"]["outcome"]["human_label"] == "accept"
+    memory_index = (
+        workspace
+        / "examples"
+        / "direct_demo"
+        / "build"
+        / "memory"
+        / "quality_memory_index.json"
+    )
+    assert memory_index.is_file()
 
 
 def test_append_recommendation_record_writes_auto_accept_recommendation(
