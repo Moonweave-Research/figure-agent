@@ -810,10 +810,13 @@ def test_final_mode_blocks_complete_when_warning_budget_exceeds_cap(
     assert summary["final_readiness_profile"]["warning_budget"]["budget_state"] == "needs_action"
     assert summary["final_readiness_profile"]["warning_budget"]["visual_clash"] == {
         "present": True,
+        "raw_total": 3,
         "total": 3,
         "cap": 0,
         "over_by": 3,
         "status": "over_budget",
+        "source": "canonical",
+        "accepted_false_positive_count": 0,
     }
 
 

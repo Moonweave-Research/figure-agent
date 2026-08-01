@@ -603,10 +603,31 @@ def _draft_export_block_reason(status: dict[str, Any]) -> str:
     )
 
 
-def _final_warning_budget(example_dir: Path, mode: str, render_state: Any) -> dict[str, Any] | None:
+def _final_warning_budget(
+    example_dir: Path, mode: str, render_state: Any, status: dict[str, Any]
+) -> dict[str, Any] | None:
     if mode != "final" or render_state != "FRESH":
         return None
-    return warning_budget_mod.summarize_fixture(example_dir)
+    candidate = status.get("current_candidate")
+    if isinstance(candidate, dict) and candidate.get("state") == "VALID":
+        evidence = candidate.get("evidence_paths")
+        report = evidence.get("visual_clash") if isinstance(evidence, dict) else None
+        return warning_budget_mod.summarize_fixture(
+            example_dir,
+            report_path=example_dir / report if isinstance(report, str) else None,
+            report_source="current_candidate",
+        )
+    feedback = status.get("audit_evidence")
+    detector_feedback = feedback.get("detector_feedback") if isinstance(feedback, dict) else None
+    visual_feedback = detector_feedback.get("visual_clash") if isinstance(detector_feedback, dict) else None
+    accepted = (
+        visual_feedback.get("accepted_false_positive_count", 0)
+        if isinstance(visual_feedback, dict)
+        else 0
+    )
+    return warning_budget_mod.summarize_fixture(
+        example_dir, accepted_false_positive_count=accepted
+    )
 
 
 def _publication_gate_block_reason(status: dict[str, Any]) -> str:
@@ -691,7 +712,7 @@ def _select_action(
     ) -> dict[str, Any]:
         effective_warning_budget = warning_budget
         if effective_warning_budget is None:
-            effective_warning_budget = _final_warning_budget(example_dir, mode, render)
+            effective_warning_budget = _final_warning_budget(example_dir, mode, render, status)
         return _summary(
             name=name,
             mode=mode,
@@ -803,7 +824,7 @@ def _select_action(
         )
 
     # Render is FRESH from here.
-    warning_budget = _final_warning_budget(example_dir, mode, render)
+    warning_budget = _final_warning_budget(example_dir, mode, render, status)
     if isinstance(warning_budget, dict):
         budget_state = warning_budget.get("state")
         if budget_state == "missing_input":

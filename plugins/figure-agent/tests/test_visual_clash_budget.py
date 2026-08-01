@@ -55,10 +55,13 @@ def test_visual_clash_budget_summary_reports_pass_state(tmp_path: Path) -> None:
         "reason": "visual clash warnings are within budget",
         "visual_clash": {
             "present": True,
+            "raw_total": 3,
             "total": 3,
             "cap": 5,
             "over_by": 0,
             "status": "within_budget",
+            "source": "canonical",
+            "accepted_false_positive_count": 0,
         },
     }
 
@@ -71,10 +74,13 @@ def test_visual_clash_budget_summary_reports_over_budget(tmp_path: Path) -> None
     assert result["state"] == "needs_action"
     assert result["visual_clash"] == {
         "present": True,
+        "raw_total": 5,
         "total": 5,
         "cap": 2,
         "over_by": 3,
         "status": "over_budget",
+        "source": "canonical",
+        "accepted_false_positive_count": 0,
     }
 
 
@@ -88,10 +94,13 @@ def test_visual_clash_budget_summary_reports_missing_report(tmp_path: Path) -> N
     assert result["state"] == "missing_input"
     assert result["visual_clash"] == {
         "present": False,
+        "raw_total": None,
         "total": None,
         "cap": 0,
         "over_by": None,
         "status": "missing_report",
+        "source": "canonical",
+        "accepted_false_positive_count": None,
     }
 
 
@@ -104,6 +113,41 @@ def test_visual_clash_budget_defaults_missing_cap_to_zero(tmp_path: Path) -> Non
         assert str(exc) == "demo: visual clash budget exceeded: 1 > 0"
     else:
         raise AssertionError("expected VisualClashBudgetError")
+
+
+def test_visual_clash_budget_uses_declared_current_candidate_report(tmp_path: Path) -> None:
+    fixture = _write_fixture(tmp_path, cap=0, total=9)
+    candidate_root = fixture / "review" / "candidate"
+    (candidate_root / "build").mkdir(parents=True)
+    source = candidate_root / "candidate.tex"
+    source.write_text("% candidate", encoding="utf-8")
+    (candidate_root / "build" / "candidate.pdf").write_bytes(b"%PDF")
+    (candidate_root / "build" / "visual_clash.json").write_text(
+        json.dumps({"total": 2}), encoding="utf-8"
+    )
+    import hashlib
+
+    (fixture / "review" / "current-candidate.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.current-candidate-pointer.v1",
+                "fixture": "demo",
+                "candidate_root": "review/candidate",
+                "source_path": "candidate.tex",
+                "source_sha256": "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest(),
+                "evidence": {
+                    "render_pdf": "build/candidate.pdf",
+                    "visual_clash": "build/visual_clash.json",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = budget.summarize_fixture(fixture)
+
+    assert result["visual_clash"]["source"] == "current_candidate"
+    assert result["visual_clash"]["raw_total"] == 2
 
 
 def test_visual_clash_budget_fails_when_report_is_missing(tmp_path: Path) -> None:

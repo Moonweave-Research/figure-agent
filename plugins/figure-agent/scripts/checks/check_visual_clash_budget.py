@@ -13,6 +13,7 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import fixture_identity  # noqa: E402
+import current_candidate  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 
 SUMMARY_SCHEMA = "figure-agent.warning-budget.v1"
@@ -44,7 +45,31 @@ def _load_total(report_path: Path) -> int:
     return total
 
 
-def summarize_fixture(example_dir: Path) -> dict[str, Any]:
+def _report_input(
+    example_dir: Path,
+    *,
+    report_path: Path | None,
+    report_source: str,
+) -> tuple[Path, str]:
+    if report_path is not None:
+        return report_path, report_source
+    candidate = current_candidate.resolve_current_candidate(example_dir)
+    if candidate.get("state") == "VALID":
+        evidence = candidate.get("evidence_paths")
+        visual_clash = evidence.get("visual_clash") if isinstance(evidence, dict) else None
+        if not isinstance(visual_clash, str) or not visual_clash:
+            raise VisualClashBudgetError("current candidate omits visual-clash evidence")
+        return example_dir / visual_clash, "current_candidate"
+    return example_dir / "build" / "visual_clash.json", "canonical"
+
+
+def summarize_fixture(
+    example_dir: Path,
+    *,
+    report_path: Path | None = None,
+    report_source: str = "canonical",
+    accepted_false_positive_count: int = 0,
+) -> dict[str, Any]:
     spec_path = example_dir / "spec.yaml"
     if not spec_path.is_file():
         return {
@@ -93,19 +118,34 @@ def summarize_fixture(example_dir: Path) -> dict[str, Any]:
                 "status": "invalid_cap",
             },
         }
-    report_path = example_dir / "build" / "visual_clash.json"
+    try:
+        report_path, report_source = _report_input(
+            example_dir, report_path=report_path, report_source=report_source
+        )
+    except VisualClashBudgetError as exc:
+        return {
+            "schema": SUMMARY_SCHEMA, "fixture": name, "state": "missing_input", "reason": str(exc),
+            "visual_clash": {"present": False, "raw_total": None, "total": None, "cap": cap,
+                             "over_by": None, "status": "missing_current_candidate_report",
+                             "source": "current_candidate", "accepted_false_positive_count": None},
+        }
     if not report_path.is_file():
         return {
             "schema": SUMMARY_SCHEMA,
             "fixture": name,
             "state": "missing_input",
-            "reason": "missing build/visual_clash.json for warning budget",
+            "reason": (
+                "missing build/visual_clash.json for warning budget"
+                if report_source == "canonical"
+                else f"missing current-candidate {report_path.name} for warning budget"
+            ),
             "visual_clash": {
                 "present": False,
-                "total": None,
+                "raw_total": None, "total": None,
                 "cap": cap,
                 "over_by": None,
-                "status": "missing_report",
+                "status": "missing_report", "source": report_source,
+                "accepted_false_positive_count": None,
             },
         }
     try:
@@ -118,13 +158,27 @@ def summarize_fixture(example_dir: Path) -> dict[str, Any]:
             "reason": str(exc),
             "visual_clash": {
                 "present": True,
-                "total": None,
+                "raw_total": None, "total": None,
                 "cap": cap,
                 "over_by": None,
-                "status": "invalid_report",
+                "status": "invalid_report", "source": report_source,
+                "accepted_false_positive_count": None,
             },
         }
-    over_by = max(0, total - cap)
+    if (
+        not isinstance(accepted_false_positive_count, int)
+        or accepted_false_positive_count < 0
+        or accepted_false_positive_count > total
+    ):
+        return {
+            "schema": SUMMARY_SCHEMA, "fixture": name, "state": "invalid",
+            "reason": "accepted false-positive accounting is invalid",
+            "visual_clash": {"present": True, "raw_total": total, "total": None, "cap": cap,
+                             "over_by": None, "status": "invalid_accounting", "source": report_source,
+                             "accepted_false_positive_count": accepted_false_positive_count},
+        }
+    effective_total = total - accepted_false_positive_count
+    over_by = max(0, effective_total - cap)
     if over_by:
         return {
             "schema": SUMMARY_SCHEMA,
@@ -133,10 +187,11 @@ def summarize_fixture(example_dir: Path) -> dict[str, Any]:
             "reason": "visual clash warning budget exceeded",
             "visual_clash": {
                 "present": True,
-                "total": total,
+                "raw_total": total, "total": effective_total,
                 "cap": cap,
                 "over_by": over_by,
-                "status": "over_budget",
+                "status": "over_budget", "source": report_source,
+                "accepted_false_positive_count": accepted_false_positive_count,
             },
         }
     return {
@@ -146,10 +201,11 @@ def summarize_fixture(example_dir: Path) -> dict[str, Any]:
         "reason": "visual clash warnings are within budget",
         "visual_clash": {
             "present": True,
-            "total": total,
+            "raw_total": total, "total": effective_total,
             "cap": cap,
             "over_by": 0,
-            "status": "within_budget",
+            "status": "within_budget", "source": report_source,
+            "accepted_false_positive_count": accepted_false_positive_count,
         },
     }
 

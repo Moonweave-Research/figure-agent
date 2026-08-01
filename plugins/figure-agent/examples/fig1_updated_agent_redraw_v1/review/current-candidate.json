@@ -12,7 +12,8 @@
     "print_size_contract": "build/print_size_contract.json",
     "physics_grounding": "build/physics_grounding.json",
     "text_boundary_clash": "build/text_boundary_clash.json",
-    "label_path_proximity": "build/label_path_proximity.json"
+    "label_path_proximity": "build/label_path_proximity.json",
+    "visual_clash": "build/visual_clash.json"
   },
   "promotion_state": "candidate_only",
   "human_gate": "pending"

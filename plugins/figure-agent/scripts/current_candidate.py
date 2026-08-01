@@ -21,6 +21,7 @@ _EVIDENCE_KEYS = {
     "physics_grounding": "physics_grounding",
     "text_boundary_clash": "text_boundary_clash",
     "label_path_proximity": "label_path_proximity",
+    "visual_clash": "visual_clash",
 }
 
 
