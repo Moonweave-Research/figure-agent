@@ -85,6 +85,7 @@ TARGETED_TESTS = [
 
 REQUIRED_PACKAGE_PATHS = {
     ".claude-plugin/plugin.json",
+    ".codex-plugin/plugin.json",
     ".mcp.json",
     "benchmarks/quality_suites.yaml",
     "mcp/figure_agent_server.py",

@@ -62,6 +62,7 @@ def _smoke_fixture_names() -> list[str]:
 def _included_files() -> list[Path]:
     roots = [
         PLUGIN_ROOT / ".claude-plugin",
+        PLUGIN_ROOT / ".codex-plugin",
         PLUGIN_ROOT / "benchmarks",
         PLUGIN_ROOT / "mcp",
         PLUGIN_ROOT / "skills",

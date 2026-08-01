@@ -37,6 +37,7 @@ def test_package_cowork_plugin_zip_contract(tmp_path: Path) -> None:
     required = {
         ".mcp.json",
         ".claude-plugin/plugin.json",
+        ".codex-plugin/plugin.json",
         "skills/figure-agent/SKILL.md",
         "commands/fig_status.md",
         "mcp/figure_agent_server.py",
