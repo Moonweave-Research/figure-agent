@@ -12,8 +12,8 @@ from typing import Any
 SCRIPTS_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-import fixture_identity  # noqa: E402
 import current_candidate  # noqa: E402
+import fixture_identity  # noqa: E402
 from inputs import parse_spec  # noqa: E402
 
 SUMMARY_SCHEMA = "figure-agent.warning-budget.v1"
@@ -173,9 +173,16 @@ def summarize_fixture(
         return {
             "schema": SUMMARY_SCHEMA, "fixture": name, "state": "invalid",
             "reason": "accepted false-positive accounting is invalid",
-            "visual_clash": {"present": True, "raw_total": total, "total": None, "cap": cap,
-                             "over_by": None, "status": "invalid_accounting", "source": report_source,
-                             "accepted_false_positive_count": accepted_false_positive_count},
+            "visual_clash": {
+                "present": True,
+                "raw_total": total,
+                "total": None,
+                "cap": cap,
+                "over_by": None,
+                "status": "invalid_accounting",
+                "source": report_source,
+                "accepted_false_positive_count": accepted_false_positive_count,
+            },
         }
     effective_total = total - accepted_false_positive_count
     over_by = max(0, effective_total - cap)

@@ -17,8 +17,7 @@ _SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(_SCRIPTS / "quality"))
 sys.path.insert(0, str(_SCRIPTS / "candidates"))
 
-import experience_log
-import fixture_identity
+import fixture_identity  # noqa: E402
 
 
 class RecoveryError(ValueError):
@@ -131,7 +130,9 @@ def recover_records(
     return {
         "execute": execute,
         "source_records": source_counts,
-        "recovered_records": {fixture: len(records) for fixture, records in sorted(additions.items())},
+        "recovered_records": {
+            fixture: len(records) for fixture, records in sorted(additions.items())
+        },
         "recovered_total": sum(len(records) for records in additions.values()),
         "writes": writes,
     }

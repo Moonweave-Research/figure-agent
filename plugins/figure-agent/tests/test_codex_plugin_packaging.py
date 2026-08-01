@@ -1,13 +1,14 @@
 import json
 from pathlib import Path
 
-
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 MARKETPLACE_ROOT = PLUGIN_ROOT.parents[1]
 
 
 def test_codex_manifest_exposes_the_shared_skill_and_mcp_facade() -> None:
-    manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
+    )
     mcp = json.loads((PLUGIN_ROOT / ".mcp.json").read_text(encoding="utf-8"))
 
     assert manifest["name"] == "figure-agent"

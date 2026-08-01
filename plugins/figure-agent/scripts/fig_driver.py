@@ -619,7 +619,11 @@ def _final_warning_budget(
         )
     feedback = status.get("audit_evidence")
     detector_feedback = feedback.get("detector_feedback") if isinstance(feedback, dict) else None
-    visual_feedback = detector_feedback.get("visual_clash") if isinstance(detector_feedback, dict) else None
+    visual_feedback = (
+        detector_feedback.get("visual_clash")
+        if isinstance(detector_feedback, dict)
+        else None
+    )
     accepted = (
         visual_feedback.get("accepted_false_positive_count", 0)
         if isinstance(visual_feedback, dict)
