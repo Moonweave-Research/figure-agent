@@ -44,6 +44,12 @@ def _copy_fixture(tmp_path: Path) -> tuple[Path, Path]:
     (fixture / "contract" / "fonts").mkdir(parents=True)
     (fixture / "contract" / "licenses").mkdir(parents=True)
     (plugin_root / "scripts").mkdir(parents=True)
+    # The replay subprocess is intentionally launched through ``uv run`` from
+    # the copied plugin root.  Carry the project metadata into that isolated
+    # root so its declared runtime dependencies (notably PyYAML) remain
+    # available during provenance-negative replay checks.
+    for project_file in ("pyproject.toml", "uv.lock"):
+        shutil.copy2(PLUGIN_ROOT / project_file, plugin_root / project_file)
     for script in ("direct_svg_candidate.py", "direct_svg_packet.py"):
         shutil.copy2(PLUGIN_ROOT / "scripts" / script, plugin_root / "scripts" / script)
     shutil.copy2(FIXTURE / "packets" / "test-b-synthesis.yaml", fixture / "packets")

@@ -127,16 +127,16 @@ fixtures:
     text_boundary_check_ids:
       - mechanism-strip-top-band
     label_path_check_ids:
-      - readout-window-divider
+      - persistent-relaxation-annotation-lane
     aesthetic_intent: true
     critique_reference_pack: false
     paper_aesthetic_context: nc-main-text-series
     journal_art_direction_playbook:
     adoption_status: adopted_high_risk
     rationale: >
-      Fig2 declares a bounded mechanism strip and an explicit readout-window
-      divider; the fixture remains schematic and its data panels stay bound to
-      the declared charge-transport pipeline.
+      Fig2 declares a bounded mechanism strip and an explicit persistent-
+      relaxation annotation lane; the fixture remains schematic and its data
+      panels stay bound to the declared charge-transport pipeline.
 
   - fixture: fig3_trap_schematic_slice4_illustration_grammar
     reference_image: true
