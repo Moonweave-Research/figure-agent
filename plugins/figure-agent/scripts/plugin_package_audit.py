@@ -36,7 +36,14 @@ def _is_empty_dir(path: Path) -> bool:
 
 
 def _is_plugin_root(root: Path) -> bool:
-    return (root / ".claude-plugin" / "plugin.json").is_file()
+    return any(
+        (root / manifest / "plugin.json").is_file()
+        for manifest in (".claude-plugin", ".codex-plugin")
+    )
+
+
+def _has_codex_manifest(root: Path) -> bool:
+    return (root / ".codex-plugin" / "plugin.json").is_file()
 
 
 def _is_fixture_artifact_dir(root: Path, path: Path) -> bool:
@@ -139,7 +146,10 @@ def find_mcp_config_issues(root: Path) -> list[str]:
                     f"{server_name}: MCP config embeds workspace-relative script path {value!r}"
                 )
         cwd = config.get("cwd")
-        if isinstance(cwd, str) and cwd in {".", ""}:
+        # Codex resolves a plugin-local ``cwd: .`` inside its installed package;
+        # the same value is unsafe for a Claude-only manifest because it can
+        # instead resolve to the user's project workspace.
+        if isinstance(cwd, str) and cwd in {".", ""} and not _has_codex_manifest(root):
             issues.append(f"{server_name}: MCP cwd must not depend on user workspace")
     return issues
 

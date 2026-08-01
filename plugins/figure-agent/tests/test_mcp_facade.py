@@ -1686,6 +1686,28 @@ def test_package_audit_rejects_workspace_relative_mcp_scripts(tmp_path: Path) ->
     assert any("cwd must not depend on user workspace" in issue for issue in issues)
 
 
+def test_package_audit_allows_plugin_local_cwd_for_a_codex_manifest(tmp_path: Path) -> None:
+    plugin = tmp_path / "plugin"
+    (plugin / ".codex-plugin").mkdir(parents=True)
+    (plugin / ".codex-plugin" / "plugin.json").write_text("{}", encoding="utf-8")
+    (plugin / ".mcp.json").write_text(
+        json.dumps(
+            {
+                "mcpServers": {
+                    "figure-agent": {
+                        "command": "python3",
+                        "args": ["mcp/figure_agent_server.py"],
+                        "cwd": ".",
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert find_mcp_config_issues(plugin) == []
+
+
 def _run_fig_agent_cli(workspace: Path, *args: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
