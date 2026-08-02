@@ -1,8 +1,12 @@
 ---
-description: Vision critique of compiled figure via host Claude Code (no external API). Writes structured critique.md (YAML front-matter + Markdown summary) for one fixture.
+description: Vision critique of a compiled figure via the current vision-capable host (Codex or Claude; no external API). Writes structured critique.md (YAML front-matter + Markdown summary) for one fixture.
 ---
 
-Generate a structured vision critique for a compiled figure using the **host Claude Code main loop** as the vision LLM. No external Anthropic API call; subscription tokens only.
+Generate a structured vision critique for a compiled figure using the current
+**vision-capable host main loop** (for example, Codex or Claude). The host reads
+the declared rendered artifacts directly and writes the report-only critique.
+Do not call an external vision API or treat the host's model/provider identity
+as a quality verdict.
 
 **Usage**: `/fig_critique <name>`
 
@@ -355,4 +359,7 @@ create `examples/<name>/critique_adjudication.yaml` with the current critique
 hash. Review the generated decisions before marking exactly one finding as
 `apply`.
 
-Cost: 0원 (subscription tokens only). The plugin orchestrates; the host Claude Code main loop reads the PNG and produces the critique. `skills/figure-agent/SKILL.md` policy: delegate vision tasks to the host main loop; never call an external vision API directly.
+Cost: no per-figure external API call. The plugin orchestrates; the current
+vision-capable host main loop (Codex or Claude) reads the PNG and produces the
+critique. `skills/figure-agent/SKILL.md` policy: delegate vision tasks to the
+host main loop; never call an external vision API directly.

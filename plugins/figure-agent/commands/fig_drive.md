@@ -183,9 +183,9 @@ When `safe_command` is non-null it falls into one of two namespaces:
 
 - **entrypoint** (`fig-agent ...`) — runnable by a generic
   shell or `subprocess.run`.
-- **slash** (`/fig_critique <name>`, etc.) — requires a Claude host loop
-  (e.g. `/fig_critique` invokes host vision); a non-Claude executor must
-  delegate these to the host.
+- **slash** (`/fig_critique <name>`, etc.) — requires a vision-capable host
+  loop (for example, Codex or Claude; `/fig_critique` invokes host vision). A
+  shell-only executor must delegate these to the host.
 
 In both cases the goal substring is shell-quoted via `shlex.quote`, so a goal
 containing spaces or single quotes is safe to copy-paste.
@@ -357,7 +357,8 @@ never recommend in that mode.
 If `stop_boundary` is non-null, stop and satisfy that boundary before running
 any other command. Identifiers:
 
-- `host_llm_critique_required` — `/fig_critique` must run via host Claude.
+- `host_llm_critique_required` — `/fig_critique` must run via a vision-capable
+  host (for example, Codex or Claude).
 - `reference_missing` — declared reference input is absent; fix `spec.yaml`
   path or add the file first.
 - `ambiguous_patch_selection` — more than one actionable patch target.

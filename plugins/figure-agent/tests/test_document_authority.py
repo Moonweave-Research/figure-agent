@@ -133,6 +133,27 @@ def test_agent_entrypoints_keep_figure_agent_dogfood_on_its_own_workflow() -> No
         assert "build artifacts" in normalized
 
 
+def test_host_vision_critique_contract_is_not_vendor_locked() -> None:
+    """A rendered critique may be written by any in-session vision-capable host.
+
+    The kernel verifies the critique's hashes and schema; it must not treat a
+    Claude-only wording in operator documents as an additional, undocumented
+    runtime requirement.  This keeps Codex and Claude hosts on the same
+    report-only, no-external-API boundary.
+    """
+    command = _read(PLUGIN_ROOT / "commands" / "fig_critique.md")
+    driver = _read(PLUGIN_ROOT / "commands" / "fig_drive.md")
+    readme = _read(PLUGIN_ROOT / "README.md")
+    skill = _read(PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md")
+
+    for text in (command, driver, readme, skill):
+        assert "Codex" in text
+        assert "vision-capable host" in text
+
+    assert "host Claude Code main loop" not in command
+    assert "non-Claude executor" not in driver
+
+
 def test_prior_superseded_documents_remain_explicitly_historical() -> None:
     for relative_path in SUPERSEDED_DOCS:
         text = _read(PLUGIN_ROOT / relative_path)

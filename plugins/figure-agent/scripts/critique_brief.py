@@ -1,7 +1,8 @@
 """Emit the L4.5 vision-critique brief from briefing.md + TikZ + rendered PNG.
 
 Produces the prompt-context block consumed by the `/fig_critique <name>` slash
-command. The host Claude Code main loop reads the brief together with the
+command. A vision-capable host main loop (for example, Codex or Claude) reads
+the brief together with the
 build PNG (via the Read tool) and writes the structured critique to
 `examples/<name>/critique.md` (YAML front-matter + Markdown summary, schema
 v1.10). No external API is called; the brief itself is API-free.

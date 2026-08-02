@@ -303,11 +303,12 @@ authoring or drift review.
 ### L4.5 Vision Critique (host-orchestrated)
 
 ```
-/fig_critique <name>         host Claude reads build/<name>.png + briefing,
+/fig_critique <name>         vision-capable host (Codex or Claude) reads
+                             build/<name>.png + briefing,
                              plus any panel crop/reference pairs declared by
                              panels[].reference_image + panels[].bbox_pdf_cm,
                              writes structured critique.md (YAML + Markdown).
-                             Report-only; subscription tokens, zero external API.
+                             Report-only; no external API.
 ```
 
 Keep authoring freedom high and make critique strict about the rendered meaning.

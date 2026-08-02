@@ -23,7 +23,7 @@ rendered evidence, and exports clean PDF/SVG.
 - **Style Lock** — palette, fonts, line weights stay consistent across every figure in a manuscript.
 - **Build + visual QA** in one command — compile errors, label collisions, and clash warnings all in one report.
 - **Reference analysis** — `reference PNG -> OCR + palette clusters + optional vtracer structural hints`, then `coordinate_hints.yaml -> semantic TikZ authoring`. SVG-to-TikZ path conversion is not the active workflow.
-- **Vision critique without API costs** — the host Claude Code reads your compiled figure and writes feedback. Subscription tokens only; no external API keys, no per-figure inference bill.
+- **Vision critique without external API costs** — a vision-capable host (Codex or Claude) reads your compiled figure and writes feedback. No external API keys or per-figure inference bill.
 - **Export to PDF / SVG / TIFF / PNG** with text staying as text (SVG preserves editable labels).
 
 ## What this is NOT
@@ -31,7 +31,7 @@ rendered evidence, and exports clean PDF/SVG.
 - ❌ **Image generation.** No DALL·E / Imagen / SDXL calls. You author the TikZ.
 - ❌ **Data plots.** Numerical plots from real datasets go in `[Graph_making_hub]/`. This plugin is for **symbolic schematics** — energy diagrams, mechanism cartoons, device overviews.
 - ❌ **Auto-magic SVG → TikZ converter.** Reference images are used as visual guides for *you*, not as inputs to a code generator.
-- ❌ **Paid API service.** All vision work is done by the host Claude Code session you're already running.
+- ❌ **Paid API service.** All vision work is done by the current vision-capable host session (Codex or Claude); no external vision API is called.
 - ❌ **A hidden auto-designer.** The plugin exposes evidence, gates, and bounded handoffs; it does not silently invent art direction or source edits.
 - ❌ **Journal acceptance oracle.** It can raise a figure toward paper-grade quality, but it cannot certify Nature/Science acceptance.
 
@@ -45,7 +45,7 @@ Canonical documented workflow route:
 /fig_new      Start a new figure — chat interview fills briefing.md + spec.yaml
 /fig_status   "Where am I?" — read-only stage check
 /fig_compile  Build the TikZ → PDF + PNG, run Style Lock + collision checks
-/fig_critique Have host Claude read the build PNG and write critique.md
+/fig_critique Have a vision-capable host (Codex or Claude) read the build PNG and write critique.md
 /fig_adjudicate Scaffold critique_adjudication.yaml after critique lint passes
 /fig_run      Bounded runner — executes safe mechanical steps, stops at gates
 /fig_export   Export final PDF / SVG / TIFF / PNG
@@ -111,7 +111,7 @@ Runtime roots are explicit:
 # 4. Compile. This runs Style Lock + builds PDF + PNG + collision/clash checks.
 /fig_compile fig3_trap_concept
 
-# 5. Get vision feedback. Host Claude reads the build PNG.
+# 5. Get vision feedback. A vision-capable host (Codex or Claude) reads the build PNG.
 /fig_critique fig3_trap_concept   # writes critique.md
 
 # 6. For loop work, lint critique.md, scaffold adjudication, then record state.
@@ -180,7 +180,7 @@ declared meaning better.
 | Area | What's working |
 |---|---|
 | **Build pipeline** | `/fig_compile` runs Style Lock + lualatex + collision + clash checks. Report-only by default; manuscript runs use `FIGURE_AGENT_STRICT=1` for hard fail. |
-| **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, and optional aesthetic intent, then writes structured `critique.md`. Host Claude only — no external API. |
+| **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, and optional aesthetic intent, then writes structured `critique.md`. A vision-capable host (Codex or Claude) performs the review; no external API. |
 | **Single next-action summary** | `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout` expose the same compact read-only `next_action_summary`, including `decision_boundary` so agents can tell deterministic gates, human decisions, release decisions, SVG-polish handoffs, and advisory-only aesthetic improvements apart. |
 | **Bounded safe runner** | `/fig_run` wraps `/fig_drive` and executes only allowlisted deterministic shell actions, then re-queries state. It can execute compile, missing adjudication scaffold, verify-only loop checkpoints, and non-golden draft export; host/human/existing-adjudication/accepted/golden/release/polish boundaries remain explicit stops. |
 | **Loop-centered compatibility wrapper** | `/fig_improve` wraps `/fig_run` for historical repeated one-fixture workflows while preserving host/human/patch/SVG/release boundaries. It is not the default route and cannot reactivate autonomous quality search. |

@@ -888,8 +888,9 @@ def _select_action(
             safe_command=command_mod.critique_command(name),
             stop_boundary=STOP_HOST_LLM_CRITIQUE,
             reason=(
-                "grounded critique is missing or stale; host Claude "
-                "must run /fig_critique to refresh critique.md."
+                "grounded critique is missing or stale; a vision-capable host "
+                "(for example, Codex or Claude) must run /fig_critique to "
+                "refresh critique.md."
             ),
         )
 
