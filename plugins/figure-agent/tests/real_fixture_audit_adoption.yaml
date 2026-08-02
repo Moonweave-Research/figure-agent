@@ -350,15 +350,16 @@ fixtures:
       - panel-c-coulomb-arrow
       - trace-switch-line
       - panel-d-bend-angle-axis
-    aesthetic_intent: false
+      - panel-d-recovery-tail
+    aesthetic_intent: true
     critique_reference_pack: false
-    paper_aesthetic_context:
-    journal_art_direction_playbook:
+    paper_aesthetic_context: nc-main-text-series
+    journal_art_direction_playbook: nc-main-text
     adoption_status: adopted_high_risk
     rationale: >
-      The active Fig5 fixture binds process separators, Coulomb-force label
-      ownership, the manual sequence arrow, and the response-trace switch line
-      to deterministic audit checks.
+      The active Fig5 fixture binds process separators, force-label ownership,
+      manual isolation, response-trace lanes, and paper/journal art direction to
+      deterministic and host-reviewed audit contracts.
 
   - fixture: fig5_cantilever_mechanism_v1
     reference_image: false

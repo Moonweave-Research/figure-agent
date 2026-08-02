@@ -110,10 +110,30 @@ def _text_boundary_checks_step(name: str, example_dir: Path) -> dict[str, Any]:
         )
     layout = spec.get("text_boundary_layout")
     if layout is None:
+        explicit_checks = spec.get("text_boundary_checks")
+        if isinstance(explicit_checks, list) and explicit_checks:
+            return _step(
+                step_id="text_boundary_checks",
+                state="passed",
+                reason=(
+                    f"{len(explicit_checks)} explicit text_boundary_checks are declared"
+                ),
+                evidence_path=spec_path,
+                evidence={"check_count": len(explicit_checks), "source": "explicit"},
+            )
+        if explicit_checks is not None and not isinstance(explicit_checks, list):
+            return _step(
+                step_id="text_boundary_checks",
+                state="blocked",
+                reason="spec.yaml.text_boundary_checks must be a list",
+                evidence_path=spec_path,
+            )
         return _step(
             step_id="text_boundary_checks",
             state="not_required",
-            reason="spec.yaml.text_boundary_layout is absent",
+            reason=(
+                "no text_boundary_layout or explicit text_boundary_checks are declared"
+            ),
             evidence_path=spec_path,
         )
     try:

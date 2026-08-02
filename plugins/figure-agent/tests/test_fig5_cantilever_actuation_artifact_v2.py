@@ -126,7 +126,8 @@ def _distance_to_cubic(
 
 
 def test_fig5_declares_a_width_limited_physical_print_contract() -> None:
-    contract = _yaml("spec.yaml")["final_size_contract"]
+    spec = _yaml("spec.yaml")
+    contract = spec["final_size_contract"]
 
     assert contract["basis"] == "width_limited_nature_family_main_figure"
     assert contract["natural_size_mm"] == [180.8, 53.5]
@@ -139,6 +140,11 @@ def test_fig5_declares_a_width_limited_physical_print_contract() -> None:
         "nature_figure_guide": 183.0,
     }
     assert contract["natural_size_mm"][1] < contract["max_height_mm"]
+    assert spec["review_scale_previews"] == "required"
+    assert spec["paper_aesthetic_context"] == "nc-main-text-series"
+    assert spec["journal_art_direction_playbook"] == "nc-main-text"
+    assert spec["aesthetic_intent"] == "aesthetic_intent.yaml"
+    assert (FIXTURE / "aesthetic_intent.yaml").is_file()
 
 
 def test_fig5_requires_a_transferable_mechanism_contract() -> None:
@@ -147,10 +153,48 @@ def test_fig5_requires_a_transferable_mechanism_contract() -> None:
 
     contract = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert contract["publication_acceptance"] == "not_claimed"
-    assert contract["summary"]["object_role_count"] == 21
-    assert contract["summary"]["visible_connector_count"] == 9
+    assert contract["summary"]["object_role_count"] == 30
+    assert contract["summary"]["visible_connector_count"] == 6
     assert contract["summary"]["label_ownership_count"] == 17
     assert contract["summary"]["panel_story_role_count"] == 4
+    assert contract["summary"]["electrical_node_count"] == 9
+    assert contract["summary"]["electrical_connection_count"] == 1
+    assert contract["summary"]["floating_object_count"] == 4
+
+
+def test_fig5_declares_grounded_then_floating_electrical_topology() -> None:
+    semantic = _yaml("semantic_contract.yaml")["semantic_legibility"]
+    topology = semantic["electrical_topology"]
+    states = {item["object_id"]: item["declared_state"] for item in topology["nodes"]}
+
+    assert states["panel_a.cantilever"] == "ground_reference"
+    assert states["panel_a.clip_ground"] == "ground_reference"
+    assert states["panel_a.drive_electrode"] == "driven"
+    assert states["panel_b.cantilever"] == "floating"
+    assert states["panel_b.clip"] == "floating"
+    assert states["panel_c.cantilever"] == "floating"
+    assert states["panel_c.clip"] == "floating"
+    assert states["panel_c.drive_electrode"] == "driven"
+    assert topology["connections"] == [
+        {
+            "connection_id": "panel_a.clip_contacts_cantilever",
+            "from_object": "panel_a.clip_ground",
+            "to_object": "panel_a.cantilever",
+            "declared_role": "electrical_contact",
+        }
+    ]
+
+
+def test_fig5_visible_connectors_do_not_claim_undrawn_cross_panel_arrows() -> None:
+    connectors = _yaml("semantic_contract.yaml")["semantic_legibility"][
+        "visible_connectors"
+    ]
+
+    assert all(
+        item["from_object"].split(".", 1)[0] == item["to_object"].split(".", 1)[0]
+        for item in connectors
+    )
+    assert not any(item["render_style"] == "stage_transition" for item in connectors)
 
 
 def test_fig5_declares_reader_facing_stage_order_assertions() -> None:
@@ -236,7 +280,7 @@ def test_fig5_marks_reverse_force_as_conditional_after_isolation() -> None:
         for item in contract["semantic_legibility"]["panel_story"]["panels"]
     }
 
-    coulomb = connectors["panel_b.isolation_enables_reversed_force"]
+    coulomb = connectors["panel_c.coulomb_originates_at_trapped_charge"]
     assert coulomb["epistemic_status"] == "conditional"
     assert coulomb["render_style"] == "force_conditional"
     assert coulomb["condition"]

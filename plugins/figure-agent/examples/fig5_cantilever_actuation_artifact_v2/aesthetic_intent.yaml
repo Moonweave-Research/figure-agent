@@ -1,0 +1,147 @@
+schema: figure-agent.aesthetic-intent.v2
+fixture: fig5_cantilever_actuation_artifact_v2
+target_journal: Nature Communications
+visual_maturity: restrained
+density: balanced
+reference_style: mechanism_schematic
+design_principles:
+  - id: causal_state_sequence
+    instruction: "Make grounded actuation, source-off isolation, reversed-drive force competition, and qualitative response read as one left-to-right causal sequence."
+  - id: apparatus_continuity
+    instruction: "Reuse one mounted cantilever and driven-electrode grammar across A-C; state changes belong to electrical labels, force vectors, and bend direction rather than altered specimen scale."
+  - id: editorial_economy
+    instruction: "Keep panel headings subordinate to the mechanism and move protocol-length explanation to the caption instead of repeating it inside the artboard."
+  - id: conditional_mechanism
+    instruction: "Keep the reversed bend explicitly conditional and visually bind the charge-mediated and Maxwell force terms to their own arrows."
+must_avoid:
+  - id: slide_title_density
+    pattern: "Large bold headings, subtitles, and explanatory footer sentences repeat the same state until the figure reads as a presentation slide."
+    severity: MAJOR
+  - id: electrical_owner_ambiguity
+    pattern: "A voltage, ground, source-off, or floating label can be assigned to the wrong clip, electrode, lead, or specimen."
+    severity: MAJOR
+  - id: faux_measured_trace
+    pattern: "The qualitative bend response is styled or labeled as calibrated measured data."
+    severity: MAJOR
+polish_triggers:
+  - id: source_semantics_or_layout
+    condition: "Electrical ownership, force hierarchy, event order, title hierarchy, or panel geometry remains unresolved."
+    recommended_path: continue_tikz
+  - id: finish_only
+    condition: "Meaning and source geometry are locked and only sub-point optical spacing or stroke-edge finish remains."
+    recommended_path: ready_for_svg_polish
+aesthetic_levers:
+  - id: causal_hierarchy
+    dimension: hero_hierarchy
+    intent: "The first read should be the A-to-D state sequence, not four competing title banners."
+    priority: required
+    positive_signals:
+      - "grounded actuation, isolation, reversed drive, and response are distinct at print scale"
+      - "panel headings guide navigation without becoming the first scientific subject"
+      - "each panel adds one non-redundant causal step"
+    anti_patterns:
+      - "repeated title, subtitle, and footer prose restate one panel"
+      - "panel dividers or headings dominate the cantilever and force marks"
+    allowed_adjustments:
+      - "shorten headings and move protocol prose to the caption"
+      - "remove redundant separators or explanatory footer copy"
+      - "rebalance panel-internal whitespace without changing the four-stage order"
+    forbidden_adjustments:
+      - "remove the source-off isolation stage"
+      - "merge the conditional force balance into an observed result"
+    default_route: tikz_patch
+  - id: electrical_state_ownership
+    dimension: component_fidelity
+    intent: "Every voltage, ground, source-off, lead-open, and floating state must visibly belong to the correct electrical owner."
+    priority: required
+    positive_signals:
+      - "the +5 kV and -5 kV labels terminate on the driven-electrode lane"
+      - "Panel A clip GND and Panels B-C electrically floating clips are directly owned"
+      - "the manually lifted object reads as the ground lead rather than the mechanical clamp"
+    anti_patterns:
+      - "a voltage value floats between the clip and electrode"
+      - "clip floating appears to describe a loose terminal or mechanical motion"
+      - "a ground symbol survives on the specimen after isolation"
+    allowed_adjustments:
+      - "shorten and relocate electrical-state labels"
+      - "redraw the manual lead-separation cue"
+      - "add direct neutral leaders to electrical owners"
+    forbidden_adjustments:
+      - "invent an automated switch or a support ground not declared by the experiment"
+      - "connect the floating cantilever to the driven electrode"
+    default_route: semantic_backport
+  - id: repeated_member_continuity
+    dimension: component_fidelity
+    intent: "A-C must read as the same finite-width mounted film with ordered deflection, common scale, and safe non-contact clearance."
+    priority: required
+    positive_signals:
+      - "fixed-end axes and electrode tops share stable datums"
+      - "A has visibly larger attraction bend than B and C bends oppositely"
+      - "all free ends remain rounded and follow the local tangent"
+    anti_patterns:
+      - "one member becomes shorter, thicker, tapered, pointed, or banana-like"
+      - "the maximum bend appears able to contact the drive electrode"
+    allowed_adjustments:
+      - "redraw each silhouette while preserving the shared arc-length contract"
+      - "adjust clamp or electrode spacing to restore common datums"
+    forbidden_adjustments:
+      - "encode state change by changing specimen identity or dimensions"
+      - "close the air gap without declared contact"
+    default_route: semantic_backport
+  - id: force_competition_hierarchy
+    dimension: cross_panel_grammar
+    intent: "Force arrows must bind to their bodies and show drive-on attraction, weaker residual attraction, and conditional Coulomb dominance without implying measured magnitudes."
+    priority: required
+    positive_signals:
+      - "A attraction is stronger than the shorter B residual cue"
+      - "Panel C Coulomb is stronger and longer than the neutral Maxwell baseline"
+      - "F_C and F_M labels map directly to the governing inequality"
+    anti_patterns:
+      - "a weaker arrow is longer because its label needed space"
+      - "a force tail floats off the film or begins on the wrong charge marker"
+      - "the supporting Maxwell arrow steals the main visual emphasis"
+    allowed_adjustments:
+      - "change arrow span, contrast, label lane, and symbol placement"
+    forbidden_adjustments:
+      - "add numeric force magnitude or claim direct force decomposition"
+      - "depict the conditional reverse bend as a measured snapshot"
+    default_route: semantic_backport
+  - id: qualitative_response_morphology
+    dimension: cross_panel_grammar
+    intent: "The schematic trace must show a held positive state, a visible source-off/floating interval, faster reversal, negative extremum, and slow recovery without quantitative timing claims."
+    priority: required
+    positive_signals:
+      - "a horizontal positive plateau follows the initial rise"
+      - "source OFF and floating precede the reversed-drive event"
+      - "the reversal is visibly steeper than the initial attraction and recovery"
+    anti_patterns:
+      - "a rounded hump replaces the plateau"
+      - "OFF, floating, and reversal collapse to one coincident marker"
+      - "the tail asserts a calibrated terminal recovery value"
+    allowed_adjustments:
+      - "redraw the continuous qualitative path and event rail"
+      - "shorten event labels or move them into dedicated lanes"
+    forbidden_adjustments:
+      - "add exact isolation time, measured ticks, or synthetic data points"
+      - "remove the visible t=0 origin"
+    default_route: semantic_backport
+  - id: print_scale_editorial_finish
+    dimension: typography_authority
+    intent: "At 180 mm final width, navigation type, scientific labels, separators, and strokes must remain quiet, legible, and compliant with the Nature Communications line floor."
+    priority: required
+    positive_signals:
+      - "panel letters navigate without dominating the first fixation"
+      - "labels remain readable at 50 and 33 percent without crowding"
+      - "remaining scientific and apparatus strokes survive final reduction"
+    anti_patterns:
+      - "sub-1 pt claim-bearing strokes survive only when zoomed"
+      - "bold headings compete with the force and response story"
+      - "redundant separators consume visual weight"
+    allowed_adjustments:
+      - "reduce title and panel-letter hierarchy"
+      - "remove redundant rules before raising surviving stroke weights"
+      - "normalize neutral apparatus and annotation strokes"
+    forbidden_adjustments:
+      - "shrink scientific labels below the declared print floor"
+      - "use decorative gradients, pseudo-3D shading, or poster effects"
+    default_route: tikz_patch

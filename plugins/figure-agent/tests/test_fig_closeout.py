@@ -255,6 +255,34 @@ def test_closeout_passes_matching_text_boundary_checks(
     assert step["command"] is None
 
 
+def test_closeout_reports_explicit_text_boundary_checks_without_layout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    (fixture / "spec.yaml").write_text(
+        "name: loop_demo\n"
+        "panels: []\n"
+        "style_profile: polymer-default\n"
+        "text_boundary_checks:\n"
+        "  - id: title-band\n"
+        "    kind: rect\n"
+        "    role: title_band\n"
+        "    mode: contain_text\n"
+        "    bbox_pdf_cm: [0.0, 0.0, 4.0, 0.8]\n"
+        "    clearance_pt: 0.0\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(fig_closeout_mod, "infer_stage", lambda _example_dir: _status())
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+    step = _steps_by_id(report)["text_boundary_checks"]
+
+    assert step["state"] == "passed"
+    assert step["reason"] == "1 explicit text_boundary_checks are declared"
+    assert step["evidence"] == {"check_count": 1, "source": "explicit"}
+
+
 def test_closeout_requests_text_boundary_helper_when_checks_are_missing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

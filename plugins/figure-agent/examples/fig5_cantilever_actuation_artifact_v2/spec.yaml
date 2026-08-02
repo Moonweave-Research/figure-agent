@@ -7,6 +7,10 @@ title: "Fig 5 artifact — polarity-reversal actuation probe"
 style_profile: polymer-paper
 undeclared_geometry_profile: schematic
 visual_clash_cap: 8
+review_scale_previews: required
+paper_aesthetic_context: nc-main-text-series
+journal_art_direction_playbook: nc-main-text
+aesthetic_intent: aesthetic_intent.yaml
 
 # This wide, single-row mechanism figure fits the double-column working width
 # without approaching the Nature-family 170 mm height guidance.  Declare its

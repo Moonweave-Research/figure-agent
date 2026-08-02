@@ -47,6 +47,14 @@ figure_roles:
       - source_first_polish
     allowed_variations:
       - may use a staged material-state sequence before a compact qualitative readout
+  - fixture: fig5_cantilever_actuation_artifact_v2
+    role: actuation_mechanism_payoff
+    must_align_with:
+      - restrained_palette
+      - compact_typography
+      - source_first_polish
+    allowed_variations:
+      - may use a four-stage apparatus sequence with one compact qualitative response trace
   - fixture: template_data
     role: data_evidence
     must_align_with:

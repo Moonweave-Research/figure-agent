@@ -109,6 +109,14 @@ def test_skill_audits_panel_area_against_rendered_occupancy() -> None:
     assert "fail at reduction scale" in doc
 
 
+def test_skill_requires_provenance_classification_before_using_loose_build_crops() -> None:
+    doc = _read("skills/figure-agent/SKILL.md")
+
+    assert "diagnostic_artifact_provenance.py" in doc
+    assert "unmanifested build crop" in doc
+    assert "must not be used as current review evidence" in doc
+
+
 def test_skill_carries_nature_communications_figure_constraints() -> None:
     doc = _read("skills/figure-agent/SKILL.md")
 

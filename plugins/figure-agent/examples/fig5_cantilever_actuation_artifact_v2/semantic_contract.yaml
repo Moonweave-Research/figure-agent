@@ -14,12 +14,18 @@ required_objects:
   - panel_a.trapped_charge
   - panel_a.attraction_force
   - panel_b.isolation_state
+  - panel_b.cantilever
+  - panel_b.drive_electrode
+  - panel_b.clip
   - panel_b.trapped_charge
   - panel_b.manual_lead_separation
   - panel_b.floating_state
   - panel_b.residual_attraction
   - panel_d.positive_plateau
   - panel_c.trapped_charge
+  - panel_c.cantilever
+  - panel_c.drive_electrode
+  - panel_c.clip
   - panel_c.maxwell_baseline
   - panel_c.coulomb_force
   - panel_c.reverse_drive
@@ -27,6 +33,9 @@ required_objects:
   - panel_d.time_origin
   - panel_d.response_trace
   - panel_d.polarity_switch
+  - panel_d.source_off_state
+  - panel_d.floating_interval
+  - panel_d.recovery_state
 
 forbidden_implications:
   - panel_a.standalone_two_terminal_charger
@@ -98,6 +107,15 @@ semantic_legibility:
     - object_id: panel_b.isolation_state
       declared_role: isolation_transition
       forbidden_readings: [automated_motion_stage, conveyor_transfer]
+    - object_id: panel_b.cantilever
+      declared_role: same_mounted_polymer_cantilever
+      forbidden_readings: [released_specimen, independent_second_sample]
+    - object_id: panel_b.drive_electrode
+      declared_role: source_off_drive_electrode
+      forbidden_readings: [grounded_specimen_clip, measurement_probe]
+    - object_id: panel_b.clip
+      declared_role: mounted_electrically_floating_clip
+      forbidden_readings: [opened_mechanical_clamp, grounded_support]
     - object_id: panel_b.trapped_charge
       declared_role: retained_trapped_charge
       forbidden_readings: [decorative_bead]
@@ -113,6 +131,15 @@ semantic_legibility:
     - object_id: panel_c.trapped_charge
       declared_role: representative_trapped_charge_marker
       forbidden_readings: [decorative_bead, detached_force_origin]
+    - object_id: panel_c.cantilever
+      declared_role: same_floating_polymer_cantilever
+      forbidden_readings: [independent_second_sample, grounded_member]
+    - object_id: panel_c.drive_electrode
+      declared_role: reversed_polarity_drive_electrode
+      forbidden_readings: [floating_specimen_clip, measurement_probe]
+    - object_id: panel_c.clip
+      declared_role: mounted_electrically_floating_clip
+      forbidden_readings: [opened_mechanical_clamp, grounded_support]
     - object_id: panel_c.coulomb_force
       declared_role: polarity_dependent_force
       forbidden_readings: [annotation_leader]
@@ -137,7 +164,21 @@ semantic_legibility:
     - object_id: panel_d.polarity_switch
       declared_role: drive_polarity_reversal
       forbidden_readings: [time_axis_break]
+    - object_id: panel_d.source_off_state
+      declared_role: source_off_event
+      forbidden_readings: [polarity_reversal_event, calibrated_time_tick]
+    - object_id: panel_d.floating_interval
+      declared_role: qualitative_floating_interval
+      forbidden_readings: [twenty_second_calibrated_interval, source_on_hold]
+    - object_id: panel_d.recovery_state
+      declared_role: qualitative_relaxation_toward_maxwell_baseline
+      forbidden_readings: [measured_full_recovery, calibrated_terminal_value]
   visible_connectors:
+    - connector_id: panel_a.clip_contacts_cantilever
+      from_object: panel_a.clip_ground
+      to_object: panel_a.cantilever
+      declared_role: electrical_contact
+      render_style: electrical_contact
     - connector_id: panel_a.air_gap_separates_members
       from_object: panel_a.cantilever
       to_object: panel_a.drive_electrode
@@ -149,29 +190,12 @@ semantic_legibility:
       declared_role: force_direction
       render_style: force_directional
       epistemic_status: derived
-    - connector_id: panel_a.charge_enters_isolation
-      from_object: panel_a.actuation_charge_state
-      to_object: panel_b.isolation_state
-      declared_role: process_stage_transition
-      render_style: stage_transition
-    - connector_id: panel_b.isolation_retains_charge
-      from_object: panel_b.trapped_charge
-      to_object: panel_b.isolation_state
-      declared_role: process_stage_transition
-      render_style: stage_transition
     - connector_id: panel_b.floating_state_retains_residual_attraction
       from_object: panel_b.floating_state
       to_object: panel_b.residual_attraction
       declared_role: source_off_residual_force_state
       render_style: force_residual
       epistemic_status: observed
-    - connector_id: panel_b.isolation_enables_reversed_force
-      from_object: panel_b.isolation_state
-      to_object: panel_c.coulomb_force
-      declared_role: force_direction
-      render_style: force_conditional
-      epistemic_status: conditional
-      condition: Illustrated reversed-polarity condition; the charge-mediated term opposes the Maxwell baseline.
     - connector_id: panel_c.coulomb_originates_at_trapped_charge
       from_object: panel_c.trapped_charge
       to_object: panel_c.coulomb_force
@@ -184,11 +208,6 @@ semantic_legibility:
       to_object: panel_c.coulomb_force
       declared_role: force_decomposition
       render_style: force_directional
-    - connector_id: panel_d.switch_owns_bend_reversal
-      from_object: panel_c.reverse_drive
-      to_object: panel_d.response_trace
-      declared_role: process_stage_transition
-      render_style: stage_transition
   forbidden_connectors:
     - from_object: panel_a.cantilever
       to_object: panel_a.drive_electrode
@@ -234,6 +253,31 @@ semantic_legibility:
       owner: panel_d.time_origin
     - label_id: panel_d.trace_label
       owner: panel_d.response_trace
+  electrical_topology:
+    nodes:
+      - object_id: panel_a.cantilever
+        declared_state: ground_reference
+      - object_id: panel_a.clip_ground
+        declared_state: ground_reference
+      - object_id: panel_a.drive_electrode
+        declared_state: driven
+      - object_id: panel_b.cantilever
+        declared_state: floating
+      - object_id: panel_b.clip
+        declared_state: floating
+      - object_id: panel_b.drive_electrode
+        declared_state: electrically_unmodeled
+      - object_id: panel_c.cantilever
+        declared_state: floating
+      - object_id: panel_c.clip
+        declared_state: floating
+      - object_id: panel_c.drive_electrode
+        declared_state: driven
+    connections:
+      - connection_id: panel_a.clip_contacts_cantilever
+        from_object: panel_a.clip_ground
+        to_object: panel_a.cantilever
+        declared_role: electrical_contact
   panel_story:
     reading_order: [A, B, C, D]
     panels:

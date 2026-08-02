@@ -898,6 +898,13 @@ separator rules rather than approximate image fractions. Check each crop for
 neighbor-panel content before using it as evidence; a crop that includes a sibling
 axis, label, or rule is a packaging defect and must be regenerated at the exact
 panel boundary.
+Before opening a loose crop from `build/`, classify it with
+`fig-agent helper diagnostic_artifact_provenance.py <fixture> <artifact>`. An
+unmanifested build crop is diagnostic-only and must not be used as current review evidence;
+only the fresh canonical build render or a hash-matching entry in
+`build/audit_crops/manifest.json` is authoritative. Preserve old diagnostic
+files, but never let their plausible filename or visual quality override the
+manifest-bound current artifact.
 
 Also inspect for workflow-metadata leakage. Terms such as `HERO`, priority,
 draft, iteration, reviewer notes, or approval state belong in comments/specs and
