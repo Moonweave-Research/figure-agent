@@ -259,9 +259,10 @@
   \node[labelMute,anchor=south west] at (3.05,2.16) {recovery};
 \end{scope}
 
-% Process separators: guide the eye without turning the figure into cards.
+% Process separators: quiet continuous hairlines preserve the causal reading
+% without making the panel row read as a dashed infographic grid.
 \foreach \x in {4.34,8.79,13.24} {
-  \draw[cGray!28!black,dash pattern=on 1.5pt off 2.0pt,line width=0.38pt]
+  \draw[cGray!20!black,line width=0.30pt]
     (\x,0.55)--(\x,4.78);
 }
 \end{tikzpicture}%

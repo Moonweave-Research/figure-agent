@@ -362,6 +362,22 @@ def test_fig5_declares_clearance_for_the_rotated_bend_angle_label() -> None:
     )
 
 
+def test_fig5_declares_clearance_for_the_recovery_label_and_trace_tail() -> None:
+    spec = _yaml("spec.yaml")
+    checks = {
+        item["id"]: item for item in spec["label_path_proximity_checks"]
+    }
+    recovery = checks["panel-d-recovery-tail"]
+
+    assert recovery["kind"] == "polyline"
+    assert recovery["role"] == "qualitative_response_curve"
+    assert recovery["clearance_pt"] == 3.0
+    assert recovery["defect_kind"] == "label_curve_near_label"
+    assert recovery["text_phrases"] == [
+        {"id": "recovery_label", "words": ["recovery"]}
+    ]
+
+
 def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
