@@ -791,6 +791,11 @@ state anchor inside the assigned panel. An arrow plus explanatory prose is not
 enough: declare fixture-local `process_stage_visibility_checks` with rendered
 stage phrases and reading order, then compile in strict mode. This check is a
 meaning/legibility guard, not a prescribed box, primitive, or coordinate recipe.
+Use ordered stage checks only for genuinely sequential events. When two labels
+describe one simultaneous boundary condition, such as source OFF with the same
+clip floating, do not invent a left-to-right order between them; declare the
+coexisting states in the semantic/electrical topology contract and reserve the
+ordered check for the later event sequence.
 
 Keep preparation time distinct from the observed response axis. If a long hold
 or conditioning phase is not part of the recorded response timebase, label it as

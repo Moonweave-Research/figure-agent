@@ -18,7 +18,7 @@ aesthetic_intent: aesthetic_intent.yaml
 # final-reduction type and line review has a physical placement basis.
 final_size_contract:
   basis: width_limited_nature_family_main_figure
-  natural_size_mm: [180.8, 53.5]
+  natural_size_mm: [180.8, 53.14]
   target_width_mm: 180.0
   max_height_mm: 170.0
   min_print_font_pt: 5.0
@@ -89,19 +89,6 @@ tex_assertions:
 # A declared intermediate stage must have a visible, ordered reader-facing
 # anchor. This is a semantic/render contract, not a primitive recipe.
 process_stage_visibility_checks:
-  - id: isolation-boundary-state
-    panel_id: B
-    reading_axis: x
-    minimum_stage_separation_pt: 12.0
-    stages:
-      - id: source-off
-        text_phrases:
-          - id: source-off-heading
-            words: [source, 'OFF']
-      - id: floating-state
-        text_phrases:
-          - id: floating-clip
-            words: [floating]
   - id: qualitative-response-sequence
     panel_id: D
     reading_axis: x
@@ -149,7 +136,7 @@ text_boundary_checks:
     kind: rect
     role: force_label_rail
     mode: contain_text
-    bbox_pdf_cm: [9.05, 2.70, 10.20, 3.00]
+    bbox_pdf_cm: [9.45, 2.45, 11.25, 3.00]
     clearance_pt: 0.0
     text_allowlist: [Coulomb]
 

@@ -48,7 +48,7 @@ figure_roles:
     allowed_variations:
       - may use a staged material-state sequence before a compact qualitative readout
   - fixture: fig5_cantilever_actuation_artifact_v2
-    role: actuation_mechanism_payoff
+    role: mechanism_detail
     must_align_with:
       - restrained_palette
       - compact_typography

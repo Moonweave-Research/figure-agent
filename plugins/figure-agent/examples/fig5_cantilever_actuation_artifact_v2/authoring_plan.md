@@ -15,6 +15,21 @@
    positive charged state must include a visibly horizontal hold before the
    source-OFF/reversal transition.
 
+## Current editorial repair slice
+
+- Preserve the accepted four-panel composition and cantilever geometry.
+- Remove duplicated explanatory prose from A/B; direct labels must carry the
+  electrical state without turning the row into a slide.
+- In C, the drawn vector hierarchy must agree with the conditional statement:
+  the Coulomb-repulsion vector is longer and more prominent than the Maxwell
+  attraction vector when the reverse-bend condition is shown.
+- In D, separate source OFF, the floating hold, and reversed drive into an
+  ordered event lane.  The positive plateau persists through the floating
+  hold, and the post-reversal descent is visibly faster than the initial
+  attraction rise.
+- Keep D explicitly qualitative: no calibrated time spacing or measured-data
+  styling is introduced by this repair.
+
 ## Composition rule
 
 The four panels answer four different reader questions: formation, isolation,

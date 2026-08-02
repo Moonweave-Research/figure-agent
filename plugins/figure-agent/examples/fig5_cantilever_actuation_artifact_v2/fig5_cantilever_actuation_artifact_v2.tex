@@ -8,9 +8,9 @@
 \resizebox{178mm}{!}{%
 \begin{tikzpicture}[
   every node/.style={font=\sffamily\fontsize{6.2}{7.4}\selectfont},
-  panelLetter/.style={font=\sffamily\bfseries\fontsize{8}{9.6}\selectfont,
+  panelLetter/.style={font=\sffamily\bfseries\fontsize{7.2}{8.6}\selectfont,
     text=cGray!92!black},
-  panelTitle/.style={font=\sffamily\bfseries\fontsize{6.6}{7.9}\selectfont,
+  panelTitle/.style={font=\sffamily\bfseries\fontsize{6.2}{7.4}\selectfont,
     text=cGray!86!black},
   labelStd/.style={font=\sffamily\fontsize{5.5}{6.6}\selectfont,
     text=cGray!88!black},
@@ -50,9 +50,9 @@
 \begin{scope}[shift={(0.00,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {a};
   \node[panelTitle,anchor=west] at (0.44,5.12)
-    {actuation charge};
+    {field-on charging};
   \node[labelMute,anchor=west] at (0.44,4.78)
-    {field-on charge; \textasciitilde20 min};
+    {field-on charging; \textasciitilde20 min};
 
   % The charge state is the actuation geometry itself: a cantilever faces a
   % nearby drive electrode across an air gap and bends toward it.
@@ -112,8 +112,6 @@
   \node[labelStd,text=cRed!84!black,anchor=south east] at (2.82,3.05)
     {attraction};
 
-  \node[labelMute,align=left,anchor=west] at (0.42,0.92)
-    {field-on actuation establishes\\[-0.4pt]retained $q_{\mathrm{tr}}$ in the same film};
 \end{scope}
 
 % ================================================================
@@ -122,8 +120,8 @@
 % Panel B
 \begin{scope}[shift={(4.45,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {b};
-  \node[panelTitle,anchor=west] at (0.44,5.12) {source-off floating state};
-  \node[labelMute,anchor=west] at (0.44,4.78) {residual attraction persists};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {source-off, floating};
+  \node[labelMute,anchor=west] at (0.44,4.78) {residual bend persists};
 
   % The lead is manually lifted after source OFF, leaving the mounted film
   % electrically floating.  Residual trapped charge retains a smaller
@@ -134,7 +132,7 @@
   \coordinate (panel-b-clamp-axis) at (1.69,4.05);
   \coordinate (panel-b-beam-origin) at (1.69,4.05);
   \draw[wire] (panel-b-clamp-axis)--(1.69,4.52);
-  \node[labelMute,anchor=west] at (2.00,4.52) {clip remains mounted};
+  \node[labelMute,anchor=west] at (2.00,4.52) {clip: floating};
   \draw[beamOuter]
     (panel-b-beam-origin)
       .. controls (1.69,3.45) and (1.75,2.30) .. (2.10,1.65);
@@ -154,24 +152,28 @@
   \draw[leader,cRed!58!black] (1.16,2.73)--(panel-b-q2);
   \fill[cGray!28] (3.42,1.40) rectangle (3.70,4.34);
   \draw[apparatus] (3.42,1.40) rectangle (3.70,4.34);
+  \draw[driveBiasLeader] (3.56,4.34)--(3.56,4.62);
+  \node[labelStd,anchor=south] at (3.56,4.62) {OFF};
   % Residual attraction is deliberately weaker than the drive-on state:
   % preserve the shared arrow grammar but shorten and mute the vector.
   \coordinate (panel-b-residual-origin) at (1.87,3.02);
   \coordinate (panel-b-residual-head) at (2.70,3.02);
   \draw[forceToward,opacity=0.62]
     (panel-b-residual-origin)--(panel-b-residual-head);
-  \node[labelStd,text=cRed!72!black,anchor=south] at (2.60,3.22)
+  \node[labelStd,text=cRed!72!black,anchor=south] at (2.60,3.34)
     {residual attraction};
   % Show the manual operation as two disconnected lead terminals, not as an
   % abstract pair of bars: source OFF, then the lead is physically lifted.
-  \draw[wire] (0.46,0.96)--(0.90,0.96);
-  \draw[wire] (1.30,1.22)--(1.74,1.22);
-  \node[leadTerminal] at (0.90,0.96) {};
+  \draw[wire] (0.56,1.02)--(0.90,1.02);
+  \draw[wire] (0.56,1.02)--(0.56,0.88);
+  \draw[wire] (0.45,0.88)--(0.67,0.88);
+  \draw[wire] (0.48,0.82)--(0.64,0.82);
+  \draw[wire] (0.51,0.76)--(0.61,0.76);
+  \draw[wire] (1.30,1.22)--(1.74,1.34);
+  \node[leadTerminal] at (0.90,1.02) {};
   \node[leadTerminal] at (1.30,1.22) {};
-  \draw[baselineArrow] (1.10,1.02)--(1.10,1.17);
-  \node[labelMute,anchor=south] at (1.10,1.30) {lead lifted manually};
-  \node[labelStd,anchor=west] at (0.46,0.56) {source OFF};
-  \node[labelMute,anchor=west] at (1.82,0.56) {clip floating};
+  \draw[baselineArrow] (1.10,1.02)--(1.10,1.16);
+  \node[labelMute,anchor=south] at (1.10,1.42) {ground lead lifted};
 \end{scope}
 
 % ================================================================
@@ -194,7 +196,7 @@
   \coordinate (panel-c-clamp-top) at (1.43,4.52);
   \draw[wire] (panel-c-clamp-axis)--(panel-c-clamp-top);
   \node[labelMute,align=right,anchor=east] at (3.18,4.00)
-    {clip:\\[-0.4pt]electrically floating};
+    {clip: floating};
   % One conditional response silhouette makes the competing-arrow result
   % legible without introducing a second, supposedly observed bend snapshot.
   % Its free-end curvature and effective length mirror Panel A so the reader
@@ -226,13 +228,13 @@
   % Maxwell stress is a body-level attraction: its tail touches the film
   % surface but does not borrow the trapped-charge marker as its origin.
   \coordinate (panel-c-maxwell-origin) at (1.36,3.12);
-  \coordinate (panel-c-maxwell-head) at (2.30,3.12);
+  \coordinate (panel-c-maxwell-head) at (2.08,3.12);
   \draw[baselineArrow] (panel-c-maxwell-origin)--(panel-c-maxwell-head);
-  \node[labelStd,anchor=south,text=cGray!74!black] at (2.36,3.18)
+  \node[labelStd,anchor=south west,text=cGray!74!black] at (1.48,3.34)
     {Maxwell attraction};
-  \coordinate (panel-c-coulomb-head) at (0.18,2.32);
+  \coordinate (panel-c-coulomb-head) at (0.14,2.32);
   \draw[forceAway] (panel-c-force-origin)--(panel-c-coulomb-head);
-  \node[labelStd,text=cRed!84!black,anchor=south east] at (0.92,2.50)
+  \node[labelStd,text=cRed!84!black,anchor=south west] at (0.18,2.48)
     {Coulomb};
   \node[labelStd,anchor=north] at (2.24,0.82)
     {reverse bend if $|F_{\mathrm{C}}|>|F_{\mathrm{M}}|$};
@@ -244,7 +246,7 @@
 % Panel D
 \begin{scope}[shift={(13.35,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {d};
-  \node[panelTitle,anchor=west] at (0.44,5.12) {continuous bend response};
+  \node[panelTitle,anchor=west] at (0.44,5.12) {qualitative bend response};
 
   % Axes and zero line.
   \draw[axis] (0.62,1.02)--(0.62,4.08);
@@ -262,26 +264,25 @@
   % The 20-minute precharge is documented in Panel A and omitted from this
   % response timebase; t=0 is the actuation-onset origin shown below.
   \draw[cBlue!82!black,line width=1.05pt]
-    (0.74,2.52) .. controls (0.78,2.70) and (0.93,3.20) .. (1.08,3.48)
-    .. controls (1.12,3.55) and (1.16,3.58) .. (1.20,3.58)
-    -- (1.68,3.58)
-    .. controls (1.74,3.58) and (1.79,3.57) .. (1.82,3.56)
-    .. controls (1.88,3.38) and (1.94,2.80) .. (2.02,2.52)
-    .. controls (2.10,2.06) and (2.16,1.55) .. (2.36,1.35)
+    (0.74,2.52) .. controls (0.80,2.72) and (0.98,3.20) .. (1.18,3.48)
+    .. controls (1.23,3.55) and (1.28,3.58) .. (1.34,3.58)
+    -- (1.94,3.58)
+    .. controls (1.98,3.42) and (2.02,2.78) .. (2.08,2.52)
+    .. controls (2.13,2.02) and (2.19,1.55) .. (2.36,1.35)
     .. controls (2.46,1.17) and (2.84,1.35) .. (3.22,1.78)
     .. controls (3.46,2.04) and (3.65,2.24) .. (3.84,2.36);
   \draw[cBlue!55!white,dashed,line width=0.82pt]
     (3.84,2.36) .. controls (3.90,2.38) and (3.97,2.41) .. (4.02,2.42);
-  \draw[cGray!42!black,dashed,line width=0.55pt] (1.82,1.04)--(1.82,3.56);
-  \fill[cRed!85!black] (1.82,3.56) circle (0.75pt);
+  \draw[cGray!42!black,dashed,line width=0.55pt] (1.94,1.04)--(1.94,3.58);
   \draw[cGray!72!black,line width=0.45pt] (0.74,2.52)--(0.74,2.38);
   \node[labelMute,anchor=north] at (0.74,2.30) {$t=0$};
   % A short event-owned interval separates source OFF / floating from the
   % later polarity reversal; it is schematic and carries no exact duration.
-  \draw[cGray!58!black,line width=0.45pt] (1.38,3.68)--(2.08,3.68);
-  \node[labelStd,anchor=south] at (1.73,4.30) {source OFF};
-  \node[labelMute,anchor=north] at (1.73,4.08) {clip floating};
-  \node[labelStd,text=cRed!84!black,anchor=south west] at (2.24,3.04)
+  \fill[cGray!72!black] (1.54,3.58) circle (0.62pt);
+  \draw[cGray!58!black,line width=0.45pt] (1.54,3.70)--(1.94,3.70);
+  \node[labelStd,anchor=south] at (1.54,4.28) {source OFF};
+  \node[labelMute,anchor=north] at (1.74,4.09) {clip floating};
+  \node[labelStd,text=cRed!84!black,anchor=south west] at (2.14,3.02)
     {reversed drive};
   \node[labelMute,anchor=south west] at (3.05,2.16) {recovery};
 \end{scope}

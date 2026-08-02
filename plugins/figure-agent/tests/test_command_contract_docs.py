@@ -117,6 +117,14 @@ def test_skill_requires_provenance_classification_before_using_loose_build_crops
     assert "must not be used as current review evidence" in doc
 
 
+def test_skill_does_not_force_simultaneous_states_into_an_ordered_stage_gate() -> None:
+    doc = _read("skills/figure-agent/SKILL.md")
+
+    assert "Use ordered stage checks only for genuinely sequential events" in doc
+    assert "do not invent a left-to-right order between them" in doc
+    assert "semantic/electrical topology contract" in doc
+
+
 def test_skill_carries_nature_communications_figure_constraints() -> None:
     doc = _read("skills/figure-agent/SKILL.md")
 

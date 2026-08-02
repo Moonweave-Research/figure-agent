@@ -9,8 +9,10 @@ import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = PLUGIN_ROOT / "examples" / "fig5_cantilever_actuation_artifact_v2"
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
+import paper_aesthetic_context  # noqa: E402
 from semantic_legibility_contract import (  # noqa: E402
     validate_semantic_legibility_contract,
 )
@@ -130,7 +132,7 @@ def test_fig5_declares_a_width_limited_physical_print_contract() -> None:
     contract = spec["final_size_contract"]
 
     assert contract["basis"] == "width_limited_nature_family_main_figure"
-    assert contract["natural_size_mm"] == [180.8, 53.5]
+    assert contract["natural_size_mm"] == [180.8, 53.14]
     assert contract["target_width_mm"] == 180.0
     assert contract["max_height_mm"] == 170.0
     assert contract["min_print_font_pt"] == 5.0
@@ -145,6 +147,23 @@ def test_fig5_declares_a_width_limited_physical_print_contract() -> None:
     assert spec["journal_art_direction_playbook"] == "nc-main-text"
     assert spec["aesthetic_intent"] == "aesthetic_intent.yaml"
     assert (FIXTURE / "aesthetic_intent.yaml").is_file()
+
+
+def test_fig5_paper_aesthetic_context_is_schema_valid() -> None:
+    context_path = (
+        PLUGIN_ROOT / "examples" / "_paper_aesthetic_contexts" / "nc-main-text-series.yaml"
+    )
+    context = paper_aesthetic_context.load_paper_aesthetic_context(context_path)
+    role = paper_aesthetic_context.matching_figure_role(
+        context, "fig5_cantilever_actuation_artifact_v2"
+    )
+
+    assert role["role"] == "mechanism_detail"
+    assert set(role["must_align_with"]) == {
+        "restrained_palette",
+        "compact_typography",
+        "source_first_polish",
+    }
 
 
 def test_fig5_requires_a_transferable_mechanism_contract() -> None:
@@ -248,7 +267,7 @@ def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> Non
     )
     assert charge_subtitle is not None
     assert "kV" not in charge_subtitle.group(1)
-    assert "field-on charge" in charge_subtitle.group(1)
+    assert "field-on charging" in charge_subtitle.group(1)
 
     assert re.search(r"\\node\[labelMute,anchor=west\] at \([^)]*\) \{clip: GND\};", panel_a)
     assert "clip: GND" in panel_a
@@ -360,6 +379,32 @@ def test_fig5_force_origins_bind_to_charge_or_film_surface() -> None:
     assert "(panel-c-force-origin)--(panel-c-coulomb-head)" in panel_c
 
 
+def test_fig5_conditional_reverse_force_hierarchy_matches_the_drawn_vectors() -> None:
+    protected = set(_yaml("semantic_contract.yaml")["protected_relations"])
+    assert "conditional_reverse_bend_owns_force_hierarchy" in protected
+
+    coulomb = _named_coordinates("C", "panel-c-force-origin")
+    coulomb.update(_named_coordinates("C", "panel-c-coulomb-head"))
+    maxwell = _named_coordinates("C", "panel-c-maxwell-")
+    coulomb_span = hypot(
+        coulomb["panel-c-coulomb-head"][0]
+        - coulomb["panel-c-force-origin"][0],
+        coulomb["panel-c-coulomb-head"][1]
+        - coulomb["panel-c-force-origin"][1],
+    )
+    maxwell_span = hypot(
+        maxwell["panel-c-maxwell-head"][0]
+        - maxwell["panel-c-maxwell-origin"][0],
+        maxwell["panel-c-maxwell-head"][1]
+        - maxwell["panel-c-maxwell-origin"][1],
+    )
+
+    assert coulomb_span >= 1.15 * maxwell_span
+    panel_c = _panel_source("C")
+    assert "{Coulomb};" in panel_c
+    assert "{Maxwell attraction};" in panel_c
+
+
 def test_fig5_residual_force_vector_is_visibly_shorter_than_drive_on() -> None:
     protected = set(_yaml("semantic_contract.yaml")["protected_relations"])
     assert (
@@ -399,12 +444,7 @@ def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> Non
     spec = _yaml("spec.yaml")
     checks = {item["id"]: item for item in spec["process_stage_visibility_checks"]}
 
-    assert [stage["id"] for stage in checks["isolation-boundary-state"]["stages"]] == [
-        "source-off",
-        "floating-state",
-    ]
-    floating_phrases = checks["isolation-boundary-state"]["stages"][1]["text_phrases"]
-    assert {tuple(item["words"]) for item in floating_phrases} == {("floating",)}
+    assert "isolation-boundary-state" not in checks
     assert [stage["id"] for stage in checks["qualitative-response-sequence"]["stages"]] == [
         "observation-origin",
         "source-off-float",
@@ -456,10 +496,10 @@ def test_fig5_panel_b_keeps_the_specimen_mounted_and_lifts_the_lead_manually() -
     )
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
-    assert "clip remains mounted" in panel_b
-    assert "lead lifted manually" in panel_b
+    assert "clip: floating" in panel_b
+    assert "ground lead lifted" in panel_b
     assert panel_b.count("leadTerminal") == 2
-    assert "clip floating" in panel_b
+    assert "clip: floating" in panel_b
     assert "switch" not in panel_b.lower()
 
 
@@ -472,10 +512,9 @@ def test_fig5_keeps_clamp_state_labels_clear_of_the_drive_terminal() -> None:
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
     assert "clip: GND" in panel_a
-    assert "clip remains mounted" in panel_b
-    assert "clip floating" in panel_b
+    assert "clip: floating" in panel_b
     assert re.search(r"align=right,anchor=east\] at \([^)]*\)", panel_c)
-    assert "electrically floating" in panel_c
+    assert "clip: floating" in panel_c
 
 
 def test_fig5_declares_clearance_for_the_rotated_bend_angle_label() -> None:
@@ -644,7 +683,7 @@ def test_fig5_panel_b_keeps_source_off_state_floating_with_residual_attraction()
     )
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
-    assert "clip floating" in panel_b
+    assert "clip: floating" in panel_b
     assert "residual attraction" in panel_b
     assert "support GND" not in panel_b
     assert "GND" not in panel_b
@@ -667,13 +706,12 @@ def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
     assert "clip: GND" in panel_a
     assert panel_a.count("driveBiasLeader") == 1
     assert panel_c.count("driveBiasLeader") == 1
-    assert "clip floating" in panel_b
-    assert "clip floating" in panel_b
+    assert "clip: floating" in panel_b
     assert "residual attraction" in panel_b
     assert "GND" not in panel_b
     assert "drive inactive" not in panel_b
     assert "after floating isolation" in panel_c
-    assert "electrically floating" in panel_c
+    assert "clip: floating" in panel_c
 
 
 def test_fig5_declares_deterministic_clamp_axis_geometry_check() -> None:
@@ -729,20 +767,21 @@ def test_fig5_response_trace_has_no_erased_gap_shortcut() -> None:
     assert "\\mathrm{s}" not in tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
 
-def test_fig5_source_off_label_uses_the_manual_isolation_lane() -> None:
+def test_fig5_source_off_label_is_owned_by_the_inactive_drive_electrode() -> None:
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
     )
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     match = re.search(
-        r"\\node\[labelStd,anchor=west\] at \((\d+\.\d+),(\d+\.\d+)\)"
-        r" \{source OFF\};",
+        r"\\node\[labelStd,anchor=south\] at \((\d+\.\d+),(\d+\.\d+)\)"
+        r" \{OFF\};",
         panel_b,
     )
     assert match is not None
-    assert 0.40 < float(match.group(1)) < 0.60
+    assert panel_b.count("driveBiasLeader") == 1
+    assert 3.45 < float(match.group(1)) < 3.65
     y = float(match.group(2))
-    assert 0.45 < y < 0.70
+    assert 4.55 < y < 4.70
 
 
 def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None:
