@@ -267,7 +267,8 @@ def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> Non
     )
     assert charge_subtitle is not None
     assert "kV" not in charge_subtitle.group(1)
-    assert "field-on charging" in charge_subtitle.group(1)
+    assert "actuation hold" in charge_subtitle.group(1)
+    assert "field-on charging" not in charge_subtitle.group(1)
 
     assert re.search(r"\\node\[labelMute,anchor=west\] at \([^)]*\) \{clip: GND\};", panel_a)
     assert "clip: GND" in panel_a
@@ -474,6 +475,8 @@ def test_fig5_response_trace_separates_off_float_from_reversal() -> None:
     assert "source OFF" in panel_d
     assert "clip floating" in panel_d
     assert "reverse" in panel_d.lower()
+    assert "The source-OFF text owns the plateau event" in panel_d
+    assert "\\draw[leader] (1.54,3.58)--(1.54,4.02);" in panel_d
 
 
 def test_fig5_response_trace_has_a_visible_sustained_positive_plateau() -> None:

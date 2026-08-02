@@ -25,8 +25,8 @@
   attraction vector when the reverse-bend condition is shown.
 - In D, separate source OFF, the floating hold, and reversed drive into an
   ordered event lane.  The positive plateau persists through the floating
-  hold, and the post-reversal descent is visibly faster than the initial
-  attraction rise.
+  hold; source OFF receives a short direct tick to its plateau event; and the
+  post-reversal descent is visibly faster than the initial attraction rise.
 - Keep D explicitly qualitative: no calibrated time spacing or measured-data
   styling is introduced by this repair.
 

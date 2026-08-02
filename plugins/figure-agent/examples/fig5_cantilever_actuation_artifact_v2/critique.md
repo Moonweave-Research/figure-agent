@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-02T04:18:50Z'
+generated_at: '2026-08-02T04:43:58Z'
 generator: critique_brief.py
 generator_version: sha256:97044e8f0e58d58dc347929c82e321ee15d89470716a1dbd83433a254231d809
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:1ea79caa4763d864b8b2f1554c3c92bed068bdbd36596979100634372285e4a0
+critique_input_hash: sha256:fe765498421f9b34d6f8f334fe49aecd18517773f4f8edcbde067fdfda1c654f
 verdict: ready
 findings: []
 panels: []
@@ -27,7 +27,7 @@ audit_enumeration:
       - component: qualitative response trace
         mount_support: N/A
         rationale: Panel D begins at t = 0, shows the positive plateau, reversed excursion, and slow recovery.
-        connections: Source OFF, floating, reversed drive, and recovery labels map to the trace sequence.
+        connections: A direct source-OFF tick terminates at the plateau event, while a separate rail owns the floating interval before reversed drive and recovery.
     missing_from_reference:
       - element: representative video frame or measured waveform
         status: intentional_omission
@@ -45,7 +45,7 @@ audit_enumeration:
       proposed_fix: ''
     - label: 'OFF / source OFF'
       nearest_object: Panel B drive electrode and Panel D event lane
-      intended_target: inactive drive in B and the source-off event preceding reversed drive in D
+      intended_target: inactive drive in B and the plateau event tick preceding the floating interval and reversed drive in D
       matches: true
       proposed_fix: ''
     - label: 'clip floating'
@@ -169,8 +169,8 @@ quality_axes:
   label_annotation_semantics:
     verdict: pass
     confidence: high
-    rationale: Force, charge, voltage, state, and trace labels point to the intended visual owners without a release-blocking collision.
-    evidence: Six report-only visual-clash candidates were inspected directly and accepted as proximity false positives.
+    rationale: Force, charge, voltage, state, and trace labels point to the intended visual owners without a release-blocking collision; the D source-OFF label now terminates on its plateau event rather than only sharing its x-position.
+    evidence: The current full render and six report-only visual-clash candidates were inspected directly; all candidates remain proximity false positives.
     blocking_items: []
     recommended_action: none
   journal_polish:
@@ -315,7 +315,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:1ea79caa4763d864b8b2f1554c3c92bed068bdbd36596979100634372285e4a0
+  assessed_artifact_hash: sha256:fe765498421f9b34d6f8f334fe49aecd18517773f4f8edcbde067fdfda1c654f
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
@@ -435,7 +435,7 @@ aesthetic_lever_audit:
     verdict: pass
     confidence: high
     observed_positive_signals:
-      - The trace holds a positive plateau, separates source OFF and clip floating from reversed drive, descends faster than the initial rise, and recovers slowly.
+      - The trace holds a positive plateau, binds source OFF to its plateau event with a direct tick, separates the clip-floating rail from reversed drive, descends faster than the initial rise, and recovers slowly.
     observed_anti_patterns: []
     route: none
     linked_evidence: [quality_axes.message_storyline, editorial_art_direction.narrative_choreography]

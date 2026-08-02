@@ -52,7 +52,7 @@
   \node[panelTitle,anchor=west] at (0.44,5.12)
     {field-on charging};
   \node[labelMute,anchor=west] at (0.44,4.78)
-    {field-on charging; \textasciitilde20 min};
+    {actuation hold; \textasciitilde20 min};
 
   % The charge state is the actuation geometry itself: a cantilever faces a
   % nearby drive electrode across an air gap and bends toward it.
@@ -278,10 +278,13 @@
   \node[labelMute,anchor=north] at (0.74,2.30) {$t=0$};
   % A short event-owned interval separates source OFF / floating from the
   % later polarity reversal; it is schematic and carries no exact duration.
+  % The source-OFF text owns the plateau event through a short vertical tick;
+  % the adjacent horizontal rail then owns the floating interval up to reversal.
   \fill[cGray!72!black] (1.54,3.58) circle (0.62pt);
-  \draw[cGray!58!black,line width=0.45pt] (1.54,3.70)--(1.94,3.70);
-  \node[labelStd,anchor=south] at (1.54,4.28) {source OFF};
-  \node[labelMute,anchor=north] at (1.74,4.09) {clip floating};
+  \draw[leader] (1.54,3.58)--(1.54,4.02);
+  \draw[cGray!58!black,line width=0.45pt] (1.66,3.70)--(1.94,3.70);
+  \node[labelStd,anchor=south] at (1.54,4.08) {source OFF};
+  \node[labelMute,anchor=south west] at (1.66,3.78) {clip floating};
   \node[labelStd,text=cRed!84!black,anchor=south west] at (2.14,3.02)
     {reversed drive};
   \node[labelMute,anchor=south west] at (3.05,2.16) {recovery};

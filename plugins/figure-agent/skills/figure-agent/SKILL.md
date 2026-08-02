@@ -811,6 +811,11 @@ For a qualitative response trace with compressed precharge, require a visible
 source-OFF/floating interval between the positive plateau and the polarity
 reversal marker. Do not collapse OFF, floating, and reversal into one coincident
 label, and do not let a precharge duration compete with the response timebase.
+When a source-OFF label sits above a plateau, give it a compact event-owned tick,
+dot, or leader that terminates at the plateau event; shared horizontal interval
+rails alone can read as an unlabeled decoration at final reduction. Keep the
+floating interval on a separate adjacent rail so the two states remain distinct
+without inventing a quantitative duration.
 If the charged state is described as saturated or held before that transition,
 make the positive plateau an explicitly horizontal segment after the rise. A
 rounded summit that immediately descends is a waveform-morphology defect, not a
