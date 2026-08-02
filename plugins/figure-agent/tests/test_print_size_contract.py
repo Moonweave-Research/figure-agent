@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks
 from check_print_size_contract import (  # noqa: E402, I001
     _journal_policy_floor,
     evaluate_contract,
+    find_contract_file,
 )
 
 
@@ -104,3 +105,16 @@ def test_journal_policy_floor_is_selected_only_by_explicit_nature_basis() -> Non
         == 5.0
     )
     assert _journal_policy_floor({"basis": "project_schematic"}) is None
+
+
+def test_source_specific_authority_wins_over_parent_fixture_spec(tmp_path: Path) -> None:
+    fixture = tmp_path / "fixture"
+    review = fixture / "review"
+    review.mkdir(parents=True)
+    source = review / "alternative.tex"
+    source.write_text("% prospective source\n", encoding="utf-8")
+    (fixture / "spec.yaml").write_text("final_size_contract: {}\n", encoding="utf-8")
+    sidecar = review / "alternative.authority.yaml"
+    sidecar.write_text("final_size_contract: {}\n", encoding="utf-8")
+
+    assert find_contract_file(source) == sidecar

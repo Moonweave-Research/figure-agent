@@ -34,7 +34,17 @@ class PrintSizeContractError(ValueError):
 
 
 def find_contract_file(tex_path: Path) -> Path | None:
-    """Find the nearest fixture authority/spec contract while walking upward."""
+    """Find a source-specific or nearest fixture print-size contract.
+
+    A sibling ``<source-stem>.authority.yaml`` is reserved for a prospective
+    review source whose natural page geometry differs from the canonical
+    fixture.  It scopes only the print-size measurement to that source; it
+    cannot alter fixture acceptance, semantic contracts, or promotion state.
+    """
+
+    source_specific = tex_path.with_suffix(".authority.yaml")
+    if source_specific.is_file():
+        return source_specific
 
     for directory in (tex_path.parent, *tex_path.parents):
         for name in ("spec.yaml", "authority.yaml"):

@@ -1,0 +1,3 @@
+# Derived comparison renders are review evidence, not editable source.
+build/
+preview-build/

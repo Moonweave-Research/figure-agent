@@ -1115,6 +1115,11 @@ redirect to matplotlib?"):
   `max_height_mm`, and `min_print_font_pt`. The compile gate checks the PDF
   page geometry and the smallest explicit `\\fontsize` declaration at the
   height-limited placement scale. A fresh PNG alone is not print-size evidence.
+  A prospective review source may instead declare a sibling
+  `<source-stem>.authority.yaml` print contract when its deliberate composition
+  changes natural page geometry. That sidecar applies only to that source's
+  physical measurement and cannot change canonical acceptance, semantic
+  contracts, or promotion state.
 - Checks: `fig-agent helper check_collisions.py`, `fig-agent helper check_visual_clash.py`
 - Perception pack: `scripts/perception_pack.py` writes
   `build/perception/extract.yaml` and `build/perception/overlay.png`
