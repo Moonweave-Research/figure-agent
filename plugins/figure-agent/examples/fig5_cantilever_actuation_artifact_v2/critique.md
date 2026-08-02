@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-02T05:13:12Z'
+generated_at: '2026-08-02T07:38:27Z'
 generator: critique_brief.py
 generator_version: sha256:97044e8f0e58d58dc347929c82e321ee15d89470716a1dbd83433a254231d809
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:0df7dc43c12d95235f89aedd4155c331ce8cea7c9234db414c847e2125eae648
+critique_input_hash: sha256:0ef38e36b2d7872901b9f323f8197c2ecef3d76213fe5d1bccf611c0f060adfd
 verdict: ready
 findings: []
 panels: []
@@ -162,7 +162,7 @@ quality_axes:
   composition_layout:
     verdict: pass
     confidence: high
-    rationale: The single-row 180 mm contract is balanced; separators remain clear and the D rotated axis label stays inside its panel.
+    rationale: The single-row 180 mm contract is balanced; separators remain clear and the D horizontal angle label stays inside its panel.
     evidence: print_178mm and print_thumbnail crops; strict geometry evidence.
     blocking_items: []
     recommended_action: none
@@ -315,7 +315,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:0df7dc43c12d95235f89aedd4155c331ce8cea7c9234db414c847e2125eae648
+  assessed_artifact_hash: sha256:0ef38e36b2d7872901b9f323f8197c2ecef3d76213fe5d1bccf611c0f060adfd
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
@@ -791,7 +791,7 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: Panel C force hierarchy and Panel D trace, switch marker, and rotated bend-angle label are clear.
+    rationale: Panel C force hierarchy and Panel D trace, switch marker, and horizontal angle label are clear.
     unintended_visible_anomaly: none
     anomaly_rationale: No stray artifact is visible.
     anomaly_link: ''
