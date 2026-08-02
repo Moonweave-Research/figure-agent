@@ -523,7 +523,7 @@ def test_fig5_keeps_clamp_state_labels_clear_of_the_drive_terminal() -> None:
     assert "clip: floating" in panel_c
 
 
-def test_fig5_declares_clearance_for_the_rotated_bend_angle_label() -> None:
+def test_fig5_declares_clearance_for_the_y_axis_angle_label() -> None:
     spec = _yaml("spec.yaml")
     checks = {
         item["id"]: item for item in spec["label_path_proximity_checks"]
@@ -534,16 +534,14 @@ def test_fig5_declares_clearance_for_the_rotated_bend_angle_label() -> None:
     assert axis_check["role"] == "axis_label_lane"
     assert axis_check["x_pdf_cm"] == 13.97
     assert axis_check["clearance_pt"] == 2.5
-    assert axis_check["text_phrases"] == [
-        {"id": "bend_angle_label", "words": ["bend", "angle"]}
-    ]
+    assert axis_check["text_phrases"] == [{"id": "angle_label", "words": ["angle"]}]
 
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
     )
     panel_d = tex.split("% Panel D", 1)[1]
     assert re.search(
-        r"rotate=90,anchor=south\] at \(0\.24,2\.56\) \{bend angle\}",
+        r"anchor=south west\] at \(0\.20,4\.15\) \{angle\}",
         panel_d,
     )
 

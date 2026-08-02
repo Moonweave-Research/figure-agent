@@ -120,6 +120,87 @@ def _text_phrases(check: dict[str, Any]) -> list[dict[str, Any]]:
     return phrases
 
 
+def _source_binding(check: dict[str, Any]) -> dict[str, str] | None:
+    value = check.get("source_binding")
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise LabelPathProximityError(f"{check['id']}.source_binding must be a mapping")
+    source_name = value.get("source_name")
+    selector = value.get("selector")
+    if not isinstance(source_name, str) or not source_name.strip():
+        raise LabelPathProximityError(
+            f"{check['id']}.source_binding.source_name must be a non-empty string"
+        )
+    source_path = Path(source_name)
+    if source_path.is_absolute() or ".." in source_path.parts:
+        raise LabelPathProximityError(
+            f"{check['id']}.source_binding.source_name must stay inside the fixture"
+        )
+    if not isinstance(selector, str) or not selector.strip():
+        raise LabelPathProximityError(
+            f"{check['id']}.source_binding.selector must be a non-empty string"
+        )
+    return {"source_name": source_name, "selector": selector}
+
+
+def validate_live_bindings(
+    checks: list[dict[str, Any]],
+    *,
+    spec_path: Path,
+    words: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    """Fail closed when a declared path no longer has unique live source evidence.
+
+    A detector declaration may retain geometry after its authored path or target label
+    has moved.  Optional source bindings make that drift explicit without forcing a
+    TikZ parser or an authoring primitive: the selector must occur exactly once in
+    the current fixture source and every declared phrase must resolve in the render.
+    """
+    fixture_dir = spec_path.parent.resolve()
+    failures: list[dict[str, str]] = []
+    for check in sorted(checks, key=_check_sort_key):
+        binding = _source_binding(check)
+        if binding is None:
+            continue
+        source_path = (fixture_dir / binding["source_name"]).resolve()
+        if fixture_dir not in source_path.parents or not source_path.is_file():
+            failures.append(
+                {
+                    "check_id": str(check["id"]),
+                    "kind": "source_missing",
+                    "detail": binding["source_name"],
+                }
+            )
+            continue
+        source_text = source_path.read_text(encoding="utf-8")
+        selector_count = source_text.count(binding["selector"])
+        if selector_count != 1:
+            failures.append(
+                {
+                    "check_id": str(check["id"]),
+                    "kind": "source_selector_not_unique",
+                    "detail": f"{binding['selector']} (matches={selector_count})",
+                }
+            )
+        max_gap, max_center_delta = _phrase_tolerances(check)
+        for phrase in _text_phrases(check):
+            if not _group_phrase_words(
+                words,
+                phrase,
+                max_gap=max_gap,
+                max_center_delta=max_center_delta,
+            ):
+                failures.append(
+                    {
+                        "check_id": str(check["id"]),
+                        "kind": "rendered_phrase_missing",
+                        "detail": " ".join(phrase["words"]),
+                    }
+                )
+    return failures
+
+
 def _phrase_tolerances(check: dict[str, Any]) -> tuple[float, float]:
     max_gap = _non_negative_number(
         check.get("max_phrase_gap_pt", DEFAULT_MAX_PHRASE_GAP_PT),
@@ -293,6 +374,7 @@ def load_label_path_proximity_checks(spec_path: Path | None) -> list[dict[str, A
                 f"label_path_proximity_checks[{index}].defect_kind must be one of "
                 + ", ".join(sorted(ALLOWED_DEFECT_KINDS))
             )
+        _source_binding(check)
         checks.append(check)
     return checks
 
@@ -577,9 +659,12 @@ def label_path_proximity_payload(
     candidates: list[dict[str, Any]],
     *,
     checked: int,
+    live_binding_checked: int = 0,
+    live_binding_failures: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
+    binding_failures = list(live_binding_failures or [])
     return {
         "schema": SCHEMA,
         "fixture": fixture_name,
@@ -587,6 +672,17 @@ def label_path_proximity_payload(
         "source": "spec.yaml:label_path_proximity_checks",
         "candidates": candidates,
         "checked": checked,
+        "live_binding": {
+            "checked": live_binding_checked,
+            "state": (
+                "failed"
+                if binding_failures
+                else "passed"
+                if live_binding_checked
+                else "not_declared"
+            ),
+            "failures": binding_failures,
+        },
         "total": len(candidates),
     }
 
@@ -624,14 +720,35 @@ def main() -> int:
         spec_path = args.spec or _infer_spec_path(args.pdf)
         checks = load_label_path_proximity_checks(spec_path)
         words, page_size_pt = extract_pdf_words_and_page(args.pdf)
+        binding_failures = validate_live_bindings(
+            checks,
+            spec_path=spec_path,
+            words=words,
+        )
         candidates = detect_label_path_proximity(words, page_size_pt, checks)
     except LabelPathProximityError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 
-    payload = label_path_proximity_payload(args.pdf, candidates, checked=len(checks))
+    live_binding_checked = sum(1 for check in checks if _source_binding(check) is not None)
+    payload = label_path_proximity_payload(
+        args.pdf,
+        candidates,
+        checked=len(checks),
+        live_binding_checked=live_binding_checked,
+        live_binding_failures=binding_failures,
+    )
     if args.json_output is not None:
         _write_json(args.json_output, payload)
+
+    if binding_failures:
+        for failure in binding_failures:
+            print(
+                "ERROR label_path_binding: "
+                f"{failure['check_id']} {failure['kind']} ({failure['detail']})",
+                file=sys.stderr,
+            )
+        return 2
 
     if not candidates:
         print(

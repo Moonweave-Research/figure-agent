@@ -141,21 +141,28 @@ text_boundary_checks:
     text_allowlist: [Coulomb]
 
 label_path_proximity_checks:
-  - id: manual-sequence-arrow
-    kind: horizontal_line
-    role: process_arrow
-    y_pdf_cm: 2.40
-    x_range_pdf_cm: [3.18, 3.98]
+  - id: panel-b-manual-lead-lift
+    kind: polyline
+    role: manual_lead_lift
+    points_pdf_cm:
+      - [5.67, 0.65]
+      - [5.91, 0.73]
     clearance_pt: 3.0
+    source_binding:
+      source_name: fig5_cantilever_actuation_artifact_v2.tex
+      selector: 'figure-agent-path: panel-b-manual-lead-lift'
     text_phrases:
-      - id: off_float
-        words: ['OFF', float]
+      - id: gnd_lead_lifted
+        words: [GND, lead, lifted]
   - id: panel-c-coulomb-arrow
     kind: horizontal_line
     role: conditional_force_arrow
     y_pdf_cm: 2.38
     x_range_pdf_cm: [9.21, 9.95]
     clearance_pt: 3.0
+    source_binding:
+      source_name: fig5_cantilever_actuation_artifact_v2.tex
+      selector: 'figure-agent-path: panel-c-coulomb-arrow'
     text_phrases:
       - id: coulomb_label
         words: [Coulomb]
@@ -165,6 +172,9 @@ label_path_proximity_checks:
     x_pdf_cm: 15.23
     y_range_pdf_cm: [1.08, 3.75]
     clearance_pt: 3.0
+    source_binding:
+      source_name: fig5_cantilever_actuation_artifact_v2.tex
+      selector: 'figure-agent-path: panel-d-trace-switch-line'
     text_phrases:
       - id: reversed_drive
         words: [reversed, drive]
@@ -175,9 +185,12 @@ label_path_proximity_checks:
     y_range_pdf_cm: [1.02, 4.08]
     clearance_pt: 2.5
     defect_kind: label_path_near_miss
+    source_binding:
+      source_name: fig5_cantilever_actuation_artifact_v2.tex
+      selector: 'figure-agent-path: panel-d-bend-angle-axis'
     text_phrases:
-      - id: bend_angle_label
-        words: [bend, angle]
+      - id: angle_label
+        words: [angle]
   - id: panel-d-recovery-tail
     kind: polyline
     role: qualitative_response_curve
@@ -191,6 +204,9 @@ label_path_proximity_checks:
       - [17.19, 2.36]
     clearance_pt: 3.0
     defect_kind: label_curve_near_label
+    source_binding:
+      source_name: fig5_cantilever_actuation_artifact_v2.tex
+      selector: 'figure-agent-path: panel-d-recovery-tail'
     text_phrases:
       - id: recovery_label
         words: [recovery]

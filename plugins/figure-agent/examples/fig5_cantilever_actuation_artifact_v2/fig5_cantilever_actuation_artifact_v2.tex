@@ -121,7 +121,7 @@
 \begin{scope}[shift={(4.45,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {b};
   \node[panelTitle,anchor=west] at (0.44,5.12) {source-off, floating};
-  \node[labelMute,anchor=west] at (0.44,4.78) {GND lead lifted};
+  \node[labelMute,anchor=west] at (1.70,4.78) {GND lead lifted};
 
   % The lead is manually lifted after source OFF, leaving the mounted film
   % electrically floating.  Residual trapped charge retains a smaller
@@ -136,10 +136,11 @@
   % lead has been lifted away.
   \draw[wire] (panel-b-clamp-axis)--(1.69,4.43);
   \node[leadTerminal] at (1.69,4.46) {};
+  % figure-agent-path: panel-b-manual-lead-lift
   \draw[wire] (1.22,4.66)--(1.46,4.58);
   \node[leadTerminal] at (1.46,4.58) {};
   \draw[baselineArrow] (1.56,4.46)--(1.56,4.56);
-  \node[labelMute,anchor=west] at (2.00,4.52) {clip: floating};
+  \node[labelMute,anchor=west] at (2.26,4.16) {clip: floating};
   \draw[beamOuter]
     (panel-b-beam-origin)
       .. controls (1.69,3.45) and (1.75,2.30) .. (2.10,1.65);
@@ -228,6 +229,7 @@
   \node[labelStd,anchor=south west,text=cGray!74!black] at (1.48,3.34)
     {Maxwell attraction};
   \coordinate (panel-c-coulomb-head) at (0.14,2.32);
+  % figure-agent-path: panel-c-coulomb-arrow
   \draw[forceAway] (panel-c-force-origin)--(panel-c-coulomb-head);
   \node[labelStd,text=cRed!84!black,anchor=south west] at (0.18,2.48)
     {Coulomb};
@@ -244,20 +246,20 @@
   \node[panelTitle,anchor=west] at (0.44,5.12) {qualitative bend response};
 
   % Axes and zero line.
+  % figure-agent-path: panel-d-bend-angle-axis
   \draw[axis] (0.62,1.02)--(0.62,4.08);
   \draw[axis] (0.62,2.52)--(4.02,2.52);
   % Keep the rotated axis label visibly clear of the shaft at print reduction;
   % the label still owns the y-axis without sitting on its stroke.
-  \node[labelMute,rotate=90,anchor=south] at (0.24,2.56) {bend angle};
+  \node[labelMute,anchor=south west] at (0.20,4.15) {angle};
   \node[labelMute,anchor=north east] at (4.00,0.92) {time from actuation onset};
-  \node[labelMute,anchor=east] at (0.56,3.63) {$+\theta$};
-  \node[labelMute,anchor=east] at (0.56,1.46) {$-\theta$};
 
   % The plot begins at the actuation onset: the cantilever angle is neutral at
   % t=0, then reaches a visibly sustained positive plateau after the compressed
   % precharge interval, before source OFF and polarity reversal.
   % The 20-minute precharge is documented in Panel A and omitted from this
   % response timebase; t=0 is the actuation-onset origin shown below.
+  % figure-agent-path: panel-d-recovery-tail
   \draw[cBlue!82!black,line width=1.05pt]
     (0.74,2.52) .. controls (0.80,2.72) and (0.98,3.20) .. (1.18,3.48)
     .. controls (1.23,3.55) and (1.28,3.58) .. (1.34,3.58)
@@ -268,6 +270,7 @@
     .. controls (3.46,2.04) and (3.65,2.24) .. (3.84,2.36);
   \draw[cBlue!55!white,dashed,line width=0.82pt]
     (3.84,2.36) .. controls (3.90,2.38) and (3.97,2.41) .. (4.02,2.42);
+  % figure-agent-path: panel-d-trace-switch-line
   \draw[cGray!42!black,dashed,line width=0.55pt] (1.94,1.04)--(1.94,3.58);
   \draw[cGray!72!black,line width=0.45pt] (0.74,2.52)--(0.74,2.38);
   \node[labelMute,anchor=north] at (0.74,2.30) {$t=0$};

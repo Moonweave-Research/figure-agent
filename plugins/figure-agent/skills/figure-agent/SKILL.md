@@ -423,6 +423,12 @@ Moving a label away from its axis but into a panel separator is a regression,
 not a repair; preserve the interior annotation lane and record the clearance
 constraint in the fixture contract.
 
+When a high-risk label-path declaration protects a named source path, bind it to
+one unique, fixture-local source selector and to the rendered target phrase. A
+coordinate declaration whose selector is missing, duplicated, or whose target
+phrase no longer renders is stale evidence, not a clean check. This binds review
+coverage without imposing a drawing primitive or a TikZ-path parser.
+
 For a schematic ideal dielectric, select the polarization grammar from the
 reader-facing claim.  When the point is orientation polarization, use compact
 neutral oval dipole bodies with paired $+$/$-$ poles aligned to the held field;

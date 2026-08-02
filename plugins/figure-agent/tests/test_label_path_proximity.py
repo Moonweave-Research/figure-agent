@@ -159,7 +159,95 @@ def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
         "source": "spec.yaml:label_path_proximity_checks",
         "candidates": [candidate],
         "checked": 1,
+        "live_binding": {
+            "checked": 0,
+            "state": "not_declared",
+            "failures": [],
+        },
         "total": 1,
+    }
+
+
+def test_live_binding_requires_unique_source_selector_and_rendered_phrase(tmp_path: Path) -> None:
+    fixture = tmp_path / "demo"
+    fixture.mkdir()
+    source = fixture / "demo.tex"
+    source.write_text("% figure-agent-path: active-arrow\n", encoding="utf-8")
+    checks = [
+        {
+            "id": "active_arrow",
+            "kind": "horizontal_line",
+            "role": "process_arrow",
+            "y_pdf_cm": 1.0,
+            "x_range_pdf_cm": [1.0, 2.0],
+            "clearance_pt": 2.0,
+            "source_binding": {
+                "source_name": "demo.tex",
+                "selector": "figure-agent-path: active-arrow",
+            },
+            "text_phrases": [{"id": "active", "words": ["source", "OFF"]}],
+        }
+    ]
+    words = [_word("source", 10.0, 10.0, 30.0, 18.0), _word("OFF", 32.0, 10.0, 46.0, 18.0)]
+
+    assert proximity.validate_live_bindings(
+        checks,
+        spec_path=fixture / "spec.yaml",
+        words=words,
+    ) == []
+
+    source.write_text(
+        "% figure-agent-path: active-arrow\n% figure-agent-path: active-arrow\n",
+        encoding="utf-8",
+    )
+    failures = proximity.validate_live_bindings(
+        checks,
+        spec_path=fixture / "spec.yaml",
+        words=words,
+    )
+
+    assert failures == [
+        {
+            "check_id": "active_arrow",
+            "kind": "source_selector_not_unique",
+            "detail": "figure-agent-path: active-arrow (matches=2)",
+        }
+    ]
+
+    source.write_text("% figure-agent-path: active-arrow\n", encoding="utf-8")
+    assert proximity.validate_live_bindings(
+        checks,
+        spec_path=fixture / "spec.yaml",
+        words=[],
+    ) == [
+        {
+            "check_id": "active_arrow",
+            "kind": "rendered_phrase_missing",
+            "detail": "source OFF",
+        }
+    ]
+
+
+def test_payload_marks_live_binding_evidence_failed(tmp_path: Path) -> None:
+    pdf = tmp_path / "demo" / "build" / "demo.pdf"
+    failure = {
+        "check_id": "active_arrow",
+        "kind": "rendered_phrase_missing",
+        "detail": "source OFF",
+    }
+
+    payload = proximity.label_path_proximity_payload(
+        pdf,
+        [],
+        checked=1,
+        live_binding_checked=1,
+        live_binding_failures=[failure],
+    )
+
+    assert payload["live_binding"] == {
+        "checked": 1,
+        "state": "failed",
+        "failures": [failure],
     }
 
 
