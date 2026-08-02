@@ -45,12 +45,13 @@ and the actual time ordering in D separate.
 - A's trapped-charge label must use a dedicated left annotation lane; its
   leader starts outside the label glyphs and terminates on the representative
   charge marker.
-- B must visibly show both source OFF and the ground lead separated from GND;
-  it must not imply that the specimen clip itself opens.
+- B must visibly show both source OFF and the ground lead separated directly
+  at the mounted clip; it must not imply that the specimen clip itself opens
+  or use a detached lower-panel wiring icon.
 - B's source OFF label belongs to the switch lane below the specimen tip; it
   must not sit on the cantilever's free-end level where ownership is ambiguous.
-  The lower cue is a manual ground-lead lift, not a generic electrical switch;
-  the specimen clip remains mounted throughout.
+  The clip-adjacent cue is a manual ground-lead lift, not a generic electrical
+  switch; the specimen clip remains mounted throughout.
 - C must label the force balance as conditional; its one reverse-bent member
   may not imply an observed force vector or a second measured bend snapshot.
 - In C, the Maxwell baseline is a supporting vector and the conditional

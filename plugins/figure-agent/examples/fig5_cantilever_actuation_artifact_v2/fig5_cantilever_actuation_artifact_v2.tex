@@ -121,7 +121,7 @@
 \begin{scope}[shift={(4.45,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {b};
   \node[panelTitle,anchor=west] at (0.44,5.12) {source-off, floating};
-  \node[labelMute,anchor=west] at (0.44,4.78) {residual bend persists};
+  \node[labelMute,anchor=west] at (0.44,4.78) {GND lead lifted};
 
   % The lead is manually lifted after source OFF, leaving the mounted film
   % electrically floating.  Residual trapped charge retains a smaller
@@ -131,7 +131,14 @@
   \draw[apparatus] (1.18,4.05) rectangle (2.20,4.34);
   \coordinate (panel-b-clamp-axis) at (1.69,4.05);
   \coordinate (panel-b-beam-origin) at (1.69,4.05);
-  \draw[wire] (panel-b-clamp-axis)--(1.69,4.52);
+  % The manual isolation is drawn at the actual clip terminal, rather than as
+  % a detached lower-panel icon: the fixed clip remains mounted while its GND
+  % lead has been lifted away.
+  \draw[wire] (panel-b-clamp-axis)--(1.69,4.43);
+  \node[leadTerminal] at (1.69,4.46) {};
+  \draw[wire] (1.22,4.66)--(1.46,4.58);
+  \node[leadTerminal] at (1.46,4.58) {};
+  \draw[baselineArrow] (1.56,4.46)--(1.56,4.56);
   \node[labelMute,anchor=west] at (2.00,4.52) {clip: floating};
   \draw[beamOuter]
     (panel-b-beam-origin)
@@ -162,18 +169,6 @@
     (panel-b-residual-origin)--(panel-b-residual-head);
   \node[labelStd,text=cRed!72!black,anchor=south] at (2.60,3.34)
     {residual attraction};
-  % Show the manual operation as two disconnected lead terminals, not as an
-  % abstract pair of bars: source OFF, then the lead is physically lifted.
-  \draw[wire] (0.56,1.02)--(0.90,1.02);
-  \draw[wire] (0.56,1.02)--(0.56,0.88);
-  \draw[wire] (0.45,0.88)--(0.67,0.88);
-  \draw[wire] (0.48,0.82)--(0.64,0.82);
-  \draw[wire] (0.51,0.76)--(0.61,0.76);
-  \draw[wire] (1.30,1.22)--(1.74,1.34);
-  \node[leadTerminal] at (0.90,1.02) {};
-  \node[leadTerminal] at (1.30,1.22) {};
-  \draw[baselineArrow] (1.10,1.02)--(1.10,1.16);
-  \node[labelMute,anchor=south] at (1.10,1.42) {ground lead lifted};
 \end{scope}
 
 % ================================================================

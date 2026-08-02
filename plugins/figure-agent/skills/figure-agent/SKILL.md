@@ -483,6 +483,10 @@ specimen clamp unless the evidence declares that mechanism. A manual separation
 must show two visibly disconnected lead terminals (or an equally explicit
 before/after lead geometry) and a directional lift cue; two anonymous horizontal
 bars plus prose are not sufficient for a reader to recover the operation.
+Keep that separation geometrically attached to, or immediately adjacent to, the
+actual clip lead it isolates. A detached lower-panel plug, ground symbol, or
+two-terminal inset can read as a second circuit rather than the film's boundary
+change; redraw the lift at the mounted clip before adding explanatory text.
 
 When that isolation leaves a support-side reference fixed while the film clip
 floats, name both electrical owners in the rendered state: label the film clip

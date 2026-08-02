@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-02T04:43:58Z'
+generated_at: '2026-08-02T05:13:12Z'
 generator: critique_brief.py
 generator_version: sha256:97044e8f0e58d58dc347929c82e321ee15d89470716a1dbd83433a254231d809
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:fe765498421f9b34d6f8f334fe49aecd18517773f4f8edcbde067fdfda1c654f
+critique_input_hash: sha256:0df7dc43c12d95235f89aedd4155c331ce8cea7c9234db414c847e2125eae648
 verdict: ready
 findings: []
 panels: []
@@ -18,7 +18,7 @@ audit_enumeration:
         connections: The attraction arrow begins at the film surface, while the +5 kV label binds the field-on state to the drive electrode.
       - component: source-off floating state
         mount_support: yes
-        rationale: Panel B shows the manual lead lift, source OFF, floating clip, and residual attraction.
+        rationale: Panel B shows the manual GND-lead lift directly at the mounted clip, source OFF, the resulting floating clip, and residual attraction.
         connections: The shorter, lighter residual-attraction vector preserves the weaker-force hierarchy between actuation charge and polarity reversal.
       - component: reversed-drive force balance
         mount_support: yes
@@ -75,7 +75,7 @@ audit_enumeration:
       proposed_fix: ''
   physical_plausibility:
     - check: cable_gravity
-      finding: The manual lead-lift cue is schematic and does not imply an automated stage or unsupported cable routing.
+      finding: The manual lead-lift cue is attached directly to the mounted clip rather than reading as a detached secondary circuit; it does not imply an automated stage or unsupported cable routing.
       verdict: convention_acceptable
     - check: floating_components
       finding: Panel B and Panel C explicitly show the clip floating after source OFF; no ground symbol persists in those states.
@@ -141,7 +141,7 @@ quality_axes:
   subregion_integration:
     verdict: pass
     confidence: high
-    rationale: The manual lead-lift cue, force arrows, and response labels remain attached to the intended state transitions.
+    rationale: The manual lead-lift cue now sits at the actual clip terminal, while force arrows and response labels remain attached to their intended state transitions.
     evidence: Required visual-clash crops and full-row crops.
     blocking_items: []
     recommended_action: none
@@ -169,7 +169,7 @@ quality_axes:
   label_annotation_semantics:
     verdict: pass
     confidence: high
-    rationale: Force, charge, voltage, state, and trace labels point to the intended visual owners without a release-blocking collision; the D source-OFF label now terminates on its plateau event rather than only sharing its x-position.
+    rationale: Force, charge, voltage, state, and trace labels point to the intended visual owners without a release-blocking collision; the B lead lift is now physically adjacent to the floating clip, and the D source-OFF label terminates on its plateau event rather than only sharing its x-position.
     evidence: The current full render and six report-only visual-clash candidates were inspected directly; all candidates remain proximity false positives.
     blocking_items: []
     recommended_action: none
@@ -315,7 +315,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:fe765498421f9b34d6f8f334fe49aecd18517773f4f8edcbde067fdfda1c654f
+  assessed_artifact_hash: sha256:0df7dc43c12d95235f89aedd4155c331ce8cea7c9234db414c847e2125eae648
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
@@ -778,7 +778,7 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: The lower halves of Panels A and B keep the air-gap and manual lead-lift cues readable.
+    rationale: The lower halves of Panels A and B keep the air gap and residual-bend contrast readable; the clip-adjacent manual lift is inspected in the upper Panel B crop.
     unintended_visible_anomaly: none
     anomaly_rationale: No stray artifact is visible.
     anomaly_link: ''

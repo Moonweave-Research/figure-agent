@@ -500,8 +500,11 @@ def test_fig5_panel_b_keeps_the_specimen_mounted_and_lifts_the_lead_manually() -
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
     assert "clip: floating" in panel_b
-    assert "ground lead lifted" in panel_b
+    assert "GND lead lifted" in panel_b
     assert panel_b.count("leadTerminal") == 2
+    assert "(panel-b-clamp-axis)--(1.69,4.43);" in panel_b
+    assert "(1.22,4.66)--(1.46,4.58);" in panel_b
+    assert "(0.56,1.02)--(0.90,1.02);" not in panel_b
     assert "clip: floating" in panel_b
     assert "switch" not in panel_b.lower()
 
@@ -689,7 +692,7 @@ def test_fig5_panel_b_keeps_source_off_state_floating_with_residual_attraction()
     assert "clip: floating" in panel_b
     assert "residual attraction" in panel_b
     assert "support GND" not in panel_b
-    assert "GND" not in panel_b
+    assert "clip: GND" not in panel_b
     assert any(
         connector["connector_id"]
         == "panel_b.floating_state_retains_residual_attraction"
@@ -711,7 +714,7 @@ def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
     assert panel_c.count("driveBiasLeader") == 1
     assert "clip: floating" in panel_b
     assert "residual attraction" in panel_b
-    assert "GND" not in panel_b
+    assert "clip: GND" not in panel_b
     assert "drive inactive" not in panel_b
     assert "after floating isolation" in panel_c
     assert "clip: floating" in panel_c
