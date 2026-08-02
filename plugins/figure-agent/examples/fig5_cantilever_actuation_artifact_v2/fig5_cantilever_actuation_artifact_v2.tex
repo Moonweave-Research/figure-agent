@@ -154,8 +154,10 @@
   \draw[leader,cRed!58!black] (1.16,2.73)--(panel-b-q2);
   \fill[cGray!28] (3.42,1.40) rectangle (3.70,4.34);
   \draw[apparatus] (3.42,1.40) rectangle (3.70,4.34);
+  % Residual attraction is deliberately weaker than the drive-on state:
+  % preserve the shared arrow grammar but shorten and mute the vector.
   \coordinate (panel-b-residual-origin) at (1.87,3.02);
-  \coordinate (panel-b-residual-head) at (3.10,3.02);
+  \coordinate (panel-b-residual-head) at (2.70,3.02);
   \draw[forceToward,opacity=0.62]
     (panel-b-residual-origin)--(panel-b-residual-head);
   \node[labelStd,text=cRed!72!black,anchor=south] at (2.60,3.22)

@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-02T01:45:17Z'
+generated_at: '2026-08-02T03:03:25Z'
 generator: critique_brief.py
 generator_version: sha256:97044e8f0e58d58dc347929c82e321ee15d89470716a1dbd83433a254231d809
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:9c38ca4bfc1ee62953b72794b4d85868f955209260b082befbaf74ceda56df2e
+critique_input_hash: sha256:c66f0befda0be5b07d8b84d93ee6fc0b8284a9e61de172e3c101c239ddcf40b7
 verdict: ready
 findings: []
 panels: []
@@ -19,7 +19,7 @@ audit_enumeration:
       - component: source-off floating state
         mount_support: yes
         rationale: Panel B shows the manual lead lift, source OFF, floating clip, and residual attraction.
-        connections: The state is ordered between actuation charge and polarity reversal.
+        connections: The shorter, lighter residual-attraction vector preserves the weaker-force hierarchy between actuation charge and polarity reversal.
       - component: reversed-drive force balance
         mount_support: yes
         rationale: Panel C shows the -5 kV drive, Maxwell attraction, Coulomb opposition, and floating clip.

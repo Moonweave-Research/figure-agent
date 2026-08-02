@@ -49,6 +49,7 @@ protected_relations:
   - trapped_charge_remains_on_same_specimen_after_isolation
   - representative_charge_markers_remain_inside_film
   - force_vector_origins_touch_declared_body
+  - residual_attraction_vector_is_shorter_than_drive_on_attraction
   - same_mounted_film_scale_across_panels
   - coulomb_term_changes_sign_with_drive_polarity
   - maxwell_baseline_is_polarity_independent

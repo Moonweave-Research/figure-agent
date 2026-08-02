@@ -547,6 +547,17 @@ def test_finite_width_charge_markers_and_force_origins_keep_visual_ownership() -
     assert "cuts through it from the far edge" in normalized
 
 
+def test_weaker_residual_force_keeps_a_shorter_lighter_vector() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(skill.split())
+
+    assert "residual-state vector visibly shorter and lighter" in normalized
+    assert "Do not lengthen a weaker vector to fit its label" in normalized
+    assert "test the relative arrow spans from their declared endpoints" in normalized
+
+
 def test_chemical_panel_whitespace_follows_reaction_flow() -> None:
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
         encoding="utf-8"

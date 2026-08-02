@@ -504,6 +504,11 @@ continuous bend and name that residual state.  Require the smaller deflection
 to remain visibly distinct from drive-on and reverse-bend states at final
 reduction; an unbent isolation cartoon
 silently erases the claimed persistence.
+When force-arrow length is used qualitatively across those sequential states,
+keep the residual-state vector visibly shorter and lighter than the drive-on
+vector. Do not lengthen a weaker vector to fit its label; give the label a
+separate annotation lane and test the relative arrow spans from their declared
+endpoints.
 
 Do not treat an instrument name or capability display such as V/A as proof of
 the variable actually applied, held constant, stepped, or acquired. When the

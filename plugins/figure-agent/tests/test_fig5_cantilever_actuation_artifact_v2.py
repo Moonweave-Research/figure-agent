@@ -316,6 +316,31 @@ def test_fig5_force_origins_bind_to_charge_or_film_surface() -> None:
     assert "(panel-c-force-origin)--(panel-c-coulomb-head)" in panel_c
 
 
+def test_fig5_residual_force_vector_is_visibly_shorter_than_drive_on() -> None:
+    protected = set(_yaml("semantic_contract.yaml")["protected_relations"])
+    assert (
+        "residual_attraction_vector_is_shorter_than_drive_on_attraction"
+        in protected
+    )
+
+    drive = _named_coordinates("A", "panel-a-attraction-")
+    residual = _named_coordinates("B", "panel-b-residual-")
+    drive_span = hypot(
+        drive["panel-a-attraction-head"][0]
+        - drive["panel-a-attraction-origin"][0],
+        drive["panel-a-attraction-head"][1]
+        - drive["panel-a-attraction-origin"][1],
+    )
+    residual_span = hypot(
+        residual["panel-b-residual-head"][0]
+        - residual["panel-b-residual-origin"][0],
+        residual["panel-b-residual-head"][1]
+        - residual["panel-b-residual-origin"][1],
+    )
+    assert residual_span <= 0.78 * drive_span
+    assert "\\draw[forceToward,opacity=0.62]" in _panel_source("B")
+
+
 def test_fig5_panel_c_reserves_copy_for_the_reverse_bend_threshold() -> None:
     tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
         encoding="utf-8"
