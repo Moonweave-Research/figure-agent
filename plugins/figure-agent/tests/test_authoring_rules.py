@@ -530,6 +530,23 @@ def test_bridge_panel_row_height_requires_two_claim_bearing_halves() -> None:
     assert "never justify extra height by the panel title alone" in normalized
 
 
+def test_finite_width_charge_markers_and_force_origins_keep_visual_ownership() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(skill.split())
+
+    assert "full marker silhouette" in normalized
+    assert "fully inside the material body at print reduction" in normalized
+    assert "straddles the outline or floats beside the specimen" in normalized
+    assert "charge-mediated force at the declared charge marker" in normalized
+    assert (
+        "body-level attraction or Maxwell baseline at the specimen surface"
+        in normalized
+    )
+    assert "cuts through it from the far edge" in normalized
+
+
 def test_chemical_panel_whitespace_follows_reaction_flow() -> None:
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
         encoding="utf-8"

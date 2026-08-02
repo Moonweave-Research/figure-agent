@@ -47,6 +47,8 @@ protected_relations:
   - air_gap_coupling_is_capacitor_like_schematic_only
   - source_off_isolation_precedes_drive_polarity_reversal
   - trapped_charge_remains_on_same_specimen_after_isolation
+  - representative_charge_markers_remain_inside_film
+  - force_vector_origins_touch_declared_body
   - same_mounted_film_scale_across_panels
   - coulomb_term_changes_sign_with_drive_polarity
   - maxwell_baseline_is_polarity_independent

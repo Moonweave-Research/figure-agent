@@ -87,6 +87,44 @@ def _cubic_max_x(points: list[tuple[float, float]], samples: int = 2000) -> floa
     )
 
 
+def _named_coordinates(panel_id: str, prefix: str) -> dict[str, tuple[float, float]]:
+    panel = _panel_source(panel_id)
+    matches = re.findall(
+        rf"\\coordinate \(({re.escape(prefix)}[^)]*)\) at "
+        r"\(([-+0-9.]+),([-+0-9.]+)\)",
+        panel,
+    )
+    return {name: (float(x), float(y)) for name, x, y in matches}
+
+
+def _distance_to_cubic(
+    point: tuple[float, float],
+    curve: list[tuple[float, float]],
+    samples: int = 4000,
+) -> float:
+    p0, p1, p2, p3 = curve
+    return min(
+        hypot(
+            point[0]
+            - (
+                (1.0 - t) ** 3 * p0[0]
+                + 3 * (1.0 - t) ** 2 * t * p1[0]
+                + 3 * (1.0 - t) * t**2 * p2[0]
+                + t**3 * p3[0]
+            ),
+            point[1]
+            - (
+                (1.0 - t) ** 3 * p0[1]
+                + 3 * (1.0 - t) ** 2 * t * p1[1]
+                + 3 * (1.0 - t) * t**2 * p2[1]
+                + t**3 * p3[1]
+            ),
+        )
+        for index in range(samples + 1)
+        for t in (index / samples,)
+    )
+
+
 def test_fig5_declares_a_width_limited_physical_print_contract() -> None:
     contract = _yaml("spec.yaml")["final_size_contract"]
 
@@ -242,6 +280,40 @@ def test_fig5_binds_conditional_coulomb_force_to_a_visible_trapped_charge() -> N
     assert force_origin["epistemic_status"] == "conditional"
     assert panel_c.count("\\node[qmark]") >= 3
     assert re.search(r"\\draw\[forceAway\] \([^)]*\)--\([^)]*\);", panel_c)
+
+
+def test_fig5_charge_markers_remain_inside_each_cantilever() -> None:
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
+        encoding="utf-8"
+    )
+    assert "minimum size=1.00mm" in tex
+
+    expected_counts = {"A": 3, "B": 4, "C": 3}
+    for panel_id, expected_count in expected_counts.items():
+        coordinates = _named_coordinates(panel_id, f"panel-{panel_id.lower()}-q")
+        if panel_id == "C":
+            coordinates.update(
+                _named_coordinates(panel_id, "panel-c-force-origin")
+            )
+        assert len(coordinates) == expected_count
+        assert all(
+            _distance_to_cubic(point, _cantilever_centerline(panel_id)) <= 0.012
+            for point in coordinates.values()
+        ), coordinates
+
+
+def test_fig5_force_origins_bind_to_charge_or_film_surface() -> None:
+    protected = set(_yaml("semantic_contract.yaml")["protected_relations"])
+    assert "representative_charge_markers_remain_inside_film" in protected
+    assert "force_vector_origins_touch_declared_body" in protected
+
+    panel_a = _panel_source("A")
+    panel_b = _panel_source("B")
+    panel_c = _panel_source("C")
+    assert "(panel-a-attraction-origin)--(panel-a-attraction-head)" in panel_a
+    assert "(panel-b-residual-origin)--(panel-b-residual-head)" in panel_b
+    assert "(panel-c-maxwell-origin)--(panel-c-maxwell-head)" in panel_c
+    assert "(panel-c-force-origin)--(panel-c-coulomb-head)" in panel_c
 
 
 def test_fig5_panel_c_reserves_copy_for_the_reverse_bend_threshold() -> None:
@@ -402,9 +474,12 @@ def test_fig5_force_and_gap_endpoints_bind_to_rendered_beam_geometry() -> None:
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
     assert re.search(r"\\draw\[gapDimension\] \([^)]*\)--\([^)]*\);", panel_a)
-    assert re.search(
-        r"\\draw\[forceToward,opacity=0\.62\] \([^)]*\)--\([^)]*\);",
-        panel_b,
+    assert "\\coordinate (panel-b-residual-origin)" in panel_b
+    assert "\\coordinate (panel-b-residual-head)" in panel_b
+    assert (
+        "\\draw[forceToward,opacity=0.62]\n"
+        "    (panel-b-residual-origin)--(panel-b-residual-head);"
+        in panel_b
     )
 
 

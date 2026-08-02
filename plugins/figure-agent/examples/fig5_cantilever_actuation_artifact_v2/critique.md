@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-02T01:27:51Z'
+generated_at: '2026-08-02T01:45:17Z'
 generator: critique_brief.py
 generator_version: sha256:97044e8f0e58d58dc347929c82e321ee15d89470716a1dbd83433a254231d809
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:c08ec486be379d02c696f86bba029ba67383a743d05c7473684093c951d0fe35
+critique_input_hash: sha256:9c38ca4bfc1ee62953b72794b4d85868f955209260b082befbaf74ceda56df2e
 verdict: ready
 findings: []
 panels: []
@@ -14,8 +14,8 @@ audit_enumeration:
     components:
       - component: actuation-charge state
         mount_support: yes
-        rationale: Panel A shows the mounted cantilever, nearby drive electrode, air gap, and retained charge.
-        connections: The attraction arrow and +5 kV label bind the field-on state to the same specimen.
+        rationale: Panel A shows the mounted cantilever, nearby drive electrode, air gap, and retained charge fully contained by the film.
+        connections: The attraction arrow begins at the film surface, while the +5 kV label binds the field-on state to the drive electrode.
       - component: source-off floating state
         mount_support: yes
         rationale: Panel B shows the manual lead lift, source OFF, floating clip, and residual attraction.
@@ -23,7 +23,7 @@ audit_enumeration:
       - component: reversed-drive force balance
         mount_support: yes
         rationale: Panel C shows the -5 kV drive, Maxwell attraction, Coulomb opposition, and floating clip.
-        connections: The force arrows and inequality explain the reversed bend condition.
+        connections: The Coulomb arrow begins at a contained charge marker, the Maxwell arrow begins at the film surface, and the inequality explains the reversed bend condition.
       - component: continuous response trace
         mount_support: N/A
         rationale: Panel D begins at t = 0, shows the positive plateau, reversed excursion, and slow recovery.

@@ -843,6 +843,16 @@ free edge of its text box and begin the leader outside the glyphs. A leader that
 starts inside or behind the label is a label-ownership defect even when it ends
 on the correct marker; keep the marker label in its own annotation lane.
 
+For trapped or retained charge drawn on a finite-width specimen, inspect the
+full marker silhouette rather than its nominal center coordinate. Keep every
+co-equal marker fully inside the material body at print reduction; a circle that
+straddles the outline or floats beside the specimen reads as surface charge, a
+detached particle, or an inclusion. Anchor a charge-mediated force at the
+declared charge marker, but anchor a body-level attraction or Maxwell baseline
+at the specimen surface. A force vector that starts across the specimen, cuts
+through it from the far edge, or stops short of its declared body is an ownership
+defect even when its direction and label are correct.
+
 Do not retain a polarity-neutral field trace merely to fill the mechanism scene.
 When a named Maxwell baseline arrow already communicates the field-mediated
 attraction, remove redundant pale curves and a floating $\mathbf{E}$ label unless

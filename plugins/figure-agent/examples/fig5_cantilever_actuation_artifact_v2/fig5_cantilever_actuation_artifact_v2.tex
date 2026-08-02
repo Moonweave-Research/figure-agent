@@ -37,8 +37,8 @@
     inner sep=0pt,minimum size=2.8pt},
   baselineArrow/.style={-{Stealth[length=3.6pt,width=2.6pt]},cGray!62!black,
     line width=0.62pt},
-  qmark/.style={circle,fill=cRed!80!black,draw=cRed!95!black,line width=0.25pt,
-    inner sep=0pt,minimum size=1.28mm},
+  qmark/.style={circle,fill=cRed!82!black,draw=cRed!92!black,line width=0.25pt,
+    inner sep=0pt,minimum size=1.00mm},
   axis/.style={-{Stealth[length=3.2pt,width=2.4pt]},cGray!72!black,
     line width=0.62pt},
 ]
@@ -83,14 +83,20 @@
   \draw[driveBiasLeader] (3.57,4.34)--(3.57,4.62);
   \node[labelStd,text=cRed!82!black,anchor=south] at (3.57,4.62)
     {$+5\,\mathrm{kV}$};
-  \node[qmark] at (1.41,3.56) {};
-  \node[qmark] at (1.50,2.88) {};
-  \node[qmark] at (1.82,2.20) {};
+  % Representative retained charges sit on the material centerline. Keeping
+  % each marker inside the finite-width member avoids a detached-particle
+  % reading at print reduction.
+  \coordinate (panel-a-q1) at (1.43,3.58);
+  \coordinate (panel-a-q2) at (1.61,2.97);
+  \coordinate (panel-a-q3) at (1.90,2.38);
+  \node[qmark] at (panel-a-q1) {};
+  \node[qmark] at (panel-a-q2) {};
+  \node[qmark] at (panel-a-q3) {};
   % Anchor the trap label from its right edge so the leader starts outside the
   % glyph box instead of running through the trailing charge subscript.
   \node[labelStd,text=cRed!80!black,anchor=east] at (1.06,3.04)
     {trapped $q_{\mathrm{tr}}$};
-  \draw[leader,cRed!58!black] (1.13,3.08)--(1.41,3.56);
+  \draw[leader,cRed!58!black] (1.13,3.08)--(panel-a-q1);
 
   % A true dimension arrow with witness ticks keeps the air gap distinct from
   % the force arrow and avoids the hooked legacy dimension glyphs at print scale.
@@ -98,8 +104,12 @@
   \draw[gapWitness] (3.37,1.88)--(3.37,2.17);
   \draw[gapDimension] (2.56,2.02)--(3.33,2.02);
   \node[labelMute,anchor=south] at (2.94,2.14) {air gap};
-  \draw[forceToward] (1.44,3.02)--(2.84,3.02);
-  \node[labelStd,text=cRed!84!black,anchor=south] at (2.34,3.08)
+  % The vector begins on the electrode-facing surface instead of cutting
+  % through the film from its opposite edge.
+  \coordinate (panel-a-attraction-origin) at (1.73,2.97);
+  \coordinate (panel-a-attraction-head) at (2.84,2.97);
+  \draw[forceToward] (panel-a-attraction-origin)--(panel-a-attraction-head);
+  \node[labelStd,text=cRed!84!black,anchor=south east] at (2.82,3.05)
     {attraction};
 
   \node[labelMute,align=left,anchor=west] at (0.42,0.92)
@@ -131,17 +141,24 @@
   \draw[beamInner]
     (panel-b-beam-origin)
       .. controls (1.69,3.45) and (1.75,2.30) .. (2.10,1.65);
-  \node[qmark] at (1.72,3.43) {};
-  \node[qmark] at (1.87,2.80) {};
-  \node[qmark] at (1.98,2.15) {};
-  \node[qmark] at (2.06,1.78) {};
+  \coordinate (panel-b-q1) at (1.70,3.59);
+  \coordinate (panel-b-q2) at (1.75,2.98);
+  \coordinate (panel-b-q3) at (1.86,2.34);
+  \coordinate (panel-b-q4) at (1.99,1.90);
+  \node[qmark] at (panel-b-q1) {};
+  \node[qmark] at (panel-b-q2) {};
+  \node[qmark] at (panel-b-q3) {};
+  \node[qmark] at (panel-b-q4) {};
   \node[labelStd,text=cRed!80!black,anchor=east] at (1.10,2.80)
     {retained $q_{\mathrm{tr}}$};
-  \draw[leader,cRed!58!black] (1.16,2.73)--(1.87,2.80);
+  \draw[leader,cRed!58!black] (1.16,2.73)--(panel-b-q2);
   \fill[cGray!28] (3.42,1.40) rectangle (3.70,4.34);
   \draw[apparatus] (3.42,1.40) rectangle (3.70,4.34);
-  \draw[forceToward,opacity=0.62] (1.80,3.02)--(3.10,3.02);
-  \node[labelStd,text=cRed!72!black,anchor=south] at (2.60,3.08)
+  \coordinate (panel-b-residual-origin) at (1.87,3.02);
+  \coordinate (panel-b-residual-head) at (3.10,3.02);
+  \draw[forceToward,opacity=0.62]
+    (panel-b-residual-origin)--(panel-b-residual-head);
+  \node[labelStd,text=cRed!72!black,anchor=south] at (2.60,3.22)
     {residual attraction};
   % Show the manual operation as two disconnected lead terminals, not as an
   % abstract pair of bars: source OFF, then the lead is physically lifted.
@@ -186,14 +203,17 @@
   \draw[beamInner]
     (panel-c-beam-origin)
       .. controls (1.43,3.45) and (1.00,2.25) .. (0.68,1.65);
-  \node[qmark] at (1.39,3.30) {};
+  \coordinate (panel-c-q1) at (1.37,3.58);
+  \coordinate (panel-c-force-origin) at (0.98,2.32);
+  \coordinate (panel-c-q3) at (0.80,1.89);
+  \node[qmark] at (panel-c-q1) {};
   % The force vector must originate at a visible representative charge, rather
   % than visually cutting through the cantilever as a detached annotation.
-  \node[qmark] at (1.24,2.38) {};
-  \node[qmark] at (0.70,1.72) {};
+  \node[qmark] at (panel-c-force-origin) {};
+  \node[qmark] at (panel-c-q3) {};
   \node[labelStd,text=cRed!80!black,anchor=east] at (0.82,3.30)
     {$q_{\mathrm{tr}}$};
-  \draw[leader,cRed!58!black] (0.88,3.24)--(1.39,3.30);
+  \draw[leader,cRed!58!black] (0.88,3.24)--(panel-c-q1);
   \fill[cGray!28] (3.44,1.40) rectangle (3.72,4.34);
   \draw[apparatus] (3.44,1.40) rectangle (3.72,4.34);
   % The reversed source uses the same terminal rail so polarity ownership is
@@ -201,10 +221,15 @@
   \draw[driveBiasLeader] (3.58,4.34)--(3.58,4.62);
   \node[labelStd,text=cRed!82!black,anchor=south] at (3.58,4.62)
     {$-5\,\mathrm{kV}$};
-  \draw[baselineArrow] (1.49,3.12)--(2.30,3.12);
-  \node[labelStd,anchor=south,text=cGray!74!black] at (2.48,3.18)
+  % Maxwell stress is a body-level attraction: its tail touches the film
+  % surface but does not borrow the trapped-charge marker as its origin.
+  \coordinate (panel-c-maxwell-origin) at (1.36,3.12);
+  \coordinate (panel-c-maxwell-head) at (2.30,3.12);
+  \draw[baselineArrow] (panel-c-maxwell-origin)--(panel-c-maxwell-head);
+  \node[labelStd,anchor=south,text=cGray!74!black] at (2.36,3.18)
     {Maxwell attraction};
-  \draw[forceAway] (1.24,2.38)--(0.18,2.38);
+  \coordinate (panel-c-coulomb-head) at (0.18,2.32);
+  \draw[forceAway] (panel-c-force-origin)--(panel-c-coulomb-head);
   \node[labelStd,text=cRed!84!black,anchor=south east] at (0.92,2.50)
     {Coulomb};
   \node[labelStd,anchor=north] at (2.24,0.82)
