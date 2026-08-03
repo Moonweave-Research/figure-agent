@@ -20,6 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from current_candidate import resolve_current_candidate  # noqa: E402
 from diff_pdf_content import expand_pdf, strip_metadata  # noqa: E402
 from git_tracked import is_tracked  # noqa: E402
 
@@ -29,6 +30,21 @@ EXPORT_STALE = "STALE"
 EXPORT_FRESH = "FRESH"
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _current_build_pdf(example_dir: Path, name: str) -> Path | None:
+    candidate = resolve_current_candidate(example_dir)
+    if candidate.get("state") == "NOT_DECLARED":
+        return example_dir / "build" / f"{name}.pdf"
+    if candidate.get("state") != "VALID":
+        return None
+    evidence_paths = candidate.get("evidence_paths")
+    render_relative = (
+        evidence_paths.get("render_pdf") if isinstance(evidence_paths, dict) else None
+    )
+    if not isinstance(render_relative, str) or candidate.get("render_state") != "FRESH":
+        return None
+    return (example_dir / render_relative).resolve()
 
 
 def compute_pdf_content_hash(pdf_path: Path) -> bytes:
@@ -42,7 +58,7 @@ def compute_pdf_content_hash(pdf_path: Path) -> bytes:
 def compute_export_state(example_dir: Path, name: str) -> str:
     """Return one of MISSING | TRACKED_GOLDEN | STALE | FRESH."""
     exports_pdf = example_dir / "exports" / f"{name}.pdf"
-    build_pdf = example_dir / "build" / f"{name}.pdf"
+    build_pdf = _current_build_pdf(example_dir, name)
 
     if not exports_pdf.is_file():
         return EXPORT_MISSING
@@ -61,7 +77,7 @@ def compute_export_state(example_dir: Path, name: str) -> str:
     ):
         return EXPORT_STALE
 
-    if not build_pdf.is_file():
+    if build_pdf is None or not build_pdf.is_file():
         return EXPORT_STALE  # exports exist but build/ is gone — treat as stale
     try:
         exports_hash = compute_pdf_content_hash(exports_pdf)

@@ -7,6 +7,7 @@ asserting build/PDF == exports/PDF after run_export.py succeeds.
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import sys
@@ -70,6 +71,38 @@ def test_state_fresh_when_exports_pdf_matches_build(tmp_path: Path) -> None:
     (exports / "fix_fresh.tif").write_bytes(b"TIFF")
     (exports / "fix_fresh.png").write_bytes(b"PNG")
     assert compute_export_state(fixture, "fix_fresh") == EXPORT_FRESH
+
+
+def test_state_fresh_against_declared_current_candidate_render(tmp_path: Path) -> None:
+    fixture = _scaffold_minimal_fixture(tmp_path, "fix_candidate", body="root")
+    other = _scaffold_minimal_fixture(tmp_path, "candidate_source", body="candidate")
+    candidate = fixture / "review" / "repair-c1"
+    (candidate / "build").mkdir(parents=True)
+    (candidate / "repaired.tex").write_text("% candidate\n", encoding="utf-8")
+    candidate_pdf = candidate / "build" / "repaired.pdf"
+    shutil.copy(other / "build" / "candidate_source.pdf", candidate_pdf)
+    (fixture / "review" / "current-candidate.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.current-candidate-pointer.v1",
+                "fixture": "fix_candidate",
+                "candidate_id": "repair-c1",
+                "candidate_root": "review/repair-c1",
+                "source_path": "repaired.tex",
+                "evidence": {"render_pdf": "build/repaired.pdf"},
+                "promotion_state": "candidate_only",
+                "human_gate": "pending",
+            }
+        ),
+        encoding="utf-8",
+    )
+    exports = fixture / "exports"
+    shutil.copy(candidate_pdf, exports / "fix_candidate.pdf")
+    (exports / "fix_candidate.svg").write_bytes(b"<svg/>")
+    (exports / "fix_candidate.tif").write_bytes(b"TIFF")
+    (exports / "fix_candidate.png").write_bytes(b"PNG")
+
+    assert compute_export_state(fixture, "fix_candidate") == EXPORT_FRESH
 
 
 def test_state_stale_when_sibling_missing(tmp_path: Path) -> None:

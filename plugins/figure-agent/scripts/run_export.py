@@ -32,6 +32,7 @@ SCRIPT_IMPORT_DIRS = (
 for script_dir in reversed(SCRIPT_IMPORT_DIRS):
     sys.path.insert(0, str(script_dir))
 
+import current_candidate  # noqa: E402
 import fixture_identity  # noqa: E402
 import runtime_paths  # noqa: E402
 from check_tex_assertions import BLOCKING_STATUSES as TEX_BLOCKING_STATUSES  # noqa: E402
@@ -65,11 +66,17 @@ from status import (  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _regenerate(example_dir: Path, name: str, plugin_root: Path | None = None) -> None:
+def _regenerate(
+    example_dir: Path,
+    name: str,
+    *,
+    build_pdf: Path | None = None,
+    plugin_root: Path | None = None,
+) -> None:
     plugin_root = runtime_paths.resolve_runtime_paths(
         plugin_root=plugin_root or REPO_ROOT
     ).plugin_root
-    build_pdf = example_dir / "build" / f"{name}.pdf"
+    build_pdf = build_pdf or example_dir / "build" / f"{name}.pdf"
     exports_dir = example_dir / "exports"
     exports_dir.mkdir(parents=True, exist_ok=True)
     exports_pdf = exports_dir / f"{name}.pdf"
@@ -102,43 +109,83 @@ def _load_spec(spec_path: Path) -> dict:
     return data if isinstance(data, dict) else {}
 
 
-def _live_tex_blockers(example_dir: Path, name: str) -> list[dict]:
+def _export_inputs(example_dir: Path, name: str) -> tuple[Path, Path]:
+    """Resolve the source/render pair status already treats as current.
+
+    An explicit current-candidate pointer is evidence selection, not promotion:
+    exports remain draft artifacts under the fixture root and acceptance stays
+    human-gated. Invalid or incomplete pointers fail closed instead of silently
+    exporting a different root source.
+    """
+
+    candidate = current_candidate.resolve_current_candidate(example_dir)
+    if candidate.get("state") == "NOT_DECLARED":
+        return (
+            example_dir / f"{name}.tex",
+            example_dir / "build" / f"{name}.pdf",
+        )
+    if candidate.get("state") != "VALID":
+        raise ValueError(
+            "current candidate is invalid: " + str(candidate.get("reason") or "unknown")
+        )
+    evidence_paths = candidate.get("evidence_paths")
+    render_relative = (
+        evidence_paths.get("render_pdf") if isinstance(evidence_paths, dict) else None
+    )
+    source_relative = candidate.get("source_path")
+    if not isinstance(source_relative, str) or not isinstance(render_relative, str):
+        raise ValueError("current candidate source/render evidence is incomplete")
+    source_path = (example_dir / source_relative).resolve()
+    build_pdf = (example_dir / render_relative).resolve()
+    if candidate.get("render_state") != "FRESH":
+        raise ValueError(
+            "current candidate render is not fresh: "
+            + str(candidate.get("render_state") or "unknown")
+        )
+    return source_path, build_pdf
+
+
+def _live_tex_blockers(
+    example_dir: Path, name: str, tex_path: Path | None = None
+) -> list[dict]:
     """Re-run the tex-assertion check against the current source at export time.
 
     Never reads build/tex_assertions.json: it is gitignored (absent on a fresh
     checkout) and goes stale when .tex is edited without recompiling, so trusting
     it fails open on the reversed-arrow physics this gate exists to catch.
     """
+    tex_path = tex_path or example_dir / f"{name}.tex"
     assertions = parse_tex_assertions(
-        _load_spec(example_dir / "spec.yaml"), source_name=f"{name}.tex"
+        _load_spec(example_dir / "spec.yaml"), source_name=tex_path.name
     )
     if not assertions:
         return []
-    tex_path = example_dir / f"{name}.tex"
     if not tex_path.is_file():
         return [
             {
                 "id": assertions[0]["id"],
                 "status": "anchor_missing",
-                "message": f"{name}.tex missing; cannot verify declared tex_assertions",
+                "message": f"{tex_path} missing; cannot verify declared tex_assertions",
             }
         ]
     issues = check_tex_assertions(tex_path.read_text(encoding="utf-8"), assertions)
     return [issue for issue in issues if issue["status"] in TEX_BLOCKING_STATUSES]
 
 
-def _live_semantic_blockers(example_dir: Path, name: str) -> list[dict]:
+def _live_semantic_blockers(
+    example_dir: Path, name: str, pdf_path: Path | None = None
+) -> list[dict]:
     """Re-run the semantic-assertion check against the current render at export time."""
     assertions = parse_semantic_assertions(_load_spec(example_dir / "spec.yaml"))
     if not assertions:
         return []
-    pdf_path = example_dir / "build" / f"{name}.pdf"
+    pdf_path = pdf_path or example_dir / "build" / f"{name}.pdf"
     if not pdf_path.is_file():
         return [
             {
                 "id": assertions[0]["id"],
                 "status": "anchor_missing",
-                "message": f"build/{name}.pdf missing; cannot verify declared semantic_assertions",
+                "message": f"{pdf_path} missing; cannot verify declared semantic_assertions",
             }
         ]
     words, _ = extract_pdf_words_and_page(pdf_path)
@@ -188,6 +235,12 @@ def main(
         return 1
 
     try:
+        tex_path, build_pdf = _export_inputs(example_dir, args.name)
+    except ValueError as exc:
+        print(f"run_export.py: {exc}; run /fig_status and /fig_compile first", file=sys.stderr)
+        return 1
+
+    try:
         critique_state = compute_critique_state(example_dir, args.name)
     except ValueError as exc:
         print(f"run_export.py: invalid spec.yaml: {exc}", file=sys.stderr)
@@ -229,11 +282,14 @@ def main(
     # never trusted (gitignored => absent on fresh checkout; stale after a .tex edit
     # without recompile). Malformed assertions or an unreadable render fail closed.
     for label, compute in (
-        ("tex_assertions", _live_tex_blockers),
-        ("semantic_assertions", _live_semantic_blockers),
+        ("tex_assertions", lambda: _live_tex_blockers(example_dir, args.name, tex_path)),
+        (
+            "semantic_assertions",
+            lambda: _live_semantic_blockers(example_dir, args.name, build_pdf),
+        ),
     ):
         try:
-            blockers = compute(example_dir, args.name)
+            blockers = compute()
         except (TexAssertionError, SemanticAssertionError) as exc:
             print(
                 f"run_export.py: {label}_invalid for {args.name}: {exc}; "
@@ -273,15 +329,23 @@ def main(
         return 0  # not an error — golden protection is the success path
 
     # Regenerate path requires build/PDF.
-    build_pdf = example_dir / "build" / f"{args.name}.pdf"
     if not build_pdf.is_file():
         print(
-            f"run_export.py: build/{args.name}.pdf not found; run /fig_compile first",
+            f"run_export.py: {build_pdf} not found; run /fig_compile first",
             file=sys.stderr,
         )
         return 1
 
-    _regenerate(example_dir, args.name, plugin_root=paths.plugin_root)
+    root_build_pdf = example_dir / "build" / f"{args.name}.pdf"
+    if build_pdf == root_build_pdf:
+        _regenerate(example_dir, args.name, plugin_root=paths.plugin_root)
+    else:
+        _regenerate(
+            example_dir,
+            args.name,
+            build_pdf=build_pdf,
+            plugin_root=paths.plugin_root,
+        )
     print(f"run_export.py: regenerated exports/ for {args.name} (was {state})")
     return 0
 

@@ -372,6 +372,79 @@ def test_run_export_allows_satisfied_tex_source_without_cache(
     assert rc == 0
 
 
+def test_run_export_uses_declared_current_candidate_source_and_render(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = _make_reference_fixture(tmp_path)
+    fixture = repo / "examples" / "ref_fig"
+    candidate = fixture / "review" / "repair-c1"
+    (candidate / "build").mkdir(parents=True)
+    candidate_source = candidate / "repaired.tex"
+    candidate_pdf = candidate / "build" / "repaired.pdf"
+    candidate_source.write_text(_SATISFYING_TEX, encoding="utf-8")
+    candidate_pdf.write_bytes(b"%PDF current candidate")
+    (fixture / "ref_fig.tex").write_text(_VIOLATING_TEX, encoding="utf-8")
+    (fixture / "spec.yaml").write_text(
+        "\n".join(
+            [
+                "name: ref_fig",
+                "style_profile: polymer-default",
+                "panels: []",
+                _TEX_ASSERTION_BLOCK.replace(
+                    "  - id: force-repels",
+                    "  - id: force-repels\n    source_name: repaired.tex",
+                ),
+                "semantic_assertions:",
+                "  - id: shallow-above-deep",
+                "    relation: above",
+                "    subject: shallow",
+                "    reference: deep",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (fixture / "review" / "current-candidate.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.current-candidate-pointer.v1",
+                "fixture": "ref_fig",
+                "candidate_id": "repair-c1",
+                "candidate_root": "review/repair-c1",
+                "source_path": "repaired.tex",
+                "evidence": {"render_pdf": "build/repaired.pdf"},
+                "promotion_state": "candidate_only",
+                "human_gate": "pending",
+            }
+        ),
+        encoding="utf-8",
+    )
+    shallow = {"text": "shallow", "xmin": 0.0, "xmax": 10.0, "ymin": 5.0, "ymax": 15.0}
+    deep = {"text": "deep", "xmin": 0.0, "xmax": 10.0, "ymin": 95.0, "ymax": 105.0}
+    inspected_pdfs: list[Path] = []
+    regenerated: list[Path] = []
+
+    def fake_extract(pdf: Path):
+        inspected_pdfs.append(pdf)
+        return [shallow, deep], (600.0, 400.0)
+
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(run_export, "extract_pdf_words_and_page", fake_extract)
+    monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: "MISSING")
+    monkeypatch.setattr(
+        run_export,
+        "_regenerate",
+        lambda _example, _name, *, build_pdf, plugin_root=None: regenerated.append(build_pdf),
+    )
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
+
+    rc = run_export.main()
+
+    assert rc == 0
+    assert inspected_pdfs == [candidate_pdf]
+    assert regenerated == [candidate_pdf]
+
+
 def test_run_export_ignores_tex_assertion_scoped_to_another_source(tmp_path: Path) -> None:
     repo = _make_reference_fixture(tmp_path)
     _write_tex_assertion_fixture(

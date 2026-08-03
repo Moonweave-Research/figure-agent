@@ -254,7 +254,8 @@ polish backport, or actions the current mode forbids.
 /fig_context_pack <name>
                          read-only authoring context pack for explicit
                          briefing/spec/design/style/rule/semantic contracts
-/fig_export <name>       PDF / SVG (dvisvgm preserves text) / TIFF / PNG
+/fig_export <name>       candidate-aware PDF / outlined SVG / TIFF / PNG;
+                         export never promotes or accepts a candidate
 /fig_e2e_smoke <name>    deterministic compile/export/status/loop smoke harness
 /fig_status [<name>]     stage + render/critique/export/acceptance/final_ready state inference
 /fig_drive <name> --mode <mode> --goal "<goal>" --dry-run

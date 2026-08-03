@@ -38,8 +38,9 @@ Each slice must produce or inspect one real figure artifact (or a defensible no-
 ## 2. Product boundaries
 ### 2.1 Representation roles
 - **TikZ/TeX** is the current default editable publication-authoring path.
-- **SVG** is a derived export, inspection, interchange, or bounded fragment surface.
+- **SVG** is a derived export surface; publication exports outline glyphs to preserve PDF text geometry, while editable/searchable text remains the TeX authority.
   Direct-SVG generation is not an active backend-development target.
+- A valid `review/current-candidate.json` binds nested-repair export evidence without promotion or acceptance; invalid, incomplete, or stale bindings fail closed.
 - **Python** is the control plane for contracts, compilation, observation,
   attribution, repair, provenance, and evaluation, not an illustration language.
 - **PDF and PNG** are rendered evidence surfaces, not editable authority.

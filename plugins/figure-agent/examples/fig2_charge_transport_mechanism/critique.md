@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_charge_transport_mechanism
-generated_at: '2026-07-31T13:40:13Z'
+generated_at: '2026-08-03T08:05:16Z'
 generator: Codex host vision critique
-generator_version: sha256:edd41a94861880aed8212edf1477436dd399c6e4c7b3f592b96045d240749654
+generator_version: sha256:97044e8f0e58d58dc347929c82e321ee15d89470716a1dbd83433a254231d809
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:f499edf5664945e79c42ba7813b9d8c756181608e0a7baddde1a75bebe0f90c9
+critique_input_hash: sha256:c7c3ae645fe5009a5621b0f5a26e1b1c5d1c8d772036b01dc3ca08bc459bfbd5
 verdict: ready
 findings:
   - id: C001

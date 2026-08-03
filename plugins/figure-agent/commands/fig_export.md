@@ -4,6 +4,11 @@ description: Export figure to PDF / SVG / TIFF / PNG (600 dpi raster) in exports
 
 Export final figure.
 
+The editable text authority remains TeX. Generated SVG glyphs are outlined so
+browser and rasterizer font metrics cannot alter publication-visible spacing.
+When a valid `review/current-candidate.json` exists, export uses that candidate's
+bound source and fresh render without promoting it or changing the human gate.
+
 **Usage**: `/fig_export <name>`
 
 Run from the plugin root.

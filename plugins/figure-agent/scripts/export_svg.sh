@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# export_svg.sh — PDF → SVG with text preserved as <text> nodes.
+# export_svg.sh — PDF → renderer-stable SVG with glyphs outlined as paths.
 # Usage: scripts/export_svg.sh <input.pdf> <output.svg>
 #
-# Uses dvisvgm in --pdf mode so labels survive as semantic <text> elements
-# instead of being outlined into glyph paths. Fonts are embedded via woff2
-# so the SVG renders correctly without external font files.
+# The editable authority is TeX.  The derived SVG prioritizes visual fidelity:
+# embedded-font <text> output has shown renderer-dependent kerning drift in
+# librsvg, including visibly split voltage labels and panel titles.  Outlined
+# glyphs keep the PDF geometry stable across browsers and rasterizers.
 #
 # Requirements:
 #   - dvisvgm (ships with TeX Live; standalone via `brew install dvisvgm`)
@@ -40,7 +41,7 @@ if ! command -v dvisvgm >/dev/null 2>&1; then
 fi
 
 # --pdf: take a PDF as input (requires mutool or compatible Ghostscript)
-# --font-format=woff2: embed fonts so <text> elements render out of the box
-dvisvgm --pdf --font-format=woff2 "$PDF_INPUT" -o "$SVG_OUTPUT" >/dev/null
+# --no-fonts=1: emit reusable glyph paths instead of renderer-dependent fonts
+dvisvgm --pdf --no-fonts=1 "$PDF_INPUT" -o "$SVG_OUTPUT" >/dev/null
 
 echo "Generated: $SVG_OUTPUT"
