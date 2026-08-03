@@ -41,6 +41,24 @@ def test_input_manifest_hash_is_stable_for_path_order(tmp_path: Path) -> None:
     )
 
 
+def test_critique_generator_version_tracks_prompt_dependency_changes(tmp_path: Path) -> None:
+    generator = tmp_path / "critique_brief.py"
+    sections = tmp_path / "critique_brief_sections.py"
+    vocabulary = tmp_path / "critique_schema_vocab.py"
+    generator.write_text("# generator\n", encoding="utf-8")
+    sections.write_text("PROMPT = 'first'\n", encoding="utf-8")
+    vocabulary.write_text("IDS = ('first',)\n", encoding="utf-8")
+
+    before = critique_generator_version(generator)
+    sections.write_text("PROMPT = 'second'\n", encoding="utf-8")
+    after_sections = critique_generator_version(generator)
+    vocabulary.write_text("IDS = ('second',)\n", encoding="utf-8")
+    after_vocabulary = critique_generator_version(generator)
+
+    assert before != after_sections
+    assert after_sections != after_vocabulary
+
+
 def _write_basic_critique_fixture(tmp_path: Path) -> tuple[Path, Path]:
     example_dir = tmp_path / "examples" / "demo"
     example_dir.mkdir(parents=True)

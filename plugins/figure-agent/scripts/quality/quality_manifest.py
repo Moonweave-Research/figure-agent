@@ -28,6 +28,10 @@ CRITIQUE_SCHEMA_VERSION_V1_10 = "figure-agent.critique.v1.10"
 CRITIQUE_SCHEMA_VERSION_V1_14 = "figure-agent.critique.v1.14"
 CRITIQUE_SCHEMA_VERSION_V1_17 = "figure-agent.critique.v1.17"
 _CRITIQUE_METADATA_KEYS = ("generator_version", "rubric_version", "critique_input_hash")
+_CRITIQUE_GENERATOR_DEPENDENCIES = (
+    "critique_brief_sections.py",
+    "critique_schema_vocab.py",
+)
 
 
 def file_sha256(path: Path) -> str:
@@ -157,7 +161,23 @@ def compute_critique_input_hash(
 def critique_generator_version(
     generator_path: Path = REPO_ROOT / "scripts" / "critique_brief.py",
 ) -> str:
-    return file_sha256(generator_path)
+    """Hash the executable critique prompt surface, not only its entrypoint.
+
+    Temporary compatibility fixtures commonly provide only the entrypoint; in
+    that case retain the historical single-file hash. The installed generator
+    includes prompt sections and closed-set vocabulary beside the entrypoint,
+    so changes to either must stale critiques produced under the old questions.
+    """
+
+    paths = [generator_path]
+    paths.extend(
+        candidate
+        for dependency in _CRITIQUE_GENERATOR_DEPENDENCIES
+        if (candidate := generator_path.parent / dependency).is_file()
+    )
+    if len(paths) == 1:
+        return file_sha256(generator_path)
+    return input_manifest_hash(tuple(paths), base_dir=generator_path.parent)
 
 
 def expected_critique_rubric_version(example_dir: Path) -> str:

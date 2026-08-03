@@ -8,7 +8,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import run_export  # noqa: E402
 import status as status_mod  # noqa: E402
-from quality_manifest import CRITIQUE_RUBRIC_VERSION, file_sha256, input_manifest_hash  # noqa: E402
+from quality_manifest import (  # noqa: E402
+    CRITIQUE_RUBRIC_VERSION,
+    critique_generator_version,
+    input_manifest_hash,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -74,7 +78,7 @@ def _write_hashed_critique(fixture: Path, name: str, critique_input_hash: str) -
         f"fixture: {name}\n"
         "generated_at: 2026-05-17T00:00:00Z\n"
         "generator: critique_brief.py\n"
-        f"generator_version: {file_sha256(REPO_ROOT / 'scripts' / 'critique_brief.py')}\n"
+        f"generator_version: {critique_generator_version()}\n"
         f"rubric_version: {CRITIQUE_RUBRIC_VERSION}\n"
         f"critique_input_hash: {critique_input_hash}\n"
         "verdict: ready\n"
@@ -619,7 +623,7 @@ def test_run_export_blocks_hash_fresh_but_invalid_critique(
         "fixture: ref_fig\n"
         "generated_at: 2026-05-17T00:00:00Z\n"
         "generator: critique_brief.py\n"
-        f"generator_version: {file_sha256(REPO_ROOT / 'scripts' / 'critique_brief.py')}\n"
+        f"generator_version: {critique_generator_version()}\n"
         f"rubric_version: {CRITIQUE_RUBRIC_VERSION}\n"
         f"critique_input_hash: {critique_hash}\n"
         "verdict: ready\n"

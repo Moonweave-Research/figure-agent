@@ -22,6 +22,7 @@ from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
     CRITIQUE_RUBRIC_VERSION_V1_17,
+    critique_generator_version,
     file_sha256,
     input_manifest_hash,
 )
@@ -658,9 +659,7 @@ def _write_hashed_critique(
         )
         for anti_pattern_id in AESTHETIC_ANTIPATTERN_IDS
     )
-    generator_version = generator_version or file_sha256(
-        REPO_ROOT / "scripts" / "critique_brief.py"
-    )
+    generator_version = generator_version or critique_generator_version()
     if rubric_version is None:
         if schema == "figure-agent.critique.v1.17":
             rubric_version = CRITIQUE_RUBRIC_VERSION_V1_17
