@@ -155,7 +155,12 @@ thick-stroke member. Optional `silhouette_morphology_groups` compare declared
 members for cross-panel length/width drift and bend-state ordering. The checker
 reads PDF vectors rather than TikZ coordinates and writes
 `build/silhouette_morphology.json`; strict compile fails on declared violations
-or an unanalyzable target. This is a narrow defect gate, not an aesthetic score:
+or an unanalyzable target. The report binds the current PDF and `spec.yaml`
+hashes, and `/fig_status` surfaces checked/declared coverage, comparison-group
+coverage, and violations under `spine_evidence.silhouette_morphology`. A
+declared but missing, stale, incomplete, invalid, or failing report blocks
+workflow readiness instead of being hidden behind an older passing strict
+receipt. This is a narrow defect gate, not an aesthetic score:
 curvature quality, force-label hierarchy, and publication taste still require
 fresh reduced-scale host and human review. Do not generalize its thresholds
 beyond a validated figure family without new evidence.

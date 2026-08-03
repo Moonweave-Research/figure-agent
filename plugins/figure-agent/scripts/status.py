@@ -76,6 +76,7 @@ SPINE_EVIDENCE_SCHEMA = "figure-agent.spine-evidence-summary.v1"
 PROMOTION_QUEUE_SCHEMA = "figure-agent.promotion-queue.v1"
 STRICT_STATUS_SCHEMA = "figure-agent.strict-status.v1"
 SEMANTIC_CONTRACT_EVIDENCE_SCHEMA = "figure-agent.semantic-contract-evidence.v1"
+SILHOUETTE_MORPHOLOGY_SCHEMA = "figure-agent.silhouette-morphology.v1"
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -788,6 +789,92 @@ def _strict_status_summary(path: Path, example_dir: Path | None = None) -> dict[
     }
 
 
+def _silhouette_morphology_summary(
+    path: Path,
+    example_dir: Path,
+) -> dict[str, Any]:
+    display_path = _json_report_display_path(path, example_dir)
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return {"state": "not_declared", "path": display_path}
+    try:
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        return {"state": "invalid", "path": display_path, "reason": "spec_invalid"}
+    if not isinstance(spec, dict):
+        return {"state": "invalid", "path": display_path, "reason": "spec_invalid"}
+    checks = spec.get("silhouette_morphology_checks")
+    groups = spec.get("silhouette_morphology_groups", [])
+    if checks is None:
+        return {"state": "not_declared", "path": display_path}
+    if not isinstance(checks, list) or not isinstance(groups, list):
+        return {"state": "invalid", "path": display_path, "reason": "declaration_invalid"}
+
+    declared = len(checks)
+    group_declared = len(groups)
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {
+            "state": error,
+            "path": display_path,
+            "declared": declared,
+            "group_declared": group_declared,
+        }
+    assert payload is not None
+    checked = payload.get("checked")
+    group_checked = payload.get("group_checked")
+    violation_count = payload.get("violation_count")
+    results = payload.get("results")
+    report_groups = payload.get("groups")
+    if (
+        payload.get("schema") != SILHOUETTE_MORPHOLOGY_SCHEMA
+        or payload.get("source") != "spec.yaml:silhouette_morphology_checks"
+        or not isinstance(checked, int)
+        or isinstance(checked, bool)
+        or not isinstance(group_checked, int)
+        or isinstance(group_checked, bool)
+        or not isinstance(violation_count, int)
+        or isinstance(violation_count, bool)
+        or not isinstance(results, list)
+        or not isinstance(report_groups, list)
+        or len(results) != checked
+        or len(report_groups) != group_checked
+    ):
+        return {"state": "invalid", "path": display_path}
+
+    render_value = payload.get("render_pdf")
+    if not isinstance(render_value, str) or not render_value.strip():
+        return {"state": "invalid", "path": display_path}
+    render_path = path.parent / Path(render_value).name
+    try:
+        render_hash = hashlib.sha256(render_path.read_bytes()).hexdigest()
+        spec_hash = hashlib.sha256(spec_path.read_bytes()).hexdigest()
+    except OSError:
+        return {"state": "stale", "path": display_path, "reason": "input_missing"}
+    if (
+        payload.get("render_pdf_sha256") != render_hash
+        or payload.get("spec_sha256") != spec_hash
+    ):
+        return {"state": "stale", "path": display_path, "reason": "hash_mismatch"}
+
+    if declared == 0 or checked != declared or group_checked != group_declared:
+        state = "incomplete"
+    elif violation_count:
+        state = "needs_action"
+    else:
+        state = "passed"
+    return {
+        "state": state,
+        "path": display_path,
+        "schema": payload["schema"],
+        "checked": checked,
+        "declared": declared,
+        "group_checked": group_checked,
+        "group_declared": group_declared,
+        "violation_count": violation_count,
+    }
+
+
 def _artifact_display_path(example_dir: Path, path: Path | None) -> str | None:
     if path is None:
         return None
@@ -867,6 +954,10 @@ def _spine_evidence_summary(example_dir: Path, build_dir: Path | None = None) ->
             build_dir / "physics_grounding.json",
             example_dir,
         ),
+        "silhouette_morphology": _silhouette_morphology_summary(
+            build_dir / "silhouette_morphology.json",
+            example_dir,
+        ),
     }
     semantic_contract = sources["semantic_contract"]
     semantic_assertions = sources["semantic_assertions"]
@@ -883,8 +974,11 @@ def _spine_evidence_summary(example_dir: Path, build_dir: Path | None = None) ->
             semantic_assertions["coverage_state"] = "complete"
     states = [str(item.get("state")) for item in sources.values()]
     present_states = {"passed", "present", "validated", "needs_action", "incomplete"}
+    silhouette_state = sources["silhouette_morphology"].get("state")
     if "invalid" in states:
         state = "invalid"
+    elif silhouette_state in {"missing", "stale", "incomplete", "needs_action"}:
+        state = "needs_action"
     elif any(item in states for item in {"needs_action", "incomplete", "stale"}):
         state = "needs_action"
     elif any(item in present_states for item in states):
@@ -1005,6 +1099,17 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
                 candidate_build_dir = (example_dir / render_path).parent
         candidate_info.pop("build_pdf_abs", None)
     result["spine_evidence"] = _spine_evidence_summary(example_dir, candidate_build_dir)
+    silhouette_state = result["spine_evidence"]["silhouette_morphology"].get("state")
+    if silhouette_state in {"missing", "stale", "invalid", "incomplete", "needs_action"}:
+        note = f"silhouette_morphology_{silhouette_state}"
+        if note not in result.setdefault("notes", []):
+            result["notes"].append(note)
+        result["workflow_ready"] = False
+        result["golden_ready"] = False
+        result["release_ready"] = False
+        result["final_ready"] = False
+        if result.get("accepted") is True:
+            result["acceptance_freshness_state"] = "accepted_but_stale"
     result["promotion_queue"] = _promotion_queue_summary(example_dir)
     build_dir = candidate_build_dir or example_dir / "build"
     result["strict_evidence"] = _strict_status_summary(
@@ -1607,6 +1712,7 @@ def _print_single(result: dict) -> None:
         semantic_contract = spine_evidence.get("semantic_contract")
         conventions = spine_evidence.get("convention_receipt")
         physics = spine_evidence.get("physics_grounding")
+        silhouette = spine_evidence.get("silhouette_morphology")
         tex_state = (
             tex_assertions.get("state")
             if isinstance(tex_assertions, dict)
@@ -1629,6 +1735,11 @@ def _print_single(result: dict) -> None:
             if isinstance(semantic_contract, dict)
             else "?"
         )
+        silhouette_state = silhouette.get("state") if isinstance(silhouette, dict) else "?"
+        silhouette_checked = silhouette.get("checked") if isinstance(silhouette, dict) else "?"
+        silhouette_groups = (
+            silhouette.get("group_checked") if isinstance(silhouette, dict) else "?"
+        )
         print(
             "  Spine evidence: "
             f"{spine_evidence.get('state', '?')} "
@@ -1636,7 +1747,8 @@ def _print_single(result: dict) -> None:
             f"semantic_contract={semantic_contract_state} "
             f"semantic_assertions={semantic_assertion_state} "
             f"conventions={convention_state}/{convention_total} "
-            f"physics={physics_status}"
+            f"physics={physics_status} "
+            f"silhouette={silhouette_state}/{silhouette_checked}+{silhouette_groups}"
         )
     final_ready = str(bool(result.get("final_ready"))).lower()
     print(

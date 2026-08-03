@@ -1334,6 +1334,165 @@ def test_spine_marks_zero_semantic_assertion_coverage_incomplete(tmp_path: Path)
     assert spine["state"] == "needs_action"
 
 
+def test_spine_surfaces_hash_bound_silhouette_morphology_evidence(tmp_path: Path) -> None:
+    spec = tmp_path / "spec.yaml"
+    spec.write_text(
+        "silhouette_morphology_checks:\n"
+        "  - id: member-a\n"
+        "silhouette_morphology_groups:\n"
+        "  - id: repeated-members\n",
+        encoding="utf-8",
+    )
+    build = tmp_path / "build"
+    build.mkdir()
+    pdf = build / "figure.pdf"
+    pdf.write_bytes(b"render")
+    (build / "silhouette_morphology.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.silhouette-morphology.v1",
+                "render_pdf": pdf.as_posix(),
+                "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
+                "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+                "source": "spec.yaml:silhouette_morphology_checks",
+                "checked": 1,
+                "group_checked": 1,
+                "violation_count": 0,
+                "results": [{"id": "member-a", "violations": []}],
+                "groups": [{"id": "repeated-members", "violations": []}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    spine = status_mod._spine_evidence_summary(tmp_path, build)
+
+    assert spine["silhouette_morphology"] == {
+        "state": "passed",
+        "path": "build/silhouette_morphology.json",
+        "schema": "figure-agent.silhouette-morphology.v1",
+        "checked": 1,
+        "declared": 1,
+        "group_checked": 1,
+        "group_declared": 1,
+        "violation_count": 0,
+    }
+    assert spine["state"] == "present"
+
+
+def test_spine_fails_loud_when_declared_silhouette_report_is_missing_or_stale(
+    tmp_path: Path,
+) -> None:
+    spec = tmp_path / "spec.yaml"
+    spec.write_text(
+        "silhouette_morphology_checks:\n  - id: member-a\n",
+        encoding="utf-8",
+    )
+    build = tmp_path / "build"
+    build.mkdir()
+
+    missing = status_mod._spine_evidence_summary(tmp_path, build)
+    assert missing["silhouette_morphology"]["state"] == "missing"
+    assert missing["state"] == "needs_action"
+
+    pdf = build / "figure.pdf"
+    pdf.write_bytes(b"current-render")
+    (build / "silhouette_morphology.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.silhouette-morphology.v1",
+                "render_pdf": pdf.as_posix(),
+                "render_pdf_sha256": hashlib.sha256(b"old-render").hexdigest(),
+                "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+                "source": "spec.yaml:silhouette_morphology_checks",
+                "checked": 1,
+                "group_checked": 0,
+                "violation_count": 0,
+                "results": [{"id": "member-a", "violations": []}],
+                "groups": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    stale = status_mod._spine_evidence_summary(tmp_path, build)
+    assert stale["silhouette_morphology"]["state"] == "stale"
+    assert stale["state"] == "needs_action"
+
+
+def test_declared_missing_silhouette_evidence_blocks_ready_status(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "morphology_ready"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "silhouette_morphology_checks:\n  - id: member-a\n",
+        encoding="utf-8",
+    )
+    result = status_mod._finalize_status(
+        {
+            "stage": 4,
+            "name": fig_dir.name,
+            "checks": [],
+            "notes": [],
+            "accepted": True,
+            "exports_substate": "FRESH",
+            "render_state": "FRESH",
+            "critique_state": "FRESH",
+            "export_state": "FRESH",
+            "acceptance_state": "ACCEPTED",
+            "acceptance_freshness_state": "accepted_current",
+            "final_artifact_state": "NONE",
+            "final_artifact_kind": "generated_export",
+            "final_artifact_path": "exports/morphology_ready.svg",
+            "workflow_ready": True,
+            "golden_ready": True,
+            "release_ready": True,
+            "final_ready": True,
+            "publication_gate_state": "NOT_APPLICABLE",
+        },
+        fig_dir,
+    )
+
+    assert result["workflow_ready"] is False
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+    assert result["acceptance_freshness_state"] == "accepted_but_stale"
+    assert result["status_explanation"]["first_blocker"]["code"] == (
+        "silhouette_morphology_missing"
+    )
+
+
+def test_empty_silhouette_declaration_is_not_clean_coverage(tmp_path: Path) -> None:
+    spec = tmp_path / "spec.yaml"
+    spec.write_text("silhouette_morphology_checks: []\n", encoding="utf-8")
+    build = tmp_path / "build"
+    build.mkdir()
+    pdf = build / "figure.pdf"
+    pdf.write_bytes(b"render")
+    (build / "silhouette_morphology.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.silhouette-morphology.v1",
+                "render_pdf": pdf.as_posix(),
+                "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
+                "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+                "source": "spec.yaml:silhouette_morphology_checks",
+                "checked": 0,
+                "group_checked": 0,
+                "violation_count": 0,
+                "results": [],
+                "groups": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    spine = status_mod._spine_evidence_summary(tmp_path, build)
+
+    assert spine["silhouette_morphology"]["state"] == "incomplete"
+    assert spine["state"] == "needs_action"
+
+
 def test_stage_3_missing_briefing_does_not_suggest_export(tmp_path: Path) -> None:
     fig_dir = tmp_path / "legacy_built"
     fig_dir.mkdir()

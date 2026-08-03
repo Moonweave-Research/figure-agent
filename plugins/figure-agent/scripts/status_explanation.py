@@ -71,10 +71,30 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     final_ready = status.get("final_ready")
     release_decision = status.get("release_decision")
     scale_previews = status.get("review_scale_previews")
+    spine_evidence = status.get("spine_evidence")
 
     plugin_state: list[dict[str, Any]] = []
     fixture_freshness: list[dict[str, Any]] = []
     human_blockers: list[dict[str, Any]] = []
+
+    silhouette = (
+        spine_evidence.get("silhouette_morphology")
+        if isinstance(spine_evidence, Mapping)
+        else None
+    )
+    silhouette_state = silhouette.get("state") if isinstance(silhouette, Mapping) else None
+    _append_if(
+        fixture_freshness,
+        silhouette_state in {"missing", "stale", "invalid", "incomplete", "needs_action"},
+        code=f"silhouette_morphology_{silhouette_state}",
+        category=FIXTURE_FRESHNESS,
+        message=(
+            "declared rendered-silhouette evidence is missing, stale, incomplete, "
+            "invalid, or failing; repair the declared morphology contract and recompile."
+        ),
+        next_command=_command(name, "/fig_compile"),
+        manual=silhouette_state == "needs_action",
+    )
 
     paper_plan_state = (
         paper_plan.get("state") if isinstance(paper_plan, Mapping) else None

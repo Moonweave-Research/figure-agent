@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import sys
 from pathlib import Path
 
@@ -248,6 +249,39 @@ def test_group_comparison_accepts_complete_order_without_pairing_error() -> None
     )
 
     assert compared[0]["violations"] == []
+
+
+def test_report_binds_render_and_spec_bytes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    pdf = tmp_path / "figure.pdf"
+    spec = tmp_path / "spec.yaml"
+    pdf.write_bytes(b"render-bytes")
+    spec.write_text(
+        "silhouette_morphology_checks: []\n"
+        "silhouette_morphology_groups: []\n",
+        encoding="utf-8",
+    )
+
+    class _Page:
+        curves: list[dict[str, object]] = []
+
+    class _Document:
+        pages = [_Page()]
+
+        def __enter__(self) -> _Document:
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+    monkeypatch.setattr(morphology.pdfplumber, "open", lambda _path: _Document())
+
+    report = morphology.check_pdf(pdf, spec)
+
+    assert report["render_pdf_sha256"] == hashlib.sha256(pdf.read_bytes()).hexdigest()
+    assert report["spec_sha256"] == hashlib.sha256(spec.read_bytes()).hexdigest()
 
 
 def test_product_contract_keeps_morphology_gate_narrow_and_render_based() -> None:

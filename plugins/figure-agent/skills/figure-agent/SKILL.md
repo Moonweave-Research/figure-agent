@@ -780,6 +780,11 @@ the repeated states in `silhouette_morphology_groups` when length, width, bend
 order, or bend direction carries the comparison. Use the rendered measurements
 as regression evidence only. Passing ratios do not prove that the curvature,
 free-end treatment, or force-label hierarchy has publication-quality finish.
+After compile, require `/fig_status` to expose the hash-bound checked/declared
+member and group counts. A declared morphology contract with a missing, stale,
+incomplete, invalid, or failing report is a workflow-readiness gap even when an
+older strict receipt says `passed`; recompile or repair the named silhouette
+before release routing.
 
 For a qualitative time-response trace, preserve one continuous event-owned
 path from the declared observation origin. Show a hold or isolation interval as

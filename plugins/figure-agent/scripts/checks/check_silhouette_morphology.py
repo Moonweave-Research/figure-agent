@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -19,6 +20,10 @@ CM_TO_PT = 72.0 / 2.54
 
 class SilhouetteMorphologyError(ValueError):
     """Raised when a declared rendered silhouette cannot be analyzed safely."""
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _point(raw: tuple[float, float]) -> complex:
@@ -382,6 +387,8 @@ def check_pdf(pdf_path: Path, spec_path: Path) -> dict[str, Any]:
     return {
         "schema": SCHEMA,
         "render_pdf": pdf_path.as_posix(),
+        "render_pdf_sha256": _sha256(pdf_path),
+        "spec_sha256": _sha256(spec_path),
         "source": "spec.yaml:silhouette_morphology_checks",
         "checked": len(results),
         "group_checked": len(groups),
