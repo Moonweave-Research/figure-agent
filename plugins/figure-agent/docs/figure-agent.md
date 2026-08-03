@@ -4,12 +4,12 @@
 **Effective date:** 2026-07-18
 **Committed baseline:** `c6a28e40` (`codex/figure-agent-closed-loop-reset`)
 
-This is the sole product specification and forward execution authority for Figure Agent. Other specifications, plans, roadmaps, milestone notes, fixture reviews,
-and generated packets are implementation references or historical evidence. They
-cannot change product direction or the next implementation step.
-The baseline names a reproducible starting commit, not a release, quality, or
-publication verdict. A clean worktree at this commit passed 235 targeted baseline
-tests. Future claims require fresh evidence from the slice that makes the claim.
+This is the sole product specification and forward execution authority for Figure
+Agent. Other plans, roadmaps, reviews, and generated packets are implementation
+references or historical evidence and cannot change product direction. The
+baseline is a reproducible starting commit, not a release, quality, or publication
+verdict; its clean worktree passed 235 targeted baseline tests. Future claims
+require fresh evidence from the slice that makes the claim.
 
 ## 1. Outcome
 Figure Agent does not compete with an LLM as a second general drawing model. The
@@ -129,14 +129,10 @@ directory is not scientific evidence.
 
 Evidence remains layered:
 
-1. **Machine-valid:** schemas, hashes, compilation, declared assertions, and
-   deterministic checks pass.
-2. **Visually re-reviewed:** the current render and review crops are fresh, and
-   post-repair regression review is complete.
-3. **Human development accepted:** a named reviewer accepts the current
-   artifact as a development baseline.
-4. **Publication accepted:** an external editorial outcome outside Figure
-   Agent's authority.
+1. **Machine-valid:** schemas, hashes, compilation, assertions, and checks pass.
+2. **Visually re-reviewed:** current render/crops are fresh and regression review is complete.
+3. **Human development accepted:** a named reviewer accepts the current development baseline.
+4. **Publication accepted:** an external editorial outcome outside Figure Agent's authority.
 
 Panel analysis normally indexes the canonical fixture source. When review has
 produced a repaired child that has not been promoted to that root, select it
@@ -149,37 +145,22 @@ No lower state implies a higher one. Machine gates and model critiques use
 `publication_acceptance: not_claimed`; any external record is evidence, not plugin
 authority.
 
-Fixtures may opt into `silhouette_morphology_checks` when a vector member has a
-declared rendered-PDF region and stroke color. `filled_boundary` checks inspect
-a closed finite-width path for self-intersection, excessive width relative to
-edge length, and abrupt width variation. `stroked_centerline` checks inspect the
-rendered centerline length, stroke width, tip displacement, and direction of a
-thick-stroke member. Optional `silhouette_morphology_groups` compare declared
-members for cross-panel length/width drift and bend-state ordering. The checker
-reads PDF vectors rather than TikZ coordinates and writes
-`build/silhouette_morphology.json`; strict compile fails on declared violations
-or an unanalyzable target. The report binds the current PDF and `spec.yaml`
-hashes, and `/fig_status` surfaces checked/declared coverage, comparison-group
-coverage, and violations under `spine_evidence.silhouette_morphology`. A
-declared but missing, stale, incomplete, invalid, or failing report blocks
-workflow readiness instead of being hidden behind an older passing strict
-receipt. This is a narrow defect gate, not an aesthetic score:
-curvature quality, force-label hierarchy, and publication taste still require
-fresh reduced-scale host and human review. Do not generalize its thresholds
-beyond a validated figure family without new evidence.
+PDF-vector `silhouette_morphology_checks` may guard filled-path integrity or
+measure a thick-stroke member's rendered length, width, displacement, and
+direction; optional groups compare cross-panel scale and bend order. `/fig_status`
+must expose hash-bound checked/declared member and group coverage. Missing, stale,
+incomplete, invalid, unanalyzable, or failing evidence blocks readiness. This is
+not an aesthetic score: curvature, label hierarchy, and publication taste still
+require fresh reduced-scale review, and thresholds do not transfer without evidence.
 
 ### Mechanism semantic-contract rule
 
-`physics_grounding=grounded` means only that a briefing declares physics intent
-and at least one directional or relational assertion is wired. It is not a
-scientific-validity verdict. A mechanism fixture may set
-`semantic_contract_required: true` in `spec.yaml` to require the existing
-coordinate-free semantic-legibility contract before a strict compile can pass.
-That contract must name the scientific objects and their visible relations,
-record forbidden readings, and keep unresolved electrical topology explicit
-rather than inferred from the word “charging”. The contract is a transferable
-meaning guard, not a TikZ primitive, coordinate recipe, style lock, or
-publication-acceptance claim.
+`physics_grounding=grounded` only declares physics intent and at least one wired
+directional or relational assertion; it is not scientific validity.
+`semantic_contract_required: true` additionally requires coordinate-free objects,
+visible relations, forbidden readings, and explicit unresolved electrical
+topology before strict compile. This transferable meaning guard is not a primitive,
+coordinate recipe, style lock, or publication-acceptance claim.
 
 Promotion requires two materially different figure families, prospectively recorded correction time, named human outcomes, no semantic/relation regression, and reproducible evidence.
 Reports require passing `correction_time_gate` and `lineage_gate`: A/B share task/model/budget/start; C is B's hash-bound repair child, not an independent generation.
@@ -320,22 +301,17 @@ success is publication acceptance.
 ## 7. Current implementation boundary
 
 Reuse the established compile/export, perception, critique, attribution, repair,
-materialization, provenance, and human-review surfaces. The code implements the
-R1-R3 foundation and several R4 transitions; it is not a completed autonomous
-loop. Canonical status and run bind one current attempt by identity and hashes,
-fail closed on ambiguity or stale evidence, and stop at external host or human
-boundaries.
+materialization, provenance, and human-review surfaces. The R1-R3 foundation and
+several R4 transitions are not a completed autonomous loop. Status and run bind
+one hash-identified attempt, fail closed on ambiguity or staleness, and stop at
+external host or human boundaries.
 
-Repairs require exact semantic and source attribution, a bound packet and
-preview, named authorization, strict materialization or rollback, and fresh
-post-repair review. Runner and queue actions revalidate their lease and live
-plan before each subprocess. Execution evidence uses content hashes rather than
-mtime, never follows symlinks, and cannot turn a failed command into success.
-Candidate promotion remains explicitly human-gated; unsupported edit families
-fail loudly.
-Detailed dated R4/R5 implementation chronology, schema inventory, and Fig1
-repair measurements are non-authoritative evidence in
-`docs/evidence/r4-r5-implementation-history.md`. They must not be copied back
-into this authority or used to claim visual, release, or publication acceptance.
+Repairs require exact attribution, a bound packet and preview, named authorization,
+strict materialization or rollback, and fresh post-repair review. Runner and queue
+actions revalidate their lease and live plan; evidence uses content hashes, never
+follows symlinks, and cannot turn failure into success. Promotion remains human-
+gated, and unsupported edit families fail loudly.
 
-Current compatibility schemas include `figure-agent.repair-materialization-preview.v1`, `figure-agent.repair-materialization-receipt.v2`, `figure-agent.repair-execution-packet.v4`, `figure-agent.repair-authority-contract.v1`, `figure-agent.bounded-repair-lineage.v1`, `figure-agent.closed-loop-attempt-state.v1`, `figure-agent.closed-loop-current-state.v1`, `figure-agent.legacy-candidate-quarantine-authorization.v1`, `figure-agent.adjudicated-repair-binding.v1`, `figure-agent.semantic-finding-attribution.v1`, `figure-agent.attribution-handoff.v1`, `figure-agent.post-repair-visual-review-request.v1`, `figure-agent.host-review-execution-receipt.v1`, `figure-agent.post-repair-visual-review-response.v1`, `figure-agent.post-repair-visual-review-receipt.v1`, `figure-agent.initial-visual-review-request.v1`, `figure-agent.attempt-local-post-repair-review-request.v2`, `figure-agent.attempt-local-host-review-execution-receipt.v2`, `figure-agent.attempt-local-post-repair-review-response.v2`, `figure-agent.attempt-local-post-repair-review-receipt.v2`, `figure-agent.initial-visual-review-response.v1`, `figure-agent.initial-human-adjudication.v1`, `figure-agent.initial-attribution-handoff.v1`, `figure-agent.initial-attribution-binding.v2`, `figure-agent.closed-loop-development-verdict.v1`, `figure-agent.root-attempt-manifest.v1`, `figure-agent.step-execution-evidence.v1`, `figure-agent.current-candidate-pointer.v1`, and `figure-agent.prospective-evidence-receipt.v1`.
+Dated R4/R5 chronology, schema inventory, and Fig1 measurements live only in
+`docs/evidence/r4-r5-implementation-history.md` and its named validators/tests.
+They are non-authoritative and cannot claim visual, release, or publication acceptance.
