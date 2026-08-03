@@ -129,6 +129,7 @@ Each row includes:
 | `required_actor` | `workflow_agent`, `host_llm`, `human`, `release_operator`, or `svg_editor` |
 | `blocking_source` | compact source from `next_action_summary.blocking_source`, stop boundary, or driver action; mode-scoped `complete` rows use `null` so completion is not counted as a blocker |
 | `requires_human` | copied from `next_action_summary.requires_human` when available |
+| `bottleneck_category` | inferred root-cause bucket for non-complete rows: `mechanical_tool`, `host_critique`, `human_acceptance`, `reference_context`, or `template_style` |
 | `render_state` | compact status field |
 | `critique_state` | compact status field |
 | `export_state` | compact status field |
@@ -160,11 +161,15 @@ driver has a current loop checkpoint or gate explanation:
 | `dominant_first_blocker` | top `/fig_status` first-blocker counts |
 | `dominant_required_actor` | top required actor counts |
 | `dominant_blocking_source` | top queue blocking-source counts |
+| `by_bottleneck_category` | stable counts for the five root-cause buckets: `mechanical_tool`, `host_critique`, `human_acceptance`, `reference_context`, and `template_style` |
+| `bottleneck_categories` | one entry per bucket with definition, count, example fixtures, and top signals |
 | `command_plan` | executable, blocked, and complete counts using queue command-plan rules |
 
 Use this report as the Wave 0 corpus bottleneck scan before choosing an
 execution wave. It is read-only and does not mutate accepted, golden, export, or
-figure source state.
+figure source state. Category counts are intentionally distinct from actor
+counts: for example, `reference_context` can still require a host-critique run,
+and `template_style` can still surface through SVG-polish or human handoff rows.
 
 `summary` includes:
 
@@ -175,6 +180,7 @@ figure source state.
 - `by_first_blocker`
 - `by_required_actor`
 - `by_blocking_source`
+- `by_bottleneck_category`
 - `by_svg_polish_gate_state` when polish rows expose SVG gate state
 - `by_svg_polish_recommended_path` when polish rows expose readiness route
 - `by_svg_polish_next_action` when polish rows expose SVG next-action guidance

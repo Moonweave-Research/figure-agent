@@ -160,3 +160,12 @@ def test_wave0_queue_bottleneck_plan_is_read_only_and_documented() -> None:
     assert 'fig-agent queue --mode review --goal "Wave 0 bottleneck scan" --json' in plan
     assert "Forbidden in Wave 0: accepted/golden mutation" in plan
     assert "read-only" in queue_doc
+    for category in (
+        "mechanical_tool",
+        "host_critique",
+        "human_acceptance",
+        "reference_context",
+        "template_style",
+    ):
+        assert category in plan
+        assert category in queue_doc
