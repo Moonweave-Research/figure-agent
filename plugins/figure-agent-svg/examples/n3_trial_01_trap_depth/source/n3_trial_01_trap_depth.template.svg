@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+  data-figure-agent-svg="semantic-v1"
+  data-journal-preset="nature-double"
+  width="183mm" height="98mm" viewBox="0 0 1830 980">
+  <g id="semantic-layer">
+    <g id="panels">
+      <g id="panel-left" data-role="panel" data-bbox="32 32 920 906">
+        <rect x="32" y="32" width="920" height="906" rx="8"
+          fill="#FFFFFF" stroke="#6B7280" stroke-width="1.2"/>
+      </g>
+      <g id="panel-unified" data-role="panel" data-bbox="1018 32 780 906">
+        <rect x="1018" y="32" width="780" height="906" rx="8"
+          fill="#FFFFFF" stroke="#6B7280" stroke-width="1.2"/>
+      </g>
+    </g>
+
+    <g id="objects">
+      <path data-object-id="left-section-dividers" data-overlap="allow"
+        data-bbox="40 364 904 308"
+        d="M40 364 L944 364 M40 672 L944 672"
+        fill="none" stroke="#6B7280" stroke-width="0.8"/>
+
+      <circle data-object-id="step-1-marker" data-overlap="allow"
+        data-bbox="44 104 40 40" cx="64" cy="124" r="20"
+        fill="#2563EB" stroke="#2563EB" stroke-width="1.2"/>
+      <circle data-object-id="step-2-marker" data-overlap="allow"
+        data-bbox="44 402 40 40" cx="64" cy="422" r="20"
+        fill="#2563EB" stroke="#2563EB" stroke-width="1.2"/>
+      <circle data-object-id="step-3-marker" data-overlap="allow"
+        data-bbox="44 706 40 40" cx="64" cy="726" r="20"
+        fill="#2563EB" stroke="#2563EB" stroke-width="1.2"/>
+
+      <!-- figure-agent-fragment:discharge-loglog-plot -->
+
+      <g data-object-id="math-pipeline" data-overlap="allow"
+        data-bbox="326 414 520 122">
+        <path d="M442 422 L510 422 M494 408 L510 422 L494 436
+                 M628 422 L696 422 M680 408 L696 422 L680 436"
+          fill="none" stroke="#6B7280" stroke-width="2.4"/>
+        <path d="M304 522 L470 522 L470 536 L304 536 Z
+                 M708 522 C728 468 780 468 802 522 C824 576 876 576 900 522"
+          fill="none" stroke="#2563EB" stroke-width="1.8"/>
+      </g>
+      <path data-object-id="trap-distribution-mini" data-overlap="allow"
+        data-bbox="718 502 196 92"
+        d="M718 580 L900 580 M738 580 C758 500 806 500 826 580 C846 500 884 500 900 580"
+        fill="none" stroke="#2563EB" stroke-width="1.8"/>
+
+      <!-- figure-agent-fragment:polymer-chain -->
+
+      <path data-object-id="row-to-brace-arrows" data-overlap="allow"
+        data-bbox="824 148 158 666"
+        d="M824 156 L922 156 M906 142 L922 156 L906 170
+           M824 472 L922 472 M906 458 L922 472 L906 486
+           M824 794 L922 794 M906 780 L922 794 L906 808"
+        fill="none" stroke="#6B7280" stroke-width="2.4"/>
+      <path data-object-id="convergence-brace" data-overlap="allow"
+        data-bbox="962 96 72 736"
+        d="M968 96 C1000 96 1002 150 1002 222
+           C1002 302 1010 384 1030 450
+           C1010 516 1002 598 1002 678
+           C1002 770 1000 832 968 832"
+        fill="none" stroke="#14B8A6" stroke-width="2.4"/>
+      <path data-object-id="brace-to-unified-arrow" data-overlap="allow"
+        data-bbox="1052 456 80 34"
+        d="M1052 472 L1116 472 M1100 458 L1116 472 L1100 486"
+        fill="none" stroke="#6B7280" stroke-width="2.4"/>
+
+      <!-- figure-agent-fragment:unified-energy-diagram-tikz -->
+    </g>
+
+    <g id="labels">
+      <text data-text-role="title" data-bbox="1136 44 606 24" x="1136" y="64"
+        font-family="Arial" font-size="18" fill="#14B8A6">Unified trap-depth picture in a sulfur-rich polymer</text>
+
+      <text data-text-role="panel_letter" data-bbox="58 116 14 20" x="58" y="131"
+        font-family="Arial" font-size="16" fill="#FFFFFF">1</text>
+      <text data-text-role="label" data-bbox="98 108 126 18" x="98" y="124"
+        font-family="Arial" font-size="14" fill="#2563EB">Experiment</text>
+      <text data-text-role="label" data-bbox="48 160 142 18" x="48" y="174"
+        font-family="Arial" font-size="14" fill="#111827">Discharge current</text>
+      <text data-text-role="label" data-bbox="48 190 142 18" x="48" y="204"
+        font-family="Arial" font-size="14" fill="#111827">vs. time (log-log)</text>
+
+      <text data-text-role="panel_letter" data-bbox="58 414 14 20" x="58" y="429"
+        font-family="Arial" font-size="16" fill="#FFFFFF">2</text>
+      <text data-text-role="label" data-bbox="98 404 210 18" x="98" y="420"
+        font-family="Arial" font-size="14" fill="#2563EB">Mathematical interpretation</text>
+      <text data-text-role="label" data-bbox="48 478 218 18" x="48" y="492"
+        font-family="Arial" font-size="14" fill="#111827">From n to trap-depth distribution</text>
+      <text data-text-role="label" data-bbox="344 394 22 18" x="344" y="410"
+        font-family="Arial" font-size="14" fill="#2563EB">n</text>
+      <text data-text-role="micro" data-bbox="322 432 92 16" x="322" y="444"
+        font-family="Arial" font-size="11" fill="#111827">power-law exponent</text>
+      <text data-text-role="label" data-bbox="540 394 44 18" x="540" y="410"
+        font-family="Arial" font-size="14" fill="#2563EB">tau_d</text>
+      <text data-text-role="micro" data-bbox="510 432 128 16" x="510" y="444"
+        font-family="Arial" font-size="11" fill="#111827">Debye time constant</text>
+      <text data-text-role="label" data-bbox="724 394 52 18" x="724" y="410"
+        font-family="Arial" font-size="14" fill="#2563EB">g(E_t)</text>
+      <text data-text-role="micro" data-bbox="704 432 132 16" x="704" y="444"
+        font-family="Arial" font-size="11" fill="#111827">trap-depth distribution</text>
+      <text data-text-role="axis_label" data-bbox="354 542 190 16" x="354" y="556"
+        font-family="Arial" font-size="12" fill="#2563EB">tau_d = tau_0 exp(E_t/kBT)</text>
+      <text data-text-role="axis_label" data-bbox="798 590 26 16" x="798" y="604"
+        font-family="Arial" font-size="12" fill="#111827">E_t</text>
+
+      <text data-text-role="panel_letter" data-bbox="58 718 14 20" x="58" y="733"
+        font-family="Arial" font-size="16" fill="#FFFFFF">3</text>
+      <text data-text-role="label" data-bbox="98 708 124 18" x="98" y="724"
+        font-family="Arial" font-size="14" fill="#2563EB">Molecular origin</text>
+      <text data-text-role="label" data-bbox="48 774 134 18" x="48" y="788"
+        font-family="Arial" font-size="14" fill="#111827">sulfur-rich polymer</text>
+
+      <text data-text-role="label" data-bbox="1038 462 252 18" x="1038" y="478"
+        font-family="Arial" font-size="14" fill="#14B8A6">Convergence on a unified trap-depth picture</text>
+    </g>
+  </g>
+</svg>

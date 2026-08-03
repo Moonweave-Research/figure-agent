@@ -1,0 +1,47 @@
+schema_version: semantic-svg-style-v1
+
+journal_presets:
+  nature-single:
+    width_mm: 89
+    max_height_mm: 180
+  nature-double:
+    width_mm: 183
+    max_height_mm: 180
+
+palette:
+  ink: "#111827"
+  muted: "#6B7280"
+  soft-gray: "#E5E7EB"
+  blue: "#2563EB"
+  teal: "#14B8A6"
+  orange: "#F97316"
+  purple: "#7C3AED"
+  white: "#FFFFFF"
+
+font_families:
+  - Arial
+  - Helvetica
+  - Noto Sans
+  - Liberation Sans
+
+text_roles:
+  title:
+    font_size: 18
+  panel_letter:
+    font_size: 16
+  label:
+    font_size: 14
+  axis_label:
+    font_size: 12
+  micro:
+    font_size: 11
+
+stroke_widths:
+  - 0.8
+  - 1.2
+  - 1.8
+  - 2.4
+
+layout:
+  margin_min: 24
+  panel_gap_min: 40

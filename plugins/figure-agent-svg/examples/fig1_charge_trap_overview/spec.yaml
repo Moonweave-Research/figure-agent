@@ -1,0 +1,27 @@
+name: fig1_charge_trap_overview
+reference_image: reference/fig1_charge_trap_overview_draft.png
+journal_preset: nature-double
+required_labels:
+  - Fig. 1 Charge-trap electret actuator overview
+  - A
+  - B
+  - C
+  - Layered electret stack
+  - Trap-depth landscape
+  - Retention and actuation
+  - PDMS elastomer
+  - Fluorinated trap layer
+  - Deep traps
+  - Long retention
+  - Electrostatic bending
+required_objects:
+  - electret-stack
+  - trap-layer
+  - charge-injection-arrow
+  - energy-axis
+  - shallow-trap-well
+  - deep-trap-well
+  - retention-curve
+  - actuator-bend
+visual_diff:
+  max_fraction: 0.62

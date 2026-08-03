@@ -1,0 +1,21 @@
+name: fig1_svg_overview
+reference_image: reference/fig1_svg_overview_draft.png
+journal_preset: nature-double
+required_labels:
+  - Fig. 1 SVG-first paper figure workflow
+  - A
+  - B
+  - C
+  - Reference or draft
+  - Locked vtracer underlay
+  - Semantic SVG source
+  - Manuscript export
+  - QA gate
+required_objects:
+  - reference-card
+  - locked-underlay-card
+  - semantic-source-card
+  - export-stack
+  - qa-checklist
+visual_diff:
+  max_fraction: 0.60

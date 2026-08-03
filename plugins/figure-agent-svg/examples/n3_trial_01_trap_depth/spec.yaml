@@ -1,0 +1,37 @@
+name: n3_trial_01_trap_depth
+reference_image: reference/codex_gen_v1.png
+journal_preset: nature-double
+required_labels:
+  - Unified trap-depth picture in a sulfur-rich polymer
+  - Experiment
+  - Discharge current
+  - Mathematical interpretation
+  - Molecular origin
+  - Power-law
+  - Debye reference
+  - From n to trap-depth distribution
+  - sulfur-rich polymer
+  - Convergence on a unified trap-depth picture
+  - CB
+  - VB
+  - Shallow traps
+  - Deep traps
+  - g(E_t)
+  - E_t
+required_objects:
+  - discharge-loglog-plot
+  - power-law-curve
+  - debye-reference-curve
+  - math-pipeline
+  - trap-distribution-mini
+  - sulfur-rich-polymer-chain
+  - chemical-origin-highlight
+  - physical-origin-highlight
+  - convergence-brace
+  - unified-energy-diagram
+  - shallow-trap-levels
+  - deep-trap-levels
+  - trap-depth-distribution
+visual_diff:
+  max_fraction: 0.42
+  tolerance: 8

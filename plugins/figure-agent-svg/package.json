@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "openchemlib": "9.22.1",
+    "vega": "6.2.0",
+    "vega-lite": "6.4.3"
+  }
+}

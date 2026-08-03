@@ -1,0 +1,154 @@
+schema_version: figure-agent-svg-primitives-v1
+fragments:
+  discharge-loglog-plot:
+    kind: vega_loglog_plot
+    object_id: discharge-loglog-plot
+    bbox: [392, 60, 410, 258]
+    x_label: log t
+    y_label: log I
+    data:
+      - {series: Power-law, x: 1, y: 120}
+      - {series: Power-law, x: 2, y: 78}
+      - {series: Power-law, x: 5, y: 38}
+      - {series: Power-law, x: 10, y: 21}
+      - {series: Power-law, x: 20, y: 12}
+      - {series: Power-law, x: 50, y: 5.6}
+      - {series: Power-law, x: 100, y: 3.1}
+      - {series: Debye reference, x: 1, y: 100}
+      - {series: Debye reference, x: 2, y: 88}
+      - {series: Debye reference, x: 5, y: 62}
+      - {series: Debye reference, x: 10, y: 35}
+      - {series: Debye reference, x: 20, y: 13}
+      - {series: Debye reference, x: 50, y: 4.0}
+      - {series: Debye reference, x: 100, y: 2.7}
+
+  polymer-chain:
+    kind: openchemlib_molecule
+    object_id: sulfur-rich-polymer-chain
+    bbox: [306, 704, 590, 118]
+    smiles: CCSCCSCCSCCSCC
+
+  unified-energy-diagram:
+    kind: energy_band_v2
+    object_id: unified-energy-diagram
+    bbox: [1128, 96, 640, 760]
+    cb_label: CB
+    vb_label: VB
+    shallow_label: Shallow traps
+    deep_label: Deep traps
+    density_label: g(E_t)
+
+  unified-energy-diagram-tikz:
+    kind: tikz
+    object_id: unified-energy-diagram
+    bbox: [1128, 96, 640, 760]
+    source: |
+      \begin{tikzpicture}[x=1pt,y=1pt,>=Stealth,font=\sffamily\fontsize{16}{18}\selectfont]
+        \path[use as bounding box] (0,0) rectangle (\fgW,\fgH);
+        \tikzset{
+          band/.style={draw=fgblue,fill=fgsoftgray,line width=1.8pt,minimum width=230pt,minimum height=50pt,inner sep=0pt},
+          axis/.style={draw=fgink,line width=1.8pt,-{Stealth[length=14pt,width=10pt]}},
+          guide/.style={draw=fgmuted,line width=0.8pt,dashed},
+          shallow/.style={draw=fgorange,line width=1.8pt},
+          deep/.style={draw=fgpurple,line width=1.8pt}
+        }
+        \coordinate (energy-bottom) at (94,88);
+        \coordinate (energy-top) at (94,690);
+        \draw[axis] (energy-bottom) -- (energy-top);
+        \node[anchor=east,font=\sffamily\fontsize{14}{16}\selectfont,text=fgink] at ($(energy-bottom)!0.54!(energy-top)$) {Energy};
+
+        \node[band] (cb) at (315,660) {CB};
+        \node[band] (vb) at (315,94) {VB};
+        \coordinate (gap-top) at (cb.south);
+        \coordinate (gap-bottom) at (vb.north);
+        \coordinate (gap-left) at (cb.south west);
+        \coordinate (gap-right) at (cb.south east);
+        \coordinate (Et) at ($(gap-top)!0.46!(gap-bottom)$);
+        \coordinate (density-axis-top) at (500,660);
+        \coordinate (density-axis-bottom) at (500,94);
+        \coordinate (density-right) at (615,94);
+
+        \draw[guide] (gap-left) -- (density-axis-top -| density-right);
+        \draw[guide] (gap-left |- Et) -- (density-right |- Et);
+        \draw[guide] (gap-bottom) -- (density-right |- gap-bottom);
+        \node[anchor=east,font=\sffamily\fontsize{14}{16}\selectfont,text=fgink] at ($(energy-bottom)!0.46!(energy-top)$) {E\_g};
+        \node[anchor=east,font=\sffamily\fontsize{14}{16}\selectfont,text=fgink] at ($(gap-left |- Et)+(-10,-12)$) {E\_t};
+
+        \foreach \p/\name in {0.17/shallow-a,0.24/shallow-b,0.31/shallow-c} {
+          \coordinate (\name) at ($(gap-top)!\p!(gap-bottom)$);
+        }
+        \foreach \p/\name in {0.58/deep-a,0.67/deep-b,0.76/deep-c,0.86/deep-d} {
+          \coordinate (\name) at ($(gap-top)!\p!(gap-bottom)$);
+        }
+        \coordinate (trap-left-a) at ($(cb.south west)!0.18!(cb.south east)$);
+        \coordinate (trap-left-b) at ($(cb.south west)!0.23!(cb.south east)$);
+        \coordinate (trap-left-c) at ($(cb.south west)!0.16!(cb.south east)$);
+        \coordinate (trap-left-d) at ($(cb.south west)!0.22!(cb.south east)$);
+        \coordinate (trap-mark) at ($(cb.south west)!0.42!(cb.south east)$);
+        \coordinate (shallow-right-a) at ($(cb.south west)!0.58!(cb.south east)$);
+        \coordinate (shallow-right-b) at ($(cb.south west)!0.64!(cb.south east)$);
+        \coordinate (shallow-right-c) at ($(cb.south west)!0.62!(cb.south east)$);
+        \coordinate (deep-right-a) at ($(cb.south west)!0.56!(cb.south east)$);
+        \coordinate (deep-right-b) at ($(cb.south west)!0.65!(cb.south east)$);
+        \coordinate (deep-right-c) at ($(cb.south west)!0.60!(cb.south east)$);
+        \coordinate (deep-right-d) at ($(cb.south west)!0.63!(cb.south east)$);
+
+        \draw[shallow] (trap-left-a |- shallow-a) -- (shallow-right-a |- shallow-a);
+        \draw[shallow] (trap-left-b |- shallow-b) -- (shallow-right-b |- shallow-b);
+        \draw[shallow] (trap-left-a |- shallow-c) -- (shallow-right-c |- shallow-c);
+        \foreach \name in {shallow-a,shallow-b,shallow-c} {
+          \fill[fgorange] (trap-mark |- \name) circle (3pt);
+        }
+        \draw[shallow] ($(cb.south east |- shallow-a)+(22,14)$)
+          .. controls +(18,0) and +(18,0) ..
+          ($(cb.south east |- shallow-c)+(22,-14)$);
+        \node[anchor=west,font=\sffamily\fontsize{14}{16}\selectfont,text=fgorange] at ($(cb.south east |- shallow-b)+(44,0)$) {Shallow traps};
+
+        \draw[deep] (trap-left-c |- deep-a) -- (deep-right-a |- deep-a);
+        \draw[deep] (trap-left-d |- deep-b) -- (deep-right-b |- deep-b);
+        \draw[deep] (trap-left-c |- deep-c) -- (deep-right-c |- deep-c);
+        \draw[deep] (trap-left-d |- deep-d) -- (deep-right-d |- deep-d);
+        \foreach \name in {deep-a,deep-b,deep-c,deep-d} {
+          \fill[fgpurple] (trap-mark |- \name) circle (3pt);
+        }
+        \draw[deep] ($(cb.south east |- deep-a)+(22,14)$)
+          .. controls +(18,0) and +(18,0) ..
+          ($(cb.south east |- deep-d)+(22,-14)$);
+        \node[anchor=west,font=\sffamily\fontsize{14}{16}\selectfont,text=fgpurple] at ($(cb.south east |- deep-b)+(44,-8)$) {Deep\quad traps};
+
+        \draw[axis] (density-axis-bottom) -- (density-axis-top);
+        \draw[axis] (density-axis-bottom) -- (density-right);
+        \node[anchor=south,font=\sffamily\fontsize{14}{16}\selectfont,text=fgink] at ($(density-axis-top)+(20,18)$) {g(E\_t)};
+        \node[anchor=north,font=\sffamily\fontsize{14}{16}\selectfont,text=fgink] at ($(density-axis-bottom)!0.72!(density-right)+(0,-14)$) {E\_t};
+
+        \draw[draw=fgorange,line width=2.4pt]
+          (density-axis-top |- shallow-a)
+          .. controls +(122,0) and +(122,0) .. (density-axis-top |- shallow-c);
+        \draw[draw=fgpurple,line width=2.4pt]
+          (density-axis-top |- deep-a)
+          .. controls +(132,0) and +(132,0) .. (density-axis-top |- deep-d);
+      \end{tikzpicture}
+    semantic_objects:
+      - object_id: energy-axis
+        bbox: [72, 62, 44, 626]
+      - object_id: band-gap-window
+        bbox: [198, 132, 232, 502]
+      - object_id: conduction-band
+        bbox: [198, 74, 232, 52]
+      - object_id: valence-band
+        bbox: [198, 636, 232, 54]
+      - object_id: shallow-trap-levels
+        bbox: [238, 164, 218, 142]
+      - object_id: deep-trap-levels
+        bbox: [238, 398, 218, 206]
+      - object_id: density-axis
+        bbox: [490, 74, 130, 616]
+      - object_id: trap-depth-distribution
+        bbox: [500, 164, 114, 440]
+    semantic_labels:
+      - {value: CB, role: label, bbox: [300, 92, 30, 18], opacity: 0.01}
+      - {value: VB, role: label, bbox: [300, 656, 30, 18], opacity: 0.01}
+      - {value: Shallow traps, role: label, bbox: [446, 222, 92, 18], fill: "#F97316", opacity: 0.01}
+      - {value: Deep traps, role: label, bbox: [446, 460, 72, 18], fill: "#7C3AED", opacity: 0.01}
+      - {value: g(E_t), role: axis_label, bbox: [518, 52, 44, 16], opacity: 0.01}
+      - {value: E_t, role: axis_label, bbox: [568, 704, 24, 16], opacity: 0.01}

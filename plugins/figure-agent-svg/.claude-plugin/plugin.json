@@ -1,0 +1,9 @@
+{
+  "name": "figure-agent-svg",
+  "description": "SVG-first paper-figure experiment: reference/draft image to locked vtracer underlay evidence, semantic editable SVG source, PDF/PNG/TIFF export, label/background/freshness/visual-diff QA. Vtracer output is never the final source.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Moon Choe",
+    "email": "choimoonyoung3631@gmail.com"
+  }
+}

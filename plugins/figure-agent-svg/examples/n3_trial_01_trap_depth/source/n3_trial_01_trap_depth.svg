@@ -1,0 +1,319 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+  data-figure-agent-svg="semantic-v1"
+  data-journal-preset="nature-double"
+  width="183mm" height="98mm" viewBox="0 0 1830 980">
+  <g id="semantic-layer">
+    <g id="panels">
+      <g id="panel-left" data-role="panel" data-bbox="32 32 920 906">
+        <rect x="32" y="32" width="920" height="906" rx="8"
+          fill="#FFFFFF" stroke="#6B7280" stroke-width="1.2"/>
+      </g>
+      <g id="panel-unified" data-role="panel" data-bbox="1018 32 780 906">
+        <rect x="1018" y="32" width="780" height="906" rx="8"
+          fill="#FFFFFF" stroke="#6B7280" stroke-width="1.2"/>
+      </g>
+    </g>
+
+    <g id="objects">
+      <path data-object-id="left-section-dividers" data-overlap="allow"
+        data-bbox="40 364 904 308"
+        d="M40 364 L944 364 M40 672 L944 672"
+        fill="none" stroke="#6B7280" stroke-width="0.8"/>
+
+      <circle data-object-id="step-1-marker" data-overlap="allow"
+        data-bbox="44 104 40 40" cx="64" cy="124" r="20"
+        fill="#2563EB" stroke="#2563EB" stroke-width="1.2"/>
+      <circle data-object-id="step-2-marker" data-overlap="allow"
+        data-bbox="44 402 40 40" cx="64" cy="422" r="20"
+        fill="#2563EB" stroke="#2563EB" stroke-width="1.2"/>
+      <circle data-object-id="step-3-marker" data-overlap="allow"
+        data-bbox="44 706 40 40" cx="64" cy="726" r="20"
+        fill="#2563EB" stroke="#2563EB" stroke-width="1.2"/>
+
+<g data-object-id="discharge-loglog-plot" data-generated-by="vega_loglog_plot"
+        data-overlap="allow" data-bbox="392 60 410 258">
+        <g data-external-svg="true" transform="translate(392 60)">
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="marks" width="410" height="258" viewBox="0 0 410 258"><rect width="410" height="258" fill="#FFFFFF"/><g fill="none" stroke-miterlimit="10" transform="translate(54,5)"><g class="mark-group role-frame root" role="graphics-object" aria-roledescription="group mark container"><g transform="translate(0,0)"><path class="background" aria-hidden="true" d="M0.30000000000000004,0.30000000000000004h347v216h-347Z" stroke="#111827" stroke-width="1.2"/><g><g class="mark-group role-axis" aria-hidden="true"><g transform="translate(0.5,216.5)"><path class="background" aria-hidden="true" d="M0,0h0v0h0Z" pointer-events="none"/><g><g class="mark-rule role-axis-grid" pointer-events="none"><line transform="translate(0,-216)" x2="0" y2="216" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(52,-216)" x2="0" y2="216" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(121,-216)" x2="0" y2="216" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(174,-216)" x2="0" y2="216" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(226,-216)" x2="0" y2="216" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(295,-216)" x2="0" y2="216" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(347,-216)" x2="0" y2="216" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/></g></g><path class="foreground" aria-hidden="true" d="" pointer-events="none" display="none"/></g></g><g class="mark-group role-axis" aria-hidden="true"><g transform="translate(0.5,0.5)"><path class="background" aria-hidden="true" d="M0,0h0v0h0Z" pointer-events="none"/><g><g class="mark-rule role-axis-grid" pointer-events="none"><line transform="translate(0,216)" x2="347" y2="0" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(0,169)" x2="347" y2="0" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(0,134)" x2="347" y2="0" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(0,99)" x2="347" y2="0" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(0,52)" x2="347" y2="0" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/><line transform="translate(0,17)" x2="347" y2="0" stroke="#E5E7EB" stroke-width="0.8" opacity="1"/></g></g><path class="foreground" aria-hidden="true" d="" pointer-events="none" display="none"/></g></g><g class="mark-group role-axis" role="graphics-symbol" aria-roledescription="axis" aria-label="X-axis titled 'log t' for a log scale with values from 1 to 100"><g transform="translate(0.5,216.5)"><path class="background" aria-hidden="true" d="M0,0h0v0h0Z" pointer-events="none"/><g><g class="mark-rule role-axis-tick" pointer-events="none"><line transform="translate(0,0)" x2="0" y2="4" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(52,0)" x2="0" y2="4" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(121,0)" x2="0" y2="4" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(174,0)" x2="0" y2="4" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(226,0)" x2="0" y2="4" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(295,0)" x2="0" y2="4" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(347,0)" x2="0" y2="4" stroke="#111827" stroke-width="1" opacity="1"/></g><g class="mark-text role-axis-label" pointer-events="none"><text text-anchor="start" transform="translate(0,15)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">1</text><text text-anchor="middle" transform="translate(52.228704247700726,15)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">2</text><text text-anchor="middle" transform="translate(121.27129575229925,15)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">5</text><text text-anchor="middle" transform="translate(173.5,15)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">10</text><text text-anchor="middle" transform="translate(225.7287042477007,15)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">20</text><text text-anchor="middle" transform="translate(294.77129575229924,15)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">50</text><text text-anchor="end" transform="translate(347,15)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">100</text></g><g class="mark-rule role-axis-domain" pointer-events="none"><line transform="translate(0,0)" x2="347" y2="0" stroke="#111827" stroke-width="1.2" opacity="1"/></g><g class="mark-text role-axis-title" pointer-events="none"><text text-anchor="middle" transform="translate(173.5,30)" font-family="Arial" font-size="12px" font-weight="bold" fill="#111827" opacity="1">log t</text></g></g><path class="foreground" aria-hidden="true" d="" pointer-events="none" display="none"/></g></g><g class="mark-group role-axis" role="graphics-symbol" aria-roledescription="axis" aria-label="Y-axis titled 'log I' for a log scale with values from 2 to 140"><g transform="translate(0.5,0.5)"><path class="background" aria-hidden="true" d="M0,0h0v0h0Z" pointer-events="none"/><g><g class="mark-rule role-axis-tick" pointer-events="none"><line transform="translate(0,216)" x2="-4" y2="0" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(0,169)" x2="-4" y2="0" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(0,134)" x2="-4" y2="0" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(0,99)" x2="-4" y2="0" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(0,52)" x2="-4" y2="0" stroke="#111827" stroke-width="1" opacity="1"/><line transform="translate(0,17)" x2="-4" y2="0" stroke="#111827" stroke-width="1" opacity="1"/></g><g class="mark-text role-axis-label" pointer-events="none"><text text-anchor="end" transform="translate(-6,219)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">2</text><text text-anchor="end" transform="translate(-6,172.41437690080903)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">5</text><text text-anchor="end" transform="translate(-6,137.1737134491707)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">10</text><text text-anchor="end" transform="translate(-6,101.9330499975324)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">20</text><text text-anchor="end" transform="translate(-6,55.347426898341425)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">50</text><text text-anchor="end" transform="translate(-6,20.10676344670305)" font-family="Arial" font-size="11px" fill="#111827" opacity="1">100</text></g><g class="mark-rule role-axis-domain" pointer-events="none"><line transform="translate(0,216)" x2="0" y2="-216" stroke="#111827" stroke-width="1.2" opacity="1"/></g><g class="mark-text role-axis-title" pointer-events="none"><text text-anchor="middle" transform="translate(-36,108) rotate(-90) translate(0,-3)" font-family="Arial" font-size="12px" font-weight="bold" fill="#111827" opacity="1">log I</text></g></g><path class="foreground" aria-hidden="true" d="" pointer-events="none" display="none"/></g></g><g class="mark-group role-scope layer_0_layer_0_pathgroup" role="graphics-object" aria-roledescription="group mark container"><g transform="translate(0,0)"><path class="background" aria-hidden="true" d="M0,0h347v216h-347Z"/><g><g class="mark-line role-mark layer_0_layer_0_marks" role="graphics-object" aria-roledescription="line mark container"><path aria-label="x: 1; y: 120; series: Power-law" role="graphics-symbol" aria-roledescription="line mark" d="M0,7.837C17.41,14.725,34.819,21.612,52.229,29.739C75.243,40.482,98.257,53.487,121.271,66.3C138.681,75.993,156.09,86.685,173.5,96.452C190.91,106.22,208.319,115.297,225.729,124.904C248.743,137.605,271.757,150.547,294.771,163.653C312.181,173.566,329.59,183.642,347,193.718" stroke="#2563EB" stroke-width="2.4" stroke-dasharray="7,6"/></g></g><path class="foreground" aria-hidden="true" d="" display="none"/></g><g transform="translate(0,0)"><path class="background" aria-hidden="true" d="M0,0h347v216h-347Z"/><g><g class="mark-line role-mark layer_0_layer_0_marks" role="graphics-object" aria-roledescription="line mark container"><path aria-label="x: 1; y: 100; series: Debye reference" role="graphics-symbol" aria-roledescription="line mark" d="M0,17.107C17.41,18.773,34.819,20.439,52.229,23.606C75.243,27.793,98.257,31.562,121.271,41.411C138.681,48.861,156.09,57.244,173.5,70.481C190.91,83.719,208.319,104.771,225.729,120.835C248.743,142.069,271.757,167.144,294.771,180.759C312.181,191.059,329.59,195.901,347,200.742" stroke="#6B7280" stroke-width="2.4" stroke-dasharray="7,6"/></g></g><path class="foreground" aria-hidden="true" d="" display="none"/></g></g><g class="mark-symbol role-mark layer_0_layer_1_marks" role="graphics-object" aria-roledescription="symbol mark container"><path aria-label="x: 1; y: 120; series: Power-law" role="graphics-symbol" aria-roledescription="point" transform="translate(0,7.8372564745127065)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#2563EB" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 2; y: 78; series: Power-law" role="graphics-symbol" aria-roledescription="point" transform="translate(52.228704247700726,29.738919198533008)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#2563EB" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 5; y: 38; series: Power-law" role="graphics-symbol" aria-roledescription="point" transform="translate(121.27129575229925,66.30021613177973)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#2563EB" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 10; y: 21; series: Power-law" role="graphics-symbol" aria-roledescription="point" transform="translate(173.5,96.45248338272461)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#2563EB" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 20; y: 12; series: Power-law" role="graphics-symbol" aria-roledescription="point" transform="translate(225.7287042477007,124.90420647698032)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#2563EB" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 50; y: 5.6; series: Power-law" role="graphics-symbol" aria-roledescription="point" transform="translate(294.77129575229924,163.6525731016586)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#2563EB" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 100; y: 3.1; series: Power-law" role="graphics-symbol" aria-roledescription="point" transform="translate(347,193.71844860641374)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#2563EB" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 1; y: 100; series: Debye reference" role="graphics-symbol" aria-roledescription="point" transform="translate(0,17.10676344670305)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#6B7280" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 2; y: 88; series: Debye reference" role="graphics-symbol" aria-roledescription="point" transform="translate(52.228704247700726,23.606007690369864)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#6B7280" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 5; y: 62; series: Debye reference" role="graphics-symbol" aria-roledescription="point" transform="translate(121.27129575229925,41.41083515230775)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#6B7280" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 10; y: 35; series: Debye reference" role="graphics-symbol" aria-roledescription="point" transform="translate(173.5,70.48132690327665)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#6B7280" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 20; y: 13; series: Debye reference" role="graphics-symbol" aria-roledescription="point" transform="translate(225.7287042477007,120.83471272155269)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#6B7280" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 50; y: 4; series: Debye reference" role="graphics-symbol" aria-roledescription="point" transform="translate(294.77129575229924,180.7593365483617)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#6B7280" stroke-width="2" stroke-dasharray="7,6" opacity="1"/><path aria-label="x: 100; y: 2.7; series: Debye reference" role="graphics-symbol" aria-roledescription="point" transform="translate(347,200.74222323996193)" d="M3.536,0A3.536,3.536,0,1,1,-3.536,0A3.536,3.536,0,1,1,3.536,0" fill="#6B7280" stroke-width="2" stroke-dasharray="7,6" opacity="1"/></g></g><path class="foreground" aria-hidden="true" d="" display="none"/></g></g></g></svg>
+        </g>
+        
+        <g data-object-id="power-law-curve" data-overlap="allow"
+          data-bbox="461.7 101.28 246 144.48"/>
+        <g data-object-id="debye-reference-curve" data-overlap="allow"
+          data-bbox="461.7 137.4 246 108.36"/>
+        <g data-object-id="power-law-markers" data-overlap="allow"
+          data-bbox="461.7 101.28 246 144.48"/>
+        <text data-text-role="label" data-bbox="670.8 96.12 88 18" x="670.8" y="110.12" font-family="Arial" font-size="14" fill="#2563EB">Power-law</text>
+        <text data-text-role="micro" data-bbox="670.8 121.92 142 16" x="670.8" y="133.92" font-family="Arial" font-size="11" fill="#2563EB">I proportional to t^-n</text>
+        <text data-text-role="label" data-bbox="424.8 189 126 18" x="424.8" y="203" font-family="Arial" font-size="14" fill="#6B7280">Debye reference</text>
+        <text data-text-role="micro" data-bbox="424.8 214.8 154 16" x="424.8" y="226.8" font-family="Arial" font-size="11" fill="#6B7280">I proportional to exp(-t/tau_d)</text>
+      </g>
+
+      <g data-object-id="math-pipeline" data-overlap="allow"
+        data-bbox="326 414 520 122">
+        <path d="M442 422 L510 422 M494 408 L510 422 L494 436
+                 M628 422 L696 422 M680 408 L696 422 L680 436"
+          fill="none" stroke="#6B7280" stroke-width="2.4"/>
+        <path d="M304 522 L470 522 L470 536 L304 536 Z
+                 M708 522 C728 468 780 468 802 522 C824 576 876 576 900 522"
+          fill="none" stroke="#2563EB" stroke-width="1.8"/>
+      </g>
+      <path data-object-id="trap-distribution-mini" data-overlap="allow"
+        data-bbox="718 502 196 92"
+        d="M718 580 L900 580 M738 580 C758 500 806 500 826 580 C846 500 884 500 900 580"
+        fill="none" stroke="#2563EB" stroke-width="1.8"/>
+
+<g data-object-id="sulfur-rich-polymer-chain" data-generated-by="openchemlib_molecule"
+        data-overlap="allow" data-bbox="306 704 590 118" data-source-smiles="CCSCCSCCSCCSCC">
+        <g data-external-svg="true" transform="translate(306 704)">
+          <svg id="sulfur-rich-polymer-chain" xmlns="http://www.w3.org/2000/svg" version="1.1" width="590px" height="118px" viewBox="0 0 590 118">
+  <style> #sulfur-rich-polymer-chain text {font-family: sans-serif;} #sulfur-rich-polymer-chain { pointer-events:none; } #sulfur-rich-polymer-chain .event  { pointer-events:all; } #sulfur-rich-polymer-chain line { stroke-linecap:round; } #sulfur-rich-polymer-chain polygon { stroke-linejoin:round; } </style>
+  <text x="383.19" y="58.33" stroke="none" font-weight="700" font-size="16" fill="rgb(205,205,38)">S</text>
+  <text x="320.84" y="70.33" stroke="none" font-weight="700" font-size="16" fill="rgb(205,205,38)">S</text>
+  <text x="258.49" y="58.33" stroke="none" font-weight="700" font-size="16" fill="rgb(205,205,38)">S</text>
+  <text x="196.13" y="70.33" stroke="none" font-weight="700" font-size="16" fill="rgb(205,205,38)">S</text>
+  <line x1="430.1" y1="53" x2="409.32" y2="65" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="409.32" y1="65" x2="395.87" y2="57.24" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="381.19" y1="57.24" x2="367.75" y2="65" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="367.75" y1="65" x2="346.96" y2="53" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="346.96" y1="53" x2="333.51" y2="60.76" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="318.84" y1="60.76" x2="305.39" y2="53" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="305.39" y1="53" x2="284.61" y2="65" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="284.61" y1="65" x2="271.16" y2="57.24" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="256.49" y1="57.24" x2="243.04" y2="65" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="243.04" y1="65" x2="222.25" y2="53" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="222.25" y1="53" x2="208.81" y2="60.76" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="194.13" y1="60.76" x2="180.68" y2="53" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line x1="180.68" y1="53" x2="159.9" y2="65" stroke="rgb(0,0,0)" stroke-width="1.4" />
+  <line id="sulfur-rich-polymer-chain:Bond:0" class="event" x1="430.1" y1="53" x2="409.32" y2="65" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:1" class="event" x1="409.32" y1="65" x2="388.53" y2="53" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:2" class="event" x1="388.53" y1="53" x2="367.75" y2="65" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:3" class="event" x1="367.75" y1="65" x2="346.96" y2="53" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:4" class="event" x1="346.96" y1="53" x2="326.18" y2="65" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:5" class="event" x1="326.18" y1="65" x2="305.39" y2="53" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:6" class="event" x1="305.39" y1="53" x2="284.61" y2="65" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:7" class="event" x1="284.61" y1="65" x2="263.82" y2="53" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:8" class="event" x1="263.82" y1="53" x2="243.04" y2="65" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:9" class="event" x1="243.04" y1="65" x2="222.25" y2="53" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:10" class="event" x1="222.25" y1="53" x2="201.47" y2="65" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:11" class="event" x1="201.47" y1="65" x2="180.68" y2="53" stroke-width="1.4" opacity="0" />
+  <line id="sulfur-rich-polymer-chain:Bond:12" class="event" x1="180.68" y1="53" x2="159.9" y2="65" stroke-width="1.4" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:0" class="event" cx="430.1" cy="53" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:1" class="event" cx="409.32" cy="65" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:2" class="event" cx="388.53" cy="53" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:3" class="event" cx="367.75" cy="65" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:4" class="event" cx="346.96" cy="53" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:5" class="event" cx="326.18" cy="65" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:6" class="event" cx="305.39" cy="53" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:7" class="event" cx="284.61" cy="65" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:8" class="event" cx="263.82" cy="53" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:9" class="event" cx="243.04" cy="65" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:10" class="event" cx="222.25" cy="53" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:11" class="event" cx="201.47" cy="65" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:12" class="event" cx="180.68" cy="53" r="8" opacity="0" />
+  <circle id="sulfur-rich-polymer-chain:Atom:13" class="event" cx="159.9" cy="65" r="8" opacity="0" />
+</svg>
+        </g>
+        
+        <circle data-object-id="chemical-origin-highlight" data-overlap="allow"
+          data-bbox="508.1 730.28 56 56"
+          cx="536.1" cy="758.28" r="28"
+          fill="none" stroke="#F97316" stroke-width="2.4"/>
+        <path data-object-id="physical-origin-highlight" data-overlap="allow"
+          data-bbox="686.8 728.28 88 60"
+          d="M686.8 758.28
+             C704.8 728.28
+              756.8 728.28
+              774.8 758.28
+             C756.8 788.28
+              704.8 788.28
+              686.8 758.28"
+          fill="none" stroke="#7C3AED" stroke-width="1.8" stroke-dasharray="8 6"/>
+        <text data-text-role="label" data-bbox="354 842 122 18" x="354" y="856" font-family="Arial" font-size="14" fill="#F97316">chemical origin</text>
+        <text data-text-role="micro" data-bbox="334 872 158 16" x="334" y="884" font-family="Arial" font-size="11" fill="#111827">electron-rich sulfur sites</text>
+        <text data-text-role="label" data-bbox="648.2 842 110 18" x="648.2" y="856" font-family="Arial" font-size="14" fill="#7C3AED">physical origin</text>
+        <text data-text-role="micro" data-bbox="624.6 872 204 16" x="624.6" y="884" font-family="Arial" font-size="11" fill="#111827">conformational heterogeneity</text>
+      </g>
+
+      <path data-object-id="row-to-brace-arrows" data-overlap="allow"
+        data-bbox="824 148 158 666"
+        d="M824 156 L922 156 M906 142 L922 156 L906 170
+           M824 472 L922 472 M906 458 L922 472 L906 486
+           M824 794 L922 794 M906 780 L922 794 L906 808"
+        fill="none" stroke="#6B7280" stroke-width="2.4"/>
+      <path data-object-id="convergence-brace" data-overlap="allow"
+        data-bbox="962 96 72 736"
+        d="M968 96 C1000 96 1002 150 1002 222
+           C1002 302 1010 384 1030 450
+           C1010 516 1002 598 1002 678
+           C1002 770 1000 832 968 832"
+        fill="none" stroke="#14B8A6" stroke-width="2.4"/>
+      <path data-object-id="brace-to-unified-arrow" data-overlap="allow"
+        data-bbox="1052 456 80 34"
+        d="M1052 472 L1116 472 M1100 458 L1116 472 L1100 486"
+        fill="none" stroke="#6B7280" stroke-width="2.4"/>
+
+<g data-object-id="unified-energy-diagram" data-generated-by="tikz"
+        data-overlap="allow" data-bbox="1128 96 640 760" data-renderer="tikz">
+        <g data-external-svg="true" transform="translate(1128 96)">
+          <!-- This file was generated by dvisvgm 3.6 -->
+<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width="640" height="760" viewBox='0 0 637.609 757.161' preserveAspectRatio="none">
+<defs>
+<font id='PQQMBP-CMSS17' horiz-adv-x='0'>
+<font-face font-family='PQQMBP-CMSS17' units-per-em='1000' ascent='758' descent='250'/>
+<glyph unicode='B' horiz-adv-x='625' vert-adv-y='625' glyph-name='B' d='M89 694V0H338C474 0 573 90 573 188C573 264 508 341 391 363C521 401 547 477 547 520C547 610 449 694 312 694H89ZM170 391V638H285C388 638 469 585 469 519C469 459 405 391 276 391H170ZM170 56V330H303C411 330 494 263 494 189C494 121 421 56 310 56H170Z'/>
+<glyph unicode='C' horiz-adv-x='601' vert-adv-y='601' glyph-name='C' d='M547 115C480 70 449 57 368 57C228 57 146 208 146 346C146 493 230 638 372 638C436 638 478 620 529 588L543 667C495 691 434 702 373 702C181 702 62 525 62 346C62 149 203-7 363-7C449-7 479 0 553 47L547 115Z'/>
+<glyph unicode='V' horiz-adv-x='624' vert-adv-y='624' glyph-name='V' d='M611 694H533L360 214C355 200 324 108 318 76H317C309 114 277 203 260 252L144 577L101 694H13L268 0H356L611 694Z'/>
+</font>
+<font id='BLWESX-CMSS12' horiz-adv-x='0'>
+<font-face font-family='BLWESX-CMSS12' units-per-em='1000' ascent='758' descent='251'/>
+<glyph unicode='(' horiz-adv-x='380' vert-adv-y='380' glyph-name='parenleft' d='M266 750C116 616 78 413 78 250C78 74 121-122 266-251H326C287-215 226-137 191-24C164 65 154 158 154 249C154 544 259 688 326 750H266Z'/>
+<glyph unicode=')' horiz-adv-x='380' vert-adv-y='380' glyph-name='parenright' d='M114-251C264-117 302 86 302 249C302 425 259 621 114 750H54C93 714 154 636 189 523C216 434 226 341 226 250C226-45 121-189 54-251H114Z'/>
+<glyph unicode='D' horiz-adv-x='704' vert-adv-y='704' glyph-name='D' d='M91 694V0H348C515 0 649 151 649 341C649 536 516 694 348 694H91ZM175 56V638H325C459 638 565 523 565 342C565 159 454 56 325 56H175Z'/>
+<glyph unicode='E' horiz-adv-x='583' vert-adv-y='583' glyph-name='E' d='M500 330V390H176V630H312C324 630 336 629 348 629H528V692H90V0H541V68H410C398 68 386 67 374 67H176V330H500Z'/>
+<glyph unicode='S' horiz-adv-x='543' vert-adv-y='543' glyph-name='S' d='M455 666C414 688 364 715 275 715C141 715 54 619 54 519C54 448 97 402 102 397C151 347 185 338 249 322C334 301 348 297 380 264C397 246 412 214 412 179C412 110 355 46 269 46C196 46 118 75 59 129L44 48C135-12 223-21 269-21C398-21 489 78 489 189C489 253 458 301 436 326C390 375 353 385 286 402C218 419 193 425 171 446C158 460 131 485 131 530C131 591 186 650 274 650C359 650 404 617 440 585L455 666Z'/>
+<glyph unicode='a' horiz-adv-x='468' vert-adv-y='468' glyph-name='a' d='M391 293C391 389 322 459 229 459C169 459 124 445 75 417L81 351C125 383 171 401 229 401C275 401 315 364 315 291V250C270 248 210 245 150 225C83 202 44 165 44 115C44 71 70-10 155-10C210-10 280 6 317 37V0H391V293ZM315 134C315 114 315 90 282 70C255 53 221 50 206 50C152 50 115 79 115 116C115 184 254 199 315 199V134Z'/>
+<glyph unicode='e' horiz-adv-x='435' vert-adv-y='435' glyph-name='e' d='M407 225C407 268 403 329 371 382C330 451 260 459 231 459C123 459 33 355 33 225C33 93 129-10 245-10C291-10 346 3 401 43C401 47 398 78 398 80C397 81 395 103 395 107C336 57 277 50 247 50C170 50 104 119 102 225H407ZM108 279C125 346 172 399 231 399C262 399 331 385 348 279H108Z'/>
+<glyph unicode='g' horiz-adv-x='489' vert-adv-y='489' glyph-name='g' d='M341 394C341 394 343 392 344 390C365 392 387 395 424 395C427 395 450 395 475 393L464 454C445 454 377 453 311 421C278 449 238 454 218 454C131 454 61 381 61 293C61 257 72 224 94 194C71 162 65 132 65 108C65 71 79 46 90 33C39 0 27-43 27-71C27-144 122-205 244-205S462-146 462-70C462 70 300 70 259 70H174C160 70 117 70 117 123C117 145 121 151 127 160C144 148 177 131 217 131C303 131 374 202 374 293C374 329 361 366 340 393L341 394ZM218 186C174 186 130 216 130 292C130 381 186 399 217 399C261 399 305 369 305 293C305 204 249 186 218 186ZM260-2C282-2 392-2 392-71C392-117 323-150 245-150S97-119 97-70C97-67 97-2 173-2H260Z'/>
+<glyph unicode='h' horiz-adv-x='502' vert-adv-y='502' glyph-name='h' d='M424 301C424 362 411 454 290 454C221 454 175 415 151 385V694H77V0H153V249C153 311 176 394 252 394C345 394 348 329 348 294V0H424V301Z'/>
+<glyph unicode='l' horiz-adv-x='230' vert-adv-y='230' glyph-name='l' d='M152 694H78V0H152V694Z'/>
+<glyph unicode='n' horiz-adv-x='502' vert-adv-y='502' glyph-name='n' d='M424 301C424 362 411 454 290 454C234 454 186 429 148 381V449H77V0H153V249C153 311 176 394 252 394C345 394 348 329 348 294V0H424V301Z'/>
+<glyph unicode='o' horiz-adv-x='489' vert-adv-y='489' glyph-name='o' d='M459 220C459 355 360 459 245 459C127 459 30 353 30 220C30 89 130-10 244-10C362-10 459 91 459 220ZM245 52C173 52 106 112 106 230C106 351 181 399 244 399C313 399 383 347 383 230C383 107 312 52 245 52Z'/>
+<glyph unicode='p' horiz-adv-x='502' vert-adv-y='502' glyph-name='p' d='M154 45C188 14 230-10 284-10C380-10 466 87 466 223C466 344 402 454 309 454C268 454 204 441 152 397V444H78V-194H154V45ZM154 336C177 370 215 392 256 392C330 392 390 317 390 222C390 122 321 50 247 50C219 50 200 60 182 74C157 96 154 114 154 130V336Z'/>
+<glyph unicode='r' horiz-adv-x='332' vert-adv-y='332' glyph-name='r' d='M152 219C152 320 228 386 318 387V454C227 453 174 400 147 361V449H78V0H152V219Z'/>
+<glyph unicode='s' horiz-adv-x='375' vert-adv-y='375' glyph-name='s' d='M336 428C272 458 218 459 195 459S33 459 33 329C33 285 57 255 72 241C108 210 133 205 192 193C225 186 283 174 283 121C283 52 205 52 191 52C151 52 93 63 39 102L27 34C32 31 100-10 192-10C321-10 352 68 352 127C352 178 321 210 317 215C280 253 250 259 189 271C153 278 102 288 102 338C102 400 172 400 185 400C238 400 280 388 324 363L336 428Z'/>
+<glyph unicode='t' horiz-adv-x='353' vert-adv-y='353' glyph-name='t' d='M171 386H309V444H171V571H102V444H18V386H100V117C100 59 113-10 182-10C249-10 295 13 326 29L311 87C276 56 239 52 221 52C177 52 171 99 171 134V386Z'/>
+<glyph unicode='w' horiz-adv-x='665' vert-adv-y='665' glyph-name='w' d='M650 444H577L517 241C503 193 475 99 471 56H470C467 80 451 147 430 218L364 444H295L238 248C220 186 196 100 193 58H192C191 77 180 130 161 197L90 444H14L148 0H225C263 126 321 316 327 386H328C330 345 350 273 357 250L428 0H516L650 444Z'/>
+<glyph unicode='y' horiz-adv-x='447' vert-adv-y='447' glyph-name='y' d='M433 444H358C312 326 235 130 231 58H230C225 117 172 249 164 269L93 444H14L200 0L165-91C143-141 128-146 110-146C96-146 64-143 33-131L39-196C45-197 78-204 110-204C134-204 181-204 224-94L433 444Z'/>
+</font>
+</defs>
+<style type='text/css'>
+<![CDATA[text.f0 {font-family:BLWESX-CMSS12;font-size:14.35px}
+text.f1 {font-family:PQQMBP-CMSS17;font-size:17.22px}
+]]>
+</style>
+<g id='page1'>
+<path d='M93.65002 669.48864V78.38082' stroke='#111827' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M93.65002 72.39591L90.65954 80.68986L93.65002 77.93256L96.6405 80.68986Z' fill='#111827'/>
+<path d='M93.65002 72.39591L90.65954 80.68986L93.65002 77.93256L96.6405 80.68986Z' stroke='#111827' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<text class='f0' x='50.101267' y='-408.054056' transform='matrix(.999735 0 0 .999735 0 757.161)'><tspan fill='#111827'>Energy</tspan></text>
+<path d='M199.25537 124.5252H428.39906V74.71133H199.25537Z' fill='#e5e7eb'/>
+<path d='M199.25537 124.5252H428.39906V74.71133H199.25537Z' stroke='#2563eb' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<text class='f1' x='303.347033' y='-651.731098' transform='matrix(.999733 0 0 .999733 0 757.161)'>CB</text>
+<path d='M199.25537 688.4179H428.39906V638.604051H199.25537Z' fill='#e5e7eb'/>
+<path d='M199.25537 688.4179H428.39906V638.604051H199.25537Z' stroke='#2563eb' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<text class='f1' x='303.142979' y='-87.694426' transform='matrix(.999733 0 0 .999733 0 757.161)'>VB</text>
+<path d='M198.35872 125.42184L612.71029 99.6183' stroke='#6b7280' fill='none' stroke-width='.79701' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883'/>
+<path d='M198.35872 361.07664H612.71029' stroke='#6b7280' fill='none' stroke-width='.79701' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883'/>
+<path d='M313.8272 637.70742H612.71029' stroke='#6b7280' fill='none' stroke-width='.79701' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883'/>
+<text class='f0' x='69.698457' y='-360.069349' transform='matrix(.999735 0 0 .999735 0 757.161)'><tspan fill='#111827'>E</tspan></text>
+<path d='M78.891 396.988H83.105' stroke='#111827' fill='none' stroke-width='.398' stroke-miterlimit='10'/>
+<text class='f0' x='83.127013' y='-360.069349' transform='matrix(.999735 0 0 .999735 0 757.161)'><tspan fill='#111827'>g</tspan><tspan fill='#111827' x='166.420069' y='-379.243427'>E</tspan></text>
+<path d='M175.587 377.819H179.801' stroke='#111827' fill='none' stroke-width='.398' stroke-miterlimit='10'/>
+<text class='f0' x='179.848625' y='-379.243427' transform='matrix(.999735 0 0 .999735 0 757.161)'><tspan fill='#111827'>t</tspan></text>
+<path d='M239.92568 212.50942H332.30259' stroke='#f97316' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M251.47322 248.3732H346.15824' stroke='#f97316' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M239.92568 284.2291H341.5385' stroke='#f97316' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M298.34065 212.50942C298.34065 210.85873 297.00254 209.5207 295.3518 209.5207C293.7011 209.5207 292.36299 210.85873 292.36299 212.50942C292.36299 214.1602 293.7011 215.4983 295.3518 215.4983C297.00254 215.4983 298.34065 214.1602 298.34065 212.50942Z' fill='#f97316'/>
+<path d='M298.34065 248.3732C298.34065 246.7225 297.00254 245.38435 295.3518 245.38435C293.7011 245.38435 292.36299 246.7225 292.36299 248.3732S293.7011 251.36201 295.3518 251.36201C297.00254 251.36201 298.34065 250.0239 298.34065 248.3732Z' fill='#f97316'/>
+<path d='M298.34065 284.2291C298.34065 282.57841 297.00254 281.2403 295.3518 281.2403C293.7011 281.2403 292.36299 282.57841 292.36299 284.2291C292.36299 285.87983 293.7011 287.21794 295.3518 287.21794C297.00254 287.21794 298.34065 285.87983 298.34065 284.2291Z' fill='#f97316'/>
+<path d='M451.21379 198.5616C469.14677 198.5616 469.14677 298.177 451.21379 298.177' stroke='#f97316' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<text class='f0' x='476.772253' y='-505.328815' transform='matrix(.999735 0 0 .999735 0 757.161)'><tspan fill='#f97316'>Shallo</tspan><tspan fill='#f97316' x='511.757508'>w</tspan><tspan fill='#f97316' x='525.992767'>traps</tspan></text>
+<path d='M235.30947 422.54844H327.68284' stroke='#7c3aed' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M249.16513 468.65226H348.4663' stroke='#7c3aed' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M235.30947 514.7561H336.9223' stroke='#7c3aed' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M249.16513 565.98776H343.8501' stroke='#7c3aed' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M298.34065 422.54844C298.34065 420.89771 297.00254 419.5596 295.3518 419.5596C293.7011 419.5596 292.36299 420.89771 292.36299 422.54844C292.36299 424.19914 293.7011 425.53727 295.3518 425.53727C297.00254 425.53727 298.34065 424.19914 298.34065 422.54844Z' fill='#7c3aed'/>
+<path d='M298.34065 468.65226C298.34065 467.00154 297.00254 465.66343 295.3518 465.66343C293.7011 465.66343 292.36299 467.00154 292.36299 468.65226C292.36299 470.30296 293.7011 471.6411 295.3518 471.6411C297.00254 471.6411 298.34065 470.30296 298.34065 468.65226Z' fill='#7c3aed'/>
+<path d='M298.34065 514.7561C298.34065 513.1054 297.00254 511.76726 295.3518 511.76726C293.7011 511.76726 292.36299 513.1054 292.36299 514.7561S293.7011 517.74492 295.3518 517.74492C297.00254 517.74492 298.34065 516.4068 298.34065 514.7561Z' fill='#7c3aed'/>
+<path d='M298.34065 565.98776C298.34065 564.33705 297.00254 562.99893 295.3518 562.99893C293.7011 562.99893 292.36299 564.33705 292.36299 565.98776C292.36299 567.63848 293.7011 568.9766 295.3518 568.9766C297.00254 568.9766 298.34065 567.63848 298.34065 565.98776Z' fill='#7c3aed'/>
+<path d='M451.21379 408.60056C469.14677 408.60056 469.14677 579.93564 451.21379 579.93564' stroke='#7c3aed' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<text class='f0' x='476.772253' y='-277.021358' transform='matrix(.999735 0 0 .999735 0 757.161)'><tspan fill='#7c3aed'>Deep</tspan><tspan fill='#7c3aed' x='520.611522'>traps</tspan></text>
+<path d='M498.13844 663.51098V108.26913' stroke='#111827' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M498.13844 102.28421L495.14796 110.57816L498.13844 107.82086L501.12892 110.57816Z' fill='#111827'/>
+<path d='M498.13844 102.28421L495.14796 110.57816L498.13844 107.82086L501.12892 110.57816Z' stroke='#111827' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M498.13844 663.51098H604.0594' stroke='#111827' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<path d='M610.04435 663.511L601.7504 660.52052L604.5077 663.511L601.7504 666.50148Z' fill='#111827'/>
+<path d='M610.04435 663.511L601.7504 660.52052L604.5077 663.511L601.7504 666.50148Z' stroke='#111827' fill='none' stroke-width='1.79329' stroke-miterlimit='10'/>
+<text class='f0' x='499.966395' y='-682.753799' transform='matrix(.999735 0 0 .999735 0 757.161)'><tspan fill='#111827'>g(E</tspan></text>
+<path d='M521.531 74.388H525.745' stroke='#111827' fill='none' stroke-width='.398' stroke-miterlimit='10'/>
+<text class='f0' x='525.885259' y='-682.753799' transform='matrix(.999735 0 0 .999735 0 757.161)'><tspan fill='#111827'>t)</tspan><tspan fill='#111827' x='571.525345' y='-66.23654'>E</tspan></text>
+<path d='M580.585 690.74307H584.799' stroke='#111827' fill='none' stroke-width='.398' stroke-miterlimit='10'/>
+<text class='f0' x='584.953901' y='-66.23654' transform='matrix(.999735 0 0 .999735 0 757.161)'><tspan fill='#111827'>t</tspan></text>
+<path d='M498.13844 212.50942C619.6842 212.50942 619.6842 284.2291 498.13844 284.2291' stroke='#f97316' fill='none' stroke-width='2.39105' stroke-miterlimit='10'/>
+<path d='M498.13844 422.54844C629.647 422.54844 629.647 565.98776 498.13844 565.98776' stroke='#7c3aed' fill='none' stroke-width='2.39105' stroke-miterlimit='10'/>
+</g>
+</svg>
+        </g>
+        <g data-object-id="energy-axis" data-generated-by="tikz"
+          data-overlap="allow" data-bbox="1200 158 44 626"/>
+        <g data-object-id="band-gap-window" data-generated-by="tikz"
+          data-overlap="allow" data-bbox="1326 228 232 502"/>
+        <g data-object-id="conduction-band" data-generated-by="tikz"
+          data-overlap="allow" data-bbox="1326 170 232 52"/>
+        <g data-object-id="valence-band" data-generated-by="tikz"
+          data-overlap="allow" data-bbox="1326 732 232 54"/>
+        <g data-object-id="shallow-trap-levels" data-generated-by="tikz"
+          data-overlap="allow" data-bbox="1366 260 218 142"/>
+        <g data-object-id="deep-trap-levels" data-generated-by="tikz"
+          data-overlap="allow" data-bbox="1366 494 218 206"/>
+        <g data-object-id="density-axis" data-generated-by="tikz"
+          data-overlap="allow" data-bbox="1618 170 130 616"/>
+        <g data-object-id="trap-depth-distribution" data-generated-by="tikz"
+          data-overlap="allow" data-bbox="1628 260 114 440"/>
+        <text data-text-role="label" data-bbox="1428 188 30 18" x="1428" y="202" font-family="Arial" font-size="14" fill="#111827" opacity="0.01">CB</text>
+        <text data-text-role="label" data-bbox="1428 752 30 18" x="1428" y="766" font-family="Arial" font-size="14" fill="#111827" opacity="0.01">VB</text>
+        <text data-text-role="label" data-bbox="1574 318 92 18" x="1574" y="332" font-family="Arial" font-size="14" fill="#F97316" opacity="0.01">Shallow traps</text>
+        <text data-text-role="label" data-bbox="1574 556 72 18" x="1574" y="570" font-family="Arial" font-size="14" fill="#7C3AED" opacity="0.01">Deep traps</text>
+        <text data-text-role="axis_label" data-bbox="1646 148 44 16" x="1646" y="160" font-family="Arial" font-size="12" fill="#111827" opacity="0.01">g(E_t)</text>
+        <text data-text-role="axis_label" data-bbox="1696 800 24 16" x="1696" y="812" font-family="Arial" font-size="12" fill="#111827" opacity="0.01">E_t</text>
+      </g>
+    </g>
+
+    <g id="labels">
+      <text data-text-role="title" data-bbox="1136 44 606 24" x="1136" y="64"
+        font-family="Arial" font-size="18" fill="#14B8A6">Unified trap-depth picture in a sulfur-rich polymer</text>
+
+      <text data-text-role="panel_letter" data-bbox="58 116 14 20" x="58" y="131"
+        font-family="Arial" font-size="16" fill="#FFFFFF">1</text>
+      <text data-text-role="label" data-bbox="98 108 126 18" x="98" y="124"
+        font-family="Arial" font-size="14" fill="#2563EB">Experiment</text>
+      <text data-text-role="label" data-bbox="48 160 142 18" x="48" y="174"
+        font-family="Arial" font-size="14" fill="#111827">Discharge current</text>
+      <text data-text-role="label" data-bbox="48 190 142 18" x="48" y="204"
+        font-family="Arial" font-size="14" fill="#111827">vs. time (log-log)</text>
+
+      <text data-text-role="panel_letter" data-bbox="58 414 14 20" x="58" y="429"
+        font-family="Arial" font-size="16" fill="#FFFFFF">2</text>
+      <text data-text-role="label" data-bbox="98 404 210 18" x="98" y="420"
+        font-family="Arial" font-size="14" fill="#2563EB">Mathematical interpretation</text>
+      <text data-text-role="label" data-bbox="48 478 218 18" x="48" y="492"
+        font-family="Arial" font-size="14" fill="#111827">From n to trap-depth distribution</text>
+      <text data-text-role="label" data-bbox="344 394 22 18" x="344" y="410"
+        font-family="Arial" font-size="14" fill="#2563EB">n</text>
+      <text data-text-role="micro" data-bbox="322 432 92 16" x="322" y="444"
+        font-family="Arial" font-size="11" fill="#111827">power-law exponent</text>
+      <text data-text-role="label" data-bbox="540 394 44 18" x="540" y="410"
+        font-family="Arial" font-size="14" fill="#2563EB">tau_d</text>
+      <text data-text-role="micro" data-bbox="510 432 128 16" x="510" y="444"
+        font-family="Arial" font-size="11" fill="#111827">Debye time constant</text>
+      <text data-text-role="label" data-bbox="724 394 52 18" x="724" y="410"
+        font-family="Arial" font-size="14" fill="#2563EB">g(E_t)</text>
+      <text data-text-role="micro" data-bbox="704 432 132 16" x="704" y="444"
+        font-family="Arial" font-size="11" fill="#111827">trap-depth distribution</text>
+      <text data-text-role="axis_label" data-bbox="354 542 190 16" x="354" y="556"
+        font-family="Arial" font-size="12" fill="#2563EB">tau_d = tau_0 exp(E_t/kBT)</text>
+      <text data-text-role="axis_label" data-bbox="798 590 26 16" x="798" y="604"
+        font-family="Arial" font-size="12" fill="#111827">E_t</text>
+
+      <text data-text-role="panel_letter" data-bbox="58 718 14 20" x="58" y="733"
+        font-family="Arial" font-size="16" fill="#FFFFFF">3</text>
+      <text data-text-role="label" data-bbox="98 708 124 18" x="98" y="724"
+        font-family="Arial" font-size="14" fill="#2563EB">Molecular origin</text>
+      <text data-text-role="label" data-bbox="48 774 134 18" x="48" y="788"
+        font-family="Arial" font-size="14" fill="#111827">sulfur-rich polymer</text>
+
+      <text data-text-role="label" data-bbox="1038 462 252 18" x="1038" y="478"
+        font-family="Arial" font-size="14" fill="#14B8A6">Convergence on a unified trap-depth picture</text>
+    </g>
+  </g>
+</svg>
