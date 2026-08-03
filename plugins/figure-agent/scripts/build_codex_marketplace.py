@@ -32,6 +32,8 @@ def _safe_extract(archive: zipfile.ZipFile, destination: Path) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         with archive.open(member) as source, target.open("wb") as output:
             shutil.copyfileobj(source, output)
+        archived_mode = (member.external_attr >> 16) & 0o777
+        target.chmod(archived_mode or 0o644)
 
 
 def _marketplace_payload() -> dict[str, object]:

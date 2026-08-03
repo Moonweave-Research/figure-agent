@@ -30,6 +30,7 @@ def test_builds_lean_self_contained_codex_marketplace(tmp_path: Path) -> None:
     }
     assert (plugin / ".codex-plugin" / "plugin.json").is_file()
     assert (plugin / ".claude-plugin" / "plugin.json").is_file()
+    assert (plugin / "bin" / "fig-agent").stat().st_mode & 0o111
     assert (plugin / "scripts" / "checks" / "check_silhouette_morphology.py").is_file()
     assert not (plugin / "examples" / "fig5_actuation_mechanism" / "build").exists()
     assert plugin_package_audit.find_packaging_junk(plugin) == []
