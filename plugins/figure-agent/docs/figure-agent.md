@@ -305,7 +305,8 @@ Reuse the established compile/export, perception, critique, attribution, repair,
 materialization, provenance, and human-review surfaces. The R1-R3 foundation and
 several R4 transitions are not a completed autonomous loop. Status and run bind
 one hash-identified attempt, fail closed on ambiguity or staleness, and stop at
-external host or human boundaries.
+external host or human boundaries; stale detector evidence is a reported stop,
+not an uncaught exception or candidate source.
 
 Repairs require exact attribution, a bound packet and preview, named authorization,
 strict materialization or rollback, and fresh post-repair review. Runner and queue

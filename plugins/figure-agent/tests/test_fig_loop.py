@@ -279,7 +279,7 @@ def test_loop_rejects_cyclic_scratch_before_checkpoint(tmp_path: Path) -> None:
     scratch.symlink_to(scratch.name)
     workspace_entries = sorted(path.name for path in tmp_path.iterdir())
 
-    with pytest.raises(FigLoopError, match="runs_root_path_resolution_error"):
+    with pytest.raises(FigLoopError, match="runs_root_canonical_symlink"):
         run_loop("loop_demo", "inspect", repo_root=tmp_path)
 
     assert not (fixture / "build").exists()
@@ -310,7 +310,7 @@ def test_loop_main_reports_cyclic_scratch_without_stdout(
     captured = capsys.readouterr()
     assert exit_code == 1
     assert captured.out == ""
-    assert captured.err == "fig_loop.py: runs_root_path_resolution_error\n"
+    assert captured.err == "fig_loop.py: runs_root_canonical_symlink\n"
     assert not (fixture / "build").exists()
     assert not (fixture / "exports").exists()
     assert sorted(path.name for path in tmp_path.iterdir()) == workspace_entries

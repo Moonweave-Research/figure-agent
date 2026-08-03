@@ -798,6 +798,22 @@ def _defect_candidates(
                 "unsupported_safe_defect_count": 0,
             },
         )
+    evidence_errors = ledger.get("evidence_errors")
+    if isinstance(evidence_errors, list) and evidence_errors:
+        return (
+            [],
+            [
+                {
+                    "code": "stale_detector_evidence",
+                    "detail": str(evidence_errors[0]),
+                }
+            ],
+            {
+                "safe_candidate_defect_count": 0,
+                "candidate_supported_defect_count": 0,
+                "unsupported_safe_defect_count": 0,
+            },
+        )
     refusals: list[dict[str, str]] = []
     sortable_candidates: list[tuple[tuple[int, str, str, int, str, str, str], dict[str, Any]]] = []
     safe_count = 0

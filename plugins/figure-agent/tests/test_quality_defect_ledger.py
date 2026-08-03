@@ -8,6 +8,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import promotion_wiring  # noqa: E402
 import quality_defect_ledger  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
@@ -943,6 +944,31 @@ def test_quality_defect_ledger_marks_missing_detector_source_hashes_stale(
     }
     assert ledger["actionability_metrics"]["candidate_supported_defect_count"] == 0
     assert ledger["actionability_metrics"]["stale_detector_evidence_count"] == 1
+
+
+def test_quality_defect_ledger_reports_promotion_evidence_error_without_crashing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _write_fixture(workspace)
+
+    def stale_detector(*_args: object, **_kwargs: object) -> list[dict[str, object]]:
+        raise promotion_wiring.PromotionWiringError(
+            "tex_assertions_source_hash_mismatch"
+        )
+
+    monkeypatch.setattr(promotion_wiring, "auto_promoted_defects", stale_detector)
+
+    ledger = quality_defect_ledger.build_quality_defect_ledger(
+        "quality_demo",
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    )
+
+    assert ledger["evidence_errors"] == ["tex_assertions_source_hash_mismatch"]
+    assert ledger["defects"][0]["freshness"]["state"] == "stale"
+    assert ledger["defects"][0]["patchability"]["may_edit"] is False
 
 
 def test_quality_defect_ledger_blocks_undeclared_target_panel(

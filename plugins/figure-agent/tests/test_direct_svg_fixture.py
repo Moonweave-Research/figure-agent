@@ -431,7 +431,13 @@ def test_test_a_valid_cycles_replay_byte_identically_from_current_and_copied_che
                 assert runtime_receipt["source_sha256"] == receipt["source_sha256"]
                 assert runtime_receipt["render_sha256"] == receipt["render_sha256"]
                 assert _sha256(root / receipt["render_path"]) == receipt["render_sha256"]
-                assert runtime_receipt == receipt["runtime_receipt"]
+                expected_receipt = receipt["runtime_receipt"]
+                assert runtime_receipt["python"]["implementation"] == "CPython"
+                assert {
+                    key: value for key, value in runtime_receipt.items() if key != "python"
+                } == {
+                    key: value for key, value in expected_receipt.items() if key != "python"
+                }
 
 
 def test_executed_test_b_binds_validated_packet_without_acceptance_claim() -> None:

@@ -215,6 +215,47 @@ def _first_blocker_defect(graph: dict[str, Any], name: str) -> dict[str, Any]:
     }
 
 
+def _detector_evidence_error_defect(
+    example_dir: Path,
+    name: str,
+    graph_hash: str,
+    error: promotion_wiring.PromotionWiringError,
+) -> dict[str, Any]:
+    error_code = str(error)
+    return {
+        "id": "QD001",
+        "source": "deterministic_audit",
+        "evidence": [
+            {
+                "uri": f"figure://{name}/audit/detector-evidence",
+                "node_id": error_code,
+            }
+        ],
+        "severity": "blocker",
+        "owner": "tool",
+        "defect_class": "detector_evidence_stale",
+        "patchability": {
+            "state": "human_required",
+            "reasons": [],
+            "blocked_codes": ["stale_detector_evidence"],
+            "may_edit": False,
+            "policy_version": quality_patch_policy.SCHEMA,
+        },
+        "affected_files": [f"examples/{name}/{name}.tex"],
+        "freshness": {
+            "state": "stale",
+            "audit_evidence_graph_hash": graph_hash,
+            "source_hashes": _source_hashes(example_dir, name),
+            "error": error_code,
+        },
+        "target": {"panel": "unknown", "subregion": "detector-evidence"},
+        "policy": {
+            "version": quality_patch_policy.SCHEMA,
+            "blocked_codes": ["stale_detector_evidence"],
+        },
+    }
+
+
 def _text_boundary_defect(example_dir: Path, name: str, graph_hash: str) -> dict[str, Any] | None:
     report = example_dir / "build" / "text_boundary_clash.json"
     if not report.is_file():
@@ -672,6 +713,7 @@ def build_quality_defect_ledger(
     graph_hash = _canonical_hash(graph)
     example_dir = paths.examples_dir / name
 
+    evidence_errors: list[str] = []
     if _source_path_escape(graph):
         defect = _first_blocker_defect(graph, name)
         defect["patchability"] = {
@@ -687,7 +729,13 @@ def build_quality_defect_ledger(
         }
         defects = [defect]
     else:
-        detector_defects = _detector_defects(example_dir, name, graph_hash)
+        try:
+            detector_defects = _detector_defects(example_dir, name, graph_hash)
+        except promotion_wiring.PromotionWiringError as exc:
+            evidence_errors.append(str(exc))
+            detector_defects = [
+                _detector_evidence_error_defect(example_dir, name, graph_hash, exc)
+            ]
         if detector_defects:
             defects = detector_defects
         else:
@@ -710,6 +758,7 @@ def build_quality_defect_ledger(
         "workspace_root": str(paths.workspace_root),
         "defects": defects,
         "actionability_metrics": actionability_metrics,
+        "evidence_errors": evidence_errors,
     }
     payload["ledger_hash"] = _canonical_hash(payload)
     return payload

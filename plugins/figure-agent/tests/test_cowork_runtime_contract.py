@@ -121,7 +121,7 @@ def test_fig_agent_loop_uses_workspace_before_cyclic_root_validation(
 
     assert result.returncode == 1
     assert result.stdout == ""
-    assert result.stderr == "fig_loop.py: runs_root_path_resolution_error\n"
+    assert result.stderr == "fig_loop.py: runs_root_canonical_symlink\n"
     assert sorted(path.name for path in workspace.iterdir()) == workspace_entries
     assert not (fixture / "build").exists()
     assert not (fixture / "exports").exists()

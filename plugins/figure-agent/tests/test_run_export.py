@@ -10,8 +10,8 @@ import run_export  # noqa: E402
 import status as status_mod  # noqa: E402
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
+    compute_critique_input_hash,
     critique_generator_version,
-    input_manifest_hash,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -65,9 +65,11 @@ def _make_missing_reference_fixture(tmp_path: Path) -> Path:
 
 def _critique_input_hash(fixture: Path, name: str) -> str:
     spec = status_mod.parse_spec((fixture / "spec.yaml").read_text(encoding="utf-8"))
-    return input_manifest_hash(
-        status_mod._critique_source_paths(fixture, name, spec),
-        base_dir=REPO_ROOT,
+    return compute_critique_input_hash(
+        fixture,
+        name,
+        spec,
+        style_lock_path=status_mod.STYLE_LOCK_PATH,
     )
 
 

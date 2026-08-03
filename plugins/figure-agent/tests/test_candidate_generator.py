@@ -334,6 +334,35 @@ def test_candidate_generator_skips_line_weight_style_safe_defect(
     assert payload["refusals"] == [{"code": "unsupported_candidate_family", "defect_id": "QD001"}]
 
 
+def test_candidate_generator_refuses_stale_detector_ledger_without_candidate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        lambda *_args, **_kwargs: {
+            "defects": [],
+            "evidence_errors": ["tex_assertions_source_hash_mismatch"],
+        },
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    assert payload["candidates"] == []
+    assert payload["refusals"] == [
+        {
+            "code": "stale_detector_evidence",
+            "detail": "tex_assertions_source_hash_mismatch",
+        }
+    ]
+
+
 def test_candidate_generator_refuses_unknown_panel_safe_defect(
     tmp_path: Path,
     monkeypatch,

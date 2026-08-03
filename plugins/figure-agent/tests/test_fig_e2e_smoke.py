@@ -519,7 +519,7 @@ def test_e2e_rejects_cyclic_scratch_before_commands_or_outputs(
     calls: list[list[str]] = []
     workspace_entries = sorted(path.name for path in tmp_path.iterdir())
 
-    with pytest.raises(smoke.SmokeError, match="runs_root_path_resolution_error"):
+    with pytest.raises(smoke.SmokeError, match="runs_root_canonical_symlink"):
         smoke.run_smoke(
             fixture.name,
             repo_root=tmp_path,
@@ -547,7 +547,7 @@ def test_e2e_main_reports_cyclic_scratch_as_json_error(
     assert exit_code == 1
     assert captured.err == ""
     assert json.loads(captured.out) == {
-        "error": "runs_root_path_resolution_error",
+        "error": "runs_root_canonical_symlink",
         "fixture": fixture.name,
         "goal": "deterministic E2E smoke",
         "repeat": 1,
