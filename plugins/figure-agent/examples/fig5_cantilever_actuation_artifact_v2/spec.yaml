@@ -86,6 +86,55 @@ tex_assertions:
     reference_coordinate: panel-b-clamp-axis
     tolerance_cm: 0.02
 
+# Rendered-PDF morphology checks complement the source-anchor assertions above.
+# The film is authored as a thick outer centerline plus a thinner inner stroke,
+# so these checks select the outer rendered member rather than requiring a
+# closed-path primitive or a fixed Bezier recipe.
+silhouette_morphology_checks:
+  - id: panel-a-drive-on-member
+    representation: stroked_centerline
+    role: repeated_cantilever_member
+    bbox_pdf_cm: [0.30, 1.00, 4.00, 4.20]
+    stroke_rgb: [0.432, 0.34447, 0.08472]
+    color_tolerance: 0.02
+    linewidth_range_pt: [6.5, 7.0]
+    max_width_to_length_ratio: 0.105
+  - id: panel-b-residual-member
+    representation: stroked_centerline
+    role: repeated_cantilever_member
+    bbox_pdf_cm: [4.60, 1.00, 8.30, 4.20]
+    stroke_rgb: [0.432, 0.34447, 0.08472]
+    color_tolerance: 0.02
+    linewidth_range_pt: [6.5, 7.0]
+    max_width_to_length_ratio: 0.105
+  - id: panel-c-reverse-member
+    representation: stroked_centerline
+    role: repeated_cantilever_member
+    bbox_pdf_cm: [8.90, 1.00, 12.70, 4.20]
+    stroke_rgb: [0.432, 0.34447, 0.08472]
+    color_tolerance: 0.02
+    linewidth_range_pt: [6.5, 7.0]
+    max_width_to_length_ratio: 0.105
+
+silhouette_morphology_groups:
+  - id: repeated-cantilever-sequence
+    member_ids:
+      - panel-a-drive-on-member
+      - panel-b-residual-member
+      - panel-c-reverse-member
+    max_centerline_length_ratio: 1.06
+    max_stroke_width_ratio: 1.03
+    absolute_bend_order:
+      - panel-b-residual-member
+      - panel-c-reverse-member
+      - panel-a-drive-on-member
+    minimum_bend_step_pt: 5.0
+    tip_directions:
+      panel-a-drive-on-member: positive
+      panel-b-residual-member: positive
+      panel-c-reverse-member: negative
+    minimum_direction_displacement_pt: 8.0
+
 # A declared intermediate stage must have a visible, ordered reader-facing
 # anchor. This is a semantic/render contract, not a primitive recipe.
 process_stage_visibility_checks:

@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-03T09:05:59Z'
+generated_at: '2026-08-03T13:27:47Z'
 generator: Codex host vision critique
-generator_version: sha256:c44ca73daa30d2a1db2f1ec4c16feeeb4c710bec2ab1515f57161c35a8f0a924
+generator_version: sha256:78cf3f9eff794f643906438081641c4f496a370cb3bf78bff39c863383018516
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:0ef38e36b2d7872901b9f323f8197c2ecef3d76213fe5d1bccf611c0f060adfd
+critique_input_hash: sha256:27a4670f02a885f89828b200eb499271241c6dcd54ec3fd6811137b60eb2da10
 verdict: ready
 findings: []
 panels: []
@@ -148,8 +148,8 @@ quality_axes:
   component_fidelity:
     verdict: pass
     confidence: high
-    rationale: The clamp, cantilever, electrode, air gap, charge markers, and response trace are all present and visually coherent.
-    evidence: Panels A-C component audit and Panel D trace crop.
+    rationale: The clamp, cantilever, electrode, air gap, charge markers, and response trace are present; rendered-vector evidence now confirms the A-C members retain one width and near-equal centerline length while their bend states remain distinct.
+    evidence: Panels A-C crops plus build/silhouette_morphology.json (3 members and 1 comparison group checked, 0 violations).
     blocking_items: []
     recommended_action: none
   scientific_plausibility:
@@ -411,13 +411,13 @@ aesthetic_lever_audit:
     verdict: pass
     confidence: high
     observed_positive_signals:
-      - A-C share fixed-end and electrode datums, consistent film width and length, ordered bends, and non-contact clearance.
+      - A-C share fixed-end and electrode datums; rendered stroke-width ratio is 1.000, centerline-length ratio is 1.031, and absolute tip displacement orders B < C < A.
     observed_anti_patterns: []
     route: none
     linked_evidence: [quality_axes.component_fidelity, top_tier_audit.cross_panel_semantic_grammar]
     allowed_next_adjustment: ''
     forbidden_adjustment_guard: Do not encode state by changing specimen identity, thickness, length, or closing the air gap.
-    rationale: The current render satisfies repeated_member_continuity and avoids a banana-like or second-specimen reading.
+    rationale: The current render satisfies repeated_member_continuity; the vector check rules out self-intersection, scale drift, and collapsed bend ordering, while final aesthetic judgment remains outside the detector.
   - lever_id: force_competition_hierarchy
     dimension: cross_panel_grammar
     verdict: pass
@@ -484,7 +484,7 @@ aesthetic_antipattern_audit:
     verdict: absent
     severity: NIT
     route: none
-    evidence: Cantilever and electrode silhouettes are controlled and rectilinear.
+    evidence: Cantilever silhouettes remain finite-width with smooth single-span curvature; electrodes and clamps retain restrained rectilinear geometry.
     rationale: No childish cue dominates.
     linked_evidence: []
   - id: poster_gradient_decoration

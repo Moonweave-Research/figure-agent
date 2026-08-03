@@ -774,6 +774,12 @@ rendered-length measurement), not only endpoint displacement: a smaller bend
 angle must not silently become a shorter cantilever. If the repeated member's
 arc-length check is absent, treat the result as an authoring/detector gap rather
 than accepting a clean local render as evidence of equal specimen scale.
+For a PDF-rendered thick-stroke member, declare fixture-local
+`silhouette_morphology_checks` with `representation: stroked_centerline`; group
+the repeated states in `silhouette_morphology_groups` when length, width, bend
+order, or bend direction carries the comparison. Use the rendered measurements
+as regression evidence only. Passing ratios do not prove that the curvature,
+free-end treatment, or force-label hierarchy has publication-quality finish.
 
 For a qualitative time-response trace, preserve one continuous event-owned
 path from the declared observation origin. Show a hold or isolation interval as
