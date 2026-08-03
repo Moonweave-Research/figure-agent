@@ -42,6 +42,7 @@ dist/
 .idea/
 .superpowers/
 .claude/
+.codex/
 .worktrees/
 
 # Live blinded-review keys are local-only and never publishable.
