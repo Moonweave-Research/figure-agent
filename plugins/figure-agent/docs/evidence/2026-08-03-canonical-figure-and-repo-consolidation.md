@@ -42,6 +42,25 @@ A verified Git bundle preserves the pre-prune local branch and tag namespace:
 - SHA-256: `c403748f6ad987b2c2c4b61a07e6ce9ce7df3b113f24e01d46c51858d8114937`
 - verification: `git bundle verify` passed and reported complete history
 
+A second verified bundle captures the current canonical `main` after export
+source-of-truth and SVG-fidelity hardening:
+
+- path: `/Users/choemun-yeong/workspace/ResearchOS/figure-agent-archives/figure-agent-main-baselines-20260803-6a84d238.bundle`
+- ref: `main` at `6a84d238`
+- size: 87 MiB
+- SHA-256: `b6cb788e674686b34d07a382a975b24418952cc60abf45f20c974aadc83287df`
+- verification: `git bundle verify` passed and reported complete history
+
+Ten legacy stash entries were converted to annotated
+`snapshot/stashes/*` tags before removing the mutable stash reflog. A dedicated
+bundle preserves all ten tag refs and their complete histories:
+
+- path: `/Users/choemun-yeong/workspace/ResearchOS/figure-agent-archives/figure-agent-stashes-20260803.bundle`
+- refs: 10 annotated `snapshot/stashes/*` tags
+- size: 107 MiB
+- SHA-256: `8f1f2a7cedfdeaee87ab6b52215aa65a64477d661b604bb26a83a8ba805e76f6`
+- verification: `git bundle verify` passed and reported complete history
+
 ## Cleanup performed
 
 - Reduced registered Git worktrees to the canonical repository root on
@@ -60,6 +79,11 @@ A verified Git bundle preserves the pre-prune local branch and tag namespace:
 - Removed 139 noncanonical local branch refs after the verified bundle was
   created. The remaining local branches are `main` and explicit `archive/*`
   refs.
+- Replaced ten mutable legacy stash entries with named snapshot tags and a
+  verified standalone bundle; no stash entry remains as an unnamed work queue.
+- Removed six local Fig5 archive refs already contained in `main` and mirrored
+  on `origin`; retained nine local `archive/*` refs with independent historical
+  commits.
 - Added `.codex/` to `.gitignore` so machine-specific absolute MCP paths cannot
   become accidental repository changes.
 
@@ -73,16 +97,19 @@ A verified Git bundle preserves the pre-prune local branch and tag namespace:
 - Strict Fig5 compile: passed with 5 geometry assertions and grounded physics.
 - SVG-first archive verification: 22 tests passed; Ruff passed after lockfile-based
   local Node dependency installation.
-- Root worktree: canonical sources and regenerated build evidence are present on
-  `main`; generated exports were not copied from the removed worktree.
+- Root worktree: canonical sources, regenerated build evidence, and fresh
+  candidate-aware exports are present on `main`.
+- Exported SVG glyphs are outlined to preserve PDF text spacing across SVG
+  renderers; TeX remains the editable text authority.
 
 ## Open human and synchronization gates
 
-- Fig1 has a fresh current-candidate render and remains `candidate_only` with
-  its human gate pending; root-level exports are missing.
-- Fig2 has a fresh render but stale critique evidence and no regenerated export.
-- Fig5 has a fresh render but stale critique evidence and no regenerated export.
-- Critique refresh, export generation, and explicit human acceptance remain
-  separate follow-up gates; source consolidation does not imply any of them.
-- Local `main` is ahead of `origin/main`; this cleanup did not push or create a
-  publication/release claim.
+- Fig1 has a fresh current-candidate render and export and remains
+  `candidate_only`; critique is not required for this fixture and its human gate
+  remains pending.
+- Fig2 and Fig5 have fresh render, critique, adjudication, and export evidence.
+- All three fixtures complete deterministic closeout with no blocking step, but
+  remain `acceptance=NOT_DECLARED`, `release_ready=false`, and
+  `final_ready=false` pending explicit human review.
+- Local `main` is 395 commits ahead of `origin/main`; this cleanup did not push
+  or create a publication/release claim.

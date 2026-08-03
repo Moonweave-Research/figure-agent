@@ -54,7 +54,7 @@ subscription tokens — no external API call originates from plugin code.
                       (FIGURE_AGENT_STRICT=1 promotes findings to hard fail)
 /fig_critique <name>  L4.5 — host reads build/<name>.png + briefing,
                       writes structured critique.md (report-only)
-/fig_export <name>    PDF / SVG / TIFF / PNG export (dvisvgm preserves text)
+/fig_export <name>    candidate-aware PDF / outlined SVG / TIFF / PNG export
 /fig_status [<name>]  read-only stage + accepted-state inference
 ```
 
