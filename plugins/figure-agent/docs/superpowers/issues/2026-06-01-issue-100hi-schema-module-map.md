@@ -202,6 +202,42 @@ This issue is intentionally docs-only. It does not change runtime behavior.
 | `figure-agent.fixture-fork.v1` | fixture duplication receipt | `fixture_fork.py` | operators | Receipt sets `acceptance_state: NOT_DECLARED`; copy explicitly excludes state files (`critique.md`, `golden_acceptance.json`); no downstream reader |
 | `figure-agent.fixture-visual-quality-metrics.v1` | advisory visual-quality metrics | `visual_quality_metrics.py` | `fixture_compare.py` | Payload declares `policy: advisory_only` and `mutation_boundary: writes_build_metrics_only_no_gate_state`; read for display only, no gating |
 | `figure-agent.review-scale-preview-manifest.v1` | hash-bound 100/50/33% review previews | `review_scale_previews.py` | `status.py`, review operators | Derived previews must match one render hash; stale or incomplete preview sets downgrade render evidence and never imply publication acceptance |
+| `figure-agent.render-input-manifest.v1` | hash-bound compile inputs | `render_input_manifest.py`, `compile.sh` | `status.py` | Binds PDF bytes to TeX, briefing, spec, and Style Lock content; identical plugin-cache copies stay fresh while byte drift fails closed |
+| `figure-agent.silhouette-morphology.v1` | rendered member morphology evidence | `check_silhouette_morphology.py` | `status.py`, strict compile | Hash-bound member/group coverage and violations block readiness when declared evidence is absent, stale, incomplete, or failing; never an aesthetic verdict |
+| `figure-agent.handcrafted-finish-benchmark.v1` | handcrafted-finish benchmark packet | `handcrafted_finish_benchmark.py` | benchmark operators and tests | Evidence-only benchmark comparison; no acceptance or publication authority |
+| `figure-agent.handcrafted-finish-host-review.v1` | host review for handcrafted-finish benchmark | external host, validated by `handcrafted_finish_benchmark.py` | `handcrafted_finish_benchmark.py` | Hash-bound review evidence only; cannot mutate source or grant acceptance |
+| `figure-agent.handcrafted-finish-render-evidence.v1` | render evidence for handcrafted-finish benchmark | `handcrafted_finish_benchmark.py` | `handcrafted_finish_benchmark.py` | Binds inspected renders for comparison without granting edit, release, or publication authority |
+
+Closed-loop compatibility schemas retained by their validators and tests are:
+`figure-agent.repair-materialization-preview.v1`,
+`figure-agent.repair-materialization-receipt.v2`,
+`figure-agent.repair-execution-packet.v4`,
+`figure-agent.repair-authority-contract.v1`,
+`figure-agent.bounded-repair-lineage.v1`,
+`figure-agent.closed-loop-attempt-state.v1`,
+`figure-agent.closed-loop-current-state.v1`,
+`figure-agent.legacy-candidate-quarantine-authorization.v1`,
+`figure-agent.adjudicated-repair-binding.v1`,
+`figure-agent.semantic-finding-attribution.v1`,
+`figure-agent.attribution-handoff.v1`,
+`figure-agent.post-repair-visual-review-request.v1`,
+`figure-agent.host-review-execution-receipt.v1`,
+`figure-agent.post-repair-visual-review-response.v1`,
+`figure-agent.post-repair-visual-review-receipt.v1`,
+`figure-agent.initial-visual-review-request.v1`,
+`figure-agent.attempt-local-post-repair-review-request.v2`,
+`figure-agent.attempt-local-host-review-execution-receipt.v2`,
+`figure-agent.attempt-local-post-repair-review-response.v2`,
+`figure-agent.attempt-local-post-repair-review-receipt.v2`,
+`figure-agent.initial-visual-review-response.v1`,
+`figure-agent.initial-human-adjudication.v1`,
+`figure-agent.initial-attribution-handoff.v1`,
+`figure-agent.initial-attribution-binding.v2`,
+`figure-agent.closed-loop-development-verdict.v1`,
+`figure-agent.root-attempt-manifest.v1`,
+`figure-agent.step-execution-evidence.v1`,
+`figure-agent.current-candidate-pointer.v1`, and
+`figure-agent.prospective-evidence-receipt.v1`.
 
 ## Module Ownership Map
 
@@ -228,7 +264,7 @@ metadata. Do not add detector reports here.
 Owns compile-time or render-derived facts. These modules may emit JSON reports
 but should not decide host-vision verdicts.
 
-- `compile.sh`, `lint_tex.py`, `palette.py`, `ocr.py`
+- `compile.sh`, `render_input_manifest.py`, `lint_tex.py`, `palette.py`, `ocr.py`
 - `check_collisions.py`, `check_visual_clash.py`,
   `check_visual_clash_budget.py`
 - `check_text_boundary_clash.py`, `check_label_path_proximity.py`,

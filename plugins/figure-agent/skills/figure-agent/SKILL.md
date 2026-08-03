@@ -81,6 +81,13 @@ Use `fig-agent ...` for shell commands. If `fig-agent` is not on `PATH`, use
 The installed plugin bundle and user figure workspace are separate. Bundled
 tools/styles come from `FIGURE_AGENT_PLUGIN_ROOT` or `CLAUDE_PLUGIN_ROOT`;
 figure fixtures come from `FIGURE_AGENT_WORKSPACE` or `CLAUDE_PROJECT_DIR`.
+Successful compiles bind the PDF to the content hashes of the authored source,
+briefing, spec, and Style Lock in `build/<name>_render_inputs.json`. When that
+manifest exists, judge render freshness from its hashes rather than file mtimes
+or installation paths: copying identical Style Lock bytes into a newer plugin
+cache must remain fresh, while byte drift must become stale even if timestamps
+are older. Missing manifests retain legacy mtime compatibility; invalid or
+incomplete manifests fail closed.
 
 ## Workflow shape
 

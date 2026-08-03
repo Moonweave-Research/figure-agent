@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import time
@@ -164,6 +165,18 @@ def test_compile_only_publishes_hash_bound_scale_previews_after_success() -> Non
     assert script.index(final_gate) < script.index(preview_call)
 
 
+def test_compile_publishes_content_bound_render_inputs_after_success() -> None:
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    manifest_call = '"$WORKFLOW_DIR/scripts/render_input_manifest.py"'
+    final_gate = 'echo "ERROR: strict detector gate failed after review evidence generation"'
+    assert 'RENDER_INPUT_MANIFEST="${BUILD_DIR}/${BASE}_render_inputs.json"' in script
+    assert '--input "source_tex=$TEX_INPUT_ABS"' in script
+    assert '--input "style_lock=$WORKFLOW_DIR/styles/polymer-paper-preamble.sty"' in script
+    assert manifest_call in script
+    assert script.index(final_gate) < script.index(manifest_call)
+
+
 @pytest.mark.skipif(shutil.which("lualatex") is None, reason="requires lualatex")
 def test_compile_failure_clears_previous_scale_preview_evidence(tmp_path: Path) -> None:
     tex_path = tmp_path / "broken.tex"
@@ -277,6 +290,11 @@ compile smoke
     assert (tmp_path / "build" / "smoke.png").exists()
     assert (tmp_path / "build" / "collisions.json").exists()
     assert (tmp_path / "build" / "label_path_proximity.json").exists()
+    render_inputs = json.loads(
+        (tmp_path / "build" / "smoke_render_inputs.json").read_text(encoding="utf-8")
+    )
+    assert render_inputs["schema"] == "figure-agent.render-input-manifest.v1"
+    assert set(render_inputs["inputs"]) == {"source_tex", "style_lock"}
     assert not (tmp_path / "smoke.pdf").exists()
     assert not (tmp_path / "smoke.png").exists()
     combined = result.stdout + result.stderr

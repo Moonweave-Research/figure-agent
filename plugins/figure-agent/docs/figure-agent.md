@@ -145,9 +145,10 @@ No lower state implies a higher one. Machine gates and model critiques use
 `publication_acceptance: not_claimed`; any external record is evidence, not plugin
 authority.
 
-PDF-vector `silhouette_morphology_checks` may guard filled-path integrity or
-measure a thick-stroke member's rendered length, width, displacement, and
-direction; optional groups compare cross-panel scale and bend order. `/fig_status`
+PDF-vector `silhouette_morphology_checks` may guard `filled_boundary` integrity or
+measure a `stroked_centerline` member's rendered length, width, displacement,
+and direction; optional `silhouette_morphology_groups` compare cross-panel scale
+and bend order. `/fig_status`
 must expose hash-bound checked/declared member and group coverage. Missing, stale,
 incomplete, invalid, unanalyzable, or failing evidence blocks readiness. This is
 not an aesthetic score: curvature, label hierarchy, and publication taste still

@@ -28,6 +28,8 @@ if [[ ! -f "$TEX_INPUT" ]]; then
   echo "Error: file not found: $TEX_INPUT" >&2
   exit 1
 fi
+TEX_INPUT_DIR="$(cd "$(dirname "$TEX_INPUT")" && pwd)"
+TEX_INPUT_ABS="${TEX_INPUT_DIR}/$(basename "$TEX_INPUT")"
 
 # A copied execution-repair-v* source is immutable review evidence. It keeps
 # the fixture's generic schematic profile, but a later live coverage contract
@@ -68,8 +70,6 @@ if [[ -n "$FIXTURE_NAME" ]]; then
   FIGURE_SPEC="${FIXTURE_WORKSPACE}/examples/${FIXTURE_NAME}/spec.yaml"
   FIXTURE_ROOT="${FIXTURE_WORKSPACE}/examples/${FIXTURE_NAME}"
   LAYOUT_CONTRACT="${FIXTURE_ROOT}/layout_lanes.yaml"
-  TEX_INPUT_DIR="$(cd "$(dirname "$TEX_INPUT")" && pwd)"
-  TEX_INPUT_ABS="${TEX_INPUT_DIR}/$(basename "$TEX_INPUT")"
   # An explicitly named fixture is sufficient for a live source outside the
   # examples tree, but never turns immutable execution-repair evidence into a
   # current-source assertion target.
@@ -186,6 +186,17 @@ SCALE_PREVIEW_MANIFEST="${BUILD_DIR}/${BASE}_review_scale_previews.json"
 SCALE_PREVIEW_100="${BUILD_DIR}/${BASE}_100pct.png"
 SCALE_PREVIEW_50="${BUILD_DIR}/${BASE}_50pct.png"
 SCALE_PREVIEW_33="${BUILD_DIR}/${BASE}_33pct.png"
+RENDER_INPUT_MANIFEST="${BUILD_DIR}/${BASE}_render_inputs.json"
+RENDER_INPUT_ARGS=(
+  --input "source_tex=$TEX_INPUT_ABS"
+  --input "style_lock=$WORKFLOW_DIR/styles/polymer-paper-preamble.sty"
+)
+if [[ -n "$FIXTURE_ROOT" && -f "$FIXTURE_ROOT/briefing.md" ]]; then
+  RENDER_INPUT_ARGS+=(--input "briefing=$FIXTURE_ROOT/briefing.md")
+fi
+if [[ -n "${FIGURE_SPEC:-}" && -f "$FIGURE_SPEC" ]]; then
+  RENDER_INPUT_ARGS+=(--input "spec=$FIGURE_SPEC")
+fi
 
 clear_review_scale_previews() {
   rm -f "$SCALE_PREVIEW_MANIFEST" "$SCALE_PREVIEW_100" "$SCALE_PREVIEW_50" "$SCALE_PREVIEW_33"
@@ -194,13 +205,13 @@ clear_review_scale_previews() {
 cleanup_failed_build() {
   local status=$?
   if [[ $status -ne 0 ]]; then
-    rm -f "$PDF_OUT" "$PNG_OUT"
+    rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"
     clear_review_scale_previews
   fi
 }
 trap cleanup_failed_build ERR
 
-rm -f "$PDF_OUT" "$PNG_OUT"
+rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"
 clear_review_scale_previews
 "$ENGINE" -interaction=nonstopmode -jobname="$BASE" -output-directory="$BUILD_DIR" "$COMPILE_FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
@@ -396,6 +407,16 @@ fi
 if ! "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/review_scale_previews.py" \
   "$PNG_OUT" --json-output "$SCALE_PREVIEW_MANIFEST" >/dev/null; then
   echo "ERROR: review scale preview generation failed" >&2
+  clear_review_scale_previews
+  exit 1
+fi
+if ! "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/render_input_manifest.py" \
+  --fixture "${FIXTURE_NAME:-$BASE}" \
+  --render "$PWD/$PDF_OUT" \
+  --json-output "$PWD/$RENDER_INPUT_MANIFEST" \
+  "${RENDER_INPUT_ARGS[@]}"; then
+  echo "ERROR: render input manifest generation failed" >&2
+  rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"
   clear_review_scale_previews
   exit 1
 fi

@@ -23,6 +23,7 @@ import closed_loop_current_state
 import current_candidate
 import current_render_review_scaffold
 import human_decision_record
+import render_input_manifest
 import review_scale_previews
 import runtime_paths
 import status_next_policy
@@ -103,6 +104,16 @@ def _source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
     ]
     candidates.append(STYLE_LOCK_PATH)
     return tuple(path for path in candidates if path.exists())
+
+
+def _render_input_paths(example_dir: Path, name: str) -> dict[str, Path]:
+    candidates = {
+        "source_tex": example_dir / f"{name}.tex",
+        "briefing": example_dir / "briefing.md",
+        "spec": example_dir / "spec.yaml",
+        "style_lock": STYLE_LOCK_PATH,
+    }
+    return {role: path for role, path in candidates.items() if path.exists()}
 
 
 def _fixture_local_path(example_dir: Path, value: object) -> Path | None:
@@ -327,6 +338,16 @@ def _compute_render_state(
         return RENDER_NOT_AUTHORED
     if not build_pdf.exists():
         return RENDER_MISSING
+    hash_state = render_input_manifest.freshness(
+        manifest=render_input_manifest.manifest_path(build_pdf),
+        fixture=example_dir.name,
+        render_pdf=build_pdf,
+        inputs=_render_input_paths(example_dir, example_dir.name),
+    )
+    if hash_state == render_input_manifest.FRESH:
+        return RENDER_FRESH
+    if hash_state != render_input_manifest.MISSING:
+        return RENDER_STALE
     if _is_stale(sources, (build_pdf,)):
         return RENDER_STALE
     return RENDER_FRESH
@@ -1497,11 +1518,11 @@ def infer_stage(example_dir: Path) -> dict:
             example_dir,
         )
 
-    # Stage 3: build pdf exists, fresh against tex+briefing+style-lock, no exports
+    # Stage 3: the canonical freshness decision already verified the hash-bound
+    # manifest when present and used the legacy mtime fallback otherwise.
     if (
         build_pdf.exists()
         and tex_path.exists()
-        and not _is_stale(sources, (build_pdf,))
         and render_state in {RENDER_FRESH, RENDER_NOT_SCAFFOLDED}
     ):
         checks.append(("build_pdf", "fresh"))

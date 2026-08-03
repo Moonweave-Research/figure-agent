@@ -285,6 +285,7 @@ def test_status_projects_declared_repair_candidate_evidence(tmp_path: Path) -> N
     result = infer_stage(fig_dir)
 
     assert result["render_state"] == "FRESH"
+    assert result["stage"] == 3
     assert result["canonical_render_state"] == "STALE"
     assert result["current_candidate"]["state"] == "fresh"
     assert result["current_candidate"]["source"] == (
@@ -453,6 +454,32 @@ def _make_spec(
     )
     (directory / "spec.yaml").write_text(content, encoding="utf-8")
     (directory / "briefing.md").write_text("briefing", encoding="utf-8")
+
+
+def _write_render_input_manifest(directory: Path, name: str) -> None:
+    build = directory / "build"
+    pdf = build / f"{name}.pdf"
+    inputs = {
+        "source_tex": directory / f"{name}.tex",
+        "briefing": directory / "briefing.md",
+        "spec": directory / "spec.yaml",
+        "style_lock": status_mod.STYLE_LOCK_PATH,
+    }
+    payload = {
+        "schema": "figure-agent.render-input-manifest.v1",
+        "fixture": name,
+        "render": {
+            "path": f"build/{name}.pdf",
+            "sha256": _sha256(pdf),
+        },
+        "inputs": {
+            role: {"sha256": _sha256(path)} for role, path in inputs.items()
+        },
+    }
+    (build / f"{name}_render_inputs.json").write_text(
+        json.dumps(payload, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _write_reference_learning_pack(directory: Path) -> None:
@@ -1102,6 +1129,57 @@ def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     os.utime(pdf, (new_time, new_time))
     result = infer_stage(fig_dir)
     assert result["stage"] == 3
+
+
+def test_render_freshness_uses_content_manifest_across_style_lock_reinstall(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    installed_style = tmp_path / "installed" / "polymer-paper-preamble.sty"
+    installed_style.parent.mkdir()
+    installed_style.write_bytes(status_mod.STYLE_LOCK_PATH.read_bytes())
+    monkeypatch.setattr(status_mod, "STYLE_LOCK_PATH", installed_style)
+    fig_dir = tmp_path / "portable_render"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    tex = fig_dir / "portable_render.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    pdf = build / "portable_render.pdf"
+    pdf.write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, fig_dir.name)
+
+    newer_than_render = pdf.stat().st_mtime + 100
+    os.utime(installed_style, (newer_than_render, newer_than_render))
+
+    result = infer_stage(fig_dir)
+
+    assert result["render_state"] == "FRESH"
+    assert result["stage"] == 3
+
+
+def test_render_freshness_detects_content_drift_despite_older_mtime(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "drifted_render"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    tex = fig_dir / "drifted_render.tex"
+    tex.write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    pdf = build / "drifted_render.pdf"
+    pdf.write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, fig_dir.name)
+
+    tex.write_text("% changed tikz", encoding="utf-8")
+    old_time = pdf.stat().st_mtime - 100
+    os.utime(tex, (old_time, old_time))
+
+    result = infer_stage(fig_dir)
+
+    assert result["render_state"] == "STALE"
 
 
 def test_status_separates_render_freshness_from_strict_and_geometry_evidence(
