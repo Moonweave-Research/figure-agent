@@ -84,3 +84,26 @@ def test_historical_cantilever_fixtures_are_non_main_in_machine_map() -> None:
     assert classified["fig5_actuation_mechanism"] == "regression"
     assert classified["fig5_cantilever_mechanism_v1"] == "superseded"
     assert classified["fig3_floating_clip_protocol"] == "si"
+
+
+def test_only_current_three_authoring_baselines_are_active() -> None:
+    plan_map = _plan_map()
+    figures = plan_map["figures"]
+    assert isinstance(figures, dict)
+
+    active_fixtures = {
+        entry["fixture"]
+        for entry in figures.values()
+        if isinstance(entry, dict) and entry["status"] == "active_candidate"
+    }
+    assert active_fixtures == {
+        "fig1_updated_agent_redraw_v1",
+        "fig2_charge_transport_mechanism",
+        "fig5_cantilever_actuation_artifact_v2",
+    }
+    assert figures["fig3"]["status"] == "planned_missing"
+    assert figures["fig4"]["status"] == "planned_missing"
+
+    non_main = plan_map["non_main"]
+    assert isinstance(non_main, dict)
+    assert "fig4_trap_energy_diagram" in non_main["superseded"]

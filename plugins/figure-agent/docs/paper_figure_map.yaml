@@ -23,8 +23,7 @@ figures:
   fig4:
     figure_id: fig4
     role_id: trap_energy_distribution
-    status: active_candidate
-    fixture: fig4_trap_energy_diagram
+    status: planned_missing
   fig5:
     figure_id: fig5
     role_id: cantilever_actuation_payoff
@@ -63,6 +62,7 @@ non_main:
   superseded:
     - fig2_trap_design_space
     - fig3_trapping_concept
+    - fig4_trap_energy_diagram
     - fig5_cantilever_mechanism_v1
   si:
     - fig3_floating_clip_protocol

@@ -19,8 +19,13 @@ The current paper bindings are:
 | Fig1 | overview, structure, and charge-trapping concept | `fig1_updated_agent_redraw_v1`, resolved through `review/current-candidate.json` |
 | Fig2 | transient charge transport and its mechanism context | `fig2_charge_transport_mechanism` |
 | Fig3 | frequency-domain dielectric response | planned; no active fixture |
-| Fig4 | trap-energy distribution | `fig4_trap_energy_diagram` |
+| Fig4 | trap-energy distribution | planned; no active fixture |
 | Fig5 | cantilever actuation payoff | `fig5_cantilever_actuation_artifact_v2` |
+
+Fig1, Fig2, and Fig5 are the three current authoring baselines. Their active
+binding records the selected source lineage; it does not imply human acceptance
+or publication readiness. Earlier figure fixtures and backend experiments remain
+non-main evidence unless the machine map explicitly promotes them.
 
 All other real fixtures are explicitly classified in the map as regression,
 pilot, reference, superseded, SI, or sandbox evidence. They do not override an
@@ -96,8 +101,9 @@ remain `candidate_only` until a human gate explicitly changes that state.
   those measured panels or prove a microscopic mechanism by itself.
 - Fig3 owns the planned frequency-domain dielectric response. Do not silently
   reuse the earlier resistance-mechanism fixture as the new Fig3 authority.
-- Fig4 owns trap energy/depth/lifetime quantification and the ISPD-derived
-  distribution story.
+- Fig4 is planned to own trap energy/depth/lifetime quantification and the
+  ISPD-derived distribution story. The earlier `fig4_trap_energy_diagram`
+  diagnostic trial is superseded and is not the current paper authority.
 - A schematic must not turn qualitative state breadth into an undeclared
   numerical exponent, trap density, energy, or composition ranking.
 
@@ -139,6 +145,8 @@ Durable invariants:
 - `fig5_actuation_mechanism` is a regression fixture for an earlier convention.
 - `fig3_resistance_mechanism` remains regression evidence for an earlier
   placement, not a current main-figure binding.
+- `fig4_trap_energy_diagram` is a superseded diagnostic trial, not the active
+  Fig4 paper binding.
 - `fig5_cantilever_mechanism_v1` is a superseded first authoring trial.
 - `fig3_floating_clip_protocol` is SI/methods evidence with historical boundary
   assumptions.
