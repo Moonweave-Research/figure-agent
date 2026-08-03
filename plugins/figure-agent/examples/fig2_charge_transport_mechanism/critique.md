@@ -1,9 +1,9 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_charge_transport_mechanism
-generated_at: '2026-08-03T08:05:16Z'
+generated_at: '2026-08-03T09:05:59Z'
 generator: Codex host vision critique
-generator_version: sha256:97044e8f0e58d58dc347929c82e321ee15d89470716a1dbd83433a254231d809
+generator_version: sha256:c44ca73daa30d2a1db2f1ec4c16feeeb4c710bec2ab1515f57161c35a8f0a924
 rubric_version: figure-agent.critique-rubric.v1.17
 critique_input_hash: sha256:c7c3ae645fe5009a5621b0f5a26e1b1c5d1c8d772036b01dc3ca08bc459bfbd5
 verdict: ready
@@ -397,7 +397,7 @@ aesthetic_lever_audit:
 aesthetic_antipattern_audit:
   - {id: childish_shape_language, verdict: absent, severity: NIT, route: none, evidence: "current render; editorial_restraint", rationale: "Flat scientific geometry is used.", linked_evidence: []}
   - {id: poster_gradient_decoration, verdict: absent, severity: NIT, route: none, evidence: "current render; editorial_restraint", rationale: "No decorative gradient or glow is visible.", linked_evidence: []}
-  - {id: generic_template_look, verdict: absent, severity: NIT, route: none, evidence: "current render; readout_led_comparison", rationale: "The state sequence is claim-specific.", linked_evidence: []}
+  - {id: generic_template_look, verdict: absent, severity: NIT, route: none, evidence: "current render; full_q1-full_q4; print_thumbnail", rationale: "Repeated MIM dimensions encode a controlled matched-geometry comparison rather than decorative template reuse; occupancy, carrier-current cues, and the output trace change only where the causal sequence requires them, with no random jitter added as false handcraft.", linked_evidence: []}
   - {id: dead_flat_vector_finish, verdict: absent, severity: NIT, route: none, evidence: "current render; flat_mim_layer_hierarchy", rationale: "Flat abstraction is intentional and legible.", linked_evidence: []}
   - {id: uniform_line_weight_monotony, verdict: absent, severity: NIT, route: none, evidence: "current render; color_and_stroke_economy", rationale: "Role-specific stroke weights remain visible.", linked_evidence: []}
   - {id: weak_hero_anchor, verdict: absent, severity: NIT, route: none, evidence: "current render; causal_hierarchy", rationale: "The sulfur sequence is the claim anchor.", linked_evidence: []}

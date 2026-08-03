@@ -1,9 +1,9 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-02T07:38:27Z'
-generator: critique_brief.py
-generator_version: sha256:97044e8f0e58d58dc347929c82e321ee15d89470716a1dbd83433a254231d809
+generated_at: '2026-08-03T09:05:59Z'
+generator: Codex host vision critique
+generator_version: sha256:c44ca73daa30d2a1db2f1ec4c16feeeb4c710bec2ab1515f57161c35a8f0a924
 rubric_version: figure-agent.critique-rubric.v1.17
 critique_input_hash: sha256:0ef38e36b2d7872901b9f323f8197c2ecef3d76213fe5d1bccf611c0f060adfd
 verdict: ready
@@ -498,8 +498,8 @@ aesthetic_antipattern_audit:
     verdict: absent
     severity: NIT
     route: none
-    evidence: The figure uses a claim-specific floating-charge sequence.
-    rationale: The mechanism prevents a generic template reading.
+    evidence: Full render, full_q1-full_q4, and print_thumbnail.
+    rationale: Repeated clamp and electrode geometry preserves apparatus identity across the state sequence; cantilever curvature, electrical boundary labels, force ownership, and the response trace vary only with the depicted state, without decorative jitter or arbitrary asymmetry.
     linked_evidence: []
   - id: dead_flat_vector_finish
     verdict: absent
