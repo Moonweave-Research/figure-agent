@@ -347,8 +347,13 @@ _AESTHETIC_ANTIPATTERN_PROMPTS = {
         "a figure tailored to this scientific claim? Inspect whether a "
         "mechanically uniform finish comes from identical spacing, curvature, "
         "corner treatment, or centering across objects with different roles. "
-        "Name the repeated geometry and its hierarchy cost; do not prescribe "
-        "random jitter or decorative noise as a substitute for art direction."
+        "Distinguish semantic invariance from mechanical templating: repeated "
+        "apparatus or specimen geometry is desirable in a controlled comparison "
+        "when only state-bearing variables should change. Name the repeated "
+        "geometry and its hierarchy cost, and flag unowned decorative variation "
+        "such as halos, texture, or field traces that does not encode a declared "
+        "role. Do not prescribe random jitter or decorative noise as a substitute "
+        "for art direction."
     ),
     "dead_flat_vector_finish": (
         "Where depth or material distinction matters, does the rendering feel "

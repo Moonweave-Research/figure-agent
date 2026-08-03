@@ -6,6 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from critique_brief_sections import (  # noqa: E402
+    aesthetic_antipattern_checklist,
     journal_grade_assessment,
     journal_grade_assessment_schema,
     mandatory_audit_checklists,
@@ -43,3 +44,12 @@ def test_critique_brief_sections_render_schema_blocks() -> None:
     assert "reference_calibration:" in calibrated_schema
     assert "reference_pack_hash: sha256:def" in calibrated_schema
     assert "score_basis: current_artifact_vs_pack" in calibrated_schema
+
+
+def test_handcrafted_finish_distinguishes_invariance_from_template_artifacts() -> None:
+    checklist = aesthetic_antipattern_checklist()
+
+    assert "state-bearing variables" in checklist
+    assert "controlled comparison" in checklist
+    assert "semantic invariance" in checklist
+    assert "unowned decorative variation" in checklist

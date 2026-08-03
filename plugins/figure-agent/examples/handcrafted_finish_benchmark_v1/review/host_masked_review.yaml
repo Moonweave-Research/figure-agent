@@ -1,0 +1,42 @@
+schema: figure-agent.handcrafted-finish-host-review.v1
+fixture: handcrafted_finish_benchmark_v1
+reviewer: GPT-5 Codex
+review_authority: host_advisory_only
+blinding_strength: masked_but_authorship_confounded
+inspected_scales: [100, 50, 33]
+creates_quality_reward: false
+authorizes_rule_promotion: false
+publication_acceptance: not_claimed
+results:
+  - motif_id: amorphous_trap_host
+    host_preference: Q2
+    human_verdict: not_recorded
+    observed_strengths:
+      - coherent specimen-scale host field survives reduction without repeated winged-dot icons
+      - varied path orientation improves material identity while equal-size cores retain category meaning
+    observed_risks:
+      - host texture remains an illustrative abstraction and needs human taste review
+      - additional trace contrast could still become topography in a full panel context
+  - motif_id: progressive_mim_transport
+    host_preference: R8
+    human_verdict: not_recorded
+    observed_strengths:
+      - invariant device geometry makes the changing occupancy and current cue easier to compare
+      - annotation restraint preserves a left-to-right causal reading at reduction
+    observed_risks:
+      - matched geometry can still feel templated if headings and internal marks share identical centering
+      - a real paper panel must retain the evidence-qualified working-model language
+  - motif_id: cantilever_force_sequence
+    host_preference: V9
+    human_verdict: not_recorded
+    observed_strengths:
+      - consistent strip width and end-cap geometry improve mechanical object identity
+      - force ownership remains clear because the Coulomb vector dominates without decorative field clutter
+    observed_risks:
+      - the preferred force hierarchy remains conditional rather than observed evidence
+      - exact bend magnitude and gap are schematic and must not be read quantitatively
+cross_motif_observations:
+  - handcrafted finish came from selective hierarchy and role-specific variation rather than random jitter
+  - repeated geometry remained beneficial when it encoded matched specimens or apparatus identity
+  - extra texture and curved decoration weakened ownership when they did not carry a named scientific relation
+promotion_decision: hold_for_named_human_review

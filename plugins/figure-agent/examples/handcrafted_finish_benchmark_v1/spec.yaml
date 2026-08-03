@@ -1,0 +1,31 @@
+name: handcrafted_finish_benchmark_v1
+classification: experiment_evidence
+style_profile: polymer-default
+undeclared_geometry_profile: schematic
+visual_clash_cap: 8
+panels:
+  - id: a
+    caption: amorphous trap host
+  - id: b
+    caption: progressive MIM transport
+  - id: c
+    caption: cantilever force sequence
+final_size_contract:
+  natural_size_mm: [178.0, 118.7]
+  target_width_mm: 178.0
+  max_height_mm: 125.0
+  min_print_font_pt: 5.0
+semantic_assertions:
+  - id: host-row-precedes-mim-row
+    relation: above
+    subject: Amorphous
+    reference: Progressive
+    tolerance_pt: 4.0
+  - id: mim-row-precedes-cantilever-row
+    relation: above
+    subject: Progressive
+    reference: Cantilever
+    tolerance_pt: 4.0
+notes: >-
+  Development benchmark only. Candidate roles are masked in the render and
+  declared in benchmark_manifest.yaml. No human or publication acceptance.

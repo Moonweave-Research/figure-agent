@@ -1,0 +1,101 @@
+schema: figure-agent.handcrafted-finish-benchmark.v1
+fixture: handcrafted_finish_benchmark_v1
+source: handcrafted_finish_benchmark_v1.tex
+canvas_cm: [18.0, 12.0]
+publication_acceptance: not_claimed
+learning_state: prospective_host_evidence_only
+authorship: same_codex_host_authored_all_candidates
+review_independence: none
+motifs:
+  - id: amorphous_trap_host
+    source_fixture: fig1_updated_agent_redraw_v1
+    target_region: Panel C real-space host and localized sites
+    scientific_invariants:
+      - shallow and deep cores remain equal-size qualitative categories
+      - every core remains embedded in a bounded disordered host cue
+      - texture does not encode measured topography, density, or phase segregation
+    candidates:
+      - role: current_baseline
+        option_id: H7
+        bbox_cm: [0.45, 7.75, 5.30, 2.60]
+        meaning_preserved: true
+        observable_finish_choices:
+          - similarly smooth host traces with repeated annotation rhythm
+          - sparse state markers retain the current restrained grammar
+      - role: free_llm_redraw
+        option_id: N4
+        bbox_cm: [6.15, 7.75, 5.30, 2.60]
+        meaning_preserved: true
+        observable_finish_choices:
+          - denser free curves and localization contours
+          - more expressive variation without a fixed component recipe
+      - role: editorial_refinement
+        option_id: Q2
+        bbox_cm: [11.85, 7.75, 5.30, 2.60]
+        meaning_preserved: true
+        observable_finish_choices:
+          - few mixed-angle host paths form one coherent field
+          - state cores sit on local kinks without repeated halos or ornamental arms
+  - id: progressive_mim_transport
+    source_fixture: fig2_charge_transport_mechanism
+    target_region: matched MIM progression
+    scientific_invariants:
+      - three MIM footprints remain identical
+      - occupancy increases left to right under the same held field
+      - mobile-current contribution weakens but does not vanish
+    candidates:
+      - role: current_baseline
+        option_id: B6
+        bbox_cm: [0.45, 4.15, 5.30, 2.60]
+        meaning_preserved: true
+        observable_finish_choices:
+          - repeated cells and centered state marks preserve the baseline grammar
+          - equal annotation rhythm keeps the progression schematic
+      - role: free_llm_redraw
+        option_id: M3
+        bbox_cm: [6.15, 4.15, 5.30, 2.60]
+        meaning_preserved: true
+        observable_finish_choices:
+          - additional field and capture cues increase local detail
+          - freer placement breaks the strict grid but raises visual density
+      - role: editorial_refinement
+        option_id: R8
+        bbox_cm: [11.85, 4.15, 5.30, 2.60]
+        meaning_preserved: true
+        observable_finish_choices:
+          - device geometry stays matched while occupancy and current alone change
+          - restrained arrows and asymmetrical state placement establish causal hierarchy
+  - id: cantilever_force_sequence
+    source_fixture: fig5_cantilever_actuation_artifact_v2
+    target_region: conditional reversed-drive force balance
+    scientific_invariants:
+      - cantilever is a finite-width member centered on its clamp
+      - air gap remains visibly non-contacting
+      - Maxwell attraction is subordinate to the opposing Coulomb result
+    candidates:
+      - role: current_baseline
+        option_id: C5
+        bbox_cm: [0.45, 0.55, 5.30, 2.60]
+        meaning_preserved: true
+        observable_finish_choices:
+          - familiar filled-strip cantilever and direct force labels
+          - centered apparatus retains the current baseline grammar
+      - role: free_llm_redraw
+        option_id: L1
+        bbox_cm: [6.15, 0.55, 5.30, 2.60]
+        meaning_preserved: true
+        observable_finish_choices:
+          - more expressive bend and apparatus detail
+          - curved force paths and extra field cues increase illustration character
+      - role: editorial_refinement
+        option_id: V9
+        bbox_cm: [11.85, 0.55, 5.30, 2.60]
+        meaning_preserved: true
+        observable_finish_choices:
+          - one shared-strip silhouette keeps clamp, width, and end-cap ownership clear
+          - force hierarchy is carried by length, weight, color, and dedicated label lanes
+learning_policy:
+  transferable_observations_may_enter_critique_prompt: true
+  ranker_reward_requires_named_human_verdict: true
+  rule_promotion_requires_two_materially_different_families: true
+  random_jitter_is_not_handcrafted_finish: true

@@ -1,0 +1,260 @@
+% Development benchmark for handcrafted scientific-figure finish.
+% Candidate identities are masked by option ids; see benchmark_manifest.yaml.
+\documentclass[border=0pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\usetikzlibrary{arrows.meta,calc}
+
+\begin{document}
+\resizebox{178mm}{!}{%
+\begin{tikzpicture}[
+  every node/.style={font=\sffamily\fontsize{5.4}{6.4}\selectfont,
+    text=cGray!84!black},
+  rowTitle/.style={font=\sffamily\bfseries\fontsize{6.4}{7.5}\selectfont,
+    text=cGray!90!black},
+  option/.style={font=\sffamily\bfseries\fontsize{5.2}{6.0}\selectfont,
+    text=cGray!72!black},
+  note/.style={font=\sffamily\itshape\fontsize{5.1}{6.0}\selectfont,
+    text=cGray!62!black},
+  structure/.style={draw=cGray!60!black,line width=0.42pt,line cap=round,
+    line join=round},
+  quiet/.style={draw=cGray!40!black,line width=0.32pt,line cap=round,
+    line join=round},
+  host/.style={draw=cGray!48!black,line width=0.46pt,line cap=round,
+    line join=round},
+  hostSoft/.style={draw=cGray!34!black,line width=0.34pt,line cap=round,
+    line join=round},
+  field/.style={draw=cBlue!65!black,line width=0.38pt,
+    dash pattern=on 1.2pt off 1.1pt,-{Stealth[length=2.2pt,width=1.6pt]}},
+  current/.style={draw=cGray!82!black,line width=0.58pt,
+    -{Stealth[length=2.5pt,width=1.8pt]}},
+  currentSoft/.style={draw=cGray!58!black,line width=0.38pt,
+    -{Stealth[length=2.1pt,width=1.5pt]}},
+  capture/.style={draw=cRed!63!black,line width=0.38pt,
+    -{Stealth[length=2.2pt,width=1.6pt]}},
+  maxwell/.style={draw=cGray!67!black,line width=0.42pt,
+    -{Stealth[length=2.4pt,width=1.7pt]}},
+  coulomb/.style={draw=cRed!76!black,line width=0.78pt,
+    -{Stealth[length=3.0pt,width=2.1pt]}},
+]
+
+\path[use as bounding box] (0,0) rectangle (18,12);
+\fill[white] (0,0) rectangle (18,12);
+\node[rowTitle,anchor=west] at (0.45,11.62) {Handcrafted-finish benchmark};
+\node[note,anchor=east] at (17.55,11.62)
+  {masked options; same-host review; no human or publication verdict};
+
+% Row headings and restrained separators.
+\node[rowTitle,anchor=west] at (0.45,10.76) {Amorphous trap host};
+\node[rowTitle,anchor=west] at (0.45,7.16) {Progressive MIM transport};
+\node[rowTitle,anchor=west] at (0.45,3.56) {Cantilever force sequence};
+\draw[quiet] (0.45,7.42)--(17.55,7.42);
+\draw[quiet] (0.45,3.82)--(17.55,3.82);
+
+% --------------------------------------------------------------------------
+% Row 1 — amorphous host and localized states
+% --------------------------------------------------------------------------
+% Option H7
+\begin{scope}[shift={(0.45,7.75)}]
+  \fill[cGray!4] (0,0) rectangle (5.30,2.60);
+  \node[option,anchor=north west] at (0.14,2.47) {H7};
+  \fill[cAmber!6] (0.36,0.30) rectangle (4.94,2.12);
+  \draw[structure] (0.36,0.30) rectangle (4.94,2.12);
+  \draw[hostSoft] (0.63,0.66) .. controls (1.35,1.02) and (2.05,0.43) .. (2.79,0.82)
+    .. controls (3.43,1.16) and (4.05,0.62) .. (4.61,0.93);
+  \draw[hostSoft] (0.62,1.15) .. controls (1.34,1.50) and (2.04,0.91) .. (2.78,1.30)
+    .. controls (3.42,1.64) and (4.04,1.10) .. (4.60,1.41);
+  \draw[hostSoft] (0.65,1.62) .. controls (1.37,1.97) and (2.07,1.38) .. (2.81,1.77)
+    .. controls (3.45,2.11) and (4.07,1.57) .. (4.63,1.88);
+  \fill[cBlue] (1.35,1.01) circle (0.075);
+  \fill[cRed] (2.78,1.30) circle (0.075);
+  \fill[cBlue] (4.05,1.58) circle (0.075);
+\end{scope}
+
+% Option N4
+\begin{scope}[shift={(6.15,7.75)}]
+  \fill[cGray!4] (0,0) rectangle (5.30,2.60);
+  \node[option,anchor=north west] at (0.14,2.47) {N4};
+  \fill[cAmber!6] (0.36,0.30) rectangle (4.94,2.12);
+  \draw[structure] (0.36,0.30) rectangle (4.94,2.12);
+  \draw[hostSoft] (0.52,0.57) .. controls (1.18,1.46) and (1.56,0.31) .. (2.16,1.05)
+    .. controls (2.57,1.56) and (3.12,0.76) .. (3.72,1.26)
+    .. controls (4.08,1.57) and (4.45,1.31) .. (4.79,1.68);
+  \draw[hostSoft] (0.62,1.70) .. controls (1.16,1.13) and (1.63,1.98) .. (2.27,1.50)
+    .. controls (2.83,1.08) and (3.14,1.91) .. (3.74,1.52);
+  \draw[hostSoft] (0.74,0.93) .. controls (1.31,0.59) and (1.88,1.30) .. (2.45,0.74)
+    .. controls (3.01,0.20) and (3.67,0.83) .. (4.46,0.55);
+  \draw[cBlue!18,fill=cBlue!5,line width=0.30pt] (1.28,1.18) ellipse (0.24 and 0.14);
+  \draw[cRed!18,fill=cRed!5,line width=0.30pt] (2.62,0.91) ellipse (0.25 and 0.14);
+  \draw[cBlue!18,fill=cBlue!5,line width=0.30pt] (3.78,1.50) ellipse (0.24 and 0.14);
+  \fill[cBlue] (1.28,1.18) circle (0.075);
+  \fill[cRed] (2.62,0.91) circle (0.075);
+  \fill[cBlue] (3.78,1.50) circle (0.075);
+\end{scope}
+
+% Option Q2
+\begin{scope}[shift={(11.85,7.75)}]
+  \fill[cGray!4] (0,0) rectangle (5.30,2.60);
+  \node[option,anchor=north west] at (0.14,2.47) {Q2};
+  \fill[cAmber!6] (0.36,0.30) rectangle (4.94,2.12);
+  \draw[structure] (0.36,0.30) rectangle (4.94,2.12);
+  \draw[host] (0.58,0.67) .. controls (1.03,0.43) and (1.32,0.88) .. (1.77,0.80)
+    .. controls (2.22,0.72) and (2.42,0.42) .. (2.90,0.64);
+  \draw[host] (0.78,1.69) .. controls (1.25,1.88) and (1.59,1.42) .. (2.04,1.52)
+    .. controls (2.42,1.60) and (2.63,1.91) .. (3.16,1.72)
+    .. controls (3.56,1.58) and (3.86,1.89) .. (4.54,1.62);
+  \draw[host] (1.94,0.91) .. controls (2.30,1.21) and (2.71,1.03) .. (3.02,1.22)
+    .. controls (3.40,1.47) and (3.72,1.03) .. (4.34,1.19);
+  \draw[host] (0.70,1.19) .. controls (1.03,1.35) and (1.30,1.14) .. (1.62,1.28);
+  \fill[cBlue] (1.29,0.83) circle (0.075);
+  \fill[cRed] (2.73,1.06) circle (0.075);
+  \fill[cBlue] (3.83,1.14) circle (0.075);
+  \fill[cRed] (4.18,1.74) circle (0.075);
+\end{scope}
+
+% --------------------------------------------------------------------------
+% Row 2 — matched MIM progression
+% --------------------------------------------------------------------------
+% Option B6
+\begin{scope}[shift={(0.45,4.15)}]
+  \fill[cGray!4] (0,0) rectangle (5.30,2.60);
+  \node[option,anchor=north west] at (0.14,2.47) {B6};
+  \foreach \x in {0.52,2.05,3.58}{
+    \fill[cAmber!7] (\x,0.55) rectangle ++(1.17,1.25);
+    \fill[cGray!24] (\x,1.80) rectangle ++(1.17,0.13);
+    \fill[cGray!24] (\x,0.42) rectangle ++(1.17,0.13);
+    \draw[structure] (\x,1.93)--++(1.17,0) (\x,0.42)--++(1.17,0);
+    \draw[field] ({\x+0.16},0.68)--({\x+0.16},1.62);
+  }
+  \draw[cRed!65!black,line width=0.42pt] (0.90,1.05)--(1.30,1.05);
+  \draw[cRed!65!black,line width=0.42pt] (2.35,1.30)--(2.75,1.30)
+    (2.78,0.86)--(3.18,0.86);
+  \fill[cRed!70!black] (2.55,1.30) circle (0.06);
+  \draw[cRed!65!black,line width=0.42pt] (3.87,1.45)--(4.27,1.45)
+    (4.31,1.02)--(4.71,1.02) (3.90,0.73)--(4.30,0.73);
+  \fill[cRed!70!black] (4.07,1.45) circle (0.06);
+  \fill[cRed!70!black] (4.51,1.02) circle (0.06);
+  \draw[current] (1.47,0.73)--(1.47,1.48);
+  \draw[currentSoft] (3.00,0.73)--(3.00,1.28);
+  \draw[currentSoft] (4.53,0.73)--(4.53,1.08);
+\end{scope}
+
+% Option M3
+\begin{scope}[shift={(6.15,4.15)}]
+  \fill[cGray!4] (0,0) rectangle (5.30,2.60);
+  \node[option,anchor=north west] at (0.14,2.47) {M3};
+  \foreach \x in {0.52,2.05,3.58}{
+    \fill[cAmber!8] (\x,0.55) rectangle ++(1.17,1.25);
+    \fill[cGray!24] (\x,1.80) rectangle ++(1.17,0.13);
+    \fill[cGray!24] (\x,0.42) rectangle ++(1.17,0.13);
+    \draw[structure] (\x,1.93)--++(1.17,0) (\x,0.42)--++(1.17,0);
+    \draw[field] ({\x+0.16},0.68)--({\x+0.16},1.62);
+    \draw[field] ({\x+0.39},0.70)--({\x+0.39},1.58);
+  }
+  \draw[hostSoft] (0.95,0.72)..controls(1.13,1.03)and(1.25,1.42)..(1.47,1.66);
+  \draw[hostSoft] (2.44,0.74)..controls(2.68,1.50)and(2.87,0.91)..(3.14,1.58);
+  \draw[hostSoft] (3.91,0.67)..controls(4.12,1.34)and(4.40,0.94)..(4.68,1.63);
+  \draw[cRed!65!black,line width=0.40pt] (0.91,1.05)--(1.28,1.05)
+    (2.33,1.30)--(2.70,1.30) (2.79,0.91)--(3.16,0.91)
+    (3.83,1.45)--(4.20,1.45) (4.30,1.05)--(4.67,1.05);
+  \fill[cRed!70!black] (2.52,1.30) circle (0.06);
+  \fill[cRed!70!black] (4.02,1.45) circle (0.06);
+  \fill[cRed!70!black] (4.49,1.05) circle (0.06);
+  \draw[capture] (2.29,1.63)--(2.50,1.36);
+  \draw[capture] (4.69,1.62)--(4.51,1.12);
+  \draw[current] (1.51,0.70)--(1.51,1.53);
+  \draw[currentSoft] (3.10,0.70)--(3.10,1.28);
+  \draw[currentSoft] (4.69,0.70)--(4.69,1.10);
+\end{scope}
+
+% Option R8
+\begin{scope}[shift={(11.85,4.15)}]
+  \fill[cGray!4] (0,0) rectangle (5.30,2.60);
+  \node[option,anchor=north west] at (0.14,2.47) {R8};
+  \foreach \x in {0.52,2.05,3.58}{
+    \fill[cAmber!7] (\x,0.55) rectangle ++(1.17,1.25);
+    \fill[cGray!24] (\x,1.80) rectangle ++(1.17,0.13);
+    \fill[cGray!24] (\x,0.42) rectangle ++(1.17,0.13);
+    \draw[structure] (\x,1.93)--++(1.17,0) (\x,0.42)--++(1.17,0);
+    \draw[field] ({\x+0.16},0.68)--({\x+0.16},1.62);
+  }
+  \draw[cRed!65!black,line width=0.42pt] (0.98,1.22)--(1.38,1.22);
+  \draw[cRed!65!black,line width=0.42pt] (2.42,1.42)--(2.82,1.42)
+    (2.73,0.82)--(3.13,0.82);
+  \fill[cRed!70!black] (2.62,1.42) circle (0.06);
+  \draw[cRed!65!black,line width=0.42pt] (3.88,1.52)--(4.28,1.52)
+    (4.25,1.08)--(4.65,1.08) (3.94,0.72)--(4.34,0.72);
+  \fill[cRed!70!black] (4.08,1.52) circle (0.06);
+  \fill[cRed!70!black] (4.45,1.08) circle (0.06);
+  \fill[cRed!70!black] (4.14,0.72) circle (0.06);
+  \draw[current] (1.52,0.68)--(1.52,1.55);
+  \draw[currentSoft] (3.15,0.68)--(3.15,1.25);
+  \draw[currentSoft] (4.70,0.68)--(4.70,1.02);
+\end{scope}
+
+% --------------------------------------------------------------------------
+% Row 3 — conditional cantilever force balance
+% --------------------------------------------------------------------------
+% Option C5
+\begin{scope}[shift={(0.45,0.55)}]
+  \fill[cGray!4] (0,0) rectangle (5.30,2.60);
+  \node[option,anchor=north west] at (0.14,2.47) {C5};
+  \fill[cGray!25] (1.50,1.91) rectangle (2.55,2.22);
+  \draw[structure] (1.50,1.91) rectangle (2.55,2.22);
+  \draw[structure,line width=0.74pt] (2.02,2.22)--(2.02,2.44);
+  \draw[fill=cAmber!9,draw=cAmber!80!black,line width=0.72pt,line join=round]
+    (1.89,1.93)..controls(1.89,1.31)and(2.13,0.70)..(2.58,0.43)
+    ..controls(2.68,0.37)and(2.78,0.51)..(2.67,0.59)
+    ..controls(2.30,0.86)and(2.17,1.34)..(2.16,1.93)--cycle;
+  \fill[cGray!24] (4.38,0.44) rectangle (4.68,2.15);
+  \draw[structure] (4.38,0.44) rectangle (4.68,2.15);
+  \fill[cRed!76!black] (2.28,1.07) circle (0.07);
+  \draw[maxwell] (2.38,1.48)--(3.28,1.48);
+  \draw[coulomb] (2.27,1.07)--(1.08,1.07);
+  \node[note,anchor=west] at (3.30,1.48) {$F_M$};
+  \node[note,anchor=east,text=cRed!76!black] at (1.05,1.07) {$F_C$};
+\end{scope}
+
+% Option L1
+\begin{scope}[shift={(6.15,0.55)}]
+  \fill[cGray!4] (0,0) rectangle (5.30,2.60);
+  \node[option,anchor=north west] at (0.14,2.47) {L1};
+  \fill[cGray!25] (1.50,1.91) rectangle (2.55,2.22);
+  \draw[structure] (1.50,1.91) rectangle (2.55,2.22);
+  \draw[structure,line width=0.74pt] (2.02,2.22)--(2.02,2.44);
+  \draw[fill=cAmber!10,draw=cAmber!80!black,line width=0.72pt,line join=round]
+    (1.88,1.93)..controls(1.69,1.30)and(2.04,0.55)..(2.79,0.35)
+    ..controls(2.95,0.31)and(3.01,0.51)..(2.84,0.58)
+    ..controls(2.31,0.80)and(2.08,1.40)..(2.16,1.93)--cycle;
+  \fill[cGray!24] (4.38,0.44) rectangle (4.68,2.15);
+  \draw[structure] (4.38,0.44) rectangle (4.68,2.15);
+  \fill[cRed!76!black] (2.25,1.10) circle (0.07);
+  \draw[quiet] (2.67,0.84)..controls(3.08,1.20)and(3.37,1.44)..(3.82,1.69);
+  \draw[quiet] (2.78,0.65)..controls(3.23,0.92)and(3.52,1.14)..(3.98,1.33);
+  \draw[maxwell] (2.42,1.48)..controls(2.85,1.63)and(3.12,1.63)..(3.52,1.48);
+  \draw[coulomb] (2.25,1.10)..controls(1.86,1.28)and(1.48,1.28)..(1.04,1.10);
+\end{scope}
+
+% Option V9
+\begin{scope}[shift={(11.85,0.55)}]
+  \fill[cGray!4] (0,0) rectangle (5.30,2.60);
+  \node[option,anchor=north west] at (0.14,2.47) {V9};
+  \fill[cGray!25] (1.50,1.91) rectangle (2.55,2.22);
+  \draw[structure] (1.50,1.91) rectangle (2.55,2.22);
+  \draw[structure,line width=0.74pt] (2.02,2.22)--(2.02,2.44);
+  \draw[fill=cAmber!8,draw=cAmber!80!black,line width=0.72pt,line join=round]
+    (1.89,1.93)..controls(1.89,1.34)and(1.72,0.77)..(1.34,0.43)
+    ..controls(1.24,0.34)and(1.12,0.46)..(1.23,0.56)
+    ..controls(1.72,0.92)and(2.16,1.36)..(2.16,1.93)--cycle;
+  \fill[cGray!24] (4.38,0.44) rectangle (4.68,2.15);
+  \draw[structure] (4.38,0.44) rectangle (4.68,2.15);
+  \fill[cRed!76!black] (1.82,1.16) circle (0.07);
+  \draw[maxwell] (2.18,1.55)--(3.22,1.55);
+  \draw[coulomb] (1.82,1.16)--(0.95,1.16);
+  \node[note,anchor=west] at (3.28,1.55) {Maxwell};
+  \node[note,anchor=east,text=cRed!76!black] at (0.91,1.16) {Coulomb};
+  \draw[quiet] (4.08,0.53)--(4.08,0.92) (3.98,0.53)--(4.18,0.53);
+\end{scope}
+
+\end{tikzpicture}%
+}
+\end{document}

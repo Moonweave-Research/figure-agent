@@ -1092,9 +1092,14 @@ For `generic_template_look` and handcrafted-finish review, identify a
 mechanically uniform finish through specific repeated geometry: identical
 spacing, curvature, corner treatment, centering, density, or annotation rhythm
 across objects with different scientific roles. State how that repetition
-weakens hierarchy or object identity. Do not add random jitter or decorative
-noise to imitate human touch; preserve semantic geometry and route genuinely
-taste-dependent choices to human art direction.
+weakens hierarchy or object identity. First distinguish mechanical templating
+from semantic invariance: in a controlled comparison, repeated apparatus,
+specimen, electrode, or axis geometry is desirable when only state-bearing
+variables should change. Conversely, treat unowned halos, textures, field
+traces, or asymmetric embellishments as removable ink when they do not encode a
+declared role. Do not add random jitter or decorative noise to imitate human
+touch; preserve semantic geometry and route genuinely taste-dependent choices
+to human art direction.
 
 Use `/fig_closeout <name>` after a human or outer agent patches one loop-selected
 target. It reports which closeout steps are still stale, missing, blocked, or

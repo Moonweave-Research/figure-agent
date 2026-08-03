@@ -34,6 +34,8 @@ figures:
 # one explicit non-main class below. Non-main entries remain usable evidence;
 # their presence is advisory and never makes strict plan validation fail.
 non_main:
+  sandbox:
+    - handcrafted_finish_benchmark_v1
   regression:
     - failure_first_label_repair_demo
     - fig1_failure_first_panel_f_pilot
