@@ -9,6 +9,7 @@ from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
     CRITIQUE_RUBRIC_VERSION_V1_17,
+    compute_critique_input_hash,
     critique_freshness_diagnostics,
     critique_generator_version,
     critique_manifest_paths,
@@ -39,6 +40,40 @@ def test_input_manifest_hash_is_stable_for_path_order(tmp_path: Path) -> None:
     assert input_manifest_hash((first, second), base_dir=tmp_path) == input_manifest_hash(
         (second, first), base_dir=tmp_path
     )
+
+
+def test_critique_hash_is_stable_across_source_and_installed_plugin_roots(
+    tmp_path: Path,
+) -> None:
+    workspace_root = tmp_path / "workspace"
+    example_dir = workspace_root / "examples" / "demo"
+    example_dir.mkdir(parents=True)
+    for name in ("demo.tex", "briefing.md", "spec.yaml"):
+        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+    source_style = workspace_root / "styles" / "polymer-paper-preamble.sty"
+    installed_root = tmp_path / "installed-plugin"
+    installed_style = installed_root / "styles" / "polymer-paper-preamble.sty"
+    source_style.parent.mkdir()
+    installed_style.parent.mkdir(parents=True)
+    source_style.write_text("same-style\n", encoding="utf-8")
+    installed_style.write_text("same-style\n", encoding="utf-8")
+
+    source_hash = compute_critique_input_hash(
+        example_dir,
+        "demo",
+        {"name": "demo"},
+        style_lock_path=source_style,
+        base_dir=workspace_root,
+    )
+    installed_hash = compute_critique_input_hash(
+        example_dir,
+        "demo",
+        {"name": "demo"},
+        style_lock_path=installed_style,
+        base_dir=installed_root,
+    )
+
+    assert installed_hash == source_hash
 
 
 def test_critique_generator_version_tracks_prompt_dependency_changes(tmp_path: Path) -> None:
@@ -95,8 +130,11 @@ def test_critique_freshness_diagnostics_reports_no_mismatch_for_fresh_metadata(
 ) -> None:
     example_dir, style_lock = _write_basic_critique_fixture(tmp_path)
     spec = {"name": "demo"}
-    expected_hash = input_manifest_hash(
-        critique_manifest_paths(example_dir, "demo", spec, style_lock_path=style_lock),
+    expected_hash = compute_critique_input_hash(
+        example_dir,
+        "demo",
+        spec,
+        style_lock_path=style_lock,
         base_dir=tmp_path,
     )
     generator_path = tmp_path / "critique_brief.py"
@@ -126,8 +164,11 @@ def test_critique_freshness_diagnostics_reports_no_mismatch_for_fresh_metadata(
 def test_critique_freshness_diagnostics_reports_generator_mismatch(tmp_path: Path) -> None:
     example_dir, style_lock = _write_basic_critique_fixture(tmp_path)
     spec = {"name": "demo"}
-    expected_hash = input_manifest_hash(
-        critique_manifest_paths(example_dir, "demo", spec, style_lock_path=style_lock),
+    expected_hash = compute_critique_input_hash(
+        example_dir,
+        "demo",
+        spec,
+        style_lock_path=style_lock,
         base_dir=tmp_path,
     )
     generator_path = tmp_path / "critique_brief.py"
@@ -185,8 +226,11 @@ def test_critique_freshness_diagnostics_reports_schema_rubric_mismatch(
         "schema: figure-agent.aesthetic-intent.v2\nfixture: demo\n",
         encoding="utf-8",
     )
-    expected_hash = input_manifest_hash(
-        critique_manifest_paths(example_dir, "demo", spec, style_lock_path=style_lock),
+    expected_hash = compute_critique_input_hash(
+        example_dir,
+        "demo",
+        spec,
+        style_lock_path=style_lock,
         base_dir=tmp_path,
     )
     generator_path = tmp_path / "critique_brief.py"

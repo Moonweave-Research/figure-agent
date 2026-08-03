@@ -22,9 +22,9 @@ from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     CRITIQUE_RUBRIC_VERSION_V1_14,
     CRITIQUE_RUBRIC_VERSION_V1_17,
+    compute_critique_input_hash,
     critique_generator_version,
     file_sha256,
-    input_manifest_hash,
 )
 from reference_aesthetic_metrics import build_reference_aesthetic_metrics  # noqa: E402
 from status import CRITIQUE_REFERENCE_MISSING, compute_critique_state, infer_stage  # noqa: E402
@@ -525,8 +525,11 @@ def test_status_surfaces_reference_aesthetic_metric_severe_divergence(
 
 def _critique_input_hash(fig_dir: Path, name: str) -> str:
     spec = status_mod.parse_spec((fig_dir / "spec.yaml").read_text(encoding="utf-8"))
-    return input_manifest_hash(
-        status_mod._critique_source_paths(fig_dir, name, spec),
+    return compute_critique_input_hash(
+        fig_dir,
+        name,
+        spec,
+        style_lock_path=status_mod.STYLE_LOCK_PATH,
         base_dir=REPO_ROOT,
     )
 

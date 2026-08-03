@@ -49,16 +49,23 @@ def _relative_manifest_path(path: Path, base_dir: Path) -> str:
         return str(path.resolve())
 
 
-def input_manifest_hash(paths: tuple[Path, ...], *, base_dir: Path) -> str:
-    entries = [
-        {
-            "path": _relative_manifest_path(path, base_dir),
-            "sha256": file_sha256(path),
-        }
-        for path in sorted(dict.fromkeys(paths), key=lambda item: str(item.resolve()))
-    ]
+def _manifest_entries_hash(entries: list[dict[str, str]]) -> str:
     payload = json.dumps(entries, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
+def input_manifest_hash(paths: tuple[Path, ...], *, base_dir: Path) -> str:
+    entries = sorted(
+        [
+            {
+                "path": _relative_manifest_path(path, base_dir),
+                "sha256": file_sha256(path),
+            }
+            for path in sorted(dict.fromkeys(paths), key=lambda item: str(item.resolve()))
+        ],
+        key=lambda entry: entry["path"],
+    )
+    return _manifest_entries_hash(entries)
 
 
 def _source_paths(example_dir: Path, name: str, style_lock_path: Path) -> tuple[Path, ...]:
@@ -152,9 +159,27 @@ def compute_critique_input_hash(
     style_lock_path: Path,
     base_dir: Path = REPO_ROOT,
 ) -> str:
-    return input_manifest_hash(
-        critique_manifest_paths(example_dir, name, spec, style_lock_path=style_lock_path),
-        base_dir=base_dir,
+    # Critique evidence belongs to the fixture workspace, while Style Lock may
+    # come from either that source tree or an installed plugin copy. Bind the
+    # logical roles and bytes, not the machine-specific install location.
+    workspace_root = example_dir.parents[1]
+    style_resolved = style_lock_path.resolve()
+    entries = []
+    for path in critique_manifest_paths(
+        example_dir,
+        name,
+        spec,
+        style_lock_path=style_lock_path,
+    ):
+        resolved = path.resolve()
+        logical_path = (
+            f"styles/{path.name}"
+            if resolved == style_resolved
+            else _relative_manifest_path(path, workspace_root)
+        )
+        entries.append({"path": logical_path, "sha256": file_sha256(path)})
+    return _manifest_entries_hash(
+        sorted(entries, key=lambda entry: entry["path"]),
     )
 
 

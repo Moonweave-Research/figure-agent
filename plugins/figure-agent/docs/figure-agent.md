@@ -122,7 +122,10 @@ workflow. In an A/B/C comparison:
 Every attempt must hash-bind the task, model, budget, source commit, starting and
 generated artifacts, context packet, toolchain, review inputs, and evidence. A line
 number is not source identity; use stable selectors and reject missing, duplicate,
-or stale anchors.
+or stale anchors. Critique-input manifests bind fixture-relative logical paths
+and content hashes, so the same workspace and Style Lock bytes produce the same
+freshness result from a source checkout and an installed plugin; an installation
+directory is not scientific evidence.
 
 Evidence remains layered:
 

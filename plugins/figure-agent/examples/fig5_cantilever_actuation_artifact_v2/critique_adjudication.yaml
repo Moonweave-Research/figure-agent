@@ -1,4 +1,4 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig5_cantilever_actuation_artifact_v2
-source_critique_hash: sha256:be10a3ea5af8d1af12950a9c9a135270891575626e04e9ee2bf0213f83bc4865
+source_critique_hash: sha256:03a8854d40d76e34ff1228d2555b18d1f357abf42670c0375ead94f841eafd49
 decisions: []

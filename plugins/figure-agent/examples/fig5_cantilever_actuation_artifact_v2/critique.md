@@ -1,7 +1,7 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-03T13:27:47Z'
+generated_at: '2026-08-03T14:00:40Z'
 generator: Codex host vision critique
 generator_version: sha256:78cf3f9eff794f643906438081641c4f496a370cb3bf78bff39c863383018516
 rubric_version: figure-agent.critique-rubric.v1.17
