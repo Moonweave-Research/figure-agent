@@ -707,6 +707,9 @@ def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):
     assert "reference_overcopying" in brief
     assert "reference_underlearning" in brief
     assert "decorative_detail_without_explanatory_value" in brief
+    assert "mechanically uniform finish" in brief
+    assert "identical spacing, curvature, corner treatment, or centering" in brief
+    assert "random jitter or decorative noise" in brief
 
 
 def test_critique_brief_includes_weakest_panel_coherence_check(tmp_path):

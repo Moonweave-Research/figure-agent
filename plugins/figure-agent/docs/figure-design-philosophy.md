@@ -19,10 +19,12 @@ the published canon. **Lean by design — grow it per-figure, do not front-load.
   surface convention evidence; they do not score aesthetics or mutate source.
 - Test every line you add against: *"would this have changed a call we actually made?"*
   If it is taste guidance dressed as a rule, delete it.
-- Its ONE job is **cross-figure CONSISTENCY**. fig1 reached Nature-tier through 20+ human-judged
-  iterations, not through codified principles — so this doc keeps the *next* figures consistent
-  with fig1, it does not make any single figure "good".
-- **fig1 is the FROZEN reference**: conventions are read FROM it, never retrofitted INTO it.
+- Its ONE job is **cross-figure CONSISTENCY**. Fig1, Fig2, and Fig5 are a
+  **revisable baseline**, not publication-final or a demonstrated taste ceiling.
+  Their current renders anchor comparison until a human-reviewed revision
+  supersedes them; this document does not make any single figure "good".
+- Read conventions from the current baseline, but allow human-master corrections
+  to improve it. Never auto-retrofit one figure merely because another changes.
 
 ## 1. Palette (Paul Tol muted + polymer warm; colorblind-safe)
 Defined once in `styles/polymer-paper-preamble.sty` — every figure imports it, never redefines.
@@ -99,6 +101,11 @@ Run these as a checklist; the critique rubric already audits them per figure.
   (diminishing returns); not every element has a "better" state.
 - **Element-iteration is the loop**: name a concrete sub-region defect → 1-line patch → recompile →
   confirm. User-as-master. (Sub-region, not whole panel, is the iteration unit.)
+- **Hand-authored finish is evidence, not wobble**: “AI-like” is not a standalone
+  defect. Decompose it into visible repetition such as identical spacing,
+  curvature, corner treatment, centering, density, or label rhythm across
+  objects with different roles. Repair the hierarchy or object-specific form;
+  never add random jitter or decorative noise to simulate human touch.
 - **Bank only demonstrated reuse**: keep an element local until a second,
   independently authored figure reuses it and a rendered review verifies that
   the abstraction preserved rather than constrained the intended meaning.

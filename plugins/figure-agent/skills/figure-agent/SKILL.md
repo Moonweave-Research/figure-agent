@@ -1087,6 +1087,15 @@ over-copying, and reference under-learning must be explicitly classified as
 `human_art_direction`. They are audit/accountability fields, not permission for
 hidden source edits or release-gate bypass.
 
+Do not use “AI-like” or “needs more hand feel” as standalone critique evidence.
+For `generic_template_look` and handcrafted-finish review, identify a
+mechanically uniform finish through specific repeated geometry: identical
+spacing, curvature, corner treatment, centering, density, or annotation rhythm
+across objects with different scientific roles. State how that repetition
+weakens hierarchy or object identity. Do not add random jitter or decorative
+noise to imitate human touch; preserve semantic geometry and route genuinely
+taste-dependent choices to human art direction.
+
 Use `/fig_closeout <name>` after a human or outer agent patches one loop-selected
 target. It reports which closeout steps are still stale, missing, blocked, or
 passed without running those steps itself. It withholds the final loop-rerun

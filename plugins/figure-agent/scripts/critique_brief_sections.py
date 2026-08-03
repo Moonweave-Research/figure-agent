@@ -344,7 +344,11 @@ _AESTHETIC_ANTIPATTERN_PROMPTS = {
     ),
     "generic_template_look": (
         "Does the figure look like a reusable schematic template rather than "
-        "a figure tailored to this scientific claim?"
+        "a figure tailored to this scientific claim? Inspect whether a "
+        "mechanically uniform finish comes from identical spacing, curvature, "
+        "corner treatment, or centering across objects with different roles. "
+        "Name the repeated geometry and its hierarchy cost; do not prescribe "
+        "random jitter or decorative noise as a substitute for art direction."
     ),
     "dead_flat_vector_finish": (
         "Where depth or material distinction matters, does the rendering feel "

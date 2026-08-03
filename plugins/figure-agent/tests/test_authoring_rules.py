@@ -936,3 +936,23 @@ def test_rule_catalog_rejects_malformed_rule_id(tmp_path: Path) -> None:
 
     with pytest.raises(authoring_rules.AuthoringRuleError, match="rule_id_invalid"):
         authoring_rules.load_rule_catalog(path)
+
+
+def test_design_philosophy_keeps_current_figures_as_revisable_baselines() -> None:
+    philosophy = (PLUGIN_ROOT / "docs" / "figure-design-philosophy.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(philosophy.split())
+
+    assert "revisable baseline" in normalized
+    assert "not publication-final" in normalized
+    assert "random jitter or decorative noise" in normalized
+    assert "FROZEN reference" not in normalized
+    assert "reached Nature-tier" not in normalized
+
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized_skill = " ".join(skill.split())
+    assert "mechanically uniform finish" in normalized_skill
+    assert "random jitter or decorative noise" in normalized_skill
