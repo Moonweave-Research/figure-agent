@@ -42,6 +42,7 @@ def test_package_cowork_plugin_zip_contract(tmp_path: Path) -> None:
         "commands/fig_status.md",
         "mcp/figure_agent_server.py",
         "scripts/status.py",
+        "scripts/checks/check_silhouette_morphology.py",
         "styles/polymer-paper-preamble.sty",
         "bin/fig-agent",
         "docs/figure-agent.md",

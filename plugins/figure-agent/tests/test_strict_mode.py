@@ -611,6 +611,9 @@ def test_compile_strict_flag_is_documented_in_script() -> None:
     assert "collisions.json" in compile_sh
     assert 'COLLISION_FIXTURE_ARGS=(--fixture "$FIXTURE_NAME")' in compile_sh
     assert "visual_clash.json" in compile_sh
+    assert "check_silhouette_morphology.py" in compile_sh
+    assert "silhouette_morphology.json" in compile_sh
+    assert "silhouette_morphology_checks:" in compile_sh
     assert "check_text_boundary_clash.py" in compile_sh
     assert "text_boundary_clash.json" in compile_sh
 

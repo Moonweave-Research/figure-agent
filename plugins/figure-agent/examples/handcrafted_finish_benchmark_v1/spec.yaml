@@ -26,6 +26,14 @@ semantic_assertions:
     subject: Progressive
     reference: Cantilever
     tolerance_pt: 4.0
+silhouette_morphology_checks:
+  - id: editorial-cantilever-finite-width-member
+    role: finite_width_member
+    bbox_pdf_cm: [11.70, 8.70, 17.00, 11.40]
+    stroke_rgb: [0.48001, 0.38274, 0.09413]
+    color_tolerance: 0.03
+    max_width_to_length_ratio: 0.10
+    max_width_variation_ratio: 1.80
 notes: >-
   Development benchmark only. Candidate roles are masked in the render and
   declared in benchmark_manifest.yaml. No human or publication acceptance.

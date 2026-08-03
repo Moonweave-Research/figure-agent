@@ -146,6 +146,17 @@ No lower state implies a higher one. Machine gates and model critiques use
 `publication_acceptance: not_claimed`; any external record is evidence, not plugin
 authority.
 
+Fixtures may opt into `silhouette_morphology_checks` when a filled vector member
+has a declared rendered-PDF region and stroke color. The current checker rejects
+self-intersection, excessive width relative to edge length, and abrupt width
+variation in a single-span finite-width path. It reads PDF vectors rather than
+TikZ coordinates and writes `build/silhouette_morphology.json`; strict compile
+fails on declared violations or an unanalyzable target. This is a narrow defect
+gate, not an aesthetic score: curvature quality, force-label hierarchy, and
+publication taste still require fresh reduced-scale host and human review. Do
+not generalize its thresholds beyond a validated figure family without new
+evidence.
+
 ### Mechanism semantic-contract rule
 
 `physics_grounding=grounded` means only that a briefing declares physics intent

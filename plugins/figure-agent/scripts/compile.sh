@@ -59,6 +59,7 @@ TEXT_BOUNDARY_SPEC_ARGS=()
 LABEL_PATH_SPEC_ARGS=()
 PROCESS_STAGE_VISIBILITY_SPEC_ARGS=()
 VECTOR_CLEARANCE_SPEC_ARGS=()
+SILHOUETTE_MORPHOLOGY_SPEC_ARGS=()
 SEMANTIC_RELATION_ARGS=()
 LAYOUT_CONTRACT=""
 if [[ -n "$FIXTURE_NAME" ]]; then
@@ -81,6 +82,9 @@ if [[ -n "$FIXTURE_NAME" ]]; then
     LABEL_PATH_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     PROCESS_STAGE_VISIBILITY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
     VECTOR_CLEARANCE_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    if grep -Eq '^[[:space:]]*silhouette_morphology_checks:' "$FIGURE_SPEC"; then
+      SILHOUETTE_MORPHOLOGY_SPEC_ARGS=(--spec "$FIGURE_SPEC")
+    fi
   fi
 fi
 
@@ -260,6 +264,14 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visu
   ${COLLISION_FIXTURE_ARGS[@]+"${COLLISION_FIXTURE_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/visual_clash.json" \
   "$PDF_OUT"
+if [[ ${#SILHOUETTE_MORPHOLOGY_SPEC_ARGS[@]} -ne 0 ]]; then
+  run_report_check "${UV_RUN[@]}" python3 \
+    "$WORKFLOW_DIR/scripts/checks/check_silhouette_morphology.py" \
+    ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+    ${SILHOUETTE_MORPHOLOGY_SPEC_ARGS[@]+"${SILHOUETTE_MORPHOLOGY_SPEC_ARGS[@]}"} \
+    --json-output "${BUILD_DIR}/silhouette_morphology.json" \
+    "$PDF_OUT"
+fi
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_text_boundary_clash.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
   ${TEXT_BOUNDARY_SPEC_ARGS[@]+"${TEXT_BOUNDARY_SPEC_ARGS[@]}"} \

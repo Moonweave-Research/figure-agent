@@ -29,17 +29,19 @@ results:
       - matched geometry can still feel templated if headings and internal marks share identical centering
       - a real paper panel must retain the evidence-qualified working-model language
   - motif_id: cantilever_force_sequence
-    host_verdict: no_viable_candidate
+    host_verdict: repair_candidate_pending_human
     host_preference: null
+    repair_candidate: V9
     human_verdict: not_recorded
     observed_strengths:
       - the comparison exposed a morphology-review failure that collision checks did not detect
+      - redrawn V9 is one non-self-intersecting finite-width member with a centered fixed-end tangent
     observed_risks:
       - C5 and L1 read as thick banana or ribbon silhouettes with bulbous free ends
-      - V9 contains a self-crossing waist and cannot be read as one finite-width member
-      - force annotation placement appears to have driven the body geometry instead of following it
+      - V9 passes the opt-in vector morphology check but journal-level silhouette taste remains a human decision
+      - force-label scale remains visually strong relative to the member at reduced size
 cross_motif_observations:
   - handcrafted finish came from selective hierarchy and role-specific variation rather than random jitter
   - repeated geometry remained beneficial when it encoded matched specimens or apparatus identity
   - extra texture and curved decoration weakened ownership when they did not carry a named scientific relation
-promotion_decision: hold_cantilever_redraw_and_named_human_review
+promotion_decision: hold_for_named_human_review_and_cross_family_validation

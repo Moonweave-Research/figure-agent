@@ -142,6 +142,13 @@ def load_review(path: Path, *, manifest: dict[str, Any]) -> dict[str, Any]:
         elif verdict == "no_viable_candidate":
             if preference is not None:
                 raise HandcraftedFinishBenchmarkError("failed_set_cannot_name_preference")
+        elif verdict == "repair_candidate_pending_human":
+            if preference is not None:
+                raise HandcraftedFinishBenchmarkError(
+                    "pending_repair_cannot_name_preference"
+                )
+            if result.get("repair_candidate") not in options_by_motif[result["motif_id"]]:
+                raise HandcraftedFinishBenchmarkError("repair_candidate_invalid")
         else:
             raise HandcraftedFinishBenchmarkError("host_verdict_invalid")
         _string_list(result, "observed_strengths")

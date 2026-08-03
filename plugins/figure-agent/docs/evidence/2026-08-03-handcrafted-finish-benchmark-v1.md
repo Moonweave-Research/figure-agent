@@ -25,8 +25,8 @@ evidence, a ranker reward, a publication verdict, or a named-human acceptance.
 - 100/50/33 candidate crops: `build/handcrafted_finish_crops/`
 - Hash-bound crop evidence: `build/handcrafted_finish_evidence.json`
 
-Final audited render SHA-256:
-`076c3770ac6314874b8a8ec2938fa317bf9e4197af38720ac5506c48368db40b`.
+Current audited render SHA-256:
+`ffe2df62b9522caa81e52608970d8b231adad8ecee21d32c3001e79974ddc0b6`.
 
 ## Same-host result
 
@@ -34,8 +34,17 @@ The advisory preferences were Q2 for the amorphous host and R8 for matched MIM
 transport. Subsequent object-level enlargement invalidated the initial V9
 preference: C5 and L1 read as thick banana/ribbon silhouettes, while V9 contains
 a self-crossing waist and is not one valid finite-width member. The cantilever
-row is therefore recorded as `no_viable_candidate`. This correction is also
+row was therefore first recorded as `no_viable_candidate`. This correction is
 evidence that collision-free output is insufficient for silhouette quality.
+
+V9 was then redrawn as a single narrow member with separated edges, a centered
+fixed-end tangent, and a smooth free-end cap. An opt-in PDF-vector morphology
+check now measures the rendered path rather than the TikZ recipe. Before redraw,
+it found one self-intersection and a 2.256 width-variation ratio. The current V9
+has zero self-intersections, a 0.075 width-to-length ratio, and a 1.026
+width-variation ratio. It is recorded only as
+`repair_candidate_pending_human`: those metrics exclude specific malformed
+silhouettes, but they do not establish journal-level taste or human preference.
 
 Across all three families, the reusable observation was narrower than “make it
 less regular”:
@@ -58,5 +67,6 @@ acceptance state.
 - Semantic assertions: 2 checked, 0 issues
 - Physics grounding: grounded
 - Visual clash: 0 blocking, 2 report-only
+- Silhouette morphology: 1 checked, 0 violations
 - Text collision/boundary/label-path: 0 blocking
 - Human/master gate: pending

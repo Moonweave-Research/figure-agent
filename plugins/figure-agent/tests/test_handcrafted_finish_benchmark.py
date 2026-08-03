@@ -59,8 +59,9 @@ def test_host_review_is_advisory_and_cannot_create_reward_or_promotion() -> None
         for result in review["results"]
         if result["motif_id"] == "cantilever_force_sequence"
     )
-    assert cantilever["host_verdict"] == "no_viable_candidate"
+    assert cantilever["host_verdict"] == "repair_candidate_pending_human"
     assert cantilever["host_preference"] is None
+    assert cantilever["repair_candidate"] == "V9"
 
 
 def test_review_rejects_false_human_or_reward_claim(tmp_path: Path) -> None:
@@ -75,6 +76,24 @@ def test_review_rejects_false_human_or_reward_claim(tmp_path: Path) -> None:
     with pytest.raises(
         handcrafted_finish_benchmark.HandcraftedFinishBenchmarkError,
         match="host_review_cannot_create_reward",
+    ):
+        handcrafted_finish_benchmark.load_review(review_path, manifest=manifest)
+
+
+def test_review_rejects_pending_repair_outside_masked_candidate_set(
+    tmp_path: Path,
+) -> None:
+    manifest = handcrafted_finish_benchmark.load_manifest(REAL_BENCHMARK)
+    text = REAL_REVIEW.read_text(encoding="utf-8")
+    review_path = tmp_path / "review.yaml"
+    review_path.write_text(
+        text.replace("repair_candidate: V9", "repair_candidate: Z0"),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        handcrafted_finish_benchmark.HandcraftedFinishBenchmarkError,
+        match="repair_candidate_invalid",
     ):
         handcrafted_finish_benchmark.load_review(review_path, manifest=manifest)
 
