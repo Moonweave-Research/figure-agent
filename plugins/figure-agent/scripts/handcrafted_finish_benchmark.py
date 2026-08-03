@@ -124,10 +124,9 @@ def load_review(path: Path, *, manifest: dict[str, Any]) -> dict[str, Any]:
     if payload.get("publication_acceptance") != "not_claimed":
         raise HandcraftedFinishBenchmarkError("publication_acceptance_overclaim")
     motif_ids = {motif["id"] for motif in manifest["motifs"]}
-    option_ids = {
-        candidate["option_id"]
+    options_by_motif = {
+        motif["id"]: {candidate["option_id"] for candidate in motif["candidates"]}
         for motif in manifest["motifs"]
-        for candidate in motif["candidates"]
     }
     results = payload.get("results")
     if not isinstance(results, list) or {result.get("motif_id") for result in results} != motif_ids:
@@ -135,8 +134,16 @@ def load_review(path: Path, *, manifest: dict[str, Any]) -> dict[str, Any]:
     for result in results:
         if not isinstance(result, dict) or result.get("human_verdict") != "not_recorded":
             raise HandcraftedFinishBenchmarkError("human_verdict_overclaim")
-        if result.get("host_preference") not in option_ids:
-            raise HandcraftedFinishBenchmarkError("host_preference_invalid")
+        verdict = result.get("host_verdict")
+        preference = result.get("host_preference")
+        if verdict == "preferred_option":
+            if preference not in options_by_motif[result["motif_id"]]:
+                raise HandcraftedFinishBenchmarkError("host_preference_invalid")
+        elif verdict == "no_viable_candidate":
+            if preference is not None:
+                raise HandcraftedFinishBenchmarkError("failed_set_cannot_name_preference")
+        else:
+            raise HandcraftedFinishBenchmarkError("host_verdict_invalid")
         _string_list(result, "observed_strengths")
         _string_list(result, "observed_risks")
     return payload

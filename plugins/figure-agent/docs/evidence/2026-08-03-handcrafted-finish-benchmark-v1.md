@@ -30,10 +30,12 @@ Final audited render SHA-256:
 
 ## Same-host result
 
-The advisory preferences were Q2 for the amorphous host, R8 for matched MIM
-transport, and V9 for the cantilever force balance. The V9 reduction crop first
-exposed a clipped `Coulomb` label; the label and vector lane were moved inside
-the candidate boundary and all evidence was regenerated.
+The advisory preferences were Q2 for the amorphous host and R8 for matched MIM
+transport. Subsequent object-level enlargement invalidated the initial V9
+preference: C5 and L1 read as thick banana/ribbon silhouettes, while V9 contains
+a self-crossing waist and is not one valid finite-width member. The cantilever
+row is therefore recorded as `no_viable_candidate`. This correction is also
+evidence that collision-free output is insufficient for silhouette quality.
 
 Across all three families, the reusable observation was narrower than “make it
 less regular”:

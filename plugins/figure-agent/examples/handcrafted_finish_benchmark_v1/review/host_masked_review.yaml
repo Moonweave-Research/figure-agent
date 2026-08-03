@@ -9,6 +9,7 @@ authorizes_rule_promotion: false
 publication_acceptance: not_claimed
 results:
   - motif_id: amorphous_trap_host
+    host_verdict: preferred_option
     host_preference: Q2
     human_verdict: not_recorded
     observed_strengths:
@@ -18,6 +19,7 @@ results:
       - host texture remains an illustrative abstraction and needs human taste review
       - additional trace contrast could still become topography in a full panel context
   - motif_id: progressive_mim_transport
+    host_verdict: preferred_option
     host_preference: R8
     human_verdict: not_recorded
     observed_strengths:
@@ -27,16 +29,17 @@ results:
       - matched geometry can still feel templated if headings and internal marks share identical centering
       - a real paper panel must retain the evidence-qualified working-model language
   - motif_id: cantilever_force_sequence
-    host_preference: V9
+    host_verdict: no_viable_candidate
+    host_preference: null
     human_verdict: not_recorded
     observed_strengths:
-      - consistent strip width and end-cap geometry improve mechanical object identity
-      - force ownership remains clear because the Coulomb vector dominates without decorative field clutter
+      - the comparison exposed a morphology-review failure that collision checks did not detect
     observed_risks:
-      - the preferred force hierarchy remains conditional rather than observed evidence
-      - exact bend magnitude and gap are schematic and must not be read quantitatively
+      - C5 and L1 read as thick banana or ribbon silhouettes with bulbous free ends
+      - V9 contains a self-crossing waist and cannot be read as one finite-width member
+      - force annotation placement appears to have driven the body geometry instead of following it
 cross_motif_observations:
   - handcrafted finish came from selective hierarchy and role-specific variation rather than random jitter
   - repeated geometry remained beneficial when it encoded matched specimens or apparatus identity
   - extra texture and curved decoration weakened ownership when they did not carry a named scientific relation
-promotion_decision: hold_for_named_human_review
+promotion_decision: hold_cantilever_redraw_and_named_human_review

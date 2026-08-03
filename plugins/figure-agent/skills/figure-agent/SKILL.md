@@ -694,6 +694,9 @@ edge contours and a deliberate free-end termination. If it reduces to a
 hairpin, tube, field line, or paired wires, redraw the silhouette directly;
 do not compensate by adding texture, charges, arrows, or a reusable primitive.
 This is an outcome constraint, not a fixed Bezier recipe.
+In a masked comparison, return `no viable candidate` when every option violates
+that silhouette contract. Never promote the least-bad malformed silhouette
+merely because its labels, force arrows, or whitespace are cleaner.
 
 When a cantilever is authored as a filled strip, treat independently authored
 edges with unmatched tangents or an arbitrary free-end closure as a structural

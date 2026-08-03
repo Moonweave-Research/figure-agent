@@ -131,6 +131,14 @@ Within and across panels, require the same physical process to reuse one arrow
 and line-style grammar unless a legend or brief-declared contrast explains the
 difference. An unexplained solid/dashed or arrowhead change can invent a second
 mechanism just as surely as a mislabeled arrow.
+For every filled finite-width member such as a cantilever, beam, strip, or film,
+inspect the rendered silhouette independently of its labels and force arrows.
+Reject any self-intersection or pinch point, collapsed edge separation, mismatched
+fixed-end tangent, bulbous or pointed free-end cap, or abrupt width change that
+makes one body read as a hairpin, tube, banana, or ribbon. In a candidate
+comparison, record `no viable candidate` when every option fails this object-level
+morphology audit; never select the least-bad malformed body merely because its
+annotations are cleaner.
 For each mechanism arrow, verify that the arrow tail touches its declared source
 state and the arrowhead touches the named destination boundary or state. Route a
 path that stops short and relies on visual proximity as an unbound mechanism.

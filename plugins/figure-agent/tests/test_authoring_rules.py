@@ -547,6 +547,16 @@ def test_finite_width_charge_markers_and_force_origins_keep_visual_ownership() -
     assert "cuts through it from the far edge" in normalized
 
 
+def test_malformed_candidate_set_can_fail_without_forced_preference() -> None:
+    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(skill.split())
+
+    assert "no viable candidate" in normalized
+    assert "least-bad malformed silhouette" in normalized
+
+
 def test_weaker_residual_force_keeps_a_shorter_lighter_vector() -> None:
     skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
         encoding="utf-8"

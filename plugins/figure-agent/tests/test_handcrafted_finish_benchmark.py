@@ -54,6 +54,13 @@ def test_host_review_is_advisory_and_cannot_create_reward_or_promotion() -> None
     assert review["creates_quality_reward"] is False
     assert review["authorizes_rule_promotion"] is False
     assert all(result["human_verdict"] == "not_recorded" for result in review["results"])
+    cantilever = next(
+        result
+        for result in review["results"]
+        if result["motif_id"] == "cantilever_force_sequence"
+    )
+    assert cantilever["host_verdict"] == "no_viable_candidate"
+    assert cantilever["host_preference"] is None
 
 
 def test_review_rejects_false_human_or_reward_claim(tmp_path: Path) -> None:
