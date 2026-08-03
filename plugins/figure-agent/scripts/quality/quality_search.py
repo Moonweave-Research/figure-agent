@@ -91,6 +91,7 @@ PANEL_F_POST_LABEL_RELIEF_SOURCE_SETTLE_TEMPLATE_ID = (
     "v5f_panel_f_post_label_relief_source_settle_v1"
 )
 PANEL_F_TRAP_LABEL_LEFT_RAIL_TEMPLATE_ID = "v5f_panel_f_trap_label_left_rail_v1"
+PANEL_F_AIR_GAP_DRIFT_REPAIR_TEMPLATE_ID = "v5f_panel_f_air_gap_drift_repair_v1"
 PANEL_C_HERO_FINISH_TEMPLATE_ID = "v5f_panel_c_hero_finish_v1"
 DENSITY_PANEL_E_TEMPLATE_ID = "row2_panel_e_density_reduce_v1"
 LINE_WIDTH_TEMPLATE_ID = "line_width_minimum_v1"
@@ -502,6 +503,27 @@ QUALITY_SEARCH_FAMILY_REGISTRY = {
             "rebalance the post-boundary Coulomb arrow and force labels",
             "keep repulsion out of the arrow lane without weakening the force cue",
             "preserve electrode, air-gap, trapped-charge, and compact source semantics",
+        ],
+        "render_targets": ["full", "print_thumbnail", "panel_F"],
+    },
+    "panel_f_air_gap_drift_repair": {
+        "builder": "panel_region_spec",
+        "apply_authority": "review_only",
+        "protected_labels": [
+            "q_tr",
+            "trapped charge",
+            "Coulomb",
+            "repulsion",
+            "electrode",
+            "air gap",
+            "mechanical",
+            "$V_{\\mathrm{active}}$",
+            "bias",
+        ],
+        "design_moves": [
+            "raise the air-gap caliper back into the gap between cantilever and electrode",
+            "keep the label centered in the gap without moving Coulomb/repulsion labels",
+            "preserve electrode and source-lead geometry while reducing air-gap drift",
         ],
         "render_targets": ["full", "print_thumbnail", "panel_F"],
     },
@@ -1207,7 +1229,11 @@ def _goal_requests_panel_f_apparatus(goal: str) -> bool:
         "force",
         "electrode",
         "air gap",
+        "cantilever",
+        "clearance",
         "coulomb",
+        "geometry",
+        "label clearance",
         "mechanical",
         "overlap",
         "readable",
@@ -1351,6 +1377,40 @@ def _goal_hypotheses(name: str, goal: str) -> list[dict[str, Any]]:
                 "expected_visual_movement": (
                     "Coulomb and repulsion separate from the arrow lane while the "
                     "air-gap/electrode relation stays readable"
+                ),
+                "rollback_condition": (
+                    "candidate worsens compile, protected labels, source attachment, "
+                    "or electrode/air-gap semantics"
+                ),
+            },
+        )
+    if any(
+        term in normalized
+        for term in ("air gap", "clearance", "geometry", "drift", "label clearance")
+    ) and not any(term in normalized for term in ("apparatus", "strengthen")):
+        hypotheses.insert(
+            0,
+            {
+                "fixture": name,
+                "family": "panel_f_air_gap_drift_repair",
+                "source": "goal_directive",
+                "mutation_allowed": False,
+                "mutation_block_reason": "quality-search v0 is planner-only",
+                "target_scope": "panel",
+                "target_hint": {
+                    "panels": ["F"],
+                    "reason": (
+                        "goal explicitly requests Panel F air-gap geometry, "
+                        "clearance, or label-clearance repair"
+                    ),
+                },
+                "expected_detector_movement": (
+                    "convert remaining air-gap drift and label clearance defects "
+                    "into a source-bound Panel F caliper repair"
+                ),
+                "expected_visual_movement": (
+                    "air-gap caliper and label move into the visible gap without "
+                    "touching the electrode, source lead, or force-label geometry"
                 ),
                 "rollback_condition": (
                     "candidate worsens compile, protected labels, source attachment, "
@@ -2681,6 +2741,8 @@ def _preferred_operation_scale(family: str) -> str:
         return "panel_block"
     if family == "panel_f_post_boundary_force_balance":
         return "panel_block"
+    if family == "panel_f_air_gap_drift_repair":
+        return "panel_block"
     if family == "panel_f_post_force_source_connector":
         return "panel_block"
     if family == "panel_f_post_source_label_scale":
@@ -2747,6 +2809,8 @@ def _preferred_template_id(family: str) -> str:
         return PANEL_F_CURRENT_LABEL_SANITIZE_TEMPLATE_ID
     if family == "panel_f_post_boundary_force_balance":
         return PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID
+    if family == "panel_f_air_gap_drift_repair":
+        return PANEL_F_AIR_GAP_DRIFT_REPAIR_TEMPLATE_ID
     if family == "panel_f_post_force_source_connector":
         return PANEL_F_POST_FORCE_SOURCE_CONNECTOR_TEMPLATE_ID
     if family == "panel_f_post_source_label_scale":
@@ -4105,6 +4169,24 @@ def _panel_f_v5f_electrode_connector_replacement(block: str) -> str | None:
         return None
     if _panel_f_v5f_electrode_connector_template_applied(block):
         return None
+    settled_source_lead = (
+        "% quality-search F post-spacing source finish: soften source lead\n"
+        "% quality-search F post-gap label relief: clear label backgrounds\n"
+        "% quality-search F post-label relief source settle: subordinate source lead\n"
+        "\\draw[cGray!34!black, line width=0.18pt, opacity=0.78, rounded corners=2.2pt]\n"
+        "  (13.24, 3.76) -- (13.20, 3.38) -- (13.18, 2.82);\n"
+        "\\fill[cGray!66!black, opacity=0.86] (13.18, 2.82) circle (0.024);"
+    )
+    if settled_source_lead in block:
+        replacement = block.replace(
+            settled_source_lead,
+            "% quality-search F connector: source-to-electrode lead\n"
+            "\\draw[cGray!54!black, line width=0.30pt, opacity=0.86, rounded corners=1.2pt]\n"
+            "  (13.28, 3.78) -- (13.08, 3.58) -- (13.08, 2.96) -- (13.18, 2.82);\n"
+            "\\fill[cGray!82!black, opacity=0.94] (13.18, 2.82) circle (0.038);",
+        )
+        if replacement != block and _panel_f_overlay_has_protected_labels(replacement):
+            return replacement
     connector_base = block
     has_refresh_relation = (
         "quality-search F refresh: left-margin trap label + electrode relation" in connector_base
@@ -5003,6 +5085,107 @@ def _panel_f_post_boundary_force_balance_template_applied(block: str) -> bool:
     return all(fragment in block for fragment in required_fragments)
 
 
+def _panel_f_v5f_current_force_balance_template_applied(block: str) -> bool:
+    required_fragments = (
+        "% quality-search F current air-gap clearance",
+        "(10.58, 1.02) -- (9.68, 1.02);",
+        "(10.32, 0.58) -- (13.18, 0.58);",
+        "at (11.66, 0.33) {air gap};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_v5f_current_force_balance_replacement(block: str) -> str | None:
+    if not _panel_f_overlay_has_protected_labels(block):
+        return None
+    if _panel_f_v5f_current_force_balance_template_applied(block):
+        return None
+    replacements = (
+        (
+            "% quality-search F post-force spacing finish: align force label rail\n"
+            "\\draw[panelFCoulombRepulsionArrow, -{Stealth[length=6.2pt,width=4.2pt]}, cRed!72!black, line width=0.62pt]\n"
+            "  (10.52, 1.02) -- (9.68, 1.02);",
+            "% quality-search F current air-gap clearance\n"
+            "\\draw[panelFCoulombRepulsionArrow, -{Stealth[length=6.2pt,width=4.2pt]}, cRed!72!black, line width=0.62pt]\n"
+            "  (10.58, 1.02) -- (9.68, 1.02);",
+        ),
+        (
+            "\\draw[<->, cGray!62!black, line width=0.68pt]\n"
+            "  (10.20, 0.54) -- (13.18, 0.54);",
+            "\\draw[<->, cGray!62!black, line width=0.68pt]\n"
+            "  (10.32, 0.58) -- (13.18, 0.58);",
+        ),
+        (
+            "      font=\\sffamily\\fontsize{5.3}{6.4}\\selectfont, text=cGray!70!black]\n"
+            "  at (11.60, 0.29) {air gap};",
+            "      font=\\sffamily\\fontsize{5.3}{6.4}\\selectfont, text=cGray!70!black]\n"
+            "  at (11.66, 0.33) {air gap};",
+        ),
+    )
+    replacement = block
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == block:
+        return None
+    if not _panel_f_overlay_has_protected_labels(replacement):
+        return None
+    if not _panel_f_v5f_current_force_balance_template_applied(replacement):
+        return None
+    return replacement
+
+
+def _panel_f_air_gap_drift_repair_template_applied(block: str) -> bool:
+    required_fragments = (
+        "% quality-search F air-gap drift repair: recenter caliper in electrode gap",
+        "(11.50, 0.55) -- (13.18, 0.55);",
+        "at (12.36, 0.50) {air gap};",
+    )
+    return all(fragment in block for fragment in required_fragments)
+
+
+def _panel_f_air_gap_drift_repair_replacement(
+    *,
+    lines: list[str],
+    selector: dict[str, Any],
+) -> tuple[str, str, int, int] | None:
+    line_start = int(selector["line_start"])
+    line_end = int(selector["line_end"])
+    original = "".join(lines[line_start - 1 : line_end])
+    if not _panel_f_overlay_has_protected_labels(original):
+        return None
+    if _panel_f_air_gap_drift_repair_template_applied(original):
+        return None
+    replacements = (
+        (
+            "\\draw[<->, cGray!62!black, line width=0.68pt]\n"
+            "  (10.20, 0.54) -- (13.18, 0.54);",
+            "% quality-search F air-gap drift repair: recenter caliper in electrode gap\n"
+            "\\draw[<->, cGray!64!black, line width=0.70pt]\n"
+            "  (11.50, 0.55) -- (13.18, 0.55);",
+        ),
+        (
+            "      font=\\sffamily\\fontsize{5.3}{6.4}\\selectfont, text=cGray!70!black]\n"
+            "  at (11.60, 0.29) {air gap};",
+            "      font=\\sffamily\\fontsize{5.3}{6.4}\\selectfont, text=cGray!70!black]\n"
+            "  at (12.36, 0.50) {air gap};",
+        ),
+    )
+    replacement = original
+    for old, new in replacements:
+        if old not in replacement:
+            return None
+        replacement = replacement.replace(old, new)
+    if replacement == original:
+        return None
+    if not _panel_f_overlay_has_protected_labels(replacement):
+        return None
+    if not _panel_f_air_gap_drift_repair_template_applied(replacement):
+        return None
+    return original, replacement, line_start, line_end
+
+
 def _panel_f_post_boundary_force_balance_replacement(
     *,
     lines: list[str],
@@ -5015,6 +5198,9 @@ def _panel_f_post_boundary_force_balance_replacement(
     original = "".join(lines[line_start - 1 : line_end])
     if not _panel_f_overlay_has_protected_labels(original):
         return None
+    current_replacement = _panel_f_v5f_current_force_balance_replacement(original)
+    if current_replacement is not None:
+        return original, current_replacement, line_start, line_end
     if not _panel_f_boundary_polish_template_applied(original):
         return None
     if _panel_f_post_boundary_force_balance_template_applied(original):
@@ -5817,6 +6003,7 @@ _LEGACY_PREFERRED_PANEL = {
     "panel_f_source_cue_demote": "F",
     "panel_f_current_label_sanitize": "F",
     "panel_f_post_boundary_force_balance": "F",
+    "panel_f_air_gap_drift_repair": "F",
     "panel_f_post_force_source_connector": "F",
     "panel_f_post_source_label_scale": "F",
     "panel_f_post_label_force_cleanup": "F",
@@ -6419,6 +6606,34 @@ def _candidate_operation_for_spec(
             "family": family,
             "operation_scale": "panel_block",
             "template_id": PANEL_F_POST_BOUNDARY_FORCE_BALANCE_TEMPLATE_ID,
+            "panel": "F",
+        }
+    if family == "panel_f_air_gap_drift_repair":
+        air_gap_block = _panel_f_air_gap_drift_repair_replacement(
+            lines=lines,
+            selector=selector,
+        )
+        if air_gap_block is not None:
+            original, new_text, line_start, line_end = air_gap_block
+            operation = {
+                "kind": "replace_text",
+                "semantic_kind": "quality_search_panel_f_air_gap_drift_repair_panel_block",
+                "operation_scale": "panel_block",
+                "template_id": PANEL_F_AIR_GAP_DRIFT_REPAIR_TEMPLATE_ID,
+                "panel": "F",
+                "path": source_ref,
+                "line_start": line_start,
+                "line_end": line_end,
+                "original": original,
+                "replacement": new_text,
+            }
+            return operation, None
+        return None, {
+            "code": "no_panel_f_air_gap_drift_repair_block",
+            "candidate_id": str(spec.get("id")),
+            "family": family,
+            "operation_scale": "panel_block",
+            "template_id": PANEL_F_AIR_GAP_DRIFT_REPAIR_TEMPLATE_ID,
             "panel": "F",
         }
     if family == "panel_f_post_force_source_connector":
@@ -8057,6 +8272,7 @@ def _candidate_structural_impact(
         "panel_f_source_cue_demote",
         "panel_f_current_label_sanitize",
         "panel_f_post_boundary_force_balance",
+        "panel_f_air_gap_drift_repair",
         "panel_f_post_force_source_connector",
         "panel_f_post_source_label_scale",
         "panel_f_post_label_force_cleanup",
@@ -8230,6 +8446,7 @@ def _family_evidence_weight(family: str, plan: dict[str, Any]) -> float:
             "panel_f_current_label_sanitize": 0.9,
             "panel_f_boundary_polish": 0.84,
             "panel_f_post_boundary_force_balance": 0.9,
+            "panel_f_air_gap_drift_repair": 0.91,
             "panel_f_post_force_source_connector": 0.88,
             "panel_f_post_source_label_scale": 0.88,
             "panel_f_post_label_force_cleanup": 0.9,
@@ -8320,6 +8537,29 @@ def _ranking_evidence(ranking: dict[str, Any] | None, polarity: str) -> list[str
     return [str(item) for item in values]
 
 
+def _ranking_negative_set(ranking: dict[str, Any] | None) -> set[str]:
+    return set(_ranking_evidence(ranking, "negative"))
+
+
+def _score_negative_set(score: dict[str, Any]) -> set[str]:
+    evidence = score.get("ranking_evidence")
+    values = evidence.get("negative") if isinstance(evidence, dict) else None
+    if not isinstance(values, list):
+        return set()
+    return {str(item) for item in values}
+
+
+def _has_below_review_threshold_evidence(score: dict[str, Any]) -> bool:
+    negative = _score_negative_set(score)
+    return bool(
+        {
+            "rendered_change_below_review_threshold",
+            "rendered_no_pixel_change",
+        }
+        & negative
+    )
+
+
 def _render_policy_adjustment(ranking: dict[str, Any] | None) -> tuple[float, float]:
     if not isinstance(ranking, dict):
         return (0.0, 0.0)
@@ -8327,11 +8567,13 @@ def _render_policy_adjustment(ranking: dict[str, Any] | None) -> tuple[float, fl
     if rank_score is None:
         return (0.0, 0.0)
     adjustment = (_bounded_float(rank_score, default=0.5) - 0.5) * 0.16
-    negative = set(_ranking_evidence(ranking, "negative"))
+    negative = _ranking_negative_set(ranking)
     render_status = str(ranking.get("render_status") or "")
     penalty = 0.0
     if "rendered_no_pixel_change" in negative:
         penalty -= 0.08
+    elif "rendered_change_below_review_threshold" in negative:
+        penalty -= 0.06
     elif render_status and render_status not in {
         "not_rendered",
         "rendered_needs_human_review",
@@ -8362,6 +8604,8 @@ def _is_targeted_cleanup_candidate(score: dict[str, Any]) -> bool:
         "panel_f_trap_label_left_rail": PANEL_F_TRAP_LABEL_LEFT_RAIL_TEMPLATE_ID,
     }
     if score.get("template_id") != targeted_templates.get(str(score.get("family"))):
+        return False
+    if _has_below_review_threshold_evidence(score):
         return False
     for key in ("panel_changed_pixel_ratio", "full_changed_pixel_ratio"):
         try:
@@ -8604,6 +8848,18 @@ def _candidate_scores(
             full_changed_pixel_ratio=full_changed_pixel_ratio,
             panel_changed_pixel_ratio=panel_changed_pixel_ratio,
         )
+        ranking_evidence = (
+            ranking.get("evidence")
+            if isinstance(ranking, dict) and isinstance(ranking.get("evidence"), dict)
+            else {"positive": [], "negative": []}
+        )
+        below_review_threshold = bool(
+            {
+                "rendered_change_below_review_threshold",
+                "rendered_no_pixel_change",
+            }
+            & set(str(item) for item in ranking_evidence.get("negative", []))
+        )
         scores.append(
             {
                 "candidate_id": spec.get("id"),
@@ -8621,6 +8877,7 @@ def _candidate_scores(
                 "full_changed_pixel_ratio": full_changed_pixel_ratio,
                 "panel_changed_pixel_ratio": panel_changed_pixel_ratio,
                 "non_marginal_visual_change": non_marginal_visual_change,
+                "below_review_threshold": below_review_threshold,
                 "stale_duplicate_experience_family": (
                     _stale_duplicate_experience_family(plan, family, template_id)
                 ),
@@ -8629,6 +8886,7 @@ def _candidate_scores(
                     "panel_changed_pixel_ratio": NON_MARGINAL_PANEL_CHANGED_PIXEL_RATIO,
                 },
                 "policy": policy,
+                "ranking_evidence": ranking_evidence,
                 "witness": {
                     "state": "dry_scored",
                     "basis": [
@@ -8811,6 +9069,7 @@ def _execution_decision(
             "top_candidate_stale_duplicate_experience_family": top.get(
                 "stale_duplicate_experience_family"
             ),
+            "top_candidate_below_review_threshold": top.get("below_review_threshold"),
             "top_candidate_full_changed_pixel_ratio": top.get("full_changed_pixel_ratio"),
             "top_candidate_panel_changed_pixel_ratio": top.get("panel_changed_pixel_ratio"),
             "non_marginal_thresholds": {

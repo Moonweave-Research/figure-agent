@@ -200,6 +200,8 @@ def _should_run_aggressive_candidates(
         return True
     if stop_reason in {fig_run.STOP_COMPLETE, STOP_OPTIONAL_IMPROVEMENT}:
         return False
+    if actor == "host_llm" and stop_boundary == "host_llm_critique_required":
+        return True
     if actor in {"release_operator", "host_llm", "svg_editor"}:
         return False
     if stop_boundary in {
@@ -227,6 +229,7 @@ def _run_aggressive_candidate_search(
         name,
         goal=goal,
         max_iterations=max_iterations,
+        allow_stale_critique_search=True,
         workspace_root=repo_root,
     )
 
