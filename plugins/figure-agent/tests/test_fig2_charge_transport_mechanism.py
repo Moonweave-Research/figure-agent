@@ -10,10 +10,10 @@ FIXTURE = PLUGIN_ROOT / "examples" / "fig2_charge_transport_mechanism"
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
-import composition_scene  # noqa: E402
 import aesthetic_intent  # noqa: E402
-from briefing_grounding import has_reference_free_grounding_context  # noqa: E402
+import composition_scene  # noqa: E402
 import paper_aesthetic_context  # noqa: E402
+from briefing_grounding import has_reference_free_grounding_context  # noqa: E402
 from semantic_legibility_contract import validate_semantic_legibility_contract  # noqa: E402
 
 

@@ -41,6 +41,7 @@ def test_doctor_reports_the_canonical_command_surface() -> None:
     ]
     assert surface["bounded_repair_transaction_state"] == "complete"
     assert surface["counts"]["total"] == 88
+    assert surface["counts"]["callable"] == 74
     assert set(surface["commands_by_disposition"]) == {
         "core",
         "internal_compatibility",
@@ -53,6 +54,26 @@ def test_doctor_reports_the_canonical_command_surface() -> None:
     assert surface["compatibility_command_contract_registry"] == (
         compatibility_command_contracts.serialize_registry()
     )
+
+
+def test_retired_default_commands_refuse_public_cli_dispatch() -> None:
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(PLUGIN_ROOT)
+
+    for command in ("quality-search", "rank-candidates", "compose-review"):
+        result = subprocess.run(
+            [str(FIG_AGENT), command, "--help"],
+            cwd=PLUGIN_ROOT,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        assert result.returncode == 2
+        assert "retired from the public CLI" in result.stderr
+        assert "fig-agent status <fixture>" in result.stderr
 
 
 def test_registry_controls_internal_cli_membership_and_public_help() -> None:

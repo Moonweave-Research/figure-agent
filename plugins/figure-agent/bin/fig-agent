@@ -141,6 +141,7 @@ INTERNAL_COMPATIBILITY_COMMANDS = (
 ALL_COMMANDS = (
     CORE_COMMANDS | INTERNAL_COMPATIBILITY_COMMANDS | RETIRED_DEFAULT_COMMANDS
 )
+PUBLIC_COMMANDS = CORE_COMMANDS | INTERNAL_COMPATIBILITY_COMMANDS
 
 
 def _command_surface() -> dict[str, object]:
@@ -161,11 +162,13 @@ def _command_surface() -> dict[str, object]:
         "commands_by_disposition": by_disposition,
         "counts": {
             **{key: len(value) for key, value in by_disposition.items()},
+            "callable": len(PUBLIC_COMMANDS),
             "total": sum(len(value) for value in by_disposition.values()),
         },
         "compatibility_contract": (
-            "internal and retired-default commands remain callable until their "
-            "CLI, import, fixture, receipt, and release-gate dependencies are migrated"
+            "internal compatibility commands remain callable; retired-default "
+            "commands are retained as archived implementation only and refuse "
+            "public CLI dispatch"
         ),
         "compatibility_command_contract_registry": (
             compatibility_command_contracts.serialize_registry()
@@ -1292,6 +1295,16 @@ def _quality_search(argv: list[str]) -> int:
     )
 
 
+def _retired_default_command(command: str) -> int:
+    print(
+        f"fig-agent: {command!r} is retired from the public CLI. "
+        "Use 'fig-agent status <fixture>' and 'fig-agent run ...' for the "
+        "supported workflow; archived implementations remain test-only.",
+        file=sys.stderr,
+    )
+    return 2
+
+
 def _promotion_wiring(argv: list[str], command: str) -> int:
     import promotion_wiring
 
@@ -2339,6 +2352,8 @@ def main(argv: list[str] | None = None) -> int:
     if command not in ALL_COMMANDS:
         print(f"fig-agent: unknown command {command!r}", file=sys.stderr)
         return 2
+    if command in RETIRED_DEFAULT_COMMANDS:
+        return _retired_default_command(command)
     if command == "doctor":
         return _doctor(rest)
     if command == "status":

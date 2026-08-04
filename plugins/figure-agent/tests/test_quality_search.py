@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -375,35 +373,24 @@ def _tree(workspace: Path) -> list[str]:
     return sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
 
 
-def test_fig_agent_quality_search_plan_cli_is_read_only(tmp_path: Path) -> None:
+def test_quality_search_planner_is_read_only(tmp_path: Path, capsys) -> None:
     workspace = tmp_path / "workspace"
     _write_minimal_fixture(workspace)
     before = _tree(workspace)
-    env = os.environ.copy()
-    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
-    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
 
-    result = subprocess.run(
+    assert quality_search.main(
         [
-            sys.executable,
-            str(FIG_AGENT),
-            "quality-search",
             "quality_demo",
             "--goal",
             "plan only",
             "--plan",
             "--json",
         ],
-        cwd=workspace,
-        env=env,
-        text=True,
-        capture_output=True,
-        check=False,
-        timeout=10,
-    )
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    ) == 0
 
-    assert result.returncode == 0, result.stderr
-    payload = json.loads(result.stdout)
+    payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.quality-search-plan.v0"
     assert payload["read_only"] is True
     assert payload["safety"]["writes"] == []
@@ -6153,19 +6140,13 @@ def test_quality_search_prefers_later_visible_panel_style_token(
     assert "line width=0.8pt" in operation["replacement"]
 
 
-def test_fig_agent_quality_search_execute_cli_writes_only_scratch(tmp_path: Path) -> None:
+def test_quality_search_executor_writes_only_scratch(tmp_path: Path, capsys) -> None:
     workspace = tmp_path / "workspace"
     _write_minimal_fixture(workspace)
     before = _tree(workspace)
-    env = os.environ.copy()
-    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
-    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
 
-    result = subprocess.run(
+    assert quality_search.main(
         [
-            sys.executable,
-            str(FIG_AGENT),
-            "quality-search",
             "quality_demo",
             "--goal",
             "execute dry witness loop",
@@ -6174,16 +6155,10 @@ def test_fig_agent_quality_search_execute_cli_writes_only_scratch(tmp_path: Path
             "2",
             "--json",
         ],
-        cwd=workspace,
-        env=env,
-        text=True,
-        capture_output=True,
-        check=False,
-        timeout=20,
-    )
-
-    assert result.returncode == 0, result.stderr
-    payload = json.loads(result.stdout)
+        plugin_root=PLUGIN_ROOT,
+        workspace_root=workspace,
+    ) == 0
+    payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.quality-search-execute.v0"
     assert payload["status"] == "dry_run_complete"
     assert payload["safety"]["source_mutation"] == "forbidden_in_dry_executor"
