@@ -311,7 +311,7 @@ def test_fig_agent_candidates_refuses_unimplemented_family_aliases(tmp_path: Pat
         assert payload["refusals"] == [{"code": "edit_family_not_implemented"}]
 
 
-def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
+def test_fig_agent_render_and_review_candidate_set(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _fixture(workspace)
 
@@ -329,14 +329,6 @@ def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
         "candidate_demo",
         "--candidate-set",
         "build/candidates/candidate_set.json",
-    )
-    rank = _run(
-        workspace,
-        "rank-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-        "--json",
     )
     review = _run(
         workspace,
@@ -356,15 +348,10 @@ def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
     manifest = fixture / "build" / "candidates" / "CAND001" / "candidate_manifest.json"
     assert candidates.returncode == 0, candidates.stderr
     assert render.returncode == 0, render.stderr
-    assert rank.returncode == 0, rank.stderr
     assert review.returncode == 0, review.stderr
     assert compare.returncode == 0, compare.stderr
     assert manifest.exists()
     assert json.loads(render.stdout)["schema"] == "figure-agent.candidate-render-result.v1"
-    payload = json.loads(rank.stdout)
-    assert payload["schema"] == "figure-agent.candidate-rank-result.v1"
-    assert payload["scores"][0]["schema"] == "figure-agent.candidate-score.v1"
-    assert payload["scores"][0]["candidate_id"] == "CAND001"
     review_payload = json.loads(review.stdout)
     assert review_payload["schema"] == "figure-agent.candidate-review-packet.v1"
     assert review_payload["candidate_id"] == "CAND001"
@@ -372,198 +359,6 @@ def test_fig_agent_render_and_rank_candidate_set(tmp_path: Path) -> None:
     assert compare_payload["schema"] == "figure-agent.candidate-review-packet.v1"
     assert compare_payload["candidate_id"] == "CAND001"
     assert compare_payload["visual_review"]["status"] == "missing_render"
-
-
-def test_fig_agent_rank_use_memory_missing_index_matches_default(tmp_path: Path) -> None:
-    workspace = tmp_path / "workspace"
-    _fixture(workspace)
-
-    candidates = _run(
-        workspace,
-        "candidates",
-        "candidate_demo",
-        "--json",
-        "--output",
-        "build/candidates/candidate_set.json",
-    )
-    render = _run(
-        workspace,
-        "render-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-    )
-    base = _run(
-        workspace,
-        "rank-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-        "--json",
-    )
-    with_memory = _run(
-        workspace,
-        "rank-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-        "--use-memory",
-        "--json",
-    )
-
-    assert candidates.returncode == 0, candidates.stderr
-    assert render.returncode == 0, render.stderr
-    assert base.returncode == 0, base.stderr
-    assert with_memory.returncode == 0, with_memory.stderr
-    assert json.loads(with_memory.stdout) == json.loads(base.stdout)
-
-
-def test_fig_agent_rank_applies_fixture_index_prior_by_default(tmp_path: Path) -> None:
-    workspace = tmp_path / "workspace"
-    fixture = _fixture(workspace)
-
-    candidates = _run(
-        workspace,
-        "candidates",
-        "candidate_demo",
-        "--json",
-        "--output",
-        "build/candidates/candidate_set.json",
-    )
-    render = _run(
-        workspace,
-        "render-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-    )
-    memory_dir = fixture / "build" / "memory"
-    memory_dir.mkdir(parents=True)
-    (memory_dir / "quality_memory_index.json").write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.quality-memory-index.v1",
-                "families": {
-                    "bounded_coordinate_offset": {
-                        "attempts": 3,
-                        "recommended_prior": 0.2,
-                    }
-                },
-            },
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    result = _run(
-        workspace,
-        "rank-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-        "--json",
-    )
-
-    assert candidates.returncode == 0, candidates.stderr
-    assert render.returncode == 0, render.stderr
-    assert result.returncode == 0, result.stderr
-    score = json.loads(result.stdout)["scores"][0]
-    assert score["scores"]["memory_prior"] == 0.2
-    assert "memory_prior:bounded_coordinate_offset:+0.2000" in score["evidence"]["positive"]
-    assert score["effective_apply_authority"] == "review_only"
-
-
-def test_fig_agent_rank_use_memory_flag_remains_compatible(tmp_path: Path) -> None:
-    workspace = tmp_path / "workspace"
-    fixture = _fixture(workspace)
-
-    candidates = _run(
-        workspace,
-        "candidates",
-        "candidate_demo",
-        "--json",
-        "--output",
-        "build/candidates/candidate_set.json",
-    )
-    render = _run(
-        workspace,
-        "render-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-    )
-    memory_dir = fixture / "build" / "memory"
-    memory_dir.mkdir(parents=True)
-    (memory_dir / "quality_memory_index.json").write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.quality-memory-index.v1",
-                "families": {
-                    "bounded_coordinate_offset": {
-                        "attempts": 3,
-                        "recommended_prior": 0.2,
-                    }
-                },
-            },
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    result = _run(
-        workspace,
-        "rank-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-        "--use-memory",
-        "--json",
-    )
-
-    assert candidates.returncode == 0, candidates.stderr
-    assert render.returncode == 0, render.stderr
-    assert result.returncode == 0, result.stderr
-    score = json.loads(result.stdout)["scores"][0]
-    assert score["scores"]["memory_prior"] == 0.2
-
-
-def test_fig_agent_rank_use_memory_rejects_memory_dir_symlink(tmp_path: Path) -> None:
-    workspace = tmp_path / "workspace"
-    fixture = _fixture(workspace)
-
-    candidates = _run(
-        workspace,
-        "candidates",
-        "candidate_demo",
-        "--json",
-        "--output",
-        "build/candidates/candidate_set.json",
-    )
-    render = _run(
-        workspace,
-        "render-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-    )
-    outside = tmp_path / "outside-memory"
-    outside.mkdir()
-    (fixture / "build" / "memory").symlink_to(outside)
-    result = _run(
-        workspace,
-        "rank-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-        "--use-memory",
-        "--json",
-    )
-
-    assert candidates.returncode == 0, candidates.stderr
-    assert render.returncode == 0, render.stderr
-    assert result.returncode == 1
-    assert "memory_index_symlink_forbidden: memory" in result.stderr
-    assert "Traceback" not in result.stderr
 
 
 def test_fig_agent_render_candidates_accepts_evaluation_flags(tmp_path: Path) -> None:
@@ -593,18 +388,8 @@ def test_fig_agent_render_candidates_accepts_evaluation_flags(tmp_path: Path) ->
         "--evaluate",
         "--json",
     )
-    rank = _run(
-        workspace,
-        "rank-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-        "--json",
-    )
-
     assert candidates.returncode == 0, candidates.stderr
     assert render.returncode == 0, render.stderr
-    assert rank.returncode == 0, rank.stderr
     payload = json.loads(render.stdout)
     assert payload["rendered"] == [
         {
@@ -617,8 +402,6 @@ def test_fig_agent_render_candidates_accepts_evaluation_flags(tmp_path: Path) ->
     assert json.loads(render_manifest.read_text(encoding="utf-8"))["stages"]["evaluate"][
         "status"
     ] in {"dependency_missing", "blocked", "rendered_needs_human_review"}
-    rank_payload = json.loads(rank.stdout)
-    assert rank_payload["scores"][0]["render_status"] != "not_rendered"
 
 
 def test_fig_agent_acceptance_readiness_and_acceptance_cli(tmp_path: Path) -> None:
@@ -915,41 +698,3 @@ def test_fig_agent_render_invalid_json_is_user_error(tmp_path: Path) -> None:
     assert result.returncode == 1
     assert "Traceback" not in result.stderr
     assert "render-candidates" in result.stderr
-
-
-def test_fig_agent_rank_rejects_candidate_id_escape(tmp_path: Path) -> None:
-    workspace = tmp_path / "workspace"
-    fixture = _fixture(workspace)
-    candidate_set = fixture / "build" / "candidates" / "candidate_set.json"
-    secret_manifest = fixture / "build" / "secret" / "candidate_manifest.json"
-    candidate_set.parent.mkdir(parents=True)
-    secret_manifest.parent.mkdir(parents=True)
-    candidate_set.write_text(
-        json.dumps({"candidates": [{"id": "../secret"}]}) + "\n",
-        encoding="utf-8",
-    )
-    secret_manifest.write_text(
-        json.dumps(
-            {
-                "candidate_id": "SECRET",
-                "apply_authority": "apply_eligible",
-                "verification": {"hard_gate_state": "pass"},
-            }
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-
-    result = _run(
-        workspace,
-        "rank-candidates",
-        "candidate_demo",
-        "--candidate-set",
-        "build/candidates/candidate_set.json",
-        "--json",
-    )
-
-    assert result.returncode == 1
-    assert "Traceback" not in result.stderr
-    assert "fixture name must be a single" in result.stderr
-    assert result.stdout == ""
