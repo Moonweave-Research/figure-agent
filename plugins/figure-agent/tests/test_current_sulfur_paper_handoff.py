@@ -106,8 +106,13 @@ def test_only_current_three_authoring_baselines_are_active() -> None:
     assert figures["fig4"]["status"] == "planned_missing"
     assert figures["fig3"]["slot_status"] == "fixed"
     assert figures["fig3"]["authoring_scope"] == "external_quantitative_data"
+    assert figures["fig3"]["assembly_state"] == "external_full_figure_ready"
     assert figures["fig4"]["slot_status"] == "fixed"
     assert figures["fig4"]["evidence_status"] == "data_pipeline_pending"
+    assert figures["fig4"]["assembly_state"] == "external_full_figure_pending"
+    assert figures["fig1"]["fixture_scope"] == "full_figure_candidate"
+    assert figures["fig2"]["fixture_scope"] == "panel_a_schematic_candidate"
+    assert figures["fig5"]["fixture_scope"] == "mechanism_schematic_candidate"
 
     non_main = plan_map["non_main"]
     assert isinstance(non_main, dict)

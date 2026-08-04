@@ -620,6 +620,8 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
                 "figure_id": entry.get("figure_id", figure),
                 "role_id": entry.get("role_id"),
                 "lifecycle": entry.get("status"),
+                "fixture_scope": entry.get("fixture_scope"),
+                "assembly_state": entry.get("assembly_state"),
                 "map_path": "docs/paper_figure_map.yaml",
             }
     non_main = plan_map.get("non_main") if isinstance(plan_map, dict) else None
@@ -1845,7 +1847,9 @@ def _print_single(result: dict) -> None:
                 "  Paper placement: "
                 f"main {paper_plan.get('figure_id', '?')} "
                 f"role={paper_plan.get('role_id', '?')} "
-                f"lifecycle={paper_plan.get('lifecycle', '?')}"
+                f"lifecycle={paper_plan.get('lifecycle', '?')} "
+                f"scope={paper_plan.get('fixture_scope', '?')} "
+                f"assembly={paper_plan.get('assembly_state', '?')}"
             )
         elif paper_state == "NON_MAIN":
             print(

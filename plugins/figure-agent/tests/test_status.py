@@ -4114,12 +4114,15 @@ def test_print_single_surfaces_main_paper_placement(tmp_path: Path, capsys) -> N
         "figure_id": "fig2",
         "role_id": "charge_transport_mechanism_schematic",
         "lifecycle": "active_candidate",
+        "fixture_scope": "panel_a_schematic_candidate",
+        "assembly_state": "external_full_figure_ready",
     }
     status_mod._print_single(result)
 
     assert (
         "Paper placement: main fig2 "
-        "role=charge_transport_mechanism_schematic lifecycle=active_candidate"
+        "role=charge_transport_mechanism_schematic lifecycle=active_candidate "
+        "scope=panel_a_schematic_candidate assembly=external_full_figure_ready"
     ) in capsys.readouterr().out
 
 

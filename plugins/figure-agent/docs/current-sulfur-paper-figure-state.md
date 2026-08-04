@@ -16,16 +16,18 @@ The current paper bindings are:
 
 | Figure | Role | Fixture authority |
 |---|---|---|
-| Fig1 | overview, structure, and charge-trapping concept | `fig1_updated_agent_redraw_v1`, resolved through `review/current-candidate.json` |
-| Fig2 | transient charge transport and its mechanism context | `fig2_charge_transport_mechanism` |
-| Fig3 | frequency-domain dielectric response | fixed main slot; external quantitative artifact, no Figure Agent fixture |
-| Fig4 | ISPD retained-charge decay and trap-energy distribution | fixed main slot; data pipeline pending, no active fixture |
-| Fig5 | cantilever actuation payoff | `fig5_cantilever_actuation_artifact_v2` |
+| Fig1 | overview, structure, and charge-trapping concept | full-figure candidate `fig1_updated_agent_redraw_v1`; human selection pending |
+| Fig2 | transient charge transport and its mechanism context | Panel a schematic candidate `fig2_charge_transport_mechanism`; external 4-panel assembly is the paper artifact |
+| Fig3 | frequency-domain dielectric response | fixed main slot; external quantitative full figure |
+| Fig4 | ISPD retained-charge decay and trap-energy distribution | fixed main slot; external full figure pending data pipeline |
+| Fig5 | cantilever actuation payoff | mechanism schematic candidate `fig5_cantilever_actuation_artifact_v2`; external full figure pending assembly |
 
-Fig1, Fig2, and Fig5 are the three current authoring baselines. Their active
-binding records the selected source lineage; it does not imply human acceptance
-or publication readiness. Earlier figure fixtures and backend experiments remain
-non-main evidence unless the machine map explicitly promotes them.
+Fig1, Fig2, and Fig5 are the three current Figure Agent authoring baselines.
+Their active binding records only the declared fixture scope, never automatic
+ownership of a full assembled paper figure. A fixture candidate does not imply
+human acceptance, a promoted external artifact, or publication readiness.
+Earlier figure fixtures and backend experiments remain non-main evidence unless
+the machine map explicitly promotes them.
 
 All other real fixtures are explicitly classified in the map as regression,
 pilot, reference, superseded, SI, or sandbox evidence. They do not override an

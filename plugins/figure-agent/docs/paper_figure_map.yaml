@@ -11,11 +11,15 @@ figures:
     status: active_candidate
     fixture: fig1_updated_agent_redraw_v1
     source_pointer: review/current-candidate.json
+    fixture_scope: full_figure_candidate
+    assembly_state: human_selection_pending
   fig2:
     figure_id: fig2
     role_id: charge_transport_mechanism_schematic
     status: active_candidate
     fixture: fig2_charge_transport_mechanism
+    fixture_scope: panel_a_schematic_candidate
+    assembly_state: external_full_figure_ready
   fig3:
     figure_id: fig3
     role_id: frequency_domain_dielectric_response
@@ -23,6 +27,7 @@ figures:
     slot_status: fixed
     evidence_status: external_canonical_artifact_ready
     authoring_scope: external_quantitative_data
+    assembly_state: external_full_figure_ready
   fig4:
     figure_id: fig4
     role_id: trap_energy_distribution
@@ -30,11 +35,14 @@ figures:
     slot_status: fixed
     evidence_status: data_pipeline_pending
     authoring_scope: external_quantitative_data_with_optional_schematic
+    assembly_state: external_full_figure_pending
   fig5:
     figure_id: fig5
     role_id: cantilever_actuation_payoff
     status: active_candidate
     fixture: fig5_cantilever_actuation_artifact_v2
+    fixture_scope: mechanism_schematic_candidate
+    assembly_state: external_full_figure_pending
 
 # Every tracked real fixture belongs to exactly one main-figure binding above or
 # one explicit non-main class below. Non-main entries remain usable evidence;
