@@ -17,7 +17,7 @@
   pl/.style={font=\bfseries\fontsize{7.5}{9}\selectfont},
   label/.style={align=center, font=\fontsize{5.6}{6.8}\selectfont},
 ]
-% ===================== (a) applied-bias trapping mechanism =====================
+% Panel A — applied-bias trapping mechanism
 \node[pl] at (0.08,4.60) {a};
 \node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (0.42,4.60)
   {trapping during conduction};
@@ -66,11 +66,11 @@
 \node[font=\fontsize{4.8}{5.6}\selectfont, text=cGray!55!black] at (2.08,2.90) {release};
 \coordinate (slow_release_label_anchor) at (3.70,1.56);
 \draw[terminalLabelLeader] (trap_slow_release) -- (slow_release_label_anchor);
-\node[anchor=north, font=\fontsize{4.2}{5.0}\selectfont, text=cAmber!68!black]
+\node[anchor=north, font=\fontsize{4.8}{5.8}\selectfont, text=cAmber!68!black]
   (slow_release_label) at (slow_release_label_anchor) {slow-release};
 % fig-agent:end object=carrier_sequence
 
-% ===================== (b) qualitative transient response =====================
+% Panel B — qualitative transient response
 \node[pl] at (5.34,4.60) {b};
 \node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (5.68,4.60)
   {transient response};
@@ -86,7 +86,7 @@
   {at $V=\mathrm{const}$: $I\downarrow$, $R\uparrow$};
 % fig-agent:end object=qualitative_current_decay
 
-% ===================== (c) shared vertical energy-landscape grammar =====================
+% Panel C — shared vertical energy-landscape grammar
 \node[pl] at (9.53,4.60) {c};
 \node[font=\bfseries\fontsize{6.5}{7.8}\selectfont, anchor=west] at (9.87,4.60)
   {composition-dependent trap-energy landscape};

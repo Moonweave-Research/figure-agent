@@ -1,0 +1,194 @@
+schema: figure-agent.failure-first-semantic-contract.v1
+selector_id: figure3.resistance_mechanism
+required_objects:
+  - panel_a.applied_bias_condition
+  - panel_a.sulfur_polymer_film
+  - panel_a.carrier_sequence
+  - panel_a.capture_state
+  - panel_a.release_state
+  - panel_a.slow_release_state
+  - panel_b.held_voltage_condition
+  - panel_b.qualitative_current_decay
+  - panel_b.cvs_power_law_relation
+  - panel_b.resistance_increase_implication
+  - panel_c.sulfur_content_progression
+  - panel_c.s60_sample
+  - panel_c.s60_discrete_states
+  - panel_c.s80_sample
+  - panel_c.s80_continuous_support
+  - panel_c.shared_energy_orientation
+forbidden_implications:
+  - panel_a.carrier_polarity
+  - panel_a.net_spatial_carrier_drift
+  - panel_b.measured_transient_trace
+  - panel_b.fitted_numeric_exponent
+  - panel_c.sample_number_as_sulfur_atom_count
+  - panel_c.fitted_density_of_states
+  - panel_c.numeric_support_width_to_n_mapping
+  - panel_c.verified_trap_chemistry
+repair:
+  family: full_figure_mechanism_candidate
+  selector_id: figure3.resistance_mechanism
+  max_source_blocks: 3
+protected_relations:
+  - applied_bias_is_held_across_the_sulfur_polymer_during_conduction
+  - carrier_placement_encodes_temporal_sequence_not_spatial_drift
+  - capture_precedes_release_and_representative_slow_release_occupancy
+  - slow_release_is_a_kinetic_state_not_a_deep_only_trap_class
+  - current_decay_is_qualitative_under_held_voltage
+  - current_decrease_implies_resistance_increase_under_held_voltage
+  - cvs_relation_is_symbolic_not_a_measured_or_fitted_trace
+  - s60_and_s80_are_sulfur_weight_percent_sample_identities
+  - s60_and_s80_remain_separate_comparison_units
+  - s80_support_is_broader_and_denser_only_as_a_qualitative_cue
+  - panels_a_and_c_share_one_upward_energy_orientation
+semantic_legibility:
+  object_roles:
+    - object_id: panel_a.applied_bias_condition
+      declared_role: held_applied_voltage_condition
+      forbidden_readings: [carrier_polarity_assignment]
+    - object_id: panel_a.sulfur_polymer_film
+      declared_role: measured_material_region
+      forbidden_readings: [spatial_trap_network]
+    - object_id: panel_a.carrier_sequence
+      declared_role: temporally_ordered_sign_agnostic_state_sequence
+      forbidden_readings: [net_spatial_drift_trajectory]
+    - object_id: panel_a.capture_state
+      declared_role: representative_capture_event
+      forbidden_readings: [composition_specific_trap]
+    - object_id: panel_a.release_state
+      declared_role: representative_release_event
+      forbidden_readings: [complete_detrapping]
+    - object_id: panel_a.slow_release_state
+      declared_role: representative_long_lived_occupancy
+      forbidden_readings: [deep_traps_only]
+    - object_id: panel_b.held_voltage_condition
+      declared_role: operating_condition
+      forbidden_readings: [measured_voltage_sweep]
+    - object_id: panel_b.qualitative_current_decay
+      declared_role: qualitative_transient_response
+      forbidden_readings: [measured_data_trace, sampled_points]
+    - object_id: panel_b.cvs_power_law_relation
+      declared_role: symbolic_curie_von_schweidler_relation
+      forbidden_readings: [reported_fitted_exponent]
+    - object_id: panel_b.resistance_increase_implication
+      declared_role: held_voltage_qualitative_implication
+      forbidden_readings: [calibrated_resistance_curve]
+    - object_id: panel_c.sulfur_content_progression
+      declared_role: qualitative_composition_ordering
+      forbidden_readings: [numeric_spacing_scale]
+    - object_id: panel_c.s60_sample
+      declared_role: sulfur_weight_percent_sample_identity
+      forbidden_readings: [sixty_sulfur_atom_species]
+    - object_id: panel_c.s60_discrete_states
+      declared_role: representative_discrete_energy_states
+      forbidden_readings: [fixed_peak_count, spectrum_bar_chart]
+    - object_id: panel_c.s80_sample
+      declared_role: sulfur_weight_percent_sample_identity
+      forbidden_readings: [eighty_sulfur_atom_species]
+    - object_id: panel_c.s80_continuous_support
+      declared_role: qualitative_broad_irregular_energy_support
+      forbidden_readings: [fitted_dos_envelope, quantitative_width]
+    - object_id: panel_c.shared_energy_orientation
+      declared_role: common_upward_energy_grammar
+      forbidden_readings: [horizontal_density_axis]
+  visible_connectors:
+    - connector_id: panel_a.bias_applies_to_film
+      from_object: panel_a.applied_bias_condition
+      to_object: panel_a.sulfur_polymer_film
+      declared_role: operating_condition
+      render_style: terminal_bias_labels
+    - connector_id: panel_a.film_hosts_carrier_sequence
+      from_object: panel_a.sulfur_polymer_film
+      to_object: panel_a.carrier_sequence
+      declared_role: material_context
+      render_style: embedded_state_sequence
+    - connector_id: panel_a.sequence_enters_capture
+      from_object: panel_a.carrier_sequence
+      to_object: panel_a.capture_state
+      declared_role: temporal_state_transition
+      render_style: curved_transfer_arrow
+    - connector_id: panel_a.capture_precedes_release
+      from_object: panel_a.capture_state
+      to_object: panel_a.release_state
+      declared_role: temporal_state_transition
+      render_style: ordered_state_sequence
+    - connector_id: panel_a.release_precedes_slow_release
+      from_object: panel_a.release_state
+      to_object: panel_a.slow_release_state
+      declared_role: temporal_state_transition
+      render_style: ordered_state_sequence
+    - connector_id: panel_b.held_voltage_owns_current_decay
+      from_object: panel_b.held_voltage_condition
+      to_object: panel_b.qualitative_current_decay
+      declared_role: operating_condition
+      render_style: condition_caption
+    - connector_id: panel_b.decay_expresses_cvs_relation
+      from_object: panel_b.qualitative_current_decay
+      to_object: panel_b.cvs_power_law_relation
+      declared_role: symbolic_relation
+      render_style: curve_attached_equation
+    - connector_id: panel_b.held_voltage_qualifies_resistance_implication
+      from_object: panel_b.held_voltage_condition
+      to_object: panel_b.resistance_increase_implication
+      declared_role: operating_condition
+      render_style: condition_caption
+    - connector_id: panel_b.decay_implies_resistance_increase
+      from_object: panel_b.qualitative_current_decay
+      to_object: panel_b.resistance_increase_implication
+      declared_role: qualitative_implication
+      render_style: implication_caption
+    - connector_id: panel_c.composition_orders_s60
+      from_object: panel_c.sulfur_content_progression
+      to_object: panel_c.s60_sample
+      declared_role: ordinal_composition_encoding
+      render_style: sulfur_content_arrow
+    - connector_id: panel_c.composition_orders_s80
+      from_object: panel_c.sulfur_content_progression
+      to_object: panel_c.s80_sample
+      declared_role: ordinal_composition_encoding
+      render_style: sulfur_content_arrow
+    - connector_id: panel_c.s60_owns_discrete_states
+      from_object: panel_c.s60_sample
+      to_object: panel_c.s60_discrete_states
+      declared_role: sample_state_ownership
+      render_style: labeled_sample_region
+    - connector_id: panel_c.s80_owns_continuous_support
+      from_object: panel_c.s80_sample
+      to_object: panel_c.s80_continuous_support
+      declared_role: sample_state_ownership
+      render_style: labeled_sample_region
+  forbidden_connectors:
+    - from_object: panel_a.carrier_sequence
+      to_object: panel_a.sulfur_polymer_film
+      declared_role: net_spatial_transport_trajectory
+    - from_object: panel_c.s60_sample
+      to_object: panel_c.s80_sample
+      declared_role: overlaid_mixture
+  label_ownership:
+    - label_id: panel_a.film_label
+      owner: panel_a.sulfur_polymer_film
+    - label_id: panel_a.slow_release_label
+      owner: panel_a.slow_release_state
+    - label_id: panel_b.current_axis_label
+      owner: panel_b.qualitative_current_decay
+    - label_id: panel_b.held_voltage_label
+      owner: panel_b.held_voltage_condition
+    - label_id: panel_c.s60_label
+      owner: panel_c.s60_sample
+    - label_id: panel_c.s80_label
+      owner: panel_c.s80_sample
+  panel_story:
+    reading_order: [A, B, C]
+    panels:
+      - panel_id: A
+        role: mechanism
+        reader_task: Read a temporal capture-release-slow-release sequence under applied bias without inferring carrier polarity or spatial drift.
+      - panel_id: B
+        role: result
+        reader_task: Read the symbolic held-voltage current decay and resistance implication as qualitative rather than measured data.
+      - panel_id: C
+        role: comparison
+        comparison_basis: schematic_state
+        reader_task: Compare representative S60 discrete states with qualitative broad irregular S80 support in one energy orientation.
+publication_acceptance: not_claimed

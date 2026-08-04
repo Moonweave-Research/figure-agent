@@ -1,0 +1,24 @@
+schema: figure-agent.failure-first-scope-extension.v1
+fixture: fig3_resistance_mechanism
+extends: scope_extension_v49.yaml
+extends_sha256: sha256:c1c8a8b1bb3bcf21dcfb15b442ecf196aff6a46ae380a40edb19b9c89dd20840
+reason: transfer coordinate-free semantic and print-size guards to the maintained Fig3 regression fixture without importing Fig1-private source or claiming a new human review
+allowed_review_prefixes: []
+allowed_review_paths:
+  - fig3_resistance_mechanism.tex
+  - spec.yaml
+  - semantic_contract.yaml
+  - review/failure-first/authority_manifest_v2.yaml
+  - review/failure-first/render_receipt.yaml
+  - review/failure-first/scope_extension_v50.yaml
+allowed_repository_paths:
+  - plugins/figure-agent/docs/experience-log/fig3_resistance_mechanism.jsonl
+  - plugins/figure-agent/docs/evidence/r4-r5-implementation-history.md
+  - plugins/figure-agent/docs/figure-agent.md
+  - plugins/figure-agent/tests/test_closed_loop_real_fig3_fault_injection.py
+  - plugins/figure-agent/tests/test_fig3_r5_semantic_transfer.py
+  - plugins/figure-agent/tests/test_fig3_resistance_failure_first.py
+publication_acceptance: not_claimed
+notes:
+  - The current-render human provenance remains intentionally stale after the source and contract update.
+  - The fixture remains a non-main regression asset; this extension does not promote it to canonical paper Fig3.

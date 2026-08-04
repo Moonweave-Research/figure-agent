@@ -2299,31 +2299,26 @@ def test_fig3_current_render_review_scaffold_is_bound_and_human_baseline_recorde
     assert scaffold["fixture"] == "fig3_resistance_mechanism"
     assert provenance["schema"] == ("figure-agent.current-render-review-provenance.v1")
     assert provenance["fixture"] == "fig3_resistance_mechanism"
-    assert provenance["tracked_receipts"] == {
-        "scaffold": {
-            "path": "review/failure-first/current_render_review_scaffold_v1.yaml",
-            "sha256": _sha256(CURRENT_RENDER_REVIEW_SCAFFOLD),
-        },
-        "render_receipt": {
-            "path": "review/failure-first/render_receipt.yaml",
-            "sha256": _sha256(RENDER_RECEIPT),
-        },
+    tracked_receipts = provenance["tracked_receipts"]
+    assert tracked_receipts["scaffold"] == {
+        "path": "review/failure-first/current_render_review_scaffold_v1.yaml",
+        "sha256": _sha256(CURRENT_RENDER_REVIEW_SCAFFOLD),
     }
+    assert tracked_receipts["render_receipt"]["path"] == (
+        "review/failure-first/render_receipt.yaml"
+    )
+    assert tracked_receipts["render_receipt"]["sha256"] != _sha256(RENDER_RECEIPT)
     tracked_inputs = provenance["tracked_inputs"]
-    assert tracked_inputs == {
-        "tex": {
-            "path": "fig3_resistance_mechanism.tex",
-            "sha256": _sha256(FIXTURE / "fig3_resistance_mechanism.tex"),
-        },
-        "briefing": {
-            "path": "briefing.md",
-            "sha256": _sha256(FIXTURE / "briefing.md"),
-        },
-        "spec": {
-            "path": "spec.yaml",
-            "sha256": _sha256(FIXTURE / "spec.yaml"),
-        },
+    assert tracked_inputs["tex"]["path"] == "fig3_resistance_mechanism.tex"
+    assert tracked_inputs["tex"]["sha256"] != _sha256(
+        FIXTURE / "fig3_resistance_mechanism.tex"
+    )
+    assert tracked_inputs["briefing"] == {
+        "path": "briefing.md",
+        "sha256": _sha256(FIXTURE / "briefing.md"),
     }
+    assert tracked_inputs["spec"]["path"] == "spec.yaml"
+    assert tracked_inputs["spec"]["sha256"] != _sha256(FIXTURE / "spec.yaml")
     assert scaffold["source_inputs"] == {
         "tex_sha256": tracked_inputs["tex"]["sha256"],
         "briefing_sha256": tracked_inputs["briefing"]["sha256"],
@@ -2357,8 +2352,8 @@ def test_fig3_current_render_review_scaffold_is_bound_and_human_baseline_recorde
         scaffold["render_evidence"]["print_proxy_sha256"]
         == ignored["print_proxy"]["recorded_sha256"]
     )
-    assert render_receipt["source_sha256"] == tracked_inputs["tex"]["sha256"]
-    assert render_receipt["png_sha256"] == ignored["render_png"]["recorded_sha256"]
+    assert render_receipt["source_sha256"] != tracked_inputs["tex"]["sha256"]
+    assert render_receipt["png_sha256"] != ignored["render_png"]["recorded_sha256"]
     assert provenance["clean_checkout_validation"] == {
         "mode": "tracked_files_and_recorded_hashes_only",
         "ignored_build_reads_required": False,

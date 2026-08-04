@@ -105,14 +105,15 @@ def test_current_v4_rejects_and_rolls_back_real_fig3_neighbor_regression(
         "authoring_contract.md",
         "authoring_plan.md",
         "layout_lanes.yaml",
+        "semantic_contract.yaml",
     ):
         shutil.copy2(REAL_FIXTURE / name, example / name)
 
     original = (REAL_FIXTURE / f"{FIXTURE}.tex").read_text(encoding="utf-8")
     fault_block = (
         "  % r3-controlled-fault:start\n"
-        "  \\node[label] at (7.20,0.55) {R3TARGET};\n"
-        "  \\node[label] at (7.20,0.55) {R3FAULT};\n"
+        "  \\node[label] at (7.20,1.35) {R3TARGET};\n"
+        "  \\node[label] at (7.20,1.35) {R3FAULT};\n"
         "  % r3-controlled-fault:end\n"
     )
     faulted = original.replace("\\end{tikzpicture}", fault_block + "\\end{tikzpicture}")
@@ -155,6 +156,9 @@ def test_current_v4_rejects_and_rolls_back_real_fig3_neighbor_regression(
                 "protected_relations": [
                     "controlled_pair_separation_restored",
                     "declared_neighbor_remains_clear_of_regression",
+                ],
+                "forbidden_implications": [
+                    "unrelated_semantic_change",
                 ],
                 "semantic_legibility": {
                     "object_roles": [
@@ -342,10 +346,10 @@ def test_current_v4_rejects_and_rolls_back_real_fig3_neighbor_regression(
     packet_path.write_text(json.dumps(packet), encoding="utf-8")
     response = {
         "replacement_utf8": (
-            "  \\node[label] at (5.80,0.30) {R3TARGET};\n"
-            "  \\node[label] at (8.60,0.30) {R3FAULT};\n"
-            "  \\node[label] at (7.20,0.55) {R3NEIGHBOR};\n"
-            "  \\node[label] at (7.20,0.55) {R3REGRESSION};"
+            "  \\node[label] at (5.80,1.35) {R3TARGET};\n"
+            "  \\node[label] at (8.60,1.35) {R3FAULT};\n"
+            "  \\node[label] at (7.20,1.35) {R3NEIGHBOR};\n"
+            "  \\node[label] at (7.20,1.35) {R3REGRESSION};"
         ),
         "change_summary": (
             "Separate the declared controlled target pair while introducing a "

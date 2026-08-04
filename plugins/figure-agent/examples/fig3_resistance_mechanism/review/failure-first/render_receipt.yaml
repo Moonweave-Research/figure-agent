@@ -6,17 +6,17 @@ compile_command:
   - examples/fig3_resistance_mechanism/fig3_resistance_mechanism.tex
 working_directory: plugins/figure-agent
 source_path: fig3_resistance_mechanism.tex
-source_sha256: sha256:3eb8349ae637664d76e8a2f4d33e3d583da0b7a687d0cc3efb80ace83d603179
+source_sha256: sha256:9c8e0f643dfe118753cb8410e56bba8b88362b621c65a3cadee0c73d4bee85c2
 pdf_path: build/fig3_resistance_mechanism.pdf
-raw_pdf_sha256: sha256:68c504520e5e2c3d7cf37980347af7556e4a12bff1cdf7b431bacb3ff3f4d761
+raw_pdf_sha256: sha256:1ec083da053f0067203b8366d1ae345f47fc897e2e68e9a63551452b9dd8821f
 raw_pdf_sha256_status: snapshot_only_nondeterministic
 pdf_content_signature:
   schema: figure-agent.pdf-content-signature.v1
   extraction: pdftotext-layout-trim-right-lines-v1
-  normalized_text_sha256: sha256:aa742dedc4e7ce9070756c38eed2f6e88508f0f8cc865308ccab1dcf3776ff06
+  normalized_text_sha256: sha256:1b4d7ada6456da7bc2dd8199ef4d259d282a5ed865f594901f3a4cb1c394d103
   page_count: 1
 png_path: build/fig3_resistance_mechanism.png
-png_sha256: sha256:d57f2f48794caa9284a68887bf2197c8a178203f85a1068e5f1f363e09fb8ef4
+png_sha256: sha256:58294480f5f900af3efe46bc1817a1698742148dea2ceaec0dde814ccc399559
 toolchain:
   latex_engine: lualatex
   lualatex_version: "This is LuaHBTeX, Version 1.24.0 (TeX Live 2026)"

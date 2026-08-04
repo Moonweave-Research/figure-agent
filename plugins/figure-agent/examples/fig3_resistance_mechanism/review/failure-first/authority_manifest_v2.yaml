@@ -8,7 +8,10 @@ authoritative_inputs:
     sha256: sha256:9e82bc439346a7785203f73e899933e08c70e99390f03829a26f04fe5ebb0341
   - role: specification
     path: spec.yaml
-    sha256: sha256:e2053941ecff6f85bab825297af1579087fb1a87d2b4f4ba356f90d8f64695ec
+    sha256: sha256:ad17fb5ca16a7cb7b6a8139eda101606e243b272ad0f5ed29927e7a8a0162b88
+  - role: semantic_contract
+    path: semantic_contract.yaml
+    sha256: sha256:767501f93b049281446d67a5a0ef8f82f98bfe630ce950983eb4a73c99906658
   - role: authoring_contract
     path: authoring_contract.md
     sha256: sha256:7292289b4ab25320adc7f34304d8a67ddfcf5739a4bf1dea3ddd763583f7df04
@@ -17,7 +20,7 @@ authoritative_inputs:
     sha256: sha256:36f9764365b82fb3fe6b44b06489099170e050b70d928bf67eb1f1b6ae8d068a
   - role: editable_source
     path: fig3_resistance_mechanism.tex
-    sha256: sha256:3eb8349ae637664d76e8a2f4d33e3d583da0b7a687d0cc3efb80ace83d603179
+    sha256: sha256:9c8e0f643dfe118753cb8410e56bba8b88362b621c65a3cadee0c73d4bee85c2
 semantic_boundary:
   fitted_n: Curie-von Schweidler exponent
   distribution_breadth: schematic mechanism cue

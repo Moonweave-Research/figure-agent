@@ -78,6 +78,28 @@ fresh export/status. The direct edit was recorded without a human decision, so
 it remains unreviewed provenance rather than positive reward, release evidence,
 or publication acceptance. Prospective correction time was not captured.
 
+R5.5 transferred the reusable meaning guards to the independently authored
+`fig3_resistance_mechanism` regression fixture. This fixture remains explicitly
+non-main; the paper-map Fig3 is still `planned_missing`. The Fig3 source has no
+`\input`, Fig1 path, or Fig1-private asset dependency. Its new coordinate-free
+contract declares 16 semantic objects, 13 visible connectors, 6 label owners,
+11 protected relations, 8 forbidden implications, and 3 ordered panel roles.
+The specification now carries panel-local claims and invariants plus a
+width-limited 180 mm print contract. Raising the smallest semantic label from
+4.2 pt to 4.8 pt produced a calculated 5.10 pt minimum at placement size.
+
+Strict compile passed with zero blocking collisions, clashes, text-boundary
+failures, label-path failures, semantic-assertion failures, or TeX-geometry
+failures. The existing real-Fig3 controlled-fault regression initially stopped
+at the new print-size gate because its synthetic labels expanded the canvas.
+The test labels were moved inside the maintained panel extent rather than
+weakening the gate; the test again proved collision detection and rollback.
+The current machine render receipt and authority manifest were refreshed, but
+the preceding human-review provenance was deliberately left stale. Therefore
+this is portability and fail-closed regression evidence, not a new human
+verdict, reduced correction-time measurement, release claim, or publication
+acceptance.
+
 ## Historical contract families
 
 The lineage exercised attempt state, current-state projection, adjudicated
