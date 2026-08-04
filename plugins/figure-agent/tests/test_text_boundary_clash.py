@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -288,6 +289,10 @@ def test_detects_text_inside_forbidden_rect() -> None:
 
 def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
     pdf = tmp_path / "demo" / "build" / "demo.pdf"
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"render")
+    spec = pdf.parent.parent / "spec.yaml"
+    spec.write_text("text_boundary_checks: []\n", encoding="utf-8")
     candidate = {
         "id": "TB001",
         "kind": "text_crosses_vertical_boundary",
@@ -303,6 +308,8 @@ def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
         "schema": "figure-agent.text-boundary-clash.v1",
         "fixture": "demo",
         "render_pdf": "build/demo.pdf",
+        "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
+        "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
         "source": "spec.yaml:text_boundary_checks",
         "candidates": [candidate],
         "checked": 1,
@@ -316,6 +323,8 @@ def test_payload_infers_fixture_name_for_compile_sh_relative_pdf(
 ) -> None:
     fixture = tmp_path / "demo"
     (fixture / "build").mkdir(parents=True)
+    (fixture / "build" / "demo.pdf").write_bytes(b"render")
+    (fixture / "spec.yaml").write_text("name: demo\n", encoding="utf-8")
     monkeypatch.chdir(fixture)
 
     payload = boundary.text_boundary_clash_payload(Path("build/demo.pdf"), [], checked=0)

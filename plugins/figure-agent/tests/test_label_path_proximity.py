@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -140,6 +141,10 @@ def test_rejects_malformed_polyline_points() -> None:
 
 def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
     pdf = tmp_path / "demo" / "build" / "demo.pdf"
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"render")
+    spec = pdf.parent.parent / "spec.yaml"
+    spec.write_text("label_path_proximity_checks: []\n", encoding="utf-8")
     candidate = {
         "id": "LP001",
         "kind": "label_path_near_miss",
@@ -156,6 +161,8 @@ def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
         "schema": "figure-agent.label-path-proximity.v1",
         "fixture": "demo",
         "render_pdf": "build/demo.pdf",
+        "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
+        "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
         "source": "spec.yaml:label_path_proximity_checks",
         "candidates": [candidate],
         "checked": 1,
@@ -230,6 +237,12 @@ def test_live_binding_requires_unique_source_selector_and_rendered_phrase(tmp_pa
 
 def test_payload_marks_live_binding_evidence_failed(tmp_path: Path) -> None:
     pdf = tmp_path / "demo" / "build" / "demo.pdf"
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"render")
+    (pdf.parent.parent / "spec.yaml").write_text(
+        "label_path_proximity_checks: []\n",
+        encoding="utf-8",
+    )
     failure = {
         "check_id": "active_arrow",
         "kind": "rendered_phrase_missing",

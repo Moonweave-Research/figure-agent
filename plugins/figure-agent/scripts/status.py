@@ -78,6 +78,8 @@ PROMOTION_QUEUE_SCHEMA = "figure-agent.promotion-queue.v1"
 STRICT_STATUS_SCHEMA = "figure-agent.strict-status.v1"
 SEMANTIC_CONTRACT_EVIDENCE_SCHEMA = "figure-agent.semantic-contract-evidence.v1"
 SILHOUETTE_MORPHOLOGY_SCHEMA = "figure-agent.silhouette-morphology.v1"
+TEXT_BOUNDARY_CLASH_SCHEMA = "figure-agent.text-boundary-clash.v1"
+LABEL_PATH_PROXIMITY_SCHEMA = "figure-agent.label-path-proximity.v1"
 
 
 def _has_export_artifact(directory: Path, name: str) -> bool:
@@ -896,6 +898,120 @@ def _silhouette_morphology_summary(
     }
 
 
+def _declared_check_coverage_summary(
+    path: Path,
+    example_dir: Path,
+    *,
+    spec_field: str,
+    schema: str,
+    source: str,
+    validate_live_binding: bool = False,
+) -> dict[str, Any]:
+    display_path = _json_report_display_path(path, example_dir)
+    spec_path = example_dir / "spec.yaml"
+    if not spec_path.is_file():
+        return {"state": "not_declared", "path": display_path}
+    try:
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        return {"state": "invalid", "path": display_path, "reason": "spec_invalid"}
+    if not isinstance(spec, dict):
+        return {"state": "invalid", "path": display_path, "reason": "spec_invalid"}
+    checks = spec.get(spec_field)
+    if checks is None:
+        return {"state": "not_declared", "path": display_path}
+    if not isinstance(checks, list):
+        return {
+            "state": "invalid",
+            "path": display_path,
+            "reason": "declaration_invalid",
+        }
+
+    declared = len(checks)
+    payload, error = _load_build_json_mapping(path)
+    if error is not None:
+        return {"state": error, "path": display_path, "declared": declared}
+    assert payload is not None
+    checked = payload.get("checked")
+    total = payload.get("total")
+    candidates = payload.get("candidates")
+    if (
+        payload.get("schema") != schema
+        or payload.get("source") != source
+        or not isinstance(checked, int)
+        or isinstance(checked, bool)
+        or not isinstance(total, int)
+        or isinstance(total, bool)
+        or not isinstance(candidates, list)
+        or len(candidates) != total
+    ):
+        return {"state": "invalid", "path": display_path, "declared": declared}
+
+    live_binding_state = "not_applicable"
+    live_binding_checked = 0
+    if validate_live_binding:
+        live_binding = payload.get("live_binding")
+        if not isinstance(live_binding, dict):
+            return {"state": "invalid", "path": display_path, "declared": declared}
+        live_binding_state = live_binding.get("state")
+        live_binding_checked = live_binding.get("checked")
+        failures = live_binding.get("failures")
+        if (
+            live_binding_state not in {"not_declared", "passed", "failed"}
+            or not isinstance(live_binding_checked, int)
+            or isinstance(live_binding_checked, bool)
+            or not isinstance(failures, list)
+            or (live_binding_state == "failed") != bool(failures)
+            or not 0 <= live_binding_checked <= checked
+            or (live_binding_state == "not_declared") != (live_binding_checked == 0)
+        ):
+            return {"state": "invalid", "path": display_path, "declared": declared}
+
+    render_value = payload.get("render_pdf")
+    if not isinstance(render_value, str) or not render_value.strip():
+        return {"state": "invalid", "path": display_path, "declared": declared}
+    render_path = path.parent / Path(render_value).name
+    try:
+        render_hash = hashlib.sha256(render_path.read_bytes()).hexdigest()
+        spec_hash = hashlib.sha256(spec_path.read_bytes()).hexdigest()
+    except OSError:
+        return {
+            "state": "stale",
+            "path": display_path,
+            "declared": declared,
+            "reason": "input_missing",
+        }
+    if (
+        payload.get("render_pdf_sha256") != render_hash
+        or payload.get("spec_sha256") != spec_hash
+    ):
+        return {
+            "state": "stale",
+            "path": display_path,
+            "declared": declared,
+            "reason": "hash_mismatch",
+        }
+
+    if declared == 0 or checked != declared:
+        state = "incomplete"
+    elif total or live_binding_state == "failed":
+        state = "needs_action"
+    else:
+        state = "passed"
+    summary = {
+        "state": state,
+        "path": display_path,
+        "schema": schema,
+        "checked": checked,
+        "declared": declared,
+        "violation_count": total,
+    }
+    if validate_live_binding:
+        summary["live_binding_checked"] = live_binding_checked
+        summary["live_binding_state"] = live_binding_state
+    return summary
+
+
 def _artifact_display_path(example_dir: Path, path: Path | None) -> str | None:
     if path is None:
         return None
@@ -979,6 +1095,21 @@ def _spine_evidence_summary(example_dir: Path, build_dir: Path | None = None) ->
             build_dir / "silhouette_morphology.json",
             example_dir,
         ),
+        "text_boundary_coverage": _declared_check_coverage_summary(
+            build_dir / "text_boundary_clash.json",
+            example_dir,
+            spec_field="text_boundary_checks",
+            schema=TEXT_BOUNDARY_CLASH_SCHEMA,
+            source="spec.yaml:text_boundary_checks",
+        ),
+        "label_path_coverage": _declared_check_coverage_summary(
+            build_dir / "label_path_proximity.json",
+            example_dir,
+            spec_field="label_path_proximity_checks",
+            schema=LABEL_PATH_PROXIMITY_SCHEMA,
+            source="spec.yaml:label_path_proximity_checks",
+            validate_live_binding=True,
+        ),
     }
     semantic_contract = sources["semantic_contract"]
     semantic_assertions = sources["semantic_assertions"]
@@ -996,9 +1127,17 @@ def _spine_evidence_summary(example_dir: Path, build_dir: Path | None = None) ->
     states = [str(item.get("state")) for item in sources.values()]
     present_states = {"passed", "present", "validated", "needs_action", "incomplete"}
     silhouette_state = sources["silhouette_morphology"].get("state")
+    declared_coverage_states = {
+        sources["text_boundary_coverage"].get("state"),
+        sources["label_path_coverage"].get("state"),
+    }
     if "invalid" in states:
         state = "invalid"
     elif silhouette_state in {"missing", "stale", "incomplete", "needs_action"}:
+        state = "needs_action"
+    elif declared_coverage_states.intersection(
+        {"missing", "stale", "invalid", "incomplete", "needs_action"}
+    ):
         state = "needs_action"
     elif any(item in states for item in {"needs_action", "incomplete", "stale"}):
         state = "needs_action"
@@ -1120,11 +1259,27 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
                 candidate_build_dir = (example_dir / render_path).parent
         candidate_info.pop("build_pdf_abs", None)
     result["spine_evidence"] = _spine_evidence_summary(example_dir, candidate_build_dir)
-    silhouette_state = result["spine_evidence"]["silhouette_morphology"].get("state")
-    if silhouette_state in {"missing", "stale", "invalid", "incomplete", "needs_action"}:
-        note = f"silhouette_morphology_{silhouette_state}"
+    blocking_evidence = {
+        "silhouette_morphology": result["spine_evidence"]["silhouette_morphology"],
+        "text_boundary_coverage": result["spine_evidence"]["text_boundary_coverage"],
+        "label_path_coverage": result["spine_evidence"]["label_path_coverage"],
+    }
+    has_blocking_evidence = False
+    for evidence_name, evidence in blocking_evidence.items():
+        evidence_state = evidence.get("state")
+        if evidence_state not in {
+            "missing",
+            "stale",
+            "invalid",
+            "incomplete",
+            "needs_action",
+        }:
+            continue
+        has_blocking_evidence = True
+        note = f"{evidence_name}_{evidence_state}"
         if note not in result.setdefault("notes", []):
             result["notes"].append(note)
+    if has_blocking_evidence:
         result["workflow_ready"] = False
         result["golden_ready"] = False
         result["release_ready"] = False

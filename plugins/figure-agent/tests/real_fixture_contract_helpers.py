@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import shutil
 from pathlib import Path
@@ -44,6 +46,49 @@ def materialize_controlled_artifacts(
         build_pdf = fixture / "build" / f"{fixture_name}.pdf"
         build_pdf.parent.mkdir(parents=True, exist_ok=True)
         build_pdf.write_bytes(b"%PDF-1.4\n% controlled test artifact\n")
+        spec_path = fixture / "spec.yaml"
+        spec = load_yaml_mapping(spec_path)
+        render_hash = hashlib.sha256(build_pdf.read_bytes()).hexdigest()
+        spec_hash = hashlib.sha256(spec_path.read_bytes()).hexdigest()
+        declared_reports = (
+            (
+                "text_boundary_checks",
+                "text_boundary_clash.json",
+                "figure-agent.text-boundary-clash.v1",
+                "spec.yaml:text_boundary_checks",
+            ),
+            (
+                "label_path_proximity_checks",
+                "label_path_proximity.json",
+                "figure-agent.label-path-proximity.v1",
+                "spec.yaml:label_path_proximity_checks",
+            ),
+        )
+        for field, report_name, schema, source in declared_reports:
+            checks = spec.get(field)
+            if not isinstance(checks, list):
+                continue
+            payload = {
+                "schema": schema,
+                "fixture": fixture_name,
+                "render_pdf": f"build/{fixture_name}.pdf",
+                "render_pdf_sha256": render_hash,
+                "spec_sha256": spec_hash,
+                "source": source,
+                "checked": len(checks),
+                "candidates": [],
+                "total": 0,
+            }
+            if field == "label_path_proximity_checks":
+                payload["live_binding"] = {
+                    "checked": 0,
+                    "state": "not_declared",
+                    "failures": [],
+                }
+            (build_pdf.parent / report_name).write_text(
+                json.dumps(payload),
+                encoding="utf-8",
+            )
 
     exports = artifacts.get("exports", [])
     assert isinstance(exports, list)

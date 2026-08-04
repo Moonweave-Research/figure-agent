@@ -8,6 +8,7 @@ any candidate is found, matching the collision/visual-clash strict contract.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import sys
@@ -36,6 +37,13 @@ ALLOWED_DEFECT_KINDS = frozenset(
 
 class LabelPathProximityError(ValueError):
     """Controlled error for malformed label-path proximity configuration."""
+
+
+def _sha256_or_none(path: Path) -> str | None:
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
 
 
 def _cm_to_pt(value: float | int) -> float:
@@ -661,14 +669,18 @@ def label_path_proximity_payload(
     checked: int,
     live_binding_checked: int = 0,
     live_binding_failures: list[dict[str, str]] | None = None,
+    spec_path: Path | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
     binding_failures = list(live_binding_failures or [])
+    resolved_spec_path = spec_path or _infer_spec_path(pdf_path)
     return {
         "schema": SCHEMA,
         "fixture": fixture_name,
         "render_pdf": f"build/{pdf_path.name}",
+        "render_pdf_sha256": _sha256_or_none(pdf_path),
+        "spec_sha256": _sha256_or_none(resolved_spec_path),
         "source": "spec.yaml:label_path_proximity_checks",
         "candidates": candidates,
         "checked": checked,
@@ -737,6 +749,7 @@ def main() -> int:
         checked=len(checks),
         live_binding_checked=live_binding_checked,
         live_binding_failures=binding_failures,
+        spec_path=spec_path,
     )
     if args.json_output is not None:
         _write_json(args.json_output, payload)

@@ -437,6 +437,13 @@ coordinate declaration whose selector is missing, duplicated, or whose target
 phrase no longer renders is stale evidence, not a clean check. This binds review
 coverage without imposing a drawing primitive or a TikZ-path parser.
 
+Treat declared text-boundary and label-path coverage as canonical status
+evidence, not an optional detector appendix. The report must be hash-bound to
+the current fixture spec and rendered PDF, and its checked count must equal the
+non-empty declaration count. Missing, stale, malformed, zero, incomplete, or
+failing declared coverage blocks workflow, golden, release, and final readiness;
+zero candidates with zero checked items is not a clean visual result.
+
 For a schematic ideal dielectric, select the polarization grammar from the
 reader-facing claim.  When the point is orientation polarization, use compact
 neutral oval dipole bodies with paired $+$/$-$ poles aligned to the held field;

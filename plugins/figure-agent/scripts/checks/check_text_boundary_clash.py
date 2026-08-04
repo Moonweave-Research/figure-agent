@@ -8,6 +8,7 @@ any candidate is found, matching the collision/visual-clash strict contract.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -24,6 +25,13 @@ DEFAULT_MAX_PHRASE_Y_CENTER_DELTA_PT = 6.0
 
 class TextBoundaryClashError(ValueError):
     """Controlled error for malformed text boundary configuration."""
+
+
+def _sha256_or_none(path: Path) -> str | None:
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
 
 
 def _cm_to_pt(value: float | int) -> float:
@@ -456,13 +464,17 @@ def text_boundary_clash_payload(
     candidates: list[dict[str, Any]],
     *,
     checked: int,
+    spec_path: Path | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
+    resolved_spec_path = spec_path or _infer_spec_path(pdf_path)
     return {
         "schema": SCHEMA,
         "fixture": fixture_name,
         "render_pdf": f"build/{pdf_path.name}",
+        "render_pdf_sha256": _sha256_or_none(pdf_path),
+        "spec_sha256": _sha256_or_none(resolved_spec_path),
         "source": "spec.yaml:text_boundary_checks",
         "candidates": candidates,
         "checked": checked,
@@ -508,7 +520,12 @@ def main() -> int:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 
-    payload = text_boundary_clash_payload(args.pdf, candidates, checked=len(checks))
+    payload = text_boundary_clash_payload(
+        args.pdf,
+        candidates,
+        checked=len(checks),
+        spec_path=spec_path,
+    )
     if args.json_output is not None:
         _write_json(args.json_output, payload)
 

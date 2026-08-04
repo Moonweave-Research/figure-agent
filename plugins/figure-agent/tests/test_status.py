@@ -1574,6 +1574,174 @@ def test_empty_silhouette_declaration_is_not_clean_coverage(tmp_path: Path) -> N
     assert spine["state"] == "needs_action"
 
 
+@pytest.mark.parametrize(
+    ("spec_field", "report_name", "schema", "source"),
+    [
+        (
+            "text_boundary_checks",
+            "text_boundary_clash.json",
+            "figure-agent.text-boundary-clash.v1",
+            "spec.yaml:text_boundary_checks",
+        ),
+        (
+            "label_path_proximity_checks",
+            "label_path_proximity.json",
+            "figure-agent.label-path-proximity.v1",
+            "spec.yaml:label_path_proximity_checks",
+        ),
+    ],
+)
+def test_spine_fails_closed_when_declared_label_coverage_is_missing_or_zero(
+    tmp_path: Path,
+    spec_field: str,
+    report_name: str,
+    schema: str,
+    source: str,
+) -> None:
+    spec = tmp_path / "spec.yaml"
+    spec.write_text(f"{spec_field}:\n  - id: high-risk-label\n", encoding="utf-8")
+    build = tmp_path / "build"
+    build.mkdir()
+
+    missing = status_mod._spine_evidence_summary(tmp_path, build)
+    coverage_key = (
+        "text_boundary_coverage"
+        if spec_field == "text_boundary_checks"
+        else "label_path_coverage"
+    )
+    assert missing[coverage_key]["state"] == "missing"
+    assert missing["state"] == "needs_action"
+
+    pdf = build / "figure.pdf"
+    pdf.write_bytes(b"render")
+    payload = {
+        "schema": schema,
+        "fixture": tmp_path.name,
+        "render_pdf": "build/figure.pdf",
+        "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
+        "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+        "source": source,
+        "checked": 0,
+        "candidates": [],
+        "total": 0,
+    }
+    if spec_field == "label_path_proximity_checks":
+        payload["live_binding"] = {
+            "checked": 0,
+            "state": "not_declared",
+            "failures": [],
+        }
+    (build / report_name).write_text(json.dumps(payload), encoding="utf-8")
+
+    incomplete = status_mod._spine_evidence_summary(tmp_path, build)
+    assert incomplete[coverage_key]["state"] == "incomplete"
+    assert incomplete[coverage_key]["declared"] == 1
+    assert incomplete[coverage_key]["checked"] == 0
+    assert incomplete["state"] == "needs_action"
+
+    pdf.write_bytes(b"changed-render")
+    stale = status_mod._spine_evidence_summary(tmp_path, build)
+    assert stale[coverage_key]["state"] == "stale"
+    assert stale["state"] == "needs_action"
+
+
+def test_spine_accepts_hash_bound_declared_label_coverage(tmp_path: Path) -> None:
+    spec = tmp_path / "spec.yaml"
+    spec.write_text(
+        "text_boundary_checks:\n  - id: title-boundary\n"
+        "label_path_proximity_checks:\n  - id: force-label\n",
+        encoding="utf-8",
+    )
+    build = tmp_path / "build"
+    build.mkdir()
+    pdf = build / "figure.pdf"
+    pdf.write_bytes(b"render")
+    common = {
+        "fixture": tmp_path.name,
+        "render_pdf": "build/figure.pdf",
+        "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
+        "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+        "checked": 1,
+        "candidates": [],
+        "total": 0,
+    }
+    (build / "text_boundary_clash.json").write_text(
+        json.dumps(
+            {
+                **common,
+                "schema": "figure-agent.text-boundary-clash.v1",
+                "source": "spec.yaml:text_boundary_checks",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (build / "label_path_proximity.json").write_text(
+        json.dumps(
+            {
+                **common,
+                "schema": "figure-agent.label-path-proximity.v1",
+                "source": "spec.yaml:label_path_proximity_checks",
+                "live_binding": {
+                    "checked": 0,
+                    "state": "not_declared",
+                    "failures": [],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    spine = status_mod._spine_evidence_summary(tmp_path, build)
+
+    assert spine["text_boundary_coverage"]["state"] == "passed"
+    assert spine["label_path_coverage"]["state"] == "passed"
+    assert spine["state"] == "present"
+
+
+def test_declared_label_coverage_gap_blocks_ready_status(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "label_coverage_ready"
+    fig_dir.mkdir()
+    (fig_dir / "spec.yaml").write_text(
+        "text_boundary_checks:\n  - id: title-boundary\n",
+        encoding="utf-8",
+    )
+
+    result = status_mod._finalize_status(
+        {
+            "stage": 4,
+            "name": fig_dir.name,
+            "checks": [],
+            "notes": [],
+            "accepted": True,
+            "exports_substate": "FRESH",
+            "render_state": "FRESH",
+            "critique_state": "FRESH",
+            "export_state": "FRESH",
+            "acceptance_state": "ACCEPTED",
+            "acceptance_freshness_state": "accepted_current",
+            "final_artifact_state": "NONE",
+            "final_artifact_kind": "generated_export",
+            "final_artifact_path": "exports/label_coverage_ready.svg",
+            "workflow_ready": True,
+            "golden_ready": True,
+            "release_ready": True,
+            "final_ready": True,
+            "publication_gate_state": "NOT_APPLICABLE",
+        },
+        fig_dir,
+    )
+
+    assert result["workflow_ready"] is False
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+    assert result["acceptance_freshness_state"] == "accepted_but_stale"
+    assert "text_boundary_coverage_missing" in result["notes"]
+    assert result["status_explanation"]["first_blocker"]["code"] == (
+        "text_boundary_coverage_missing"
+    )
+
+
 def test_stage_3_missing_briefing_does_not_suggest_export(tmp_path: Path) -> None:
     fig_dir = tmp_path / "legacy_built"
     fig_dir.mkdir()

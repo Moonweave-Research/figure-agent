@@ -51,8 +51,14 @@ fixture-coordinate grammar.
 R5.3 added a panel-count-agnostic boundary-coverage prototype derived from
 ordered panel markers and authored frame rectangles. A replay exposed the Panel
 A crossing in B and its removal in C while reporting frameless panels as zero
-coverage. Canonical pipeline wiring, transfer to another family, prospective
-timing, and cross-family promotion remained open.
+coverage. On 2026-08-04, canonical status wiring replaced the remaining gap for
+declared checks: text-boundary and label-path reports became hash-bound to the
+current spec and render, declared-versus-checked counts entered the evidence
+spine, and missing, stale, invalid, zero, incomplete, or failing declared
+coverage began blocking readiness. Strict dogfood passed with 4/4 boundary and
+5/5 path checks on Fig5, and 1/1 plus 1/1 on Fig2. Prospective timing and
+cross-family capability promotion remain open; these machine results make no
+visual, release, or publication claim.
 
 ## Historical contract families
 

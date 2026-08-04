@@ -77,6 +77,35 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     fixture_freshness: list[dict[str, Any]] = []
     human_blockers: list[dict[str, Any]] = []
 
+    for evidence_name, message in (
+        (
+            "text_boundary_coverage",
+            "declared text-boundary inspection is missing, stale, incomplete, "
+            "invalid, or failing; repair the declaration and recompile.",
+        ),
+        (
+            "label_path_coverage",
+            "declared label-path inspection is missing, stale, incomplete, invalid, "
+            "or failing; repair the declaration and recompile.",
+        ),
+    ):
+        evidence = (
+            spine_evidence.get(evidence_name)
+            if isinstance(spine_evidence, Mapping)
+            else None
+        )
+        evidence_state = evidence.get("state") if isinstance(evidence, Mapping) else None
+        _append_if(
+            fixture_freshness,
+            evidence_state
+            in {"missing", "stale", "invalid", "incomplete", "needs_action"},
+            code=f"{evidence_name}_{evidence_state}",
+            category=FIXTURE_FRESHNESS,
+            message=message,
+            next_command=_command(name, "/fig_compile"),
+            manual=evidence_state == "needs_action",
+        )
+
     silhouette = (
         spine_evidence.get("silhouette_morphology")
         if isinstance(spine_evidence, Mapping)
