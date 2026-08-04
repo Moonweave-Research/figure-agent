@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-03T14:00:40Z'
+generated_at: '2026-08-04T08:39:07Z'
 generator: Codex host vision critique
 generator_version: sha256:78cf3f9eff794f643906438081641c4f496a370cb3bf78bff39c863383018516
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:27a4670f02a885f89828b200eb499271241c6dcd54ec3fd6811137b60eb2da10
+critique_input_hash: sha256:e2447c12ac9690ee7ab8850e6b99057ec7280c6e8b2535892537d97f7247f078
 verdict: ready
 findings: []
 panels: []
@@ -315,7 +315,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:0ef38e36b2d7872901b9f323f8197c2ecef3d76213fe5d1bccf611c0f060adfd
+  assessed_artifact_hash: sha256:3b3639f607ceb2c5a57047c7c8cca30f671125a0cd35e8a5869c89f2c207b591
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
