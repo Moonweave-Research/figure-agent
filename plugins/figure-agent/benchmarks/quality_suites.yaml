@@ -16,6 +16,12 @@ suites:
     description: Local dogfood fixtures with real manuscript complexity.
     fixtures:
       - fig1_overview_v2_pair_001_vault
+  current-paper-baselines:
+    description: Current human-reviewed paper baselines; transfer remains blocked until explicit verdicts exist.
+    fixtures:
+      - fig1_updated_agent_redraw_v1
+      - fig2_charge_transport_mechanism
+      - fig5_cantilever_actuation_artifact_v2
   visual-attribution:
     description: Reviewed detector-finding attribution contract corpus.
     kind: visual_attribution

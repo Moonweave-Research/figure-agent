@@ -97,22 +97,6 @@ def _load_experience_records(plugin_root: Path, name: str) -> list[dict[str, Any
     )
 
 
-def _experience_log_fixture_names(plugin_root: Path) -> list[str]:
-    log_dir = experience_log.experience_log_dir(plugin_root)
-    if log_dir.is_symlink():
-        raise QualityMemoryIndexError("experience_log_symlink")
-    if not log_dir.is_dir():
-        return []
-    fixtures: list[str] = []
-    for path in sorted(log_dir.glob("*.jsonl")):
-        if path.is_symlink():
-            raise QualityMemoryIndexError("experience_log_symlink")
-        fixture = path.stem
-        fixture_identity.validate_fixture_name(fixture)
-        fixtures.append(fixture)
-    return fixtures
-
-
 def _event_from_experience_record(record: dict[str, Any]) -> dict[str, Any]:
     state = record.get("state") if isinstance(record.get("state"), dict) else {}
     action = record.get("action") if isinstance(record.get("action"), dict) else {}
@@ -235,6 +219,7 @@ def build_memory_index(
     counterfactual_unchosen_count = 0
     duplicate_experience_attempt_count = 0
     source_fixtures: set[str] = set()
+    eligible_source_fixtures: set[str] = set()
     seen_reward_attempt_keys: set[tuple[str, str, str, str, str, str, str]] = set()
     seen_experience_attempt_keys: set[tuple[str, str, str, str, str, str, str]] = set()
 
@@ -328,6 +313,8 @@ def build_memory_index(
                 bucket["unknown"] += 1
         if eligible_attempt:
             eligible_prior_count += 1
+            if fixture:
+                eligible_source_fixtures.add(fixture)
         rank_score = _rank_score(event)
         if rank_score is not None and family_known and not duplicate_experience_attempt:
             rank_scores[family].append(rank_score)
@@ -357,17 +344,33 @@ def build_memory_index(
     scope_fixture = scope.get("fixture") if isinstance(scope, dict) else None
     if isinstance(scope_fixture, str) and scope_fixture:
         source_fixtures.add(scope_fixture)
+    eligible_source_fixture_count = len(eligible_source_fixtures)
+    if eligible_source_fixture_count == 0:
+        cross_fixture_state = "blocked_no_eligible_outcomes"
+        learning_reason = (
+            "explicit human verdicts or verified outcomes are required before "
+            "cross-fixture learning evidence exists"
+        )
+    elif eligible_source_fixture_count == 1:
+        cross_fixture_state = "blocked_single_eligible_fixture"
+        learning_reason = (
+            "eligible outcomes from at least two fixtures are required before "
+            "cross-fixture learning can be reviewed"
+        )
+    else:
+        cross_fixture_state = "review_required"
+        learning_reason = (
+            "cross-fixture evidence requires human review before any "
+            "transferable learning or final promotion claim"
+        )
     learning_evidence = {
         "source_fixture_count": len(source_fixtures),
         "source_fixtures": sorted(source_fixtures),
-        "cross_fixture_state": (
-            "blocked_single_fixture" if len(source_fixtures) < 2 else "review_required"
-        ),
+        "eligible_source_fixture_count": eligible_source_fixture_count,
+        "eligible_source_fixtures": sorted(eligible_source_fixtures),
+        "cross_fixture_state": cross_fixture_state,
         "promotion_claim_allowed": False,
-        "reason": (
-            "cross-fixture evidence is required before any transferable learning "
-            "or final promotion claim"
-        ),
+        "reason": learning_reason,
     }
 
     return {
@@ -586,8 +589,7 @@ def build_suite_index(
     events: list[dict[str, Any]] = []
     diagnostics: list[dict[str, str]] = []
     suite_fixtures = list(suites[suite])
-    log_fixtures = _experience_log_fixture_names(paths.plugin_root)
-    for fixture in sorted(dict.fromkeys([*suite_fixtures, *log_fixtures])):
+    for fixture in sorted(dict.fromkeys(suite_fixtures)):
         example_dir = paths.examples_dir / fixture
         records = _load_experience_records(paths.plugin_root, fixture)
         if not example_dir.is_dir() and not records:
@@ -600,11 +602,7 @@ def build_suite_index(
             for record in records
             if record.get("schema") == experience_log.SCHEMA
         )
-        reason = ""
-        if fixture not in suite_fixtures:
-            reason = "out_of_suite_experience_log"
-        elif not example_dir.is_dir():
-            reason = "missing_fixture_with_experience_log"
+        reason = "" if example_dir.is_dir() else "missing_fixture_with_experience_log"
         diagnostics.append({"fixture": fixture, "status": "included", "reason": reason})
     index = build_memory_index(events, scope={"kind": "suite", "suite": suite})
     index["suite_diagnostics"] = diagnostics

@@ -61,18 +61,26 @@ def test_fewer_than_three_eligible_events_yields_no_prior() -> None:
     assert index["learning_evidence"] == {
         "source_fixture_count": 1,
         "source_fixtures": ["candidate_demo"],
-        "cross_fixture_state": "blocked_single_fixture",
+        "eligible_source_fixture_count": 1,
+        "eligible_source_fixtures": ["candidate_demo"],
+        "cross_fixture_state": "blocked_single_eligible_fixture",
         "promotion_claim_allowed": False,
         "reason": (
-            "cross-fixture evidence is required before any transferable learning "
-            "or final promotion claim"
+            "eligible outcomes from at least two fixtures are required before "
+            "cross-fixture learning can be reviewed"
         ),
     }
 
 
 def test_learning_evidence_keeps_cross_fixture_review_explicit() -> None:
-    first = _event("candidate_applied", "label_offset", "improved", "CAND001")
-    second = {**_event("candidate_applied", "label_offset", "neutral", "CAND002")}
+    first = _event(
+        "candidate_applied", "label_offset", "improved", "CAND001", quality_movement="improved"
+    )
+    second = {
+        **_event(
+            "candidate_applied", "label_offset", "neutral", "CAND002", quality_movement="neutral"
+        )
+    }
     second["fixture"] = "other_fixture"
 
     index = quality_memory_index.build_memory_index([first, second])
@@ -80,6 +88,18 @@ def test_learning_evidence_keeps_cross_fixture_review_explicit() -> None:
     assert index["learning_evidence"]["source_fixture_count"] == 2
     assert index["learning_evidence"]["cross_fixture_state"] == "review_required"
     assert index["learning_evidence"]["promotion_claim_allowed"] is False
+
+
+def test_learning_evidence_does_not_treat_unreviewed_cross_fixture_edits_as_transfer() -> None:
+    first = _event("candidate_applied", "label_offset", "unknown", "CAND001")
+    second = {**_event("candidate_applied", "label_offset", "unknown", "CAND002")}
+    second["fixture"] = "other_fixture"
+
+    index = quality_memory_index.build_memory_index([first, second])
+
+    assert index["learning_evidence"]["source_fixture_count"] == 2
+    assert index["learning_evidence"]["eligible_source_fixture_count"] == 0
+    assert index["learning_evidence"]["cross_fixture_state"] == "blocked_no_eligible_outcomes"
 
 
 def test_human_verdict_rewards_once_when_detector_outcome_also_exists() -> None:
@@ -868,7 +888,7 @@ def test_build_suite_index_skips_missing_fixtures_and_writes_scratch(tmp_path: P
     ).is_file()
 
 
-def test_build_suite_index_aggregates_all_experience_logs_with_transfer_provenance(
+def test_build_suite_index_excludes_out_of_suite_experience_logs(
     tmp_path: Path,
 ) -> None:
     workspace = tmp_path / "workspace"
@@ -915,15 +935,8 @@ def test_build_suite_index_aggregates_all_experience_logs_with_transfer_provenan
     )
 
     assert index["scope"] == {"kind": "suite", "suite": "smoke"}
-    assert index["event_count"] == 1
-    assert index["families"]["label_offset"]["attempts"] == 1
-    assert index["families"]["label_offset"]["prior_provenance"] == {
-        "locality": "cross_fixture_transfer",
-        "scope": {"kind": "suite", "suite": "smoke"},
-        "source_fixtures": ["outside_demo"],
-    }
-    assert {
-        "fixture": "outside_demo",
-        "status": "included",
-        "reason": "out_of_suite_experience_log",
-    } in index["suite_diagnostics"]
+    assert index["event_count"] == 0
+    assert index["families"] == {}
+    assert index["suite_diagnostics"] == [
+        {"fixture": "suite_demo", "status": "included", "reason": ""}
+    ]
