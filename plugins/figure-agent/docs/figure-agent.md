@@ -270,7 +270,7 @@ reviewable; open the next slice only after recording stop conditions and evidenc
 - [x] Require ordered `% Panel <id>` markers; exact-bind only unique rendered literals and leave repeated text ambiguous.
 - [x] R5.1–R5.2: exercised hash-bound attribution, bounded repair, rollback-safe materialization, and fresh neighboring/full/print review on the Fig1 failure-first lineage; dated measurements and named outcomes remain in `docs/evidence/r4-r5-implementation-history.md`.
 - [x] R5.3: canonical status now hash-binds declared text-boundary and label-path coverage to the current spec/render, exposes declared versus checked counts, and fails readiness closed on missing, stale, invalid, zero, incomplete, or failing evidence without introducing a panel-count grammar.
-- [ ] R5.4: deepen A, B, or E semantics from paper authority and prove one prospective real defect.
+- [x] R5.4: deepened Panel A/B chemistry and composition semantics from paper authority, then prospectively reproduced and repaired the Panel B sample-identity versus literal-chain-length ambiguity; evidence and limits are recorded in `docs/evidence/r4-r5-implementation-history.md`.
 - [ ] R5.5: transfer the mechanism to maintained Fig3 without Fig1-private imports.
 - [ ] Record correction minutes, named human verdicts, defect reduction, new-defect rate, semantic preservation, and reproducibility.
 - [ ] Promote only after two materially different figure families show lower correction burden without semantic/relation regression; machine-green and development acceptance never imply publication acceptance.

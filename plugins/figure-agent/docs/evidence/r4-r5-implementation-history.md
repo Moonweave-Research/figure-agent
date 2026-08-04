@@ -60,6 +60,24 @@ coverage began blocking readiness. Strict dogfood passed with 4/4 boundary and
 cross-family capability promotion remain open; these machine results make no
 visual, release, or publication claim.
 
+R5.4 started from the then-current Fig1 nested candidate at source hash
+`11476b64a5bb1faea15f7f7c713f90b3edd11cf7daf07cf4945cb2fbf9daf223`.
+Paper authority identified `S60`, `S75`, and `S85` as sulfur weight-percent
+sample identities and the visible sulfur-glyph counts as a qualitative artistic
+correlate only. The render nevertheless paired each sample label with an exact
+two/four/six-glyph motif while the reader-facing caption omitted that evidence
+boundary, and A/B had no entries in the semantic-legibility contract. A focused
+regression test was written before repair and failed on those missing A/B
+objects, relations, forbidden readings, claims, invariants, and visible
+qualifier. The repair added the compact qualifier `schematic sulfur rank`,
+expanded the contract to 31 objects, 21 visible relations, and 8 label owners,
+and bound the nonliteral encoding in `spec.yaml`. Strict compile then passed at
+source hash `2f4f2e01b92606ab72984fa6fe0c67846ed295c7a983f7315d6fbdb54899ae65`
+with 13/13 text-boundary and 9/9 label-path checks, zero blocking clashes, and
+fresh export/status. The direct edit was recorded without a human decision, so
+it remains unreviewed provenance rather than positive reward, release evidence,
+or publication acceptance. Prospective correction time was not captured.
+
 ## Historical contract families
 
 The lineage exercised attempt state, current-state projection, adjudicated

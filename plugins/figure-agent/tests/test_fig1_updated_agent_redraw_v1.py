@@ -92,9 +92,9 @@ def test_redraw_is_independent_and_keeps_floating_panel_f_topology() -> None:
     assert r"\PanelFFloatingCantilever" in source
 
     result = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
-    assert result["summary"]["object_role_count"] == 22
-    assert result["summary"]["visible_connector_count"] == 14
-    assert result["summary"]["label_ownership_count"] == 4
+    assert result["summary"]["object_role_count"] == 31
+    assert result["summary"]["visible_connector_count"] == 21
+    assert result["summary"]["label_ownership_count"] == 8
     assert result["summary"]["floating_object_count"] == 1
 
 
@@ -134,6 +134,49 @@ def test_redraw_semantic_contract_binds_c_d_e_relations() -> None:
     )
     assert result["summary"]["visual_review_required"] is True
     assert result["publication_acceptance"] == "not_claimed"
+
+
+def test_redraw_semantic_contract_binds_chemistry_and_composition_evidence_boundary() -> None:
+    contract = _yaml("semantic_contract.yaml")
+    result = validate_semantic_legibility_contract(contract)
+
+    required = set(contract["required_objects"])
+    assert {
+        "panel_a.elemental_s8",
+        "panel_a.dib_comonomer",
+        "panel_a.inverse_vulcanization",
+        "panel_a.representative_bis_thiocumyl_motif",
+        "panel_a.variable_sulfur_rank",
+        "panel_b.s60_sample",
+        "panel_b.s75_sample",
+        "panel_b.s85_sample",
+        "panel_b.qualitative_sulfur_rank_progression",
+    } <= required
+
+    protected = set(result["protected_relations"])
+    assert {
+        "inverse_vulcanization_transforms_s8_and_dib_into_representative_motif",
+        "representative_motif_contains_variable_not_fixed_sulfur_rank",
+        "s60_s75_s85_are_sulfur_weight_percent_sample_identities",
+        "drawn_sulfur_glyph_count_is_qualitative_not_measured_chain_length",
+    } <= protected
+    assert {
+        "panel_a.unique_constitutional_repeat",
+        "panel_a.covalent_crosslink_network",
+        "panel_b.sample_number_as_sulfur_atom_count",
+        "panel_b.exact_composition_derived_chain_length",
+    } <= set(contract["forbidden_implications"])
+
+    source = REPAIRED_SOURCE.read_text(encoding="utf-8")
+    panel_b = source.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
+    assert "Representative DIB-linked motifs (schematic sulfur rank)" in panel_b
+
+    spec = _yaml("spec.yaml")
+    panels = {panel["id"]: panel for panel in spec["panels"]}
+    assert panels["A"]["semantic_claims"]
+    assert panels["A"]["locked_invariants"]
+    assert panels["B"]["semantic_claims"]
+    assert panels["B"]["locked_invariants"]
 
 
 def test_redraw_context_binds_the_curated_assets_used_by_source() -> None:
@@ -227,7 +270,7 @@ def test_repaired_panel_b_preserves_panel_a_chemical_topology() -> None:
     assert "B bis-thiocumyl junctions retained at both chain ends" in panel_b
     assert "direct aryl--sulfur attachment is forbidden" in panel_b
     assert "circle, draw=cAmber" not in panel_b
-    assert "DIB-derived motifs linked by sulfur-rich segments" in panel_b
+    assert "Representative DIB-linked motifs (schematic sulfur rank)" in panel_b
 
 
 def test_repaired_panel_b_declares_qualitative_composition_encoding() -> None:
@@ -482,7 +525,7 @@ def test_repaired_top_row_summary_captions_share_one_text_level() -> None:
 
     assert r"\node[body label, align=center]" in panel_a
     assert r"\node[body label, align=center]" in panel_b
-    assert "DIB-derived motifs linked by sulfur-rich segments" in panel_b
+    assert "Representative DIB-linked motifs (schematic sulfur rank)" in panel_b
 
 
 def test_repaired_s8_atom_labels_survive_reduction() -> None:

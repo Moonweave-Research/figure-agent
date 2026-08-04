@@ -1,6 +1,15 @@
 schema: figure-agent.failure-first-semantic-contract.v1
 selector_id: figure1.redraw_v1
 required_objects:
+  - panel_a.elemental_s8
+  - panel_a.dib_comonomer
+  - panel_a.inverse_vulcanization
+  - panel_a.representative_bis_thiocumyl_motif
+  - panel_a.variable_sulfur_rank
+  - panel_b.s60_sample
+  - panel_b.s75_sample
+  - panel_b.s85_sample
+  - panel_b.qualitative_sulfur_rank_progression
   - panel_c.trap_landscape
   - panel_c.real_space_host
   - panel_c.shallow_trap_population
@@ -24,6 +33,10 @@ required_objects:
   - panel_f.ground_reference
   - panel_f.coulomb_force
 forbidden_implications:
+  - panel_a.unique_constitutional_repeat
+  - panel_a.covalent_crosslink_network
+  - panel_b.sample_number_as_sulfur_atom_count
+  - panel_b.exact_composition_derived_chain_length
   - panel_f.grounded_sample
   - panel_f.grounded_cantilever
   - panel_f.electrical_contact_at_jig
@@ -33,6 +46,10 @@ repair:
   selector_id: figure1.redraw_v1
   max_source_blocks: 6
 protected_relations:
+  - inverse_vulcanization_transforms_s8_and_dib_into_representative_motif
+  - representative_motif_contains_variable_not_fixed_sulfur_rank
+  - s60_s75_s85_are_sulfur_weight_percent_sample_identities
+  - drawn_sulfur_glyph_count_is_qualitative_not_measured_chain_length
   - shallow_and_deep_traps_share_one_energy_orientation
   - real_space_trap_populations_correspond_to_energy_diagram_states
   - transient_current_decays_under_constant_voltage
@@ -48,6 +65,44 @@ protected_relations:
   - cantilever_remains_electrically_floating
 semantic_legibility:
   object_roles:
+    - object_id: panel_a.elemental_s8
+      declared_role: elemental_sulfur_reactant
+      forbidden_readings:
+        - decorative_sulfur_icon
+    - object_id: panel_a.dib_comonomer
+      declared_role: divinyl_aromatic_comonomer
+      forbidden_readings:
+        - saturated_aromatic_substitute
+    - object_id: panel_a.inverse_vulcanization
+      declared_role: thermally_driven_reaction
+      forbidden_readings:
+        - third_chemical_reagent
+    - object_id: panel_a.representative_bis_thiocumyl_motif
+      declared_role: representative_primary_structure_motif
+      forbidden_readings:
+        - unique_constitutional_repeat
+        - covalent_crosslink_network
+    - object_id: panel_a.variable_sulfur_rank
+      declared_role: statistical_polysulfide_rank
+      forbidden_readings:
+        - fixed_stoichiometric_subscript
+    - object_id: panel_b.s60_sample
+      declared_role: sulfur_weight_percent_sample_identity
+      forbidden_readings:
+        - sixty_sulfur_atom_chain
+    - object_id: panel_b.s75_sample
+      declared_role: sulfur_weight_percent_sample_identity
+      forbidden_readings:
+        - seventy_five_sulfur_atom_chain
+    - object_id: panel_b.s85_sample
+      declared_role: sulfur_weight_percent_sample_identity
+      forbidden_readings:
+        - eighty_five_sulfur_atom_chain
+    - object_id: panel_b.qualitative_sulfur_rank_progression
+      declared_role: schematic_ordinal_composition_encoding
+      forbidden_readings:
+        - measured_chain_length_scale
+        - exact_molecular_distribution
     - object_id: panel_c.trap_landscape
       declared_role: energy_landscape
       forbidden_readings: [quantitative_density_fit]
@@ -115,6 +170,41 @@ semantic_legibility:
       declared_role: directed_force
       forbidden_readings: [annotation_leader]
   visible_connectors:
+    - connector_id: panel_a.s8_enters_inverse_vulcanization
+      from_object: panel_a.elemental_s8
+      to_object: panel_a.inverse_vulcanization
+      declared_role: reaction_input
+      render_style: reaction_scheme
+    - connector_id: panel_a.dib_enters_inverse_vulcanization
+      from_object: panel_a.dib_comonomer
+      to_object: panel_a.inverse_vulcanization
+      declared_role: reaction_input
+      render_style: reaction_scheme
+    - connector_id: panel_a.inverse_vulcanization_yields_representative_motif
+      from_object: panel_a.inverse_vulcanization
+      to_object: panel_a.representative_bis_thiocumyl_motif
+      declared_role: reaction_output
+      render_style: reaction_scheme
+    - connector_id: panel_a.variable_rank_qualifies_representative_motif
+      from_object: panel_a.variable_sulfur_rank
+      to_object: panel_a.representative_bis_thiocumyl_motif
+      declared_role: structural_qualification
+      render_style: subscript_and_caption
+    - connector_id: panel_b.progression_orders_s60
+      from_object: panel_b.qualitative_sulfur_rank_progression
+      to_object: panel_b.s60_sample
+      declared_role: ordinal_composition_encoding
+      render_style: wt_percent_axis
+    - connector_id: panel_b.progression_orders_s75
+      from_object: panel_b.qualitative_sulfur_rank_progression
+      to_object: panel_b.s75_sample
+      declared_role: ordinal_composition_encoding
+      render_style: wt_percent_axis
+    - connector_id: panel_b.progression_orders_s85
+      from_object: panel_b.qualitative_sulfur_rank_progression
+      to_object: panel_b.s85_sample
+      declared_role: ordinal_composition_encoding
+      render_style: wt_percent_axis
     - connector_id: panel_c.shallow_population_corresponds_to_energy_state
       from_object: panel_c.shallow_trap_population
       to_object: panel_c.energy_diagram
@@ -194,6 +284,14 @@ semantic_legibility:
       to_object: panel_f.ground_reference
       declared_role: ground_return
   label_ownership:
+    - label_id: panel_a.variable_rank_label
+      owner: panel_a.variable_sulfur_rank
+    - label_id: panel_b.s60_label
+      owner: panel_b.s60_sample
+    - label_id: panel_b.s75_label
+      owner: panel_b.s75_sample
+    - label_id: panel_b.s85_label
+      owner: panel_b.s85_sample
     - label_id: panel_e.derive_label
       owner: panel_e.raw_to_derived_transform
     - label_id: panel_e.tau_d_label
