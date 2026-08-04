@@ -111,6 +111,8 @@ def test_status_surfaces_missing_human_learning_verdicts(
         "build_fixture_index",
         lambda *_args, **_kwargs: {
             "event_count": 4,
+            "unknown_event_count": 4,
+            "unknown_event_rate": 1.0,
             "eligible_prior_count": 0,
             "learning_evidence": {
                 "cross_fixture_state": "blocked_no_eligible_outcomes",
@@ -127,6 +129,8 @@ def test_status_surfaces_missing_human_learning_verdicts(
     )
 
     assert summary["state"] == "blocked_no_eligible_outcomes"
+    assert summary["unknown_event_count"] == 4
+    assert summary["unknown_event_rate"] == 1.0
     assert summary["required_action"] == (
         "record explicit human accept or reject verdicts for verified direct edits"
     )

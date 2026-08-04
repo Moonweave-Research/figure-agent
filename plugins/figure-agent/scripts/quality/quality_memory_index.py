@@ -273,10 +273,15 @@ def build_memory_index(
             counterfactual_unchosen_count += 1
         family_known = not _is_unknown(family)
         target_known = not _is_unknown(panel) and not _is_unknown(subregion)
-        unknown_outcome = (
-            is_attempt
-            and reward_state == "unknown"
-            and (state in ELIGIBLE_OUTCOMES or state == "unknown")
+        # An unreviewed direct-source edit has a non-reward apply status
+        # (``manual_direct_edit``), but it is still an unknown learning
+        # outcome.  Do not let that transport label hide the missing verdict
+        # from the aggregate evidence counters. Generated lifecycle events
+        # such as ``candidate_rendered`` remain outside this count.
+        unknown_outcome = is_attempt and reward_state == "unknown" and (
+            state in ELIGIBLE_OUTCOMES
+            or state == "unknown"
+            or state == experience_log.MANUAL_DIRECT_EDIT_KIND
         )
         if not family_known or not target_known or unknown_outcome:
             unknown_event_count += 1

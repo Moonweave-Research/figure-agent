@@ -1355,6 +1355,8 @@ def _learning_evidence_summary(example_dir: Path) -> dict[str, Any]:
     return {
         "state": str(evidence.get("cross_fixture_state") or "INVALID"),
         "event_count": index.get("event_count"),
+        "unknown_event_count": index.get("unknown_event_count"),
+        "unknown_event_rate": index.get("unknown_event_rate"),
         "eligible_prior_count": index.get("eligible_prior_count"),
         "source_fixture_count": evidence.get("source_fixture_count"),
         "eligible_source_fixture_count": evidence.get("eligible_source_fixture_count"),

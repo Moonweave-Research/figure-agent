@@ -202,6 +202,8 @@ def test_manual_direct_edit_receipt_keeps_compile_out_of_reward(tmp_path: Path) 
     index = quality_memory_index.build_memory_index([event])
     assert index["families"]["mechanism_redraw"]["attempts"] == 0
     assert index["families"]["mechanism_redraw"]["unknown"] == 1
+    assert index["unknown_event_count"] == 1
+    assert index["unknown_event_rate"] == 1.0
 
 
 def test_manual_direct_edit_human_accept_becomes_the_only_positive_signal(tmp_path: Path) -> None:
