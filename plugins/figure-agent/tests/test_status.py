@@ -15,6 +15,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import quality_memory_index  # noqa: E402
 import status as status_mod  # noqa: E402
 from critique_schema_vocab import AESTHETIC_ANTIPATTERN_IDS  # noqa: E402
 from current_render_review_scaffold import review_scaffold_summary  # noqa: E402
@@ -98,6 +99,40 @@ def test_current_render_review_scaffold_binds_outputs_and_detects_staleness(
     stale = review_scaffold_summary(fig_dir)
     assert stale["state"] == "STALE"
     assert stale["stale_fields"] == ["render_evidence.render_png_sha256"]
+
+
+def test_status_surfaces_missing_human_learning_verdicts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    figure_dir = tmp_path / "examples" / "learning_demo"
+    figure_dir.mkdir(parents=True)
+    monkeypatch.setattr(
+        quality_memory_index,
+        "build_fixture_index",
+        lambda *_args, **_kwargs: {
+            "event_count": 4,
+            "eligible_prior_count": 0,
+            "learning_evidence": {
+                "cross_fixture_state": "blocked_no_eligible_outcomes",
+                "source_fixture_count": 1,
+                "eligible_source_fixture_count": 0,
+                "reason": "explicit human verdicts are required",
+            },
+        },
+    )
+
+    summary = status_mod._learning_evidence_summary(figure_dir)
+    explanation = status_mod.build_status_explanation(
+        {"name": "learning_demo", "learning_evidence": summary}
+    )
+
+    assert summary["state"] == "blocked_no_eligible_outcomes"
+    assert summary["required_action"] == (
+        "record explicit human accept or reject verdicts for verified direct edits"
+    )
+    assert explanation["buckets"]["human_blockers"][-1]["code"] == (
+        "learning_evidence_blocked_no_eligible_outcomes"
+    )
 
 
 def test_current_render_review_scaffold_detects_machine_gate_geometry_drift(

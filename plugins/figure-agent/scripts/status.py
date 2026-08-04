@@ -16,6 +16,7 @@ import yaml
 SCRIPTS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS_DIR))
 sys.path.insert(0, str(SCRIPTS_DIR / "checks"))
+sys.path.insert(0, str(SCRIPTS_DIR / "candidates"))
 sys.path.insert(0, str(SCRIPTS_DIR / "quality"))
 
 import check_plan_consistency
@@ -1226,6 +1227,15 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         workspace_root=example_dir.parents[1],
         fixture=example_dir.name,
     )
+    learning_evidence = _learning_evidence_summary(example_dir)
+    result["learning_evidence"] = learning_evidence
+    if learning_evidence.get("event_count", 0) and learning_evidence.get("state") in {
+        "blocked_no_eligible_outcomes",
+        "blocked_single_eligible_fixture",
+    }:
+        result.setdefault("notes", []).append(
+            f"learning_evidence_{learning_evidence['state']}"
+        )
     if "release_decision" not in result:
         name = result.get("name")
         if isinstance(name, str) and name:
@@ -1322,6 +1332,41 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         elif state == "severe_divergence":
             result.setdefault("notes", []).append("reference_aesthetic_metrics_severe")
     return _with_status_explanation(result)
+
+
+def _learning_evidence_summary(example_dir: Path) -> dict[str, Any]:
+    """Surface learning evidence without making it a release-readiness gate."""
+    if example_dir.parent.name != "examples":
+        return {"state": "NOT_APPLICABLE"}
+    try:
+        import quality_memory_index
+
+        index = quality_memory_index.build_fixture_index(
+            example_dir.name,
+            write=False,
+            plugin_root=SCRIPTS_DIR.parent,
+            workspace_root=example_dir.parent.parent,
+        )
+    except (ValueError, quality_memory_index.QualityMemoryIndexError) as exc:
+        return {"state": "INVALID", "reason": str(exc)}
+    evidence = index.get("learning_evidence")
+    if not isinstance(evidence, dict):
+        return {"state": "INVALID", "reason": "learning_evidence_missing"}
+    return {
+        "state": str(evidence.get("cross_fixture_state") or "INVALID"),
+        "event_count": index.get("event_count"),
+        "eligible_prior_count": index.get("eligible_prior_count"),
+        "source_fixture_count": evidence.get("source_fixture_count"),
+        "eligible_source_fixture_count": evidence.get("eligible_source_fixture_count"),
+        "reason": evidence.get("reason"),
+        "required_action": (
+            "record explicit human accept or reject verdicts for verified direct edits"
+            if evidence.get("cross_fixture_state") == "blocked_no_eligible_outcomes"
+            else "record eligible outcomes on a second materially different fixture"
+            if evidence.get("cross_fixture_state") == "blocked_single_eligible_fixture"
+            else None
+        ),
+    }
 
 
 def _resolve_current_candidate(

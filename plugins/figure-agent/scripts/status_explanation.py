@@ -72,6 +72,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     release_decision = status.get("release_decision")
     scale_previews = status.get("review_scale_previews")
     spine_evidence = status.get("spine_evidence")
+    learning_evidence = status.get("learning_evidence")
 
     plugin_state: list[dict[str, Any]] = []
     fixture_freshness: list[dict[str, Any]] = []
@@ -291,6 +292,41 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
         code="not_accepted",
         category=HUMAN_BLOCKER,
         message="fixture is not accepted; QUALITY_AUDIT.md and accepted state need human action.",
+        manual=True,
+    )
+    learning_state = (
+        learning_evidence.get("state") if isinstance(learning_evidence, Mapping) else None
+    )
+    _append_if(
+        human_blockers,
+        learning_state == "blocked_no_eligible_outcomes"
+        and isinstance(learning_evidence, Mapping)
+        and isinstance(learning_evidence.get("event_count"), int)
+        and learning_evidence["event_count"] > 0,
+        code="learning_evidence_blocked_no_eligible_outcomes",
+        category=HUMAN_BLOCKER,
+        message=(
+            "direct edits are audited but have no explicit human verdict, so they "
+            "cannot teach cross-figure quality priors."
+        ),
+        next_command=(
+            "fig-agent record-manual-edit <fixture> "
+            "--decision accept|reject --reviewer <name>"
+        ),
+        manual=True,
+    )
+    _append_if(
+        human_blockers,
+        learning_state == "blocked_single_eligible_fixture"
+        and isinstance(learning_evidence, Mapping)
+        and isinstance(learning_evidence.get("event_count"), int)
+        and learning_evidence["event_count"] > 0,
+        code="learning_evidence_blocked_single_eligible_fixture",
+        category=HUMAN_BLOCKER,
+        message=(
+            "eligible learning evidence exists for only one fixture; record a "
+            "verdict on a second materially different figure before transfer review."
+        ),
         manual=True,
     )
     release_decision_state = (
