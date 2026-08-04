@@ -84,6 +84,9 @@ RETIRED_DEFAULT_COMMANDS = frozenset(
         "rank-candidates",
     }
 )
+RETIRED_COMMAND_SUCCESSORS = {
+    "rank-candidates": "Use the read-only MCP tool figure_agent_rank_candidates.",
+}
 _LITERAL_INTERNAL_COMPATIBILITY_COMMANDS = frozenset(
     {
         "accept-candidate",
@@ -1286,10 +1289,13 @@ def _loop_metrics(argv: list[str]) -> int:
 
 
 def _retired_default_command(command: str) -> int:
+    successor = RETIRED_COMMAND_SUCCESSORS.get(
+        command,
+        "Use 'fig-agent status <fixture>' and 'fig-agent run ...' for the supported workflow.",
+    )
     print(
         f"fig-agent: {command!r} is retired from the public CLI. "
-        "Use 'fig-agent status <fixture>' and 'fig-agent run ...' for the "
-        "supported workflow; archived implementations remain test-only.",
+        f"{successor} Archived implementations remain test-only.",
         file=sys.stderr,
     )
     return 2

@@ -61,7 +61,7 @@ def test_retired_default_commands_refuse_public_cli_dispatch() -> None:
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
     env["FIGURE_AGENT_WORKSPACE"] = str(PLUGIN_ROOT)
 
-    for command in ("quality-search", "rank-candidates", "compose-review"):
+    for command in ("quality-search", "compose-review"):
         result = subprocess.run(
             [str(FIG_AGENT), command, "--help"],
             cwd=PLUGIN_ROOT,
@@ -74,6 +74,19 @@ def test_retired_default_commands_refuse_public_cli_dispatch() -> None:
         assert result.returncode == 2
         assert "retired from the public CLI" in result.stderr
         assert "fig-agent status <fixture>" in result.stderr
+
+    rank = subprocess.run(
+        [str(FIG_AGENT), "rank-candidates", "--help"],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert rank.returncode == 2
+    assert "retired from the public CLI" in rank.stderr
+    assert "figure_agent_rank_candidates" in rank.stderr
 
 
 def test_registry_controls_internal_cli_membership_and_public_help() -> None:
