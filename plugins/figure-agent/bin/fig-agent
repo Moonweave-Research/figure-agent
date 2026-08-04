@@ -1285,16 +1285,6 @@ def _loop_metrics(argv: list[str]) -> int:
     return 0
 
 
-def _quality_search(argv: list[str]) -> int:
-    import quality_search
-
-    return quality_search.main(
-        argv,
-        plugin_root=_paths().plugin_root,
-        workspace_root=_paths().workspace_root,
-    )
-
-
 def _retired_default_command(command: str) -> int:
     print(
         f"fig-agent: {command!r} is retired from the public CLI. "
@@ -1592,98 +1582,6 @@ def _render_candidates(argv: list[str]) -> int:
         return 1
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
-
-
-def _rank_candidates(argv: list[str]) -> int:
-    import candidate_contracts
-    import candidate_rank
-    import fixture_identity
-
-    parser = argparse.ArgumentParser(prog="fig-agent rank-candidates")
-    parser.add_argument("name")
-    parser.add_argument("--candidate-set", required=True)
-    parser.add_argument(
-        "--use-memory",
-        action="store_true",
-        help="compatibility no-op; persisted fixture memory is used when present",
-    )
-    parser.add_argument("--json", action="store_true")
-    args = parser.parse_args(argv)
-    name = _validated_fixture_name(parser, args.name)
-    try:
-        candidate_set = _load_fixture_json(name, args.candidate_set)
-        memory_index = _load_memory_index(name)
-        scores = []
-        for candidate in candidate_set.get("candidates", []):
-            if not isinstance(candidate, dict):
-                continue
-            candidate_id = str(candidate.get("id"))
-            fixture_identity.validate_fixture_name(candidate_id)
-            manifest = _load_fixture_json(
-                name,
-                f"build/candidates/{candidate_id}/candidate_manifest.json",
-            )
-            try:
-                render_manifest = _load_fixture_json(
-                    name,
-                    f"build/candidates/{candidate_id}/render_manifest.json",
-                )
-            except RuntimeError:
-                render_manifest = None
-            scores.append(
-                candidate_rank.score_manifest(
-                    manifest,
-                    candidate=candidate,
-                    render_manifest=render_manifest,
-                    memory_index=memory_index,
-                )
-            )
-    except (
-        RuntimeError,
-        ValueError,
-        candidate_contracts.CandidateContractError,
-    ) as exc:
-        print(f"fig-agent rank-candidates: {exc}", file=sys.stderr)
-        return 1
-    scores.sort(key=lambda score: (-float(score["rank_score"]), str(score["candidate_id"])))
-    payload = {
-        "schema": "figure-agent.candidate-rank-result.v1",
-        "fixture": name,
-        "scores": scores,
-    }
-    print(json.dumps(payload, indent=2, sort_keys=True))
-    return 0
-
-
-def _load_memory_index(name: str) -> dict | None:
-    import candidate_contracts
-    import quality_memory_index
-
-    paths = _paths()
-    example_dir = paths.examples_dir / name
-    build_dir = example_dir / "build"
-    memory_dir = build_dir / "memory"
-    for label, path in (("build", build_dir), ("memory", memory_dir)):
-        if path.is_symlink():
-            raise RuntimeError(f"memory_index_symlink_forbidden: {label}")
-    path = candidate_contracts.fixture_local_output_path(
-        paths.workspace_root,
-        name,
-        "build/memory/quality_memory_index.json",
-    )
-    if path.is_symlink():
-        raise RuntimeError("memory_index_symlink_forbidden: output")
-    if not path.is_file():
-        return quality_memory_index.build_fixture_index(
-            name,
-            write=False,
-            plugin_root=paths.plugin_root,
-            workspace_root=paths.workspace_root,
-        )
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise RuntimeError("memory_index_invalid")
-    return payload
 
 
 def _review_candidate(argv: list[str]) -> int:
@@ -2436,8 +2334,6 @@ def main(argv: list[str] | None = None) -> int:
         return _quality_next_experiment(rest)
     if command == "loop-metrics":
         return _loop_metrics(rest)
-    if command == "quality-search":
-        return _quality_search(rest)
     if command == "failure-corpus":
         return _failure_corpus(rest)
     if command == "failure-ablation":
@@ -2458,20 +2354,12 @@ def main(argv: list[str] | None = None) -> int:
         return _analyze_panel(rest)
     if command == "candidates":
         return _candidates(rest)
-    if command.startswith("compose-"):
-        import composition_cli
-
-        result = composition_cli.dispatch(command, rest, paths=_paths())
-        if result != 2:
-            return result
     if command == "analyze-composition":
         return _analyze_composition(rest)
     if command == "lint-composition":
         return _lint_composition(rest)
     if command == "render-candidates":
         return _render_candidates(rest)
-    if command == "rank-candidates":
-        return _rank_candidates(rest)
     if command == "review-candidate":
         return _review_candidate(rest)
     if command == "compare-candidate":
