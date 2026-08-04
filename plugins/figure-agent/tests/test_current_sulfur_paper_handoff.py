@@ -30,7 +30,8 @@ def test_handoff_describes_every_machine_resolved_main_figure() -> None:
             assert fixture in text
         else:
             assert entry["status"] == "planned_missing"
-            assert "planned" in text
+            assert entry["slot_status"] == "fixed"
+            assert "fixed main slot" in text
 
 
 def test_handoff_contains_durable_experiment_contracts() -> None:
@@ -103,7 +104,33 @@ def test_only_current_three_authoring_baselines_are_active() -> None:
     }
     assert figures["fig3"]["status"] == "planned_missing"
     assert figures["fig4"]["status"] == "planned_missing"
+    assert figures["fig3"]["slot_status"] == "fixed"
+    assert figures["fig3"]["authoring_scope"] == "external_quantitative_data"
+    assert figures["fig4"]["slot_status"] == "fixed"
+    assert figures["fig4"]["evidence_status"] == "data_pipeline_pending"
 
     non_main = plan_map["non_main"]
     assert isinstance(non_main, dict)
     assert "fig4_trap_energy_diagram" in non_main["superseded"]
+
+
+def test_fixed_external_main_slots_are_not_reported_as_optional_plans() -> None:
+    import sys
+
+    checks_dir = PLUGIN_ROOT / "scripts/checks"
+    sys.path.insert(0, str(checks_dir))
+    try:
+        import check_plan_consistency
+
+        report = check_plan_consistency.build_report(PLUGIN_ROOT / "examples", PLAN_MAP)
+    finally:
+        sys.path.remove(str(checks_dir))
+
+    fixed = {
+        finding["figure"]: finding
+        for finding in report["findings"]
+        if finding["code"] == "fixed_main_slot_missing_fixture"
+    }
+    assert set(fixed) == {"fig3", "fig4"}
+    assert fixed["fig3"]["evidence_status"] == "external_canonical_artifact_ready"
+    assert fixed["fig4"]["evidence_status"] == "data_pipeline_pending"

@@ -18,8 +18,8 @@ The current paper bindings are:
 |---|---|---|
 | Fig1 | overview, structure, and charge-trapping concept | `fig1_updated_agent_redraw_v1`, resolved through `review/current-candidate.json` |
 | Fig2 | transient charge transport and its mechanism context | `fig2_charge_transport_mechanism` |
-| Fig3 | frequency-domain dielectric response | planned; no active fixture |
-| Fig4 | trap-energy distribution | planned; no active fixture |
+| Fig3 | frequency-domain dielectric response | fixed main slot; external quantitative artifact, no Figure Agent fixture |
+| Fig4 | ISPD retained-charge decay and trap-energy distribution | fixed main slot; data pipeline pending, no active fixture |
 | Fig5 | cantilever actuation payoff | `fig5_cantilever_actuation_artifact_v2` |
 
 Fig1, Fig2, and Fig5 are the three current authoring baselines. Their active
@@ -99,11 +99,18 @@ remain `candidate_only` until a human gate explicitly changes that state.
   conventional-versus-sulfur schematic contrast, and the qualitative early/late
   readout windows used by the bound data panels. The schematic does not replace
   those measured panels or prove a microscopic mechanism by itself.
-- Fig3 owns the planned frequency-domain dielectric response. Do not silently
+- Fig3 owns the frequency-domain dielectric response as a fixed main-paper
+  slot. Its quantitative artifact is authored by the data-plot pipeline, not
+  by a Figure Agent schematic fixture. Do not silently
   reuse the earlier resistance-mechanism fixture as the new Fig3 authority.
-- Fig4 is planned to own trap energy/depth/lifetime quantification and the
-  ISPD-derived distribution story. The earlier `fig4_trap_energy_diagram`
+- Fig4 is fixed as the main-paper ISPD slot and owns retained-charge decay,
+  trap energy/depth/lifetime quantification, and the ISPD-derived distribution
+  story. Its slot is not conditional on the current data-readiness state. The
+  earlier `fig4_trap_energy_diagram`
   diagnostic trial is superseded and is not the current paper authority.
+- Until the ISPD conditions and analysis pipeline are validated, Fig4 may show
+  only the supported qualitative decay-shape comparison; shallow/deep
+  assignment and numerical $E_t$, $g(E_t)$, or $\tau_d$ remain gated.
 - A schematic must not turn qualitative state breadth into an undeclared
   numerical exponent, trap density, energy, or composition ranking.
 

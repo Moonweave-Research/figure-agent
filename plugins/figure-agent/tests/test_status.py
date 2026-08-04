@@ -4101,6 +4101,45 @@ def test_print_single_shows_exports_substate(tmp_path: Path, capsys) -> None:
     assert "Exports: MISSING" in captured.out
 
 
+def test_print_single_surfaces_main_paper_placement(tmp_path: Path, capsys) -> None:
+    fixture = tmp_path / "main_fixture"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fixture)
+    result["paper_plan"] = {
+        "state": "VALID",
+        "figure_id": "fig2",
+        "role_id": "charge_transport_mechanism_schematic",
+        "lifecycle": "active_candidate",
+    }
+    status_mod._print_single(result)
+
+    assert (
+        "Paper placement: main fig2 "
+        "role=charge_transport_mechanism_schematic lifecycle=active_candidate"
+    ) in capsys.readouterr().out
+
+
+def test_print_single_surfaces_non_main_classification(tmp_path: Path, capsys) -> None:
+    fixture = tmp_path / "regression_fixture"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fixture)
+    result["paper_plan"] = {
+        "state": "NON_MAIN",
+        "classification": "regression",
+    }
+    status_mod._print_single(result)
+
+    assert "Paper placement: non-main regression" in capsys.readouterr().out
+
+
 def test_print_single_shows_status_vector(tmp_path: Path, capsys) -> None:
     fixture = tmp_path / "no_exports_fig"
     fixture.mkdir(parents=True)

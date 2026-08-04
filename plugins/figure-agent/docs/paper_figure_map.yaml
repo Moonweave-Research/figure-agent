@@ -20,10 +20,16 @@ figures:
     figure_id: fig3
     role_id: frequency_domain_dielectric_response
     status: planned_missing
+    slot_status: fixed
+    evidence_status: external_canonical_artifact_ready
+    authoring_scope: external_quantitative_data
   fig4:
     figure_id: fig4
     role_id: trap_energy_distribution
     status: planned_missing
+    slot_status: fixed
+    evidence_status: data_pipeline_pending
+    authoring_scope: external_quantitative_data_with_optional_schematic
   fig5:
     figure_id: fig5
     role_id: cantilever_actuation_payoff

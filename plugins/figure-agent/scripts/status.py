@@ -620,9 +620,19 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
                 "lifecycle": entry.get("status"),
                 "map_path": "docs/paper_figure_map.yaml",
             }
+    non_main = plan_map.get("non_main") if isinstance(plan_map, dict) else None
+    if isinstance(non_main, dict):
+        for classification, fixtures in non_main.items():
+            if isinstance(fixtures, list) and name in fixtures:
+                return {
+                    "schema": "figure-agent.paper-plan-status.v1",
+                    "state": "NON_MAIN",
+                    "classification": classification,
+                    "map_path": "docs/paper_figure_map.yaml",
+                }
     return {
         "schema": "figure-agent.paper-plan-status.v1",
-        "state": "NON_MAIN_OR_UNMAPPED",
+        "state": "UNMAPPED",
         "map_path": "docs/paper_figure_map.yaml",
     }
 
@@ -1825,6 +1835,25 @@ def _print_single(result: dict) -> None:
     notes = result["notes"]
     marker = _accepted_marker(result.get("accepted"))
     print(f"{name} — stage {stage}/4{marker}")
+    paper_plan = result.get("paper_plan")
+    if isinstance(paper_plan, dict):
+        paper_state = paper_plan.get("state", "?")
+        if paper_state == "VALID":
+            print(
+                "  Paper placement: "
+                f"main {paper_plan.get('figure_id', '?')} "
+                f"role={paper_plan.get('role_id', '?')} "
+                f"lifecycle={paper_plan.get('lifecycle', '?')}"
+            )
+        elif paper_state == "NON_MAIN":
+            print(
+                "  Paper placement: "
+                f"non-main {paper_plan.get('classification', '?')}"
+            )
+        elif paper_state == "UNMAPPED":
+            print("  Paper placement: unmapped")
+        elif paper_state == "INVALID":
+            print(f"  Paper placement: invalid ({paper_plan.get('reason', '?')})")
     for key, val in checks:
         print(f"  {key}: {val}")
     print(f"  Next: {next_hint}")

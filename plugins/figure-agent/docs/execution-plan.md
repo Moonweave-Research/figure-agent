@@ -171,17 +171,23 @@ recorded or explicitly unavailable with a reason, corpus admission is
 hash-bound, and publication acceptance remains separate. If human review is not
 available, Slice 1 stops as `pending_human_review`.
 
-## Slice 2: Fig3 cross-family proof
+## Slice 2: historical Fig3 cross-family proof
+
+> **Current placement note:** this slice records a completed regression-proof
+> exercise. `docs/paper_figure_map.yaml` now classifies
+> `fig3_resistance_mechanism` as `non_main.regression`. The current paper Fig3
+> is the external quantitative frequency-domain dielectric-response artifact;
+> this historical slice must not be used to resolve present paper placement.
 
 ### Purpose
 
-Test the same failure-first control loop on the current main-text Fig3
+Test the same failure-first control loop on the then-current main-text Fig3
 mechanism schematic rather than extending the successful Fig1 fixture or
 reviving an older abandoned Fig3 composition.
 
 ### Target and boundaries
 
-The target is `examples/fig3_resistance_mechanism/`: the current main-text Fig3
+The target is `examples/fig3_resistance_mechanism/`: the then-current main-text Fig3
 schematic that connects Fig2's material design space to Fig4's quantified trap
 spectra. It has a maintained editable TikZ source, briefing, specification,
 authoring contract, panel goals, critique history, and current render. Its two

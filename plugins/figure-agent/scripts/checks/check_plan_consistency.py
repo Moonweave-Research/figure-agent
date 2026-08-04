@@ -162,13 +162,21 @@ def build_report(examples_dir: Path, map_path: Path) -> dict[str, Any]:
                 findings.append(
                     _finding("planned_missing_has_fixture", figure=str(figure_key))
                 )
+            slot_status = entry.get("slot_status")
             findings.append(
                 _finding(
-                    "planned_figure_missing",
+                    (
+                        "fixed_main_slot_missing_fixture"
+                        if slot_status == "fixed"
+                        else "planned_figure_missing"
+                    ),
                     severity="advisory",
                     figure=str(figure_key),
                     state=PLANNED_MISSING_STATUS,
                     role_id=role_id,
+                    slot_status=slot_status,
+                    evidence_status=entry.get("evidence_status"),
+                    authoring_scope=entry.get("authoring_scope"),
                 )
             )
             continue
