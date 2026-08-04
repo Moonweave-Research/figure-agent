@@ -33,7 +33,7 @@ figures:
     role_id: trap_energy_distribution
     status: planned_missing
     slot_status: fixed
-    evidence_status: data_pipeline_pending
+    evidence_status: run_validated_aggregate_pipeline_pending
     authoring_scope: external_quantitative_data_with_optional_schematic
     assembly_state: external_full_figure_pending
   fig5:

@@ -19,7 +19,7 @@ The current paper bindings are:
 | Fig1 | overview, structure, and charge-trapping concept | full-figure candidate `fig1_updated_agent_redraw_v1`; human selection pending |
 | Fig2 | transient charge transport and its mechanism context | Panel a schematic candidate `fig2_charge_transport_mechanism`; external 4-panel assembly is the paper artifact |
 | Fig3 | frequency-domain dielectric response | fixed main slot; external quantitative full figure |
-| Fig4 | ISPD retained-charge decay and trap-energy distribution | fixed main slot; external full figure pending data pipeline |
+| Fig4 | ISPD retained-charge decay and trap-energy distribution | fixed main slot; run-specific method validation exists, but the cross-run quantitative aggregate is pending |
 | Fig5 | cantilever actuation payoff | mechanism schematic candidate `fig5_cantilever_actuation_artifact_v2`; external full figure pending assembly |
 
 Fig1, Fig2, and Fig5 are the three current Figure Agent authoring baselines.
@@ -110,9 +110,11 @@ remain `candidate_only` until a human gate explicitly changes that state.
   story. Its slot is not conditional on the current data-readiness state. The
   earlier `fig4_trap_energy_diagram`
   diagnostic trial is superseded and is not the current paper authority.
-- Until the ISPD conditions and analysis pipeline are validated, Fig4 may show
-  only the supported qualitative decay-shape comparison; shallow/deep
-  assignment and numerical $E_t$, $g(E_t)$, or $\tau_d$ remain gated.
+- The current 30 s validation supports effective fast/slow time-scale fitting
+  only within its tagged run. Until the cross-run aggregate pipeline is locked,
+  Fig4 may show only the supported qualitative decay-shape comparison;
+  shallow/deep assignment and numerical $E_t$, $g(E_t)$, or $\tau_d$ remain
+  gated.
 - A schematic must not turn qualitative state breadth into an undeclared
   numerical exponent, trap density, energy, or composition ranking.
 

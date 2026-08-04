@@ -108,7 +108,10 @@ def test_only_current_three_authoring_baselines_are_active() -> None:
     assert figures["fig3"]["authoring_scope"] == "external_quantitative_data"
     assert figures["fig3"]["assembly_state"] == "external_full_figure_ready"
     assert figures["fig4"]["slot_status"] == "fixed"
-    assert figures["fig4"]["evidence_status"] == "data_pipeline_pending"
+    assert (
+        figures["fig4"]["evidence_status"]
+        == "run_validated_aggregate_pipeline_pending"
+    )
     assert figures["fig4"]["assembly_state"] == "external_full_figure_pending"
     assert figures["fig1"]["fixture_scope"] == "full_figure_candidate"
     assert figures["fig2"]["fixture_scope"] == "panel_a_schematic_candidate"
@@ -138,4 +141,7 @@ def test_fixed_external_main_slots_are_not_reported_as_optional_plans() -> None:
     }
     assert set(fixed) == {"fig3", "fig4"}
     assert fixed["fig3"]["evidence_status"] == "external_canonical_artifact_ready"
-    assert fixed["fig4"]["evidence_status"] == "data_pipeline_pending"
+    assert (
+        fixed["fig4"]["evidence_status"]
+        == "run_validated_aggregate_pipeline_pending"
+    )
