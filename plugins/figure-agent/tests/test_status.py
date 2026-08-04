@@ -4140,6 +4140,45 @@ def test_print_single_surfaces_non_main_classification(tmp_path: Path, capsys) -
     assert "Paper placement: non-main regression" in capsys.readouterr().out
 
 
+def test_paper_plan_uses_external_workspace_map(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "external-workspace"
+    examples = workspace / "examples"
+    fixture = examples / "regression_fixture"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+    docs = workspace / "docs"
+    docs.mkdir()
+    (docs / "paper_figure_map.yaml").write_text(
+        """\
+schema: figure-agent.paper-figure-map.v2
+paper_id: paper-demo
+figures: {}
+non_main:
+  regression:
+    - regression_fixture
+""",
+        encoding="utf-8",
+    )
+
+    import status as status_mod
+
+    monkeypatch.setattr(
+        status_mod.check_plan_consistency,
+        "build_report",
+        lambda examples_dir, map_path: {
+            "findings": [],
+            "examples_dir": str(examples_dir),
+            "map_path": str(map_path),
+        },
+    )
+    summary = status_mod._paper_plan_summary(fixture, "regression_fixture")
+
+    assert summary["state"] == "NON_MAIN"
+    assert summary["classification"] == "regression"
+
+
 def test_print_single_shows_status_vector(tmp_path: Path, capsys) -> None:
     fixture = tmp_path / "no_exports_fig"
     fixture.mkdir(parents=True)

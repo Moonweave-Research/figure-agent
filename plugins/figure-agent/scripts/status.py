@@ -563,15 +563,17 @@ def _status_vector(
 def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
     """Expose the paper-map binding before a driver can execute a step.
 
-    The paper map is local to the bundled cohort fixtures. External workspaces
-    may have their own figure map and therefore remain outside this check.
+    Prefer the fixture cohort's workspace-local map. This keeps an installed
+    plugin from ignoring the paper authority stored beside an external
+    workspace's examples. Workspaces without a map remain outside this check.
     """
 
     plugin_root = Path(__file__).resolve().parents[1]
-    examples_dir = plugin_root / "examples"
-    map_path = plugin_root / "docs" / "paper_figure_map.yaml"
     try:
-        if example_dir.resolve().parent != examples_dir.resolve():
+        examples_dir = example_dir.resolve().parent
+        cohort_root = examples_dir.parent
+        map_path = cohort_root / "docs" / "paper_figure_map.yaml"
+        if not map_path.is_file() and cohort_root.resolve() != plugin_root.resolve():
             return {"schema": "figure-agent.paper-plan-status.v1", "state": "NOT_APPLICABLE"}
     except OSError:
         return {
