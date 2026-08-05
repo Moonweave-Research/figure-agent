@@ -1,3 +1,7 @@
+---
+description: Compile a deterministic, read-only authoring context pack for one figure.
+---
+
 # /fig_context_pack
 
 Compile a deterministic, read-only authoring context pack for one fixture.

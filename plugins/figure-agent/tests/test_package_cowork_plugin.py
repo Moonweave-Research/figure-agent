@@ -5,10 +5,26 @@ import sys
 import zipfile
 from pathlib import Path
 
+import package_cowork_plugin
 import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = PLUGIN_ROOT.parents[1]
+
+
+def test_package_cowork_plugin_default_output_is_plugin_local(
+    tmp_path: Path, monkeypatch
+) -> None:
+    built: list[Path] = []
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        package_cowork_plugin,
+        "build_zip",
+        lambda output: built.append(output) or output / "figure-agent-cowork-test.zip",
+    )
+
+    assert package_cowork_plugin.main([]) == 0
+    assert built == [PLUGIN_ROOT / "dist" / "cowork"]
 
 
 def test_package_cowork_plugin_zip_contract(tmp_path: Path) -> None:

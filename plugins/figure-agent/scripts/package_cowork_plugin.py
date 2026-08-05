@@ -11,6 +11,7 @@ import yaml
 from document_status import shippable_document_paths
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_OUTPUT_DIR = PLUGIN_ROOT / "dist" / "cowork"
 
 
 def _version() -> str:
@@ -122,7 +123,7 @@ def build_zip(output_dir: Path) -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=Path("dist/cowork"))
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_DIR)
     args = parser.parse_args(argv)
     print(build_zip(args.output))
     return 0

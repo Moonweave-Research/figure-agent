@@ -18,6 +18,7 @@ SCRIPTS_ROOT = REPO_ROOT / "scripts"
 
 sys.path.insert(0, str(SCRIPTS_ROOT))
 
+import release_gate  # noqa: E402
 from fig_driver import MODES as FIG_DRIVER_MODES  # noqa: E402
 from package_cowork_plugin import build_zip  # noqa: E402
 from plugin_install_freshness import SCHEMA as INSTALL_FRESHNESS_SCHEMA  # noqa: E402
@@ -25,6 +26,28 @@ from plugin_package_audit import find_packaging_junk, main, remove_paths  # noqa
 
 EXPECTED_RELEASE_VERSION = "0.9.3"
 EXPECTED_RELEASE_DATE = "2026-06-07"
+
+
+def test_release_gate_default_output_is_plugin_local(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    captured: list[Path] = []
+    monkeypatch.chdir(tmp_path)
+
+    def fake_run_release_gate(**kwargs: object) -> dict[str, object]:
+        captured.append(kwargs["output_dir"])  # type: ignore[arg-type]
+        return {
+            "success": True,
+            "zip_path": str(kwargs["output_dir"]),
+            "package_size_mib": 0.0,
+            "steps": [],
+        }
+
+    monkeypatch.setattr(release_gate, "run_release_gate", fake_run_release_gate)
+
+    assert release_gate.main([]) == 0
+    assert captured == [REPO_ROOT / "dist" / "cowork"]
+    assert "success=true" in capsys.readouterr().out
 
 
 def _issue_suffix_value(suffix: str) -> int:

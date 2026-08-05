@@ -16,6 +16,7 @@ import yaml
 
 SCRIPT_ROOT = Path(__file__).resolve().parent
 PLUGIN_ROOT = SCRIPT_ROOT.parent
+DEFAULT_OUTPUT_DIR = PLUGIN_ROOT / "dist" / "cowork"
 
 for script_dir in reversed(
     (
@@ -498,7 +499,7 @@ def run_release_gate(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=Path("dist/cowork"))
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--max-mib", type=float, default=50.0)
     parser.add_argument("--json", action="store_true", help="emit JSON report")
     parser.add_argument("--skip-targeted-tests", action="store_true")
