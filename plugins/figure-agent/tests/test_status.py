@@ -37,6 +37,57 @@ def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _write_explicit_candidate_render(fig_dir: Path) -> tuple[Path, Path]:
+    _make_spec(fig_dir)
+    source = fig_dir / "review" / "candidate-c1" / "repaired.tex"
+    build = source.parent / "build"
+    build.mkdir(parents=True)
+    source.write_text("candidate", encoding="utf-8")
+    render_pdf = build / "repaired.pdf"
+    render_pdf.write_bytes(b"candidate-pdf")
+    (build / "repaired.png").write_bytes(b"candidate-png")
+    render_inputs = {
+        "source_tex": source,
+        "briefing": fig_dir / "briefing.md",
+        "spec": fig_dir / "spec.yaml",
+        "style_lock": status_mod.STYLE_LOCK_PATH,
+    }
+    manifest = {
+        "schema": "figure-agent.render-input-manifest.v1",
+        "fixture": fig_dir.name,
+        "render": {
+            "path": "build/repaired.pdf",
+            "sha256": _sha256(render_pdf),
+        },
+        "inputs": {
+            role: {"sha256": _sha256(path)} for role, path in render_inputs.items()
+        },
+    }
+    (build / "repaired_render_inputs.json").write_text(
+        json.dumps(manifest, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    pointer = {
+        "schema": "figure-agent.current-candidate-pointer.v1",
+        "fixture": fig_dir.name,
+        "candidate_id": "candidate-c1",
+        "candidate_root": "review/candidate-c1",
+        "source_path": "repaired.tex",
+        "source_sha256": _sha256(source),
+        "evidence": {
+            "render_pdf": "build/repaired.pdf",
+            "render_png": "build/repaired.png",
+            "strict_status": "build/strict_status.json",
+            "physics_grounding": "build/physics_grounding.json",
+        },
+        "promotion_state": "candidate_only",
+        "human_gate": "pending",
+    }
+    pointer_path = fig_dir / "review" / "current-candidate.json"
+    pointer_path.write_text(json.dumps(pointer), encoding="utf-8")
+    return source, render_pdf
+
+
 def _write_current_review_scaffold(directory: Path) -> None:
     """Write a small hash-bound pending review packet for status tests."""
     name = directory.name
@@ -373,6 +424,45 @@ def test_status_surfaces_explicit_nested_current_candidate_without_promoting_it(
     assert candidate["physics_state"] == "UNDECLARED"
     assert candidate["promotion_state"] == "candidate_only"
     assert result["stage"] == 1
+
+
+def test_explicit_candidate_pointer_owns_aggregate_render_freshness(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "candidate_status_single_authority"
+    fig_dir.mkdir()
+    _write_explicit_candidate_render(fig_dir)
+
+    # A timestamp-only change must not stale hash-identical render inputs.
+    future = time.time() + 100
+    os.utime(fig_dir / "spec.yaml", (future, future))
+
+    result = infer_stage(fig_dir)
+
+    assert result["current_candidate"]["state"] == "VALID"
+    assert result["current_candidate"]["render_state"] == "FRESH"
+    assert result["render_state"] == "FRESH"
+    assert ("current_candidate_render", "fresh") in result["checks"]
+    assert ("current_candidate_render", "stale") not in result["checks"]
+    assert "current_candidate_render_stale" not in result["notes"]
+
+
+def test_explicit_candidate_pointer_propagates_hash_staleness_to_status(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "candidate_status_hash_stale"
+    fig_dir.mkdir()
+    _write_explicit_candidate_render(fig_dir)
+    (fig_dir / "briefing.md").write_text("changed briefing", encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+
+    assert result["current_candidate"]["state"] == "VALID"
+    assert result["current_candidate"]["render_state"] == "STALE"
+    assert result["render_state"] == "STALE"
+    assert ("current_candidate_render", "stale") in result["checks"]
+    assert ("current_candidate_render", "fresh") not in result["checks"]
+    assert "current_candidate_render_stale" in result["notes"]
 
 
 def test_status_surfaces_zero_declared_candidate_coverage_as_a_gap(tmp_path: Path) -> None:

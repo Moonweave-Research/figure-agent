@@ -1,16 +1,19 @@
 """Read the explicit fixture-local current-candidate pointer.
 
-The pointer is deliberately advisory: it identifies the candidate evidence
-that status should surface, but it never promotes a nested repair to the
-fixture's canonical source or release state.
+The pointer is the status authority for nested candidate evidence when present,
+but it never promotes a repair to the fixture's canonical source or release
+state.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
+
+import render_input_manifest
 
 CURRENT_CANDIDATE_SCHEMA = "figure-agent.current-candidate-pointer.v1"
 POINTER_RELATIVE_PATH = Path("review") / "current-candidate.json"
@@ -40,12 +43,40 @@ def _safe_path(root: Path, relative: object) -> Path | None:
     return candidate
 
 
-def _artifact_state(source: Path, artifact: Path | None) -> str:
+def _artifact_state(sources: tuple[Path, ...], artifact: Path | None) -> str:
     if artifact is None or not artifact.is_file():
         return "MISSING"
-    if source.is_file() and artifact.stat().st_mtime < source.stat().st_mtime:
+    if any(
+        source.is_file() and artifact.stat().st_mtime < source.stat().st_mtime
+        for source in sources
+    ):
         return "STALE"
     return "FRESH"
+
+
+def _render_state(
+    *,
+    fixture: str,
+    source: Path,
+    render_pdf: Path | None,
+    common_inputs: Mapping[str, Path] | None,
+) -> str:
+    if render_pdf is None or not render_pdf.is_file():
+        return "MISSING"
+    inputs = {"source_tex": source}
+    if common_inputs is not None:
+        inputs.update(common_inputs)
+    manifest_state = render_input_manifest.freshness(
+        manifest=render_input_manifest.manifest_path(render_pdf),
+        fixture=fixture,
+        render_pdf=render_pdf,
+        inputs=inputs,
+    )
+    if manifest_state == render_input_manifest.FRESH:
+        return "FRESH"
+    if manifest_state != render_input_manifest.MISSING:
+        return "STALE"
+    return _artifact_state(tuple(inputs.values()), render_pdf)
 
 
 def _strict_state(path: Path | None) -> str:
@@ -87,8 +118,12 @@ def _checked_count(path: Path | None) -> int | None:
     return value if isinstance(value, int) and value >= 0 else None
 
 
-def resolve_current_candidate(example_dir: Path) -> dict[str, Any]:
-    """Return an explicit candidate summary without changing stage inference."""
+def resolve_current_candidate(
+    example_dir: Path,
+    *,
+    common_render_inputs: Mapping[str, Path] | None = None,
+) -> dict[str, Any]:
+    """Return the explicit candidate evidence used by status stage inference."""
 
     pointer_path = example_dir / POINTER_RELATIVE_PATH
     base = {"path": POINTER_RELATIVE_PATH.as_posix(), "state": "NOT_DECLARED"}
@@ -122,6 +157,13 @@ def resolve_current_candidate(example_dir: Path) -> dict[str, Any]:
         key: _safe_path(candidate_root, evidence.get(value))
         for key, value in _EVIDENCE_KEYS.items()
     }
+    render_state = _render_state(
+        fixture=example_dir.name,
+        source=source_path,
+        render_pdf=artifacts["render_pdf"],
+        common_inputs=common_render_inputs,
+    )
+    freshness_sources = (source_path, *(common_render_inputs or {}).values())
     return {
         **base,
         "state": "VALID",
@@ -131,15 +173,21 @@ def resolve_current_candidate(example_dir: Path) -> dict[str, Any]:
         "source_sha256": _sha256(source_path),
         "promotion_state": pointer.get("promotion_state", "candidate_only"),
         "human_gate": pointer.get("human_gate", "pending"),
-        "render_state": _artifact_state(source_path, artifacts["render_pdf"]),
-        "render_png_state": _artifact_state(source_path, artifacts["render_png"]),
+        "render_state": render_state,
+        "render_png_state": (
+            "STALE"
+            if render_state == "STALE"
+            else _artifact_state(freshness_sources, artifacts["render_png"])
+        ),
         "strict_state": _strict_state(artifacts["strict_status"]),
         "physics_state": _physics_state(artifacts["physics_grounding"]),
         "text_boundary_state": _artifact_state(
-            source_path, artifacts["text_boundary_clash"]
+            freshness_sources, artifacts["text_boundary_clash"]
         ),
         "text_boundary_checked": _checked_count(artifacts["text_boundary_clash"]),
-        "label_path_state": _artifact_state(source_path, artifacts["label_path_proximity"]),
+        "label_path_state": _artifact_state(
+            freshness_sources, artifacts["label_path_proximity"]
+        ),
         "label_path_checked": _checked_count(artifacts["label_path_proximity"]),
         "evidence_paths": {
             key: path.relative_to(example_dir).as_posix() if path else None

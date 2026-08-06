@@ -381,6 +381,11 @@ human acceptance, or publication acceptance. Treat strict-compile green with
 `text_boundary_checks` or `label_path_proximity_checks` at zero checked items as
 a coverage gap, not as proof that recurring label/path defects are systemically
 guarded.
+When `review/current-candidate.json` exists, use it as the single candidate
+status authority and hash-check its render manifest against the candidate source,
+briefing, spec, and Style Lock. Do not combine its candidate summary with render
+state or next-action output computed from the legacy `spec.yaml.current_candidate`
+fallback.
 
 For every dimension, caliper, interval, or delta annotation, identify both named
 referents and verify that each endpoint touches or is visibly projected from its

@@ -40,7 +40,7 @@ Each slice must produce or inspect one real figure artifact (or a defensible no-
 - **TikZ/TeX** is the current default editable publication-authoring path.
 - **SVG** is a derived export surface; publication exports outline glyphs to preserve PDF text geometry, while editable/searchable text remains the TeX authority.
   Direct-SVG generation is not an active backend-development target.
-- A valid `review/current-candidate.json` binds nested-repair export evidence without promotion or acceptance; invalid, incomplete, or stale bindings fail closed.
+- A valid `review/current-candidate.json` is the single status authority for nested-repair evidence and binds its render inputs without promotion or acceptance; the older `spec.yaml.current_candidate` declaration is fallback compatibility only when no pointer exists. Invalid, incomplete, or stale bindings fail closed, and top-level render state must agree with the candidate summary.
 - **Python** is the control plane for contracts, compilation, observation,
   attribution, repair, provenance, and evaluation, not an illustration language.
 - **PDF and PNG** are rendered evidence surfaces, not editable authority.

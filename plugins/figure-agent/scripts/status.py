@@ -119,6 +119,15 @@ def _render_input_paths(example_dir: Path, name: str) -> dict[str, Path]:
     return {role: path for role, path in candidates.items() if path.exists()}
 
 
+def _candidate_common_render_inputs(example_dir: Path) -> dict[str, Path]:
+    candidates = {
+        "briefing": example_dir / "briefing.md",
+        "spec": example_dir / "spec.yaml",
+        "style_lock": STYLE_LOCK_PATH,
+    }
+    return {role: path for role, path in candidates.items() if path.exists()}
+
+
 def _fixture_local_path(example_dir: Path, value: object) -> Path | None:
     if not isinstance(value, str) or not value.strip():
         return None
@@ -1203,8 +1212,12 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
             spec = {}
         build_png = example_dir / "build" / f"{example_dir.name}.png"
         result["review_scale_previews"] = _review_scale_previews_summary(build_png, spec)
-    explicit_candidate = current_candidate.resolve_current_candidate(example_dir)
-    if explicit_candidate.get("state") != "NOT_DECLARED" or result.get("current_candidate") is None:
+    explicit_candidate = result.get("current_candidate")
+    if not isinstance(explicit_candidate, dict):
+        explicit_candidate = current_candidate.resolve_current_candidate(
+            example_dir,
+            common_render_inputs=_candidate_common_render_inputs(example_dir),
+        )
         result["current_candidate"] = explicit_candidate
     if explicit_candidate.get("state") == "VALID":
         # A candidate with no declared text/path checks is not equivalent to a
@@ -1401,6 +1414,26 @@ def _resolve_current_candidate(
         "canonical_render_state": canonical_render_state,
         "publication_acceptance": candidate["publication_acceptance"],
     }
+
+
+def _effective_current_candidate(
+    example_dir: Path,
+    spec: dict,
+    *,
+    canonical_render_state: str,
+) -> dict[str, Any] | None:
+    explicit = current_candidate.resolve_current_candidate(
+        example_dir,
+        common_render_inputs=_candidate_common_render_inputs(example_dir),
+    )
+    if explicit.get("state") != "NOT_DECLARED":
+        explicit["canonical_render_state"] = canonical_render_state
+        return explicit
+    return _resolve_current_candidate(
+        example_dir,
+        spec,
+        canonical_render_state=canonical_render_state,
+    )
 
 
 def _append_reference_image_check(
@@ -1608,21 +1641,28 @@ def infer_stage(example_dir: Path) -> dict:
             if render_state == RENDER_FRESH:
                 render_state = RENDER_STALE
     canonical_render_state = render_state
-    current_candidate = _resolve_current_candidate(
+    current_candidate = _effective_current_candidate(
         example_dir,
         spec,
         canonical_render_state=canonical_render_state,
     )
     if isinstance(current_candidate, dict):
         candidate_state = str(current_candidate.get("state") or "").upper()
-        if candidate_state in {RENDER_MISSING, RENDER_STALE, RENDER_FRESH}:
-            render_state = candidate_state
-            checks.append(("current_candidate_render", candidate_state.lower()))
-            if candidate_state == RENDER_STALE:
+        candidate_render_state = (
+            str(current_candidate.get("render_state") or "").upper()
+            if candidate_state == "VALID"
+            else candidate_state
+        )
+        if candidate_render_state in {RENDER_MISSING, RENDER_STALE, RENDER_FRESH}:
+            render_state = candidate_render_state
+            checks.append(
+                ("current_candidate_render", candidate_render_state.lower())
+            )
+            if candidate_render_state == RENDER_STALE:
                 notes.append("current_candidate_render_stale")
-            elif candidate_state == RENDER_MISSING:
+            elif candidate_render_state == RENDER_MISSING:
                 notes.append("current_candidate_render_missing")
-        elif current_candidate.get("state") == "invalid":
+        elif candidate_state == "INVALID":
             notes.append(str(current_candidate.get("reason") or "current_candidate_invalid"))
     _append_prerequisite_notes(notes, spec, previews_dir, briefing_path)
     _append_reference_image_check(checks, notes, spec, example_dir)
