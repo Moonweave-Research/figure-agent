@@ -73,10 +73,39 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     scale_previews = status.get("review_scale_previews")
     spine_evidence = status.get("spine_evidence")
     learning_evidence = status.get("learning_evidence")
+    claim_authority = status.get("claim_authority")
 
     plugin_state: list[dict[str, Any]] = []
     fixture_freshness: list[dict[str, Any]] = []
     human_blockers: list[dict[str, Any]] = []
+
+    claim_state = (
+        claim_authority.get("state") if isinstance(claim_authority, Mapping) else None
+    )
+    _append_if(
+        fixture_freshness,
+        claim_state == "INVALID",
+        code="claim_authority_invalid",
+        category=FIXTURE_FRESHNESS,
+        message=(
+            "claim_authority.yaml is invalid; repair its schema or semantic-contract "
+            "targets before authoring."
+        ),
+        manual=True,
+    )
+    _append_if(
+        human_blockers,
+        claim_state == "BLOCKED"
+        and isinstance(claim_authority, Mapping)
+        and claim_authority.get("requires_human") is True,
+        code="claim_authority_unresolved",
+        category=HUMAN_BLOCKER,
+        message=(
+            "claim-bearing figure work is blocked by unresolved or conflicting "
+            "human-domain decisions in claim_authority.yaml."
+        ),
+        manual=True,
+    )
 
     for evidence_name, message in (
         (

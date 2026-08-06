@@ -1,0 +1,61 @@
+schema: figure-agent.claim-authority.v1
+fixture: fig1_updated_agent_redraw_v1
+items:
+  - id: panel-a-repeat-unit-identity
+    panel_id: A
+    kind: scientific_claim
+    state: conflicted
+    statement: The current bis(thiocumyl) name and exact repeat-unit connectivity are not jointly established by the paper-local evidence.
+    targets: [claim:A:representative-primary-structure]
+    evidence_refs:
+      - external:fig1-alt-260805/DECISION_BRIEF.md#repeat-unit-connectivity
+      - external:fig1-alt-260805/HANDOFF_PROMPT.md#I2
+  - id: panel-c-distribution-shape
+    panel_id: C
+    kind: scientific_claim
+    state: schematic
+    statement: Shallow and deeper zones may be shown schematically, but the available evidence does not determine a discrete peak count or measured DOS shape.
+    targets: [claim:C:trap-landscape]
+    evidence_refs:
+      - external:fig1-alt-260805/DECISION_BRIEF.md#energy-DOS
+  - id: panel-d-comparison-model
+    panel_id: D
+    kind: scientific_claim
+    state: unresolved
+    statement: Human adoption is still required between the current low-n/high-n comparison and an idealized single-relaxation reference.
+    targets: []
+    evidence_refs:
+      - external:fig1-alt-260805/DECISION_BRIEF.md#transient-current
+  - id: panel-e-instrument-identity
+    panel_id: E
+    kind: instrument_identity
+    state: unresolved
+    statement: The paper-local record does not yet settle whether the non-contact surface-potential instrument should be named Kelvin probe or induction-type ESVM.
+    targets: []
+    evidence_refs:
+      - external:fig1-alt-260805/DECISION_BRIEF.md#still-open
+      - external:fig1-alt-260805/HANDOFF_PROMPT.md#I1
+  - id: panel-e-tau-d-definition
+    panel_id: E
+    kind: symbol_definition
+    state: conflicted
+    statement: The current energy-domain tau_d interval conflicts with the later review that removed it because the manuscript does not define the symbol.
+    targets: [invariant:E:tau-d-energy-domain]
+    evidence_refs:
+      - external:fig1-alt-260805/DECISION_BRIEF.md#tau-d-marker
+  - id: panel-f-charge-owner
+    panel_id: F
+    kind: mechanism
+    state: unresolved
+    statement: The charge owner and force term remain unresolved between trapped film charge and floating-clip charge formulations; only the observed bend direction is settled.
+    targets: []
+    evidence_refs:
+      - external:fig1-alt-260805/DECISION_BRIEF.md#q-tr-vs-q-clip
+  - id: overview-probe-count
+    panel_id: overview
+    kind: editorial_scope
+    state: unresolved
+    statement: The roadmap says three independent probes while the current main-figure plan contains a fourth dielectric evidence family.
+    targets: []
+    evidence_refs:
+      - external:fig1-alt-260805/DECISION_BRIEF.md#F3-dielectric

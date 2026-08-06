@@ -386,6 +386,11 @@ status authority and hash-check its render manifest against the candidate source
 briefing, spec, and Style Lock. Do not combine its candidate summary with render
 state or next-action output computed from the legacy `spec.yaml.current_candidate`
 fallback.
+When `claim_authority.yaml` is present, read its certainty states before semantic
+contracts. Treat `schematic` and `hypothesis` as visible qualification requirements;
+treat `unresolved` or `conflicted` as a human stop, never as permission to choose a
+claim. Keep the ledger in the render-input hash so authority changes stale prior
+render evidence instead of silently reusing it.
 
 For every dimension, caliper, interval, or delta annotation, identify both named
 referents and verify that each endpoint touches or is visibly projected from its

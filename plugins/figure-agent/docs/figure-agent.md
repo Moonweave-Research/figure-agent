@@ -55,9 +55,8 @@ clone, whole-page grammar, or fixture-specific coordinates to reusable code.
 ### 2.2 Knowledge and model boundaries
 Read-only authoring context packs compile durable paper-specific knowledge. They
 may bind explicit paper-local files, Style Lock tokens, reviewed assets, semantic
-objects, relations, protected invariants, and human-declared non-coordinate aesthetic levers.
-They are not LLM prompt plumbing, prompt-loop revival,
-generation execution, or automatic physics detection.
+objects, relations, protected invariants, aesthetic levers, and `claim_authority.yaml` certainty; unresolved or conflicting claim authority stops claim-bearing authoring for human decision.
+They are not LLM prompt plumbing, prompt-loop revival, generation execution, or automatic physics detection.
 
 The plugin may prepare crops and briefs, but host vision review occurs outside it.
 Figure Agent accepts only a receipt binding actor, model or tool, request hash,

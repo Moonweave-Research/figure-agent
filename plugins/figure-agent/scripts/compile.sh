@@ -197,6 +197,9 @@ fi
 if [[ -n "${FIGURE_SPEC:-}" && -f "$FIGURE_SPEC" ]]; then
   RENDER_INPUT_ARGS+=(--input "spec=$FIGURE_SPEC")
 fi
+if [[ -n "$FIXTURE_ROOT" && -f "$FIXTURE_ROOT/claim_authority.yaml" ]]; then
+  RENDER_INPUT_ARGS+=(--input "claim_authority=$FIXTURE_ROOT/claim_authority.yaml")
+fi
 
 clear_review_scale_previews() {
   rm -f "$SCALE_PREVIEW_MANIFEST" "$SCALE_PREVIEW_100" "$SCALE_PREVIEW_50" "$SCALE_PREVIEW_33"

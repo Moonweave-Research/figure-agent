@@ -465,6 +465,36 @@ def test_explicit_candidate_pointer_propagates_hash_staleness_to_status(
     assert "current_candidate_render_stale" in result["notes"]
 
 
+def test_new_claim_authority_stales_existing_candidate_render_manifest(
+    tmp_path: Path,
+) -> None:
+    fig_dir = tmp_path / "candidate_status_claim_authority_stale"
+    fig_dir.mkdir()
+    _write_explicit_candidate_render(fig_dir)
+    (fig_dir / "claim_authority.yaml").write_text(
+        """
+schema: figure-agent.claim-authority.v1
+fixture: candidate_status_claim_authority_stale
+items:
+  - id: open-instrument-choice
+    panel_id: E
+    kind: instrument_identity
+    state: unresolved
+    statement: The exact instrument identity requires a human decision.
+    targets: []
+    evidence_refs: [decision-brief:instrument]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert result["claim_authority"]["state"] == "BLOCKED"
+    assert result["current_candidate"]["render_state"] == "STALE"
+    assert result["render_state"] == "STALE"
+    assert ("current_candidate_render", "stale") in result["checks"]
+
+
 def test_status_surfaces_zero_declared_candidate_coverage_as_a_gap(tmp_path: Path) -> None:
     fig_dir = tmp_path / "candidate_status_coverage_gap"
     fig_dir.mkdir()

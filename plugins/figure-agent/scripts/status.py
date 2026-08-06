@@ -20,6 +20,7 @@ sys.path.insert(0, str(SCRIPTS_DIR / "candidates"))
 sys.path.insert(0, str(SCRIPTS_DIR / "quality"))
 
 import check_plan_consistency
+import claim_authority
 import closed_loop_current_state
 import current_candidate
 import current_render_review_scaffold
@@ -104,6 +105,7 @@ def _source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
         example_dir / f"{name}.tex",
         example_dir / "briefing.md",
         example_dir / "spec.yaml",
+        example_dir / "claim_authority.yaml",
     ]
     candidates.append(STYLE_LOCK_PATH)
     return tuple(path for path in candidates if path.exists())
@@ -114,6 +116,7 @@ def _render_input_paths(example_dir: Path, name: str) -> dict[str, Path]:
         "source_tex": example_dir / f"{name}.tex",
         "briefing": example_dir / "briefing.md",
         "spec": example_dir / "spec.yaml",
+        "claim_authority": example_dir / "claim_authority.yaml",
         "style_lock": STYLE_LOCK_PATH,
     }
     return {role: path for role, path in candidates.items() if path.exists()}
@@ -123,6 +126,7 @@ def _candidate_common_render_inputs(example_dir: Path) -> dict[str, Path]:
     candidates = {
         "briefing": example_dir / "briefing.md",
         "spec": example_dir / "spec.yaml",
+        "claim_authority": example_dir / "claim_authority.yaml",
         "style_lock": STYLE_LOCK_PATH,
     }
     return {role: path for role, path in candidates.items() if path.exists()}
@@ -1236,6 +1240,16 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
                 result.setdefault("notes", []).append(
                     f"current_candidate_{label}_coverage_gap"
                 )
+    claim_summary = claim_authority.load_claim_authority(example_dir)
+    result["claim_authority"] = claim_summary
+    if claim_summary["state"] in {"BLOCKED", "INVALID"}:
+        state = claim_summary["state"].lower()
+        result.setdefault("checks", []).append(("claim_authority", state))
+        result.setdefault("notes", []).append(f"claim_authority_{state}")
+        result["workflow_ready"] = False
+        result["golden_ready"] = False
+        result["release_ready"] = False
+        result["final_ready"] = False
     result["closed_loop_attempt"] = closed_loop_current_state.resolve_current_attempt(
         workspace_root=example_dir.parents[1],
         fixture=example_dir.name,
@@ -1989,6 +2003,16 @@ def _print_single(result: dict) -> None:
                 f"render={build_pdf} "
                 f"canonical_render={current_candidate.get('canonical_render_state', '?')}"
             )
+    claim_summary = result.get("claim_authority")
+    if isinstance(claim_summary, dict) and claim_summary.get("state") != "NOT_DECLARED":
+        blocking_ids = claim_summary.get("blocking_item_ids")
+        blocking_count = len(blocking_ids) if isinstance(blocking_ids, list) else 0
+        print(
+            "  Claim authority: "
+            f"{claim_summary.get('state', '?')} "
+            f"blocking={blocking_count} "
+            f"human={str(bool(claim_summary.get('requires_human'))).lower()}"
+        )
     audit_evidence = result.get("audit_evidence")
     if isinstance(audit_evidence, dict):
         blocking_items = audit_evidence.get("blocking_items")

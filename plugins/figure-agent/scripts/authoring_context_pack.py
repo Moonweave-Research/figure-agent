@@ -11,6 +11,7 @@ from typing import Any
 
 import aesthetic_intent
 import authoring_rules
+import claim_authority
 import composition_profile as composition_profile_compiler
 import narrative_context
 import runtime_paths
@@ -719,6 +720,7 @@ def build_context_pack(
         semantic_contracts = (
             _standalone_semantic_contract(example_dir) or semantic_contracts
         )
+    claim_authority_summary = claim_authority.load_claim_authority(example_dir)
 
     catalog_path = _selected_rule_catalog_path(spec, paths)
     fixture_catalog = (
@@ -796,6 +798,14 @@ def build_context_pack(
         "rule_catalog": fixture_catalog,
         "project_rule_catalog": project_catalog,
         "semantic_contracts": semantic_contracts,
+        "claim_authority": {
+            **claim_authority_summary,
+            "authoring_directives": claim_authority.authoring_directives(
+                claim_authority_summary
+            ),
+        },
+        "authoring_ready": claim_authority_summary["state"]
+        not in {"BLOCKED", "INVALID"},
         "visual_assets": visual_assets,
         "narrative_context": narrative_context.build_narrative_context(
             example_dir,
@@ -830,17 +840,54 @@ def render_text(payload: dict[str, Any]) -> str:
         f"Schema: `{payload['schema']}`",
         "Mode: read-only compiler; no generation executor, prompt loop, or model call.",
         "",
-        "## Semantic Contracts",
+        "## Claim Authority",
     ]
+    authority = payload["claim_authority"]
+    if authority["state"] == "NOT_DECLARED":
+        lines.append("- No fixture-local claim authority ledger is declared.")
+    else:
+        if authority["state"] in {"BLOCKED", "INVALID"}:
+            lines.append(
+                "- AUTHORING STOP: resolve this claim-authority boundary before "
+                "changing claim-bearing geometry or labels."
+            )
+        for directive in authority.get("authoring_directives", []):
+            lines.append(f"- {directive}")
+    lines.extend(["", "## Semantic Contracts"])
     contracts = payload["semantic_contracts"]
     if not contracts["enabled"]:
         lines.append("- Not enabled for this fixture.")
     else:
+        target_states = {
+            target: item["state"]
+            for item in authority.get("items", [])
+            for target in item.get("targets", [])
+        }
         for claim in contracts["semantic_claims"]:
-            lines.append(f"- Claim {claim['panel_id']} {claim['id']}: {claim['claim']}")
-        for invariant in contracts["locked_invariants"]:
+            target = f"claim:{claim['panel_id']}:{claim['id']}"
+            qualifier = target_states.get(target)
+            label = (
+                "BLOCKED claim"
+                if qualifier in {"unresolved", "conflicted", "forbidden"}
+                else "Schematic claim"
+                if qualifier == "schematic"
+                else "Hypothesis claim"
+                if qualifier == "hypothesis"
+                else "Claim"
+            )
             lines.append(
-                f"- Locked invariant {invariant['panel_id']} {invariant['id']}: "
+                f"- {label} {claim['panel_id']} {claim['id']}: {claim['claim']}"
+            )
+        for invariant in contracts["locked_invariants"]:
+            target = f"invariant:{invariant['panel_id']}:{invariant['id']}"
+            qualifier = target_states.get(target)
+            label = (
+                "BLOCKED invariant"
+                if qualifier in {"unresolved", "conflicted", "forbidden"}
+                else "Locked invariant"
+            )
+            lines.append(
+                f"- {label} {invariant['panel_id']} {invariant['id']}: "
                 f"{invariant['invariant']}"
             )
     project = payload.get("project_rule_catalog")

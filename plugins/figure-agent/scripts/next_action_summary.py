@@ -464,6 +464,37 @@ def status_next_action_summary(status: Mapping[str, Any]) -> dict[str, Any]:
     if closed_loop_summary is not None:
         return closed_loop_summary
     fixture = _fixture(status)
+    claim_authority = status.get("claim_authority")
+    if isinstance(claim_authority, Mapping):
+        claim_state = _string(claim_authority.get("state"))
+        if claim_state == "BLOCKED":
+            item_ids = claim_authority.get("blocking_item_ids")
+            count = len(item_ids) if isinstance(item_ids, list) else 0
+            return _summary(
+                fixture=fixture,
+                action=ACTION_HUMAN_GATE_STOP,
+                reason=(
+                    f"{count} claim-authority item(s) require an explicit human "
+                    "decision before claim-bearing authoring continues."
+                ),
+                blocking_source="claim_authority_unresolved",
+                safe_command=None,
+                requires_human=True,
+                evidence_refs=["claim_authority.yaml"],
+            )
+        if claim_state == "INVALID":
+            return _summary(
+                fixture=fixture,
+                action=ACTION_CREATE_OR_FIX_SOURCE,
+                reason=_string(
+                    claim_authority.get("reason"),
+                    "claim_authority.yaml is invalid",
+                ),
+                blocking_source="claim_authority_invalid",
+                safe_command=None,
+                requires_human=False,
+                evidence_refs=["claim_authority.yaml"],
+            )
     explanation = status.get("status_explanation")
     first_blocker = explanation.get("first_blocker") if isinstance(explanation, Mapping) else None
     safe_command = None

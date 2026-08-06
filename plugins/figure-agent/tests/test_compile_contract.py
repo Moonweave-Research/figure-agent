@@ -173,6 +173,7 @@ def test_compile_publishes_content_bound_render_inputs_after_success() -> None:
     assert 'RENDER_INPUT_MANIFEST="${BUILD_DIR}/${BASE}_render_inputs.json"' in script
     assert '--input "source_tex=$TEX_INPUT_ABS"' in script
     assert '--input "style_lock=$WORKFLOW_DIR/styles/polymer-paper-preamble.sty"' in script
+    assert '--input "claim_authority=$FIXTURE_ROOT/claim_authority.yaml"' in script
     assert manifest_call in script
     assert script.index(final_gate) < script.index(manifest_call)
 
