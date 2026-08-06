@@ -11,7 +11,7 @@ import pytest
 pytestmark = pytest.mark.quarantine
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
-FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
+COMPOSITION_CLI = PLUGIN_ROOT / "scripts" / "composition_cli.py"
 SOURCE_TEXT = (
     "% fig-agent:start object=carrier_walk\n"
     "old walk\n"
@@ -106,7 +106,15 @@ def _candidate_set(fixture: Path, source_hash: str) -> Path:
 
 def _run(workspace: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["uv", "run", "--project", str(PLUGIN_ROOT), "python", str(FIG_AGENT), *args],
+        [
+            "uv",
+            "run",
+            "--project",
+            str(PLUGIN_ROOT),
+            "python",
+            str(COMPOSITION_CLI),
+            *args,
+        ],
         cwd=workspace,
         env=_env(workspace),
         text=True,

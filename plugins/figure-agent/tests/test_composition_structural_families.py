@@ -13,7 +13,7 @@ pytestmark = pytest.mark.quarantine
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
-FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
+COMPOSITION_CLI = PLUGIN_ROOT / "scripts" / "composition_cli.py"
 
 
 def _env(workspace: Path) -> dict[str, str]:
@@ -25,7 +25,15 @@ def _env(workspace: Path) -> dict[str, str]:
 
 def _run(workspace: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["uv", "run", "--project", str(PLUGIN_ROOT), "python", str(FIG_AGENT), *args],
+        [
+            "uv",
+            "run",
+            "--project",
+            str(PLUGIN_ROOT),
+            "python",
+            str(COMPOSITION_CLI),
+            *args,
+        ],
         cwd=workspace,
         env=_env(workspace),
         text=True,

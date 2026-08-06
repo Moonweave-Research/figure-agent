@@ -1,3 +1,5 @@
+# ruff: noqa: E402
+
 from __future__ import annotations
 
 import argparse
@@ -5,6 +7,18 @@ import json
 import sys
 from pathlib import Path
 from typing import Any
+
+SCRIPTS_DIR = Path(__file__).resolve().parent
+SCRIPT_IMPORT_DIRS = (
+    SCRIPTS_DIR,
+    SCRIPTS_DIR / "checks",
+    SCRIPTS_DIR / "candidates",
+    SCRIPTS_DIR / "quality",
+    SCRIPTS_DIR / "loop",
+    SCRIPTS_DIR / "driver",
+)
+for script_dir in reversed(SCRIPT_IMPORT_DIRS):
+    sys.path.insert(0, str(script_dir))
 
 import candidate_contracts
 import composition_acceptance
@@ -404,3 +418,22 @@ def dispatch(command: str, argv: list[str], *, paths: runtime_paths.RuntimePaths
     if handler is None:
         return 2
     return handler(paths, argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the retired composition stack as an internal test harness only."""
+
+    args = list(sys.argv[1:] if argv is None else argv)
+    if not args:
+        print("composition_cli: internal command required", file=sys.stderr)
+        return 2
+    command, *command_args = args
+    return dispatch(
+        command,
+        command_args,
+        paths=runtime_paths.resolve_runtime_paths(),
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
