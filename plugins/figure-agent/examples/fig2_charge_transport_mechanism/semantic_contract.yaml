@@ -206,7 +206,7 @@ semantic_legibility:
       to_object: panel_a.persistent_relaxation_readout
       declared_role: calibrated_data_fit
   label_ownership:
-    - label_id: panel_a.measurement_header
+    - label_id: panel_a.measurement_note
       owner: panel_a.measurement_context
     - label_id: panel_a.field_label
       owner: panel_a.field_condition

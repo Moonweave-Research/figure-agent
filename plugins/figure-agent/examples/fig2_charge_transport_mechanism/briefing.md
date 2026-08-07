@@ -27,13 +27,14 @@ the material-specific comparison`.
 - **Comparison frame**: one shared held-field condition, with a compact
   two-terminal $V_\mathrm{app}$ source cue binding the reference electrode pair,
   an idealized-dielectric reference, and three identical MIM states of one
-  sulfur-rich specimen. The declared field
-  `$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$` remains on during the whole
-  transient acquisition; `25 %RH` is a shared condition. Each MIM cell is a
-  flat metal / polymer film / metal cross-section; the source cue is a held
-  boundary condition, not a charging instrument or perspective circuit diagram.
-  Its two leads are schematic neutral terminals: the strip makes no source
-  polarity or mobile-carrier sign claim.
+  sulfur-rich specimen. The artboard states that condition only qualitatively,
+  as `field held on throughout`. The measured field strength, the humidity, the
+  fact that the cells are matched, and the fact that the sulfur cells are one
+  specimen are caption content and must not be annotated on the drawing. Each
+  MIM cell is a flat metal / polymer film / metal cross-section; the source cue
+  is a held boundary condition, not a charging instrument or perspective circuit
+  diagram. Its two leads are schematic neutral terminals: the strip makes no
+  source polarity or mobile-carrier sign claim.
 - **Idealized dielectric reference**: field-aligned neutral oval dipoles with
   paired poles provide a restrained bound-polarization grammar. This is a
   conceptual material reference, not an ideal measured control, PI, PTFE, PET,
@@ -56,8 +57,8 @@ the material-specific comparison`.
   carry the qualitative decrease as occupancy grows. A weak cue remains in the
   late state. This means reduced mobile-current contribution, not complete
   current blockage or zero current.
-- A compact key identifies bare bars as empty localized states and marked bars
-  as occupied localized states; the marks remain categorical rather than a
+- A compact key identifies bare bars as empty states and marked bars as
+  occupied states; the marks remain categorical rather than a
   trap-count scale. State bars stay horizontal; this strip does not draw a
   molecular host texture, and diagonal strokes are reserved for capture cues.
 - **What we read**: a compact qualitative log--log output. A straight early

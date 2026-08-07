@@ -73,6 +73,28 @@ decoration or unsupported mechanism detail.
 - The readout plot shares the MIM band's top and bottom edge, which keeps it a
   secondary lane rather than a second hero panel.
 
+## Typographic register
+
+Follow the canonical Fig. 1 (`fig1_updated_agent_redraw_v1`), which is the
+paper's own convention rather than a generic house style:
+
+- No figure headline. A figure is not titled inside the artboard; the caption
+  titles it. Here the parent composition owns the panel letter, so this
+  artboard carries no panel-level text at all.
+- Objects are still named. A comparison the reader cannot resolve without the
+  caption is not a comparison, so each lane keeps a short lowercase bold noun
+  phrase naming what it is -- `idealized dielectric`, `sulfur-rich copolymer`,
+  `qualitative output`. Name the object; do not describe the panel.
+- No numeric measurement condition anywhere on the drawing. Fig. 1 states its
+  condition qualitatively (`constant bias: current decays`) and leaves the
+  numbers to the caption; this strip does the same with `field held on
+  throughout`.
+- Italics are reserved for mathematical variables. Fig. 1 uses `\itshape`
+  nowhere; ordinary labels and micro clauses are roman.
+- Three text tiers only: object name (bold, 5.9 pt), label (roman, 5.45 pt),
+  micro clause (roman, 5.05 pt). One name and at most one qualifying line per
+  object; two labels making the same point is one too many.
+
 ## Review order
 
 1. Whole strip at 100%: reading order and mechanism ownership.
