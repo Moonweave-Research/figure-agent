@@ -267,8 +267,18 @@ run_report_check() {
   fi
   return 0
 }
+# A fixture opts into the text-line band-overlap gate with
+# `text_line_overlap_gate: strict` in spec.yaml.  The finding is always
+# reported; only a fixture that has declared the gate fails on it.
+LINE_OVERLAP_ARGS=()
+if [[ -n "$FIXTURE_NAME" && -f "${FIGURE_SPEC:-}" ]] && \
+   grep -Eq '^[[:space:]]*text_line_overlap_gate:[[:space:]]*strict[[:space:]]*$' \
+     "$FIGURE_SPEC"; then
+  LINE_OVERLAP_ARGS=(--strict-line-overlap)
+fi
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_collisions.py" \
   ${STRICT_ARGS[@]+"${STRICT_ARGS[@]}"} \
+  ${LINE_OVERLAP_ARGS[@]+"${LINE_OVERLAP_ARGS[@]}"} \
   ${COLLISION_FIXTURE_ARGS[@]+"${COLLISION_FIXTURE_ARGS[@]}"} \
   --json-output "${BUILD_DIR}/collisions.json" \
   --render-image "$PNG_OUT" \
