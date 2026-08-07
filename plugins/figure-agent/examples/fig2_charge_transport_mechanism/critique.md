@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_charge_transport_mechanism
-generated_at: '2026-08-07T07:55:00Z'
+generated_at: '2026-08-07T08:15:00Z'
 generator: Cowork host vision critique
 generator_version: sha256:78cf3f9eff794f643906438081641c4f496a370cb3bf78bff39c863383018516
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:ca242a54967c7d3f463f28199687af826c02ed032160958a4849655fdc188c79
+critique_input_hash: sha256:07eff253ff0860939d476e3faee95bfce51501cbf6fc57b691802e8f256f4c8c
 verdict: revise
 findings:
 - id: C001
@@ -181,6 +181,32 @@ findings:
   - idealized
   - sulfur-rich
   - qualitative
+  status: resolved
+- id: C009
+  severity: MINOR
+  category: component_fidelity
+  tex_lines:
+  - 29
+  - 64
+  grounded_in_rule: §2 Panel content; §3 Physics invariants
+  observation: 'The stroke ladder had been taken from an older render of Fig. 1 rather than from the canonical
+    fixture, and every container was roughly twice its correct weight: the MIM cross-section was drawn
+    at 1.05 pt and the readout traces at 1.25 pt, while the canonical Fig. 1 uses outline 0.55 pt and
+    reserves 0.90-1.05 pt for data curves alone. A container drawn at data-curve weight is what makes
+    a technical schematic read as a cartoon, and here it also flattened the hierarchy: the cell frame
+    competed with the localized-state marks it was holding.'
+  suggested_fix: 'Applied in the current source: the ladder is re-measured from fig1_updated_agent_redraw_v1
+    and applied throughout -- guide 0.35, interface 0.38, axis 0.48, outline 0.55, signal 0.55-0.70, force
+    0.85 maximum for the current cue, data curve 0.95. Miter joins on the cell frame became round, the
+    electrode tint dropped to cGray!26, and the occupancy markers shrank to 0.060 cm so the heaviest ink
+    is still the mark that carries meaning. design.md now records the measured ladder and its source so
+    it cannot drift back.'
+  proposed_offset:
+    axis: none
+    dy_cm: 0
+  target_texts:
+  - early field-on
+  - progressive trapping
   status: resolved
 panels: []
 audit_enumeration:
@@ -386,9 +412,11 @@ quality_axes:
   journal_polish:
     verdict: pass
     confidence: high
-    rationale: The restrained palette, the three-tier roman type scale taken from the canonical Fig. 1,
-      and the flat MIM grammar keep the strip in a main-text register rather than a slide register.
-    evidence: current render; canonical Fig. 1 label register; print_178mm; print_thumbnail
+    rationale: The restrained palette, the three-tier roman type scale and the stroke ladder are all measured
+      from the canonical Fig. 1; no container is drawn at data-curve weight, so the strip holds a main-text
+      register rather than a slide register.
+    evidence: current render; canonical Fig. 1 stroke ladder and label register; print_178mm; print_thumbnail;
+      C009 resolved
     blocking_items: []
     recommended_action: none
   reference_fidelity:
@@ -544,7 +572,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:ca242a54967c7d3f463f28199687af826c02ed032160958a4849655fdc188c79
+  assessed_artifact_hash: sha256:07eff253ff0860939d476e3faee95bfce51501cbf6fc57b691802e8f256f4c8c
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
@@ -919,8 +947,8 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: At thumbnail scale the four lanes and the left-to-right occupancy increase survive; the late
-    current cue is still visible as a thin arrow with one carrier dot.
+  rationale: At thumbnail scale the four lanes and the left-to-right occupancy increase survive at the
+    lighter stroke ladder; the late current cue is still visible as a thin arrow with one carrier dot.
   observed_objects:
   - four lanes
   - occupancy increase

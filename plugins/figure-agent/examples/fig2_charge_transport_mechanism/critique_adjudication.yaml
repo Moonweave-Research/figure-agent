@@ -1,6 +1,6 @@
 schema: figure-agent.critique-adjudication.v1
 fixture: fig2_charge_transport_mechanism
-source_critique_hash: sha256:37c2c8a098274d7cf125195992ac18498510410e8577abaa8893cb6e860f4d8c
+source_critique_hash: sha256:fe21f860f7796b4c43b3bc6402ee58d32db98b3fc54a9052c260bac4fafbe777
 decisions:
 - finding_id: C001
   decision: resolved
@@ -50,3 +50,9 @@ decisions:
   patch_target: examples/fig2_charge_transport_mechanism/fig2_charge_transport_mechanism.tex
     lines 19-27
   evidence: critique.md marks C008 status resolved.
+- finding_id: C009
+  decision: resolved
+  reason: Critique marks C009 as resolved.
+  patch_target: examples/fig2_charge_transport_mechanism/fig2_charge_transport_mechanism.tex
+    lines 29-64
+  evidence: critique.md marks C009 status resolved.
