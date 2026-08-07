@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_charge_transport_mechanism
-generated_at: '2026-08-07T08:15:00Z'
+generated_at: '2026-08-07T09:05:00Z'
 generator: Cowork host vision critique
 generator_version: sha256:78cf3f9eff794f643906438081641c4f496a370cb3bf78bff39c863383018516
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:07eff253ff0860939d476e3faee95bfce51501cbf6fc57b691802e8f256f4c8c
+critique_input_hash: sha256:d53358e2da1289b9c7efc828846dff9fd176a46774d37a9c3bc093ac247bad8f
 verdict: revise
 findings:
 - id: C001
@@ -208,6 +208,34 @@ findings:
   - early field-on
   - progressive trapping
   status: resolved
+- id: C010
+  severity: MINOR
+  category: component_fidelity
+  tex_lines:
+  - 113
+  - 132
+  grounded_in_rule: §2 Panel content; §3 Physics invariants
+  observation: 'Three symbols were carrying less than they appeared to. The held-voltage source was an
+    empty ring: that is the generic-source glyph, so the symbol stated nothing at all and its designator
+    sat far enough below the loop to read as a stray label. The occupancy key drew a 0.30 cm bar while
+    the cells draw 0.34 cm, so the legend did not show the mark the figure uses. The readout turned a
+    hard corner at the branch point, which reads as two straight sticks rather than one curve leaving
+    its own fit.'
+  suggested_fix: 'Applied in the current source: the ring carries the standard direct-current mark, one
+    solid line over one broken line, which states that the bias is DC and held while asserting no polarity
+    -- a battery glyph or a +/- pair would have made the polarity claim the contract forbids. The designator
+    moved up to hug its symbol. Key entries now use the same bar length and marker radius as the localized
+    states. The late trace leaves the branch point tangent to the early power law and flattens afterwards,
+    and the label-path guard follows the new curve.'
+  proposed_offset:
+    axis: none
+    dy_cm: 0
+  target_texts:
+  - V
+  - app
+  - empty state
+  - occupied state
+  status: resolved
 panels: []
 audit_enumeration:
   structural_completeness:
@@ -379,9 +407,10 @@ quality_axes:
   component_fidelity:
     verdict: pass
     confidence: high
-    rationale: The MIM slabs, paired dipoles, amber-tinted sulfur films, short localized-state bars with
-      categorical dots, and readout curves are identifiable at print scale.
-    evidence: current render; flat_mim_layer_hierarchy; bound_dipole_pairing; material_texture_authorship
+    rationale: 'The MIM slabs, paired dipoles, amber-tinted sulfur films and localized-state marks are
+      all information-bearing: the source ring carries the DC mark rather than being an empty generic
+      glyph, and the key shows the same mark the cells draw.'
+    evidence: current render; full_q1; full_q4; C009 and C010 resolved
     blocking_items: []
     recommended_action: none
   scientific_plausibility:
@@ -572,7 +601,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:07eff253ff0860939d476e3faee95bfce51501cbf6fc57b691802e8f256f4c8c
+  assessed_artifact_hash: sha256:d53358e2da1289b9c7efc828846dff9fd176a46774d37a9c3bc093ac247bad8f
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
