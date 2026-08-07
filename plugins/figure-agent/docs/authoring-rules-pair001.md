@@ -51,6 +51,38 @@ rules:
       locator: "fig1_overview_v5f_art_direction_001_vault/briefing.md sections 8 and 13.6 E-9"
       quote: "tau_d annotation - energy-domain interval between Gaussian peaks"
     transfer_policy: use_as_constraint
+  - id: pair001.repeated-state-sequence-single-source-geometry
+    category: panel_layout
+    rule: "When one specimen is drawn at several successive states, generate every cell frame and every internal mark from a single declaration parameterised by state. Hand-kept coordinate sets drift: the marks move between states and quietly turn 'the same specimen later' into 'three different samples'. Only the state variable (occupancy, cue strength) may differ per cell."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig2a charge-transport strip, isolated-cell audit (2026-08-07)"
+      quote: "Localized-site positions differed in all three sulfur cells although the caption claimed one specimen."
+    transfer_policy: use_as_constraint
+  - id: pair001.qualitative-magnitude-never-by-arrow-length
+    category: physics_semantics
+    rule: "A qualitative change in a transport or flux cue must be encoded by stroke weight and carrier-marker count, with the arrow's start, end, and lateral offset held identical across states. A shorter arrow reads as a measured smaller magnitude, which is a quantitative claim the schematic is not entitled to make."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig2a mobile-current cue repair (2026-08-07)"
+      quote: "Current arrows of three different lengths floated inside the film and implied a magnitude scale."
+    transfer_policy: use_as_constraint
+  - id: pair001.dashed-reference-must-carry-its-own-label
+    category: label_binding
+    rule: "An unlabelled dashed line drawn beside a material trace is read as a measured control or as the comparison material's own curve. If the dashed line is an extrapolated fit, label it as such next to its far end; if it is not, do not draw it."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig2a qualitative-output readout repair (2026-08-07)"
+      quote: "The early-fit extrapolation was drawn unlabelled, exactly where a reader expects the idealized-dielectric control trace."
+    transfer_policy: use_as_constraint
+  - id: pair001.categorical-occupancy-by-presence-not-outline
+    category: panel_layout
+    rule: "Encode a categorical occupied/empty distinction as presence versus absence of a filled marker, not as a filled versus open outline of the same marker. At manuscript reduction an open and a filled sub-millimetre circle are the same dot, so the outline encoding silently loses the entire progression. Leave at least one site unoccupied in the final state so 'mostly occupied' cannot be read as saturation."
+    source:
+      kind: hand_patch_commit
+      locator: "Fig2a occupancy-marker repair, 33% print proxy (2026-08-07)"
+      quote: "Open-versus-filled 0.042 cm circles were indistinguishable in the 33% reduction proxy."
+    transfer_policy: use_as_constraint
   - id: pair001.host-texture-needs-physical-identity
     category: physics_semantics
     rule: "In a real-space material field, do not scatter same-size dots merely to fill empty space: repeated particles can imply fillers, pores, or a second population. Use continuous non-periodic disorder cues only when they bind to a declared spatial-energy or morphology claim; otherwise omit decorative texture and let the localized states carry the meaning."

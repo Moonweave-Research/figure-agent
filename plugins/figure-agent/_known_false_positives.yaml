@@ -278,3 +278,22 @@ patterns:
     dark_max: 0.18
     edge_max: 0.035
     ground: "Panel E 'Vs' meter label; adequately separated from its own Vs-meter box border (orchestrator crop review) — box-border proximity, not a real overlap."
+
+  # Fig2 charge-transport strip: each bound dipole is an oval that OWNS its own
+  # paired poles, so the two signs necessarily sit against their own ellipse
+  # stroke. Verified 2026-08-07 at 250% on the isolated reference cell: the
+  # glyphs clear the ellipse and never touch a neighbouring object. The
+  # material-name and readout words stay unsuppressed.
+  - id: fig2_bound_dipole_positive_pole
+    fixture: fig2_charge_transport_mechanism
+    glyph: "+"
+    kind: text_on_path
+    dark_max: 0.17
+    edge_max: 0.02
+
+  - id: fig2_bound_dipole_negative_pole
+    fixture: fig2_charge_transport_mechanism
+    glyph: "−"
+    kind: text_on_path
+    dark_max: 0.17
+    edge_max: 0.02
