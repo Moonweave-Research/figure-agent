@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_charge_transport_mechanism
-generated_at: '2026-08-07T09:05:00Z'
+generated_at: '2026-08-07T09:25:00Z'
 generator: Cowork host vision critique
 generator_version: sha256:78cf3f9eff794f643906438081641c4f496a370cb3bf78bff39c863383018516
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:d53358e2da1289b9c7efc828846dff9fd176a46774d37a9c3bc093ac247bad8f
+critique_input_hash: sha256:0444269be077bfeb78e7a586d68bea07a37926bf3253e0c060760ed71de9ddd8
 verdict: revise
 findings:
 - id: C001
@@ -221,21 +221,44 @@ findings:
     the cells draw 0.34 cm, so the legend did not show the mark the figure uses. The readout turned a
     hard corner at the branch point, which reads as two straight sticks rather than one curve leaving
     its own fit.'
-  suggested_fix: 'Applied in the current source: the ring carries the standard direct-current mark, one
-    solid line over one broken line, which states that the bias is DC and held while asserting no polarity
-    -- a battery glyph or a +/- pair would have made the polarity claim the contract forbids. The designator
-    moved up to hug its symbol. Key entries now use the same bar length and marker radius as the localized
-    states. The late trace leaves the branch point tangent to the early power law and flattens afterwards,
-    and the label-path guard follows the new curve.'
+  suggested_fix: 'Applied in the current source: the ring carries $V$, the general voltage-source mark,
+    which names the quantity the source holds and asserts no polarity -- a battery glyph or a +/- pair
+    would have made the polarity claim the contract forbids. The subscript stays outside the ring because
+    it cannot fit without touching the stroke, and the applied field is already named inside the film.
+    Key entries now use the same bar length and marker radius as the localized states. The late trace
+    leaves the branch point tangent to the early power law and flattens afterwards, and the label-path
+    guard follows the new curve.'
   proposed_offset:
     axis: none
     dy_cm: 0
   target_texts:
   - V
-  - app
   - empty state
   - occupied state
   status: resolved
+- id: C011
+  severity: MINOR
+  category: component_fidelity
+  tex_lines:
+  - 113
+  - 124
+  grounded_in_rule: §3 Physics invariants; visual_clash source-label review
+  observation: A ring containing V is also the textbook voltmeter symbol, and this ring sits across the
+    reference electrode pair, which is where a voltmeter would sit. The reading is available in principle
+    and the contract forbids it (applied_voltage_source.forbidden_readings includes charging_instrument
+    and the strip forbids a second measurement instrument).
+  suggested_fix: 'Open for the research owner, recorded rather than repaired. Context already resolves
+    it: the loop contains no other source, so a meter reading would leave the film unpowered while its
+    own field and current cues are drawn, and the caption states the held-field charging-current condition.
+    If the owner wants the ambiguity closed on the drawing, the cheap move is to restore a $V_\mathrm{app}$
+    designator beside the ring, since ''applied'' names a source and not a meter. Do not close it by adding
+    a battery glyph or polarity marks.'
+  proposed_offset:
+    axis: none
+    dy_cm: 0
+  target_texts:
+  - V
+  status: open
 panels: []
 audit_enumeration:
   structural_completeness:
@@ -276,44 +299,84 @@ audit_enumeration:
       rationale: The briefing explicitly forbids a continuous hopping path or a claim of a specific microscopic
         route.
   label_target_matching:
-  - label: field-on charge transport
-    nearest_object: shared MIM strip header
-    intended_target: held-field operating context
+  - label: idealized dielectric
+    nearest_object: left MIM cell with paired bound dipoles
+    intended_target: conceptual idealized-dielectric reference
     matches: true
     proposed_fix: ''
-  - label: ideal dielectric
-    nearest_object: left MIM film with paired dipoles
-    intended_target: idealized bound-polarization reference
+  - label: bound polarization, no accumulation
+    nearest_object: left MIM film
+    intended_target: orientation polarization without trapped charge
     matches: true
     proposed_fix: ''
-  - label: V_app
-    nearest_object: compact two-terminal source symbol at the reference cell
+  - label: V
+    nearest_object: two-terminal source ring wired across the reference electrode pair
     intended_target: held applied voltage across the reference electrodes
     matches: true
     proposed_fix: ''
-  - label: 'Sulfur-rich copolymer: progressive trapping'
-    nearest_object: three matched sulfur cells
-    intended_target: one specimen progressing from empty to occupied localized states
+  - label: E_app
+    nearest_object: dashed blue field arrow inside each film
+    intended_target: constant applied field, identical in every cell
     matches: true
     proposed_fix: ''
-  - label: empty
-    nearest_object: open categorical marker in the legend
-    intended_target: empty localized state
+  - label: sulfur-rich copolymer
+    nearest_object: the three matched sulfur MIM cells
+    intended_target: one specimen shown at three held-field states
     matches: true
     proposed_fix: ''
-  - label: occupied
-    nearest_object: filled categorical marker in the legend
-    intended_target: occupied localized state
+  - label: early field-on
+    nearest_object: first sulfur cell
+    intended_target: early state with empty localized sites and the strongest current cue
     matches: true
     proposed_fix: ''
-  - label: Qualitative output
+  - label: progressive trapping
+    nearest_object: second sulfur cell
+    intended_target: partial occupancy with capture cues at the newly filled sites
+    matches: true
+    proposed_fix: ''
+  - label: long-lived occupied state
+    nearest_object: third sulfur cell
+    intended_target: mostly occupied state with one site deliberately left empty
+    matches: true
+    proposed_fix: ''
+  - label: J_mob
+    nearest_object: charcoal through-film arrow at the right of the first sulfur cell
+    intended_target: qualitative mobile-current contribution
+    matches: true
+    proposed_fix: ''
+  - label: empty state
+    nearest_object: bare bar in the legend
+    intended_target: empty localized state as drawn inside the cells
+    matches: true
+    proposed_fix: ''
+  - label: occupied state
+    nearest_object: bar with a filled marker in the legend
+    intended_target: occupied localized state as drawn inside the cells
+    matches: true
+    proposed_fix: ''
+  - label: field held on throughout; growing occupancy weakens the mobile-current cue
+    nearest_object: bottom lane beneath the sulfur sequence
+    intended_target: the qualified causal reading the objects carry
+    matches: true
+    proposed_fix: ''
+  - label: qualitative output
     nearest_object: right-hand log-log lane
     intended_target: compact transient-current consequence
     matches: true
     proposed_fix: ''
   - label: early power law
-    nearest_object: straight early segment in the log-log lane
-    intended_target: early-fit power-law grammar
+    nearest_object: straight early segment of the red trace
+    intended_target: qualitative early power-law decay
+    matches: true
+    proposed_fix: ''
+  - label: early fit
+    nearest_object: dashed grey line continuing the early slope
+    intended_target: early fit extended forward, not a measured control
+    matches: true
+    proposed_fix: ''
+  - label: persistent relaxation
+    nearest_object: curved late segment of the red trace
+    intended_target: late departure above the early fit
     matches: true
     proposed_fix: ''
   physical_plausibility:
@@ -601,7 +664,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:d53358e2da1289b9c7efc828846dff9fd176a46774d37a9c3bc093ac247bad8f
+  assessed_artifact_hash: sha256:0444269be077bfeb78e7a586d68bea07a37926bf3253e0c060760ed71de9ddd8
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
