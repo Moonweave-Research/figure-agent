@@ -57,12 +57,16 @@ decoration or unsupported mechanism detail.
   cross-material comparisons belong to the quantitative panels.
 - Do not use full-height column rules or equal framed cards; whitespace and the
   object silhouettes should establish the four lanes.
-- Stroke weight carries role, not magnitude, on the Fig. 1 measured ladder
-  (0.40 hairline / 0.70 annotation / 0.90 secondary / 1.05 instrument /
-  1.25 primary). The device cross-section outranks its own wiring, and the
-  readout traces are the only primary-weight strokes. The single declared
-  exception is the mobile-current cue, whose weight and carrier-dot count
-  encode the qualitative decrease across the three states.
+- Stroke weight carries role, not magnitude, and is taken from the canonical
+  Fig. 1 (`fig1_updated_agent_redraw_v1`), not from an older render of it:
+  guide 0.35 / interface 0.38 / axis 0.48 / outline 0.55 / signal 0.70 /
+  force 0.85 / data curve 0.90-1.05 pt. Fig. 1 prints at 166.8/150.7 and this
+  strip at 180.0/163.8, so the two scales agree to within one percent and the
+  source values transfer directly. A container drawn at data-curve weight is
+  what makes a technical schematic read as a cartoon: the MIM cross-section is
+  an outline (0.55) and must stay lighter than the marks it holds. The single
+  declared exception is the mobile-current cue, whose weight and carrier-dot
+  count encode the qualitative decrease across the three states.
 - Draw every MIM cross-section from one macro and every localized-state
   position from one list. A matched footprint and an invariant site field are
   then properties of the source, not of four hand-kept coordinate sets.
