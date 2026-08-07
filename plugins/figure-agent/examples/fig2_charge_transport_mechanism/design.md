@@ -74,6 +74,16 @@ decoration or unsupported mechanism detail.
   Length must never be available as a strength claim.
 - Label the early-fit extrapolation. An unlabelled dashed line beside a
   material trace is read as a measured control.
+- Every symbol must carry information. An empty ring is the generic-source
+  glyph and says nothing; draw the standard direct-current mark inside it
+  (solid line over broken line), which states that the bias is DC and held
+  without asserting which terminal is positive. A battery glyph or a +/- pair
+  would assert a polarity this strip does not claim.
+- A legend must show the mark the drawing actually uses. Key entries carry the
+  same bar length and marker radius as the localized states inside the cells.
+- A transient departs its own fit tangentially. Leave the branch point along
+  the early slope and flatten afterwards; a corner reads as two straight
+  sticks rather than one measured curve.
 - The readout plot shares the MIM band's top and bottom edge, which keeps it a
   secondary lane rather than a second hero panel.
 
