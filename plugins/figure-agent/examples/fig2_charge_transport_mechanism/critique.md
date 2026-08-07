@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig2_charge_transport_mechanism
-generated_at: '2026-08-07T07:20:00Z'
+generated_at: '2026-08-07T07:55:00Z'
 generator: Cowork host vision critique
 generator_version: sha256:78cf3f9eff794f643906438081641c4f496a370cb3bf78bff39c863383018516
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:f2f17e1dd2aeda2efc4946bb6286c9923ed6abcf7abc20f1b10914e486db9e36
+critique_input_hash: sha256:ca242a54967c7d3f463f28199687af826c02ed032160958a4849655fdc188c79
 verdict: revise
 findings:
 - id: C001
@@ -117,7 +117,7 @@ findings:
   category: component_fidelity
   tex_lines:
   - 113
-  - 118
+  - 120
   grounded_in_rule: §3 Physics invariants; visual_clash source-label review
   observation: The held-voltage source is wired to the idealized reference cell only, which the contract's
     applied_source_binds_reference_electrode_pair requires. The three sulfur cells carry the shared bias
@@ -133,6 +133,55 @@ findings:
   - V
   - app
   status: open
+- id: C007
+  severity: MINOR
+  category: label_placement
+  tex_lines:
+  - 100
+  - 106
+  grounded_in_rule: §2 Panel content; §3 Physics invariants
+  observation: 'The artboard carried a figure headline across the top and annotated the measurement condition
+    numerically (applied field in MV per m, relative humidity, ''held during acquisition''). Neither belongs
+    on a journal figure: the canonical Fig. 1 has no headline at all, and states its condition qualitatively
+    as ''constant bias: current decays'' while the numbers live in the caption. The parent composition
+    also owns the panel letter, so a panel-level headline here duplicated an owner.'
+  suggested_fix: 'Applied in the current source: the headline and the numeric condition row are removed,
+    the condition survives qualitatively as the bottom micro line ''field held on throughout'', and caption.md
+    now carries the field strength, the humidity, the matched-cell fact, and the single-specimen fact.
+    The freed vertical band was spent on a 30 percent taller MIM film rather than on whitespace.'
+  proposed_offset:
+    axis: y
+    dy_cm: 0
+  target_texts:
+  - field
+  - held
+  - 'on'
+  - throughout
+  status: resolved
+- id: C008
+  severity: MINOR
+  category: label_placement
+  tex_lines:
+  - 19
+  - 27
+  grounded_in_rule: label_path and text_boundary label review; canonical Fig. 1 register
+  observation: Every non-mathematical label was set in italic and the lane heads used Title Case sentence-length
+    strings. The canonical Fig. 1 uses no italic anywhere in the figure -- italic is reserved for mathematical
+    variables such as t, I(t) and g(E_t) -- and heads its panels with short lowercase bold noun phrases
+    such as 'kinetic evidence'. The reference cell also carried two labels making the same point.
+  suggested_fix: 'Applied in the current source: three text tiers only (object name bold 5.9 pt, label
+    roman 5.45 pt, micro clause roman 5.05 pt); all body labels roman; lane heads reduced to lowercase
+    noun phrases naming the object; the reference cell reduced to one line; the key shortened to ''empty
+    state'' / ''occupied state''. spec.yaml semantic assertions and the text allowlist follow the new
+    casing.'
+  proposed_offset:
+    axis: none
+    dy_cm: 0
+  target_texts:
+  - idealized
+  - sulfur-rich
+  - qualitative
+  status: resolved
 panels: []
 audit_enumeration:
   structural_completeness:
@@ -328,18 +377,18 @@ quality_axes:
   label_annotation_semantics:
     verdict: pass
     confidence: high
-    rationale: 'Every readout annotation names its own object: the dashed line is labelled ''early fit'',
-      the occupancy key names empty and occupied localized states, and the header row no longer overlaps
-      the group title.'
-    evidence: current render; visual_clash:VC001; print_178mm; C001, C004 and C005 resolved
+    rationale: 'Labels follow the canonical Fig. 1 register: no figure headline, no numeric measurement
+      condition on the drawing, lowercase noun-phrase object names, roman body text with italic reserved
+      for mathematical variables, and one name plus at most one qualifying line per object.'
+    evidence: current render; visual_clash:VC001; print_178mm; C001, C004, C005, C007 and C008 resolved
     blocking_items: []
     recommended_action: none
   journal_polish:
     verdict: pass
     confidence: high
-    rationale: The restrained palette, compact typography, and flat MIM grammar remain calm at the declared
-      double-column reduction.
-    evidence: current render; editorial_restraint; typography_authority; print_178mm
+    rationale: The restrained palette, the three-tier roman type scale taken from the canonical Fig. 1,
+      and the flat MIM grammar keep the strip in a main-text register rather than a slide register.
+    evidence: current render; canonical Fig. 1 label register; print_178mm; print_thumbnail
     blocking_items: []
     recommended_action: none
   reference_fidelity:
@@ -495,7 +544,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:f2f17e1dd2aeda2efc4946bb6286c9923ed6abcf7abc20f1b10914e486db9e36
+  assessed_artifact_hash: sha256:ca242a54967c7d3f463f28199687af826c02ed032160958a4849655fdc188c79
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
@@ -789,12 +838,12 @@ crop_audit_log:
   inspected: true
   verdict: no_defect
   linked_micro_defect_id: ''
-  rationale: Reference cell, source loop, and the shared header read cleanly; the column titles sit on
-    one baseline.
+  rationale: Reference cell, source loop and lane head read cleanly; the artboard carries no headline
+    and no numeric condition.
   observed_objects:
   - idealized dielectric cell
   - two-terminal source
-  local_relationship: Titles and sub-labels no longer share an ink band.
+  local_relationship: One object name above one qualifying line; nothing competes with the cell.
   candidate_refs: []
   unintended_visible_anomaly: none
   anomaly_rationale: No anomaly visible at this crop scale.
