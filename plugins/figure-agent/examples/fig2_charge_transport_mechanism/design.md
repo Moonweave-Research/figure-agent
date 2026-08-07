@@ -57,6 +57,21 @@ decoration or unsupported mechanism detail.
   cross-material comparisons belong to the quantitative panels.
 - Do not use full-height column rules or equal framed cards; whitespace and the
   object silhouettes should establish the four lanes.
+- Stroke weight carries role, not magnitude, on the Fig. 1 measured ladder
+  (0.40 hairline / 0.70 annotation / 0.90 secondary / 1.05 instrument /
+  1.25 primary). The device cross-section outranks its own wiring, and the
+  readout traces are the only primary-weight strokes. The single declared
+  exception is the mobile-current cue, whose weight and carrier-dot count
+  encode the qualitative decrease across the three states.
+- Draw every MIM cross-section from one macro and every localized-state
+  position from one list. A matched footprint and an invariant site field are
+  then properties of the source, not of four hand-kept coordinate sets.
+- Give the current cue the same start, end, and offset in all three states.
+  Length must never be available as a strength claim.
+- Label the early-fit extrapolation. An unlabelled dashed line beside a
+  material trace is read as a measured control.
+- The readout plot shares the MIM band's top and bottom edge, which keeps it a
+  secondary lane rather than a second hero panel.
 
 ## Review order
 

@@ -7,6 +7,7 @@ the field held on, localized-state occupancy progresses from sparse to more
 occupied, the qualitative mobile-current contribution decreases, and a
 long-lived relaxation tail remains. This is a qualified working model, not a
 claim of complete current blockage or a direct measurement of trap density,
-trap depth, or a microscopic carrier pathway. The compact log--log output is
-schematic; composition-specific normalized deviations, quantitative currents,
+trap depth, or a microscopic carrier pathway. In the compact log--log output
+the dashed line is the early power-law fit extended forward, not a measured
+control or ideal-dielectric trace. The output is schematic; composition-specific normalized deviations, quantitative currents,
 exponents, and controls are supplied by the data pipeline in panels b–d.

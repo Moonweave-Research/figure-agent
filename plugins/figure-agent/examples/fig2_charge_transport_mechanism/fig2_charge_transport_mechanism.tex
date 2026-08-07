@@ -1,6 +1,6 @@
 % Fig. 2a — charge-transport mechanism schematic.
 % Quantitative panels b–d are owned by the data pipeline; this fixture draws
-% only the reader-facing mechanism and the two-window readout they quantify.
+% only the reader-facing mechanism and the qualitative readout they quantify.
 \documentclass[border=0pt]{standalone}
 \usepackage{polymer-paper-preamble}
 \usetikzlibrary{arrows.meta,calc}
@@ -19,47 +19,75 @@
     text=cGray!75!black},
   labelMute/.style={font=\sffamily\itshape\fontsize{5.05}{6.1}\selectfont,
     text=cGray!60!black},
-  structure/.style={cGray!63!black,line width=0.46pt,line cap=round},
-  electrode/.style={fill=cGray!22,draw=none},
-  referenceFilm/.style={fill=cBlue!6,draw=none},
-  film/.style={fill=cAmber!10,draw=none},
-  sourceWire/.style={cGray!68!black,line width=0.42pt,line cap=round},
-  sourceOutline/.style={draw=cGray!76!black,fill=white,line width=0.42pt},
+  % --- stroke-weight vocabulary -------------------------------------------
+  % Weights carry role, not magnitude, and follow the Fig. 1 measured ladder
+  % (0.40 hairline / 0.70 annotation / 0.90 secondary / 1.05 instrument /
+  % 1.25 primary).  The single declared exception is the mobile-current cue,
+  % whose weight and carrier-dot count — never its length — encode the
+  % qualitative decrease across the three sulfur states.
+  structure/.style={cGray!66!black,line width=1.05pt,line join=miter},
+  interface/.style={cGray!66!black,line width=0.75pt},
+  electrode/.style={fill=cGray!30,draw=none},
+  referenceFilm/.style={fill=cBlue!10,draw=none},
+  film/.style={fill=cAmber!16,draw=none},
+  sourceWire/.style={cGray!72!black,line width=0.90pt,line cap=round},
+  sourceOutline/.style={draw=cGray!78!black,fill=white,line width=0.90pt},
   sourceLabel/.style={font=\sffamily\fontsize{5.0}{5.0}\selectfont,
-    text=cGray!76!black},
-  dipoleBody/.style={fill=white,draw=cBlue!58!black,line width=0.38pt},
+    text=cGray!78!black},
+  dipoleBody/.style={fill=white,draw=cBlue!58!black,line width=0.55pt},
   dipoleCharge/.style={inner sep=0pt,text=cBlue!66!black,
     font=\sffamily\bfseries\fontsize{5.0}{5.0}\selectfont},
-  trapState/.style={cRed!58!black,line width=0.46pt,line cap=round},
-  currentStrong/.style={-{Stealth[length=2.6pt,width=1.9pt]},cGray!88!black,
-    line width=0.64pt,line cap=round},
-  currentSoft/.style={-{Stealth[length=2.3pt,width=1.6pt]},cGray!62!black,
-    line width=0.44pt,line cap=round},
-  currentDot/.style={fill=cGray!78!black,draw=none},
-  captureCue/.style={-{Stealth[length=2.2pt,width=1.6pt]},cRed!62!black,
-    line width=0.36pt,line cap=round},
-  fieldGuide/.style={cBlue!66!black,line width=0.42pt,line cap=round,
-    dash pattern=on 1.35pt off 1.25pt},
-  storyArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!58!black,
-    line width=0.50pt},
-  axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!68!black,
-    line width=0.55pt},
-  separator/.style={cGray!42!black,line width=0.34pt,
+  trapState/.style={cRed!58!black,line width=0.70pt,line cap=round},
+  trapStateFull/.style={cRed!68!black,line width=0.95pt,line cap=round},
+  captureCue/.style={-{Stealth[length=2.0pt,width=1.5pt]},cRed!62!black,
+    line width=0.55pt,line cap=round},
+  currentDot/.style={fill=cGray!88!black,draw=none},
+  fieldGuide/.style={-{Stealth[length=2.5pt,width=1.8pt]},cBlue!66!black,
+    line width=0.62pt,line cap=round,dash pattern=on 1.35pt off 1.25pt},
+  storyArrow/.style={-{Stealth[length=3.0pt,width=2.1pt]},cGray!55!black,
+    line width=0.62pt},
+  axisArrow/.style={-{Stealth[length=3.2pt,width=2.2pt]},cGray!70!black,
+    line width=0.90pt},
+  separator/.style={cGray!45!black,line width=0.45pt,
     dash pattern=on 1.5pt off 1.6pt},
-  traceEarly/.style={cRed!76!black,line width=0.82pt,line cap=round},
-  traceLate/.style={cRed!76!black,line width=0.96pt,line cap=round},
-  fitReference/.style={cGray!54!black,line width=0.52pt,line cap=round,
+  traceEarly/.style={cRed!76!black,line width=1.25pt,line cap=round},
+  traceLate/.style={cRed!76!black,line width=1.25pt,line cap=round},
+  fitReference/.style={cGray!58!black,line width=0.70pt,line cap=round,
     dash pattern=on 1.4pt off 1.5pt},
 ]
 
-% The reference and all sulfur states share one MIM footprint.  Repeating the
-% frame is intentional: only the qualitative internal state changes with held
-% field exposure, never the device geometry.
+% --------------------------------------------------------------------------
+% Shared cell geometry.  The reference and all three sulfur states reuse one
+% MIM footprint: only the qualitative internal state changes with held-field
+% exposure, never the device geometry, the electrode spacing, or the field cue.
+% --------------------------------------------------------------------------
 \def\mimCellWidth{2.25}
-\def\referenceCellLeft{0.55}
-\def\stateEarlyLeft{3.28}
-\def\stateProgressLeft{5.92}
-\def\stateLateLeft{8.56}
+\def\mimBotOuter{1.59}
+\def\mimBotInner{1.75}
+\def\mimTopInner{2.96}
+\def\mimTopOuter{3.12}
+\def\mimMid{2.355}
+\def\referenceCellLeft{0.86}
+\def\stateEarlyLeft{3.93}
+\def\stateProgressLeft{6.73}
+\def\stateLateLeft{9.53}
+\def\fieldOffset{0.22}
+\def\currentOffset{2.03}
+
+% One macro draws every MIM cross-section, so a matched footprint is a
+% property of the source rather than of four hand-kept coordinate sets.
+\newcommand{\MimCell}[2]{%
+  \fill[#2] (#1,\mimBotInner) rectangle ({#1+\mimCellWidth},\mimTopInner);
+  \fill[electrode] (#1,\mimTopInner) rectangle
+    ({#1+\mimCellWidth},\mimTopOuter);
+  \fill[electrode] (#1,\mimBotOuter) rectangle
+    ({#1+\mimCellWidth},\mimBotInner);
+  \draw[structure] (#1,\mimBotOuter) rectangle
+    ({#1+\mimCellWidth},\mimTopOuter);
+  \draw[interface] (#1,\mimTopInner)--({#1+\mimCellWidth},\mimTopInner)
+    (#1,\mimBotInner)--({#1+\mimCellWidth},\mimBotInner);
+  \draw[fieldGuide] ({#1+\fieldOffset},1.89)--({#1+\fieldOffset},2.83);
+}
 
 \path[use as bounding box] (0.00,0.38) rectangle (16.38,5.02);
 
@@ -67,162 +95,139 @@
 % Shared field-on material comparison
 % --------------------------------------------------------------------------
 % fig-agent:start object=comparison_frame panel=A kind=annotation truth_bearing=false
-\node[panelTitle,anchor=west] at (0.76,4.71)
-  {Field-on charge transport};
-\node[labelMute,anchor=east] at (15.66,4.71)
+\node[panelTitle,anchor=base west] at (0.76,4.60)
+  {Field-on charge transport in matched MIM cells};
+\node[labelMute,anchor=base east] at (15.94,4.60)
   {$E_\mathrm{app}=15\,\mathrm{MV\,m^{-1}}$ held during acquisition
   \;\textbar\; 25\,\% RH};
-% The field is carried by the matched cells themselves rather than by an
-% abstract top rail, so it cannot be mistaken for a serial process arrow.
-\node[labelMute,anchor=south] at (6.95,3.88)
-  {same MIM geometry; held field and time progress left to right};
 % fig-agent:end object=comparison_frame
 
 % fig-agent:start object=reference_dielectric panel=A kind=material_state truth_bearing=true
-\node[columnTitle,anchor=south] at ({\referenceCellLeft+0.5*\mimCellWidth},3.56)
+\node[columnTitle,anchor=base] at ({\referenceCellLeft+0.5*\mimCellWidth},3.96)
   {Idealized dielectric};
-\fill[referenceFilm] (\referenceCellLeft,1.91) rectangle
-  ({\referenceCellLeft+\mimCellWidth},3.12);
-\draw[structure] (\referenceCellLeft,3.28)--({\referenceCellLeft+\mimCellWidth},3.28)
-  (\referenceCellLeft,3.12)--({\referenceCellLeft+\mimCellWidth},3.12)
-  (\referenceCellLeft,1.91)--({\referenceCellLeft+\mimCellWidth},1.91)
-  (\referenceCellLeft,1.75)--({\referenceCellLeft+\mimCellWidth},1.75);
-\fill[electrode] (\referenceCellLeft,3.12) rectangle
-  ({\referenceCellLeft+\mimCellWidth},3.28);
-\fill[electrode] (\referenceCellLeft,1.75) rectangle
-  ({\referenceCellLeft+\mimCellWidth},1.91);
-% A compact two-terminal source makes the held field boundary condition
-% explicit without turning the strip into an instrument diagram. The same
-% source is shared by the matched sulfur cells to the right.
-\draw[sourceWire] (0.30,3.28)--(\referenceCellLeft,3.28);
-\draw[sourceWire] (0.30,1.75)--(\referenceCellLeft,1.75);
-\draw[sourceWire] (0.30,3.28)--(0.30,2.72);
-\draw[sourceWire] (0.30,2.28)--(0.30,1.75);
-\draw[sourceOutline] (0.30,2.50) circle [radius=0.22];
-\node[sourceLabel] at (0.30,2.50) {$V_\mathrm{app}$};
-\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
-  ({\referenceCellLeft+0.18},2.06)--({\referenceCellLeft+0.18},2.96);
-\node[labelMute,anchor=west,text=cBlue!70!black]
-  at ({\referenceCellLeft+0.26},2.98) {$E_\mathrm{app}$};
+\node[labelMute,anchor=base] at ({\referenceCellLeft+0.5*\mimCellWidth},3.40)
+  {bound polarization only};
+\MimCell{\referenceCellLeft}{referenceFilm}
+% A compact two-terminal source states the held boundary condition without
+% turning the strip into an instrument diagram.  The ring carries no internal
+% polarity mark and its label sits outside the ring, so neither the symbol nor
+% its container makes a source-polarity or carrier-sign claim.
+\draw[sourceWire] (0.34,3.04)--(\referenceCellLeft,3.04);
+\draw[sourceWire] (0.34,1.67)--(\referenceCellLeft,1.67);
+\draw[sourceWire] (0.34,3.04)--(0.34,2.655);
+\draw[sourceWire] (0.34,2.055)--(0.34,1.67);
+\draw[sourceOutline] (0.34,2.355) circle [radius=0.30];
+\node[sourceLabel,anchor=base] at (0.34,1.36) {$V_\mathrm{app}$};
+\node[labelMute,anchor=base west,text=cBlue!70!black]
+  at ({\referenceCellLeft+0.30},2.10) {$E_\mathrm{app}$};
 % A quiet divider separates the idealized reference from the sulfur-state
-% mechanism; it is a composition boundary, not an electrical connection.
-\draw[separator] (3.00,1.72)--(3.00,3.32);
+% sequence; it is a composition boundary, not an electrical connection.
+\draw[separator] (3.52,\mimBotOuter)--(3.52,\mimTopOuter);
 % Field-aligned polar units use the standard orientation-polarization grammar:
-% each neutral oval contains its paired poles.  The ellipses, rather than free
-% signs or repeated vector arrows, make the paired-pole ownership clear.
-\foreach \x/\y in {1.08/2.30,1.52/2.68,1.98/2.30,2.42/2.68}{
+% each neutral oval carries its own paired poles, so the signs belong to the
+% bound dipole and never to a mobile carrier.  No current cue is drawn here.
+\foreach \x/\y in {1.60/2.64,2.20/2.64,2.80/2.64,2.10/2.04,2.62/2.04}{
   \draw[dipoleBody] (\x,\y) ellipse [x radius=0.15, y radius=0.22];
   \node[dipoleCharge] at (\x,\y+0.085) {$+$};
   \node[dipoleCharge] at (\x,\y-0.085) {$-$};
 }
-\node[labelMute,anchor=north] at ({\referenceCellLeft+0.5*\mimCellWidth},1.48)
-  {bound polarization reference};
+\node[labelMute,anchor=base] at ({\referenceCellLeft+0.5*\mimCellWidth},1.20)
+  {no charge accumulation};
 % fig-agent:end object=reference_dielectric
 
 % fig-agent:start object=sulfur_working_state panel=A kind=material_state truth_bearing=true
-% The three cells below are one sulfur-rich specimen at successive held-field
-% states. Empty/occupied sites and the mobile-current cue change; the MIM frame
-% does not. Marker count is illustrative, not a trap-density measurement.
-\node[columnTitle,anchor=south] at ({\stateProgressLeft+0.5*\mimCellWidth},4.02)
-  {Sulfur-rich copolymer: progressive trapping};
-
-% Early state: field-on, distributed empty sites, and a strong mobile-current cue.
-% The sulfur-rich film is identified by its amber-tinted matrix. No molecular
-% chain or hand-drawn texture is needed here: localized states are short bars
-% with categorical occupancy dots, keeping the real-space cue separate from
-% Fig. 4's explicit energy landscape.
-\node[labelMute,anchor=south] at ({\stateEarlyLeft+0.5*\mimCellWidth},3.56)
+% The three cells below are ONE sulfur-rich specimen at successive held-field
+% states.  Occupancy and the mobile-current cue change; the MIM frame and the
+% localized-site positions do not.  Marker count is illustrative and remains a
+% qualified working model, never a trap-density measurement.
+\node[columnTitle,anchor=base] at ({\stateProgressLeft+0.5*\mimCellWidth},3.96)
+  {Sulfur-rich copolymer: charge trapping in one specimen};
+\node[labelMute,anchor=base] at ({\stateEarlyLeft+0.5*\mimCellWidth},3.40)
   {early field-on};
-\fill[film] (\stateEarlyLeft,1.91) rectangle
-  ({\stateEarlyLeft+\mimCellWidth},3.12);
-\draw[structure] (\stateEarlyLeft,3.28)--({\stateEarlyLeft+\mimCellWidth},3.28)
-  (\stateEarlyLeft,3.12)--({\stateEarlyLeft+\mimCellWidth},3.12)
-  (\stateEarlyLeft,1.91)--({\stateEarlyLeft+\mimCellWidth},1.91)
-  (\stateEarlyLeft,1.75)--({\stateEarlyLeft+\mimCellWidth},1.75);
-\fill[electrode] (\stateEarlyLeft,3.12) rectangle
-  ({\stateEarlyLeft+\mimCellWidth},3.28);
-\fill[electrode] (\stateEarlyLeft,1.75) rectangle
-  ({\stateEarlyLeft+\mimCellWidth},1.91);
-\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
-  ({\stateEarlyLeft+0.18},2.06)--({\stateEarlyLeft+0.18},2.96);
-\draw[trapState] (3.70,2.68)--(4.04,2.68);
-\draw[cRed!70!black,line width=0.34pt] (3.87,2.68) circle [radius=0.042];
-\draw[trapState] (4.28,2.20)--(4.60,2.20);
-\draw[cRed!70!black,line width=0.34pt] (4.44,2.20) circle [radius=0.042];
-\draw[currentStrong] (4.62,2.08)--(4.62,2.56);
-\draw[currentStrong] (5.02,2.18)--(5.02,2.88);
-\fill[currentDot] (4.62,2.30) circle [radius=0.035];
-\fill[currentDot] (5.02,2.48) circle [radius=0.035];
-\node[labelMute,anchor=west,text=cGray!86!black] at (5.10,2.92)
-  {$J_\mathrm{mob}$};
-
-% Progressive state: capture cues terminate on sites, while the mobile cue is
-% visibly reduced.
-\node[labelMute,anchor=south] at ({\stateProgressLeft+0.5*\mimCellWidth},3.56)
+\node[labelMute,anchor=base] at ({\stateProgressLeft+0.5*\mimCellWidth},3.40)
   {progressive trapping};
-\fill[film] (\stateProgressLeft,1.91) rectangle
-  ({\stateProgressLeft+\mimCellWidth},3.12);
-\draw[structure] (\stateProgressLeft,3.28)--({\stateProgressLeft+\mimCellWidth},3.28)
-  (\stateProgressLeft,3.12)--({\stateProgressLeft+\mimCellWidth},3.12)
-  (\stateProgressLeft,1.91)--({\stateProgressLeft+\mimCellWidth},1.91)
-  (\stateProgressLeft,1.75)--({\stateProgressLeft+\mimCellWidth},1.75);
-\fill[electrode] (\stateProgressLeft,3.12) rectangle
-  ({\stateProgressLeft+\mimCellWidth},3.28);
-\fill[electrode] (\stateProgressLeft,1.75) rectangle
-  ({\stateProgressLeft+\mimCellWidth},1.91);
-\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
-  ({\stateProgressLeft+0.18},2.06)--({\stateProgressLeft+0.18},2.96);
-\draw[trapState] (6.36,2.66)--(6.70,2.66);
-\fill[cRed!70!black] (6.58,2.64) circle [radius=0.042];
-\draw[trapState] (7.08,2.30)--(7.44,2.30);
-\draw[cRed!70!black,line width=0.34pt] (7.26,2.30) circle [radius=0.042];
-\draw[captureCue] (6.40,2.98)--(6.58,2.66);
-\draw[captureCue] (7.02,2.82)--(7.30,2.30);
-\draw[currentSoft] (7.72,2.10)--(7.72,2.50);
-\fill[currentDot] (7.72,2.28) circle [radius=0.028];
-
-% Late state: occupied sites dominate qualitatively and only a weak mobile cue
-% remains. The state is persistent/slow, not a claim of complete blockage.
-\node[labelMute,anchor=south] at ({\stateLateLeft+0.5*\mimCellWidth},3.56)
+\node[labelMute,anchor=base] at ({\stateLateLeft+0.5*\mimCellWidth},3.40)
   {long-lived occupied state};
-\fill[film] (\stateLateLeft,1.91) rectangle
-  ({\stateLateLeft+\mimCellWidth},3.12);
-\draw[structure] (\stateLateLeft,3.28)--({\stateLateLeft+\mimCellWidth},3.28)
-  (\stateLateLeft,3.12)--({\stateLateLeft+\mimCellWidth},3.12)
-  (\stateLateLeft,1.91)--({\stateLateLeft+\mimCellWidth},1.91)
-  (\stateLateLeft,1.75)--({\stateLateLeft+\mimCellWidth},1.75);
-\fill[electrode] (\stateLateLeft,3.12) rectangle
-  ({\stateLateLeft+\mimCellWidth},3.28);
-\fill[electrode] (\stateLateLeft,1.75) rectangle
-  ({\stateLateLeft+\mimCellWidth},1.91);
-\draw[fieldGuide,-{Stealth[length=2.5pt,width=1.8pt]}]
-  ({\stateLateLeft+0.18},2.06)--({\stateLateLeft+0.18},2.96);
-\draw[trapState] (8.96,2.66)--(9.30,2.66);
-\fill[cRed!70!black] (9.18,2.64) circle [radius=0.042];
-\draw[trapState] (9.80,2.30)--(10.12,2.30);
-\fill[cRed!70!black] (10.02,2.28) circle [radius=0.042];
-\draw[currentSoft] (10.16,2.10)--(10.16,2.34);
-\fill[currentDot] (10.16,2.22) circle [radius=0.026];
+\MimCell{\stateEarlyLeft}{film}
+\MimCell{\stateProgressLeft}{film}
+\MimCell{\stateLateLeft}{film}
 
-% A compact marker key prevents the categorical occupancy marks from being
-% mistaken for a quantitative trap-count legend at print reduction.
-\draw[trapState] (6.28,1.52)--(6.62,1.52);
-\draw[cRed!70!black,line width=0.36pt] (6.45,1.52) circle [radius=0.045];
-\node[labelMute,anchor=west] at (6.60,1.48) {empty};
-\draw[trapState] (8.14,1.52)--(8.48,1.52);
-\fill[cRed!70!black] (8.31,1.52) circle [radius=0.045];
-\node[labelMute,anchor=west] at (8.46,1.48) {occupied};
+% One declaration owns every localized-state position (y / x-offset / length).
+% Because the three cells are generated from this single list, the sites cannot
+% drift between states, and the constant bar length keeps the field from
+% acquiring a fitted density-envelope silhouette.
+\foreach \sy/\sx/\slen in {2.80/0.52/0.34, 2.86/0.96/0.34, 2.30/0.62/0.34,
+                           2.38/1.32/0.34, 1.96/0.58/0.34, 2.06/1.24/0.34}{
+  \foreach \cellx in {3.93,6.73,9.53}{
+    \draw[trapState] ({\cellx+\sx-0.5*\slen},\sy)--({\cellx+\sx+0.5*\slen},\sy);
+  }
+}
+% Occupancy is the only per-state variable: an occupied site keeps the same bar
+% and gains a sign-neutral filled marker.  Presence/absence of the marker, not
+% an open-versus-filled outline, survives print reduction.
+\foreach \sy/\sx in {2.86/0.96, 2.30/0.62, 2.06/1.24}{
+  \draw[trapStateFull] ({\stateProgressLeft+\sx-0.17},\sy)--
+    ({\stateProgressLeft+\sx+0.17},\sy);
+  \fill[cRed!72!black] ({\stateProgressLeft+\sx},\sy) circle [radius=0.068];
+}
+% The late state leaves one site empty: this is a persistent, mostly occupied
+% state, not saturation or complete current blockage.
+\foreach \sy/\sx in {2.80/0.52, 2.86/0.96, 2.30/0.62, 2.38/1.32, 2.06/1.24}{
+  \draw[trapStateFull] ({\stateLateLeft+\sx-0.17},\sy)--
+    ({\stateLateLeft+\sx+0.17},\sy);
+  \fill[cRed!72!black] ({\stateLateLeft+\sx},\sy) circle [radius=0.068];
+}
+% Short capture cues terminate at the two sites that have just become occupied
+% and arrive from below, along the drawn transport direction.  They are event
+% cues, not a continuous hopping path or a molecular repeat.
+\draw[captureCue] ({\stateProgressLeft+0.78},2.62)--({\stateProgressLeft+0.90},2.78);
+\draw[captureCue] ({\stateProgressLeft+1.14},1.80)--({\stateProgressLeft+1.20},1.97);
 
-% Discrete state connectors make the causal order visible without inventing a
-% calibrated time axis or an automated measurement process.
-\coordinate (early_state_out) at (5.64,3.47);
-\coordinate (progress_state_in) at (5.86,3.47);
-\coordinate (progress_state_out) at (8.28,3.47);
-\coordinate (late_state_in) at (8.50,3.47);
+% Mobile-current cue.  Every state uses the same through-film path, from the
+% bottom electrode to the top electrode at one fixed offset, so arrow LENGTH
+% never encodes strength.  Stroke weight and carrier-dot count carry the
+% qualitative decrease; a weak cue remains in the late state.
+\draw[-{Stealth[length=3.0pt,width=2.2pt]},cGray!88!black,line width=0.95pt,
+  line cap=round] ({\stateEarlyLeft+\currentOffset},1.83)--
+  ({\stateEarlyLeft+\currentOffset},2.89);
+\foreach \dy in {2.00,2.32,2.64}{
+  \fill[currentDot] ({\stateEarlyLeft+\currentOffset},\dy) circle [radius=0.048];
+}
+\node[labelMute,anchor=base east,text=cGray!86!black]
+  at ({\stateEarlyLeft+1.95},2.72) {$J_\mathrm{mob}$};
+\draw[-{Stealth[length=2.6pt,width=1.9pt]},cGray!88!black,line width=0.68pt,
+  line cap=round] ({\stateProgressLeft+\currentOffset},1.83)--
+  ({\stateProgressLeft+\currentOffset},2.89);
+\foreach \dy in {2.08,2.48}{
+  \fill[currentDot] ({\stateProgressLeft+\currentOffset},\dy) circle [radius=0.044];
+}
+\draw[-{Stealth[length=2.2pt,width=1.6pt]},cGray!88!black,line width=0.55pt,
+  line cap=round] ({\stateLateLeft+\currentOffset},1.83)--
+  ({\stateLateLeft+\currentOffset},2.89);
+\fill[currentDot] ({\stateLateLeft+\currentOffset},2.30) circle [radius=0.042];
+
+% A compact marker key keeps the categorical occupancy marks from reading as a
+% quantitative trap-count legend at print reduction.
+\draw[trapState] (5.41,1.26)--(5.71,1.26);
+\node[labelMute,anchor=base west] at (5.79,1.20) {empty localized state};
+\draw[trapStateFull] (8.02,1.26)--(8.32,1.26);
+\fill[cRed!72!black] (8.17,1.26) circle [radius=0.085];
+\node[labelMute,anchor=base west] at (8.40,1.20) {occupied localized state};
+% The one causal sentence the objects cannot carry alone.
+\node[labelMute,anchor=base] at ({\stateProgressLeft+0.5*\mimCellWidth},0.80)
+  {field held on throughout; growing occupancy weakens the mobile-current cue};
+
+% Stage connectors run along one mid-film lane so the strip reads as the same
+% specimen at later times.  They are light, horizontal and open-headed, which
+% keeps them distinct from the vertical charcoal transport cue inside a cell.
+\coordinate (early_state_out) at (6.32,2.355);
+\coordinate (progress_state_in) at (6.59,2.355);
+\coordinate (progress_state_out) at (9.12,2.355);
+\coordinate (late_state_in) at (9.39,2.355);
 \draw[storyArrow] (early_state_out)--(progress_state_in);
 \draw[storyArrow] (progress_state_out)--(late_state_in);
-\coordinate (comparison_out) at (10.90,2.50);
-\coordinate (readout_entry) at (11.62,2.50);
+\coordinate (comparison_out) at (11.92,2.355);
+\coordinate (readout_entry) at (12.44,2.355);
 \draw[storyArrow] (comparison_out)--(readout_entry);
 % fig-agent:end object=sulfur_working_state
 
@@ -230,24 +235,24 @@
 % What we read
 % --------------------------------------------------------------------------
 % fig-agent:start object=qualitative_current_readout panel=A kind=mini_plot truth_bearing=true
-\node[columnTitle,anchor=south west] at (11.72,3.56) {Qualitative output};
-\draw[axisArrow] (11.72,1.58)--(11.72,3.36);
-\draw[axisArrow] (11.72,1.58)--(16.20,1.58);
-% This is deliberately a conventional qualitative log--log transient, rather
-% than a compact copy of panel d's material-specific normalized metric.  The
-% early fit is extrapolated as a neutral reference; the solid late segment
-% departs above it without asserting an absolute control comparison.
-\node[labelMute,anchor=south east] at (11.63,3.40)
-  {$\log I$};
-\node[labelMute,anchor=north] at (14.02,0.98) {$\log t$};
-\draw[traceEarly] (12.18,3.14)--(13.62,2.50);
-\draw[fitReference] (13.62,2.50)--(15.86,1.86);
-\draw[traceLate] (13.62,2.50) .. controls (14.24,2.47) and (15.06,2.30) ..
-  (15.86,2.18);
-% Keep the annotation below the descending early segment; placing it on the
-% curve makes the symbolic readout look like a measured trace crossing text.
-\node[labelMute,anchor=north west] at (12.20,2.35) {early power law};
-\node[labelStd,text=cRed!70!black,anchor=south west] at (14.05,2.70)
+\node[columnTitle,anchor=base west] at (12.60,3.96) {Qualitative output};
+% The plot frame shares the MIM band's top and bottom, so the readout stays a
+% secondary lane rather than a second hero panel.
+\draw[axisArrow] (12.60,\mimBotOuter)--(12.60,3.23);
+\draw[axisArrow] (12.60,\mimBotOuter)--(16.16,\mimBotOuter);
+\node[labelStd,anchor=south west] at (12.68,3.10) {$\log I$};
+\node[labelStd,anchor=base] at (14.38,1.20) {$\log t$};
+% A conventional qualitative log--log transient, not a compact copy of the
+% quantitative panels.  The dashed line is the early fit extended forward and
+% is labelled as such, so it cannot be read as a measured ideal-dielectric or
+% control trace; the solid late segment departs above it.
+\draw[traceEarly] (13.02,2.97)--(14.12,2.45);
+\draw[fitReference] (14.12,2.45)--(15.20,1.939);
+\draw[traceLate] (14.12,2.45) .. controls (14.82,2.41) and (15.42,2.33) ..
+  (16.06,2.27);
+\node[labelMute,anchor=base west] at (12.88,2.12) {early power law};
+\node[labelMute,anchor=base west] at (15.28,1.86) {early fit};
+\node[labelStd,text=cRed!72!black,anchor=base west] at (14.24,2.63)
   {persistent relaxation};
 % fig-agent:end object=qualitative_current_readout
 

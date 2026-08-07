@@ -230,4 +230,6 @@ semantic_legibility:
       owner: panel_a.early_power_law
     - label_id: panel_a.late_departure_label
       owner: panel_a.late_departure
+    - label_id: panel_a.early_fit_label
+      owner: panel_a.early_fit_extrapolation
 publication_acceptance: not_claimed

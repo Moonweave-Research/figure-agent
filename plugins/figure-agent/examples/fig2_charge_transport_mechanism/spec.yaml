@@ -7,6 +7,10 @@ title: "Fig. 2a — Charge-transport mechanism schematic"
 style_profile: polymer-paper
 undeclared_geometry_profile: schematic
 visual_clash_cap: 8
+# Two adjacent text lines that overlap by a thin band never reach the word-pair
+# IoU threshold. This strip lost a full header row to that blind spot, so it
+# gates on the band-overlap finding as well.
+text_line_overlap_gate: strict
 review_scale_previews: required
 paper_aesthetic_context: nc-main-text-series
 aesthetic_intent: aesthetic_intent.yaml
@@ -57,6 +61,19 @@ named_endpoint_assertions:
 
 # These anchors check reader-role hierarchy without forcing a particular
 # bracket, separator, or other comparison primitive.
+# The localized-state marks are a qualitative collection, never an energy or
+# density axis. Constant bar length plus irregular lateral positions are what
+# keep the field from reading as a fitted DOS silhouette, and the assertion
+# below makes that a property the source cannot lose silently.
+state_field_geometry_assertions:
+  - id: localized-state-field-is-not-a-density-envelope
+    source_object: sulfur_working_state
+    kind: horizontal_state_field
+    min_marks: 6
+    min_vertical_span_cm: 0.60
+    min_center_std_cm: 0.15
+    max_width_abs_midpoint_correlation: -0.30
+
 semantic_assertions:
   - id: reference-left-of-sulfur
     relation: left_of
@@ -113,16 +130,48 @@ text_boundary_checks:
     clearance_pt: 0.0
     text_allowlist: [DC, Idealized, Sulfur-rich, Qualitative, early, progressive, long-lived, persistent, available, occupied]
 
+# The three held-field states must stay individually visible and ordered; the
+# sequence, not any single cell, is what carries the mechanism.
+process_stage_visibility_checks:
+  - id: sulfur-held-field-sequence-visible
+    panel_id: A
+    reading_axis: x
+    minimum_stage_separation_pt: 40.0
+    stages:
+      - id: early_field_on
+        text_phrases:
+          - id: early-field-on
+            words: ["early", "field-on"]
+      - id: progressive_trapping
+        text_phrases:
+          - id: progressive-trapping
+            words: ["progressive", "trapping"]
+      - id: long_lived_occupied
+        text_phrases:
+          - id: long-lived-occupied-state
+            words: ["long-lived", "occupied", "state"]
+
+# Both readout annotations are guarded against the curve they name, so a later
+# edit cannot let a label settle onto its own trace.
 label_path_proximity_checks:
-  - id: persistent-relaxation-annotation-lane
+  - id: persistent-relaxation-clears-late-trace
     kind: vertical_line
-    role: transient-annotation-lane
-    x_pdf_cm: 13.58
-    y_range_pdf_cm: [2.65, 3.13]
+    role: late-departure-trace
+    x_pdf_cm: 16.714
+    y_range_pdf_cm: [2.868, 2.978]
     clearance_pt: 2.5
     text_phrases:
       - id: persistent-relaxation
         words: ["persistent", "relaxation"]
+  - id: early-power-law-clears-early-segment
+    kind: vertical_line
+    role: early-power-law-trace
+    x_pdf_cm: 14.945
+    y_range_pdf_cm: [2.495, 2.605]
+    clearance_pt: 2.5
+    text_phrases:
+      - id: early-power-law
+        words: ["early", "power", "law"]
 
 notes: |
   This fixture is intentionally schematic-only. The canonical Fig. 2 data

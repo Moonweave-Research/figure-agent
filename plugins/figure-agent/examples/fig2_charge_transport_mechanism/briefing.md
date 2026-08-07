@@ -41,23 +41,29 @@ the material-specific comparison`.
   not declare a mobile carrier polarity.
 - **Sulfur-rich copolymer**: a sign-neutral localized-state working model shown
   as one specimen at three successive held-field states: early field-on,
-  progressive trapping, and a long-lived occupied state. Short horizontal
-  state bars with open or filled occupancy markers are categorical only; they
-  are not an energy axis. Short capture cues may terminate at a site, but no
-  continuous hopping path or molecular repeat is drawn.
-- **Mobile-current contribution**: early state shows a stronger qualitative
-  through-film current cue. The long blue dashed arrows denote $E_\mathrm{app}$;
-  shorter solid charcoal arrows with sparse dots denote $J_\mathrm{mob}$, and
-  those current cues reduce as occupancy grows.
-  This means reduced mobile-current contribution, not complete current blockage
-  or zero current.
-- A compact key identifies open bars as empty localized states and filled bars
+  progressive trapping, and a long-lived occupied state. One declaration owns
+  the site positions for all three cells, so the same specimen cannot drift
+  between states. Short horizontal state bars are categorical only and are not
+  an energy axis; occupancy is marked by the presence of a filled sign-neutral
+  marker rather than by an open-versus-filled outline, because presence is what
+  survives print reduction. The late state leaves one site empty: mostly
+  occupied is not saturation. Short capture cues may terminate just short of a
+  site, but no continuous hopping path or molecular repeat is drawn.
+- **Mobile-current contribution**: the blue dashed arrow denotes
+  $E_\mathrm{app}$ and is identical in every cell. Every state draws the same
+  solid charcoal $J_\mathrm{mob}$ path across the film at one fixed offset, so
+  arrow length never encodes strength; stroke weight and carrier-dot count
+  carry the qualitative decrease as occupancy grows. A weak cue remains in the
+  late state. This means reduced mobile-current contribution, not complete
+  current blockage or zero current.
+- A compact key identifies bare bars as empty localized states and marked bars
   as occupied localized states; the marks remain categorical rather than a
   trap-count scale. State bars stay horizontal; this strip does not draw a
   molecular host texture, and diagonal strokes are reserved for capture cues.
 - **What we read**: a compact qualitative log--log output. A straight early
   segment and a later persistent-relaxation tail are secondary to the MIM
-  sequence. Composition-specific normalized deviations, exact ratios, and time
+  sequence. The dashed line is the early fit extended forward and carries its
+  own label, so it cannot be read as a measured control trace. Composition-specific normalized deviations, exact ratios, and time
   windows belong to the quantitative panels.
 
 ## §3. Physics invariants
