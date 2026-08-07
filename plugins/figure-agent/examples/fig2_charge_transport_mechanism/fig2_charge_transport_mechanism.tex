@@ -115,21 +115,18 @@
   {bound polarization, no accumulation};
 \MimCell{\referenceCellLeft}{referenceFilm}
 % A compact two-terminal source states the held boundary condition without
-% turning the strip into an instrument diagram.  The ring carries the standard
-% direct-current glyph — one solid line over one broken line — which says the
-% bias is DC and stays on, and says nothing about which terminal is positive.
-% An empty ring would be a generic source symbol carrying no information at
-% all; a battery or a +/- pair would assert a polarity this strip does not
-% claim.  The designator sits just below its own symbol.
+% turning the strip into an instrument diagram.  The ring carries $V$, the
+% general voltage-source mark: it names the quantity the source holds and
+% asserts no polarity, where a battery glyph or a +/- pair would assert one.
+% The subscript stays out — `$V_\mathrm{app}$` does not fit inside a ring this
+% size without touching the stroke, and the applied field is already named
+% $E_\mathrm{app}$ inside the film.
 \draw[sourceWire] (0.34,3.50)--(\referenceCellLeft,3.50);
 \draw[sourceWire] (0.34,1.75)--(\referenceCellLeft,1.75);
 \draw[sourceWire] (0.34,3.50)--(0.34,2.925);
 \draw[sourceWire] (0.34,2.325)--(0.34,1.75);
 \draw[sourceOutline] (0.34,2.625) circle [radius=0.30];
-\draw[sourceWire] (0.21,2.688)--(0.47,2.688);
-\draw[sourceWire,dash pattern=on 0.055cm off 0.048cm]
-  (0.21,2.562)--(0.47,2.562);
-\node[sourceLabel,anchor=base] at (0.34,1.52) {$V_\mathrm{app}$};
+\node[sourceLabel] at (0.34,2.625) {$V$};
 \node[labelStd,anchor=base west,text=cBlue!70!black]
   at ({\referenceCellLeft+0.30},2.29) {$E_\mathrm{app}$};
 % A quiet divider separates the idealized reference from the sulfur-state

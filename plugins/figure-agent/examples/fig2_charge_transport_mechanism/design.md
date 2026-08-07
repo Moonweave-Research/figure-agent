@@ -75,10 +75,12 @@ decoration or unsupported mechanism detail.
 - Label the early-fit extrapolation. An unlabelled dashed line beside a
   material trace is read as a measured control.
 - Every symbol must carry information. An empty ring is the generic-source
-  glyph and says nothing; draw the standard direct-current mark inside it
-  (solid line over broken line), which states that the bias is DC and held
-  without asserting which terminal is positive. A battery glyph or a +/- pair
-  would assert a polarity this strip does not claim.
+  glyph and says nothing; put $V$ inside it, the general voltage-source mark,
+  which names the quantity the source holds without asserting which terminal
+  is positive. A battery glyph or a +/- pair would assert a polarity this
+  strip does not claim. The subscript stays out: `$V_\mathrm{app}$` cannot fit
+  inside a ring this size without touching the stroke, and the applied field
+  is already named $E_\mathrm{app}$ inside the film.
 - A legend must show the mark the drawing actually uses. Key entries carry the
   same bar length and marker radius as the localized states inside the cells.
 - A transient departs its own fit tangentially. Leave the branch point along
