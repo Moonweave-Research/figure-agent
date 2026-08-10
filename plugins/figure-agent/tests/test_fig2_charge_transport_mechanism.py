@@ -184,12 +184,18 @@ def test_fig2_binds_qualified_localized_state_model_to_progressive_output() -> N
     )
 
 
-def test_fig2_progressive_trapping_rule_is_preserved_in_figure_agent_skill() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
+def test_fig2_progressive_trapping_rule_is_preserved_in_vision_critique_rubric() -> None:
+    rubric = (
+        PLUGIN_ROOT
+        / "skills"
+        / "figure-agent"
+        / "references"
+        / "vision-critique-rubric.md"
+    ).read_text(
         encoding="utf-8"
     )
 
-    assert "do not let one static trap field stand in for time" in skill
-    assert "repeated matched MIM states" in skill
-    assert "mobile-current contribution visibly weaken" in skill
-    assert "qualified working model" in skill
+    assert "do not let one static trap field stand in for time" in rubric
+    assert "repeated matched MIM states" in rubric
+    assert "mobile-current contribution visibly weaken" in rubric
+    assert "qualified working model" in rubric

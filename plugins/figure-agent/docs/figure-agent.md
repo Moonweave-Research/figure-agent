@@ -258,6 +258,7 @@ reviewable; open the next slice only after recording stop conditions and evidenc
 - [x] Preserve additive, content-hashed per-step execution artifacts for
   compile, adjudication scaffold, export, and fig-loop runs without changing
   the selected action, command return code, or final stop reason.
+- [x] Keep agent routing under 500 lines and load the detailed visual-review rubric only for visual interpretation; package and tests preserve the split contract.
 - [ ] Give every remaining specialist/internal adapter an explicit canonical
   successor and evidence contract before compacting the surface.
 - [ ] Expose a compact default command surface only after compatibility tests
@@ -277,7 +278,6 @@ Fig1 repair evidence and current fixture bindings remain in the linked evidence 
 **Exit:** two families show lower correction burden without reducing open LLM authoring, plus the required named human scaffold/review verdict; otherwise keep the mechanism experimental or retire it.
 
 ## 6. Mandatory stop conditions
-
 The workflow must stop and report the required actor when any of these holds:
 
 - the render, crop manifest, critique, adjudication, selector, or parent hash is

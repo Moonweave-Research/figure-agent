@@ -5,6 +5,19 @@ Before product work, read the sole product and execution authority
 `docs/figure-agent.md`. Other specifications, plans, roadmaps, and milestones
 are evidence, not product authority.
 
+## Agent context loading
+
+Keep `skills/figure-agent/SKILL.md` as the compact routing and workflow
+entrypoint. For figure authoring, visual review, defect adjudication, or final
+render inspection, follow its pointer and read
+`skills/figure-agent/references/vision-critique-rubric.md` completely. Do not
+load that long rubric for status, compile, export, packaging, or other
+mechanical-only work unless visual interpretation is also required.
+
+Project and paper rule catalogs are selected by the authoring context pack.
+Do not copy them back into the entry skill or treat the visual rubric as a
+second product authority.
+
 ## Routing priority
 
 For **Figure Agent dogfood** and Figure Agent product-development work, use this

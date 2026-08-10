@@ -289,7 +289,13 @@ def test_product_contract_keeps_morphology_gate_narrow_and_render_based() -> Non
     contract = (plugin_root / "docs" / "figure-agent.md").read_text(
         encoding="utf-8"
     )
-    skill = (plugin_root / "skills" / "figure-agent" / "SKILL.md").read_text(
+    rubric = (
+        plugin_root
+        / "skills"
+        / "figure-agent"
+        / "references"
+        / "vision-critique-rubric.md"
+    ).read_text(
         encoding="utf-8"
     )
 
@@ -297,5 +303,5 @@ def test_product_contract_keeps_morphology_gate_narrow_and_render_based() -> Non
     assert "`stroked_centerline`" in contract
     assert "`silhouette_morphology_groups`" in contract
     assert "not an aesthetic score" in contract
-    assert "representation: stroked_centerline" in skill
-    assert "regression evidence only" in skill
+    assert "representation: stroked_centerline" in rubric
+    assert "regression evidence only" in rubric

@@ -24,6 +24,10 @@ def _read(relative_path: str) -> str:
     return (PLUGIN_ROOT / relative_path).read_text(encoding="utf-8")
 
 
+def _read_vision_critique_rubric() -> str:
+    return _read("skills/figure-agent/references/vision-critique-rubric.md")
+
+
 def test_fig_critique_documents_v1_17_grounded_contract_fields() -> None:
     doc = _read("commands/fig_critique.md")
 
@@ -72,8 +76,8 @@ def test_command_docs_do_not_describe_route_detail_as_v1_14_only() -> None:
             assert fragment not in doc, f"{path} still uses v1.14-only wording"
 
 
-def test_skill_documents_v1_17_l4_5_contract() -> None:
-    doc = _read("skills/figure-agent/SKILL.md")
+def test_vision_critique_rubric_documents_v1_17_l4_5_contract() -> None:
+    doc = _read_vision_critique_rubric()
 
     for required in (
         "schema v1.17",
@@ -84,24 +88,24 @@ def test_skill_documents_v1_17_l4_5_contract() -> None:
         assert required in doc
 
 
-def test_skill_audits_rotated_curve_labels_against_ticks_and_axes() -> None:
-    doc = _read("skills/figure-agent/SKILL.md")
+def test_vision_critique_rubric_audits_rotated_curve_labels() -> None:
+    doc = _read_vision_critique_rubric()
 
     assert "inspect the full glyph bounds against the curve" in doc
     assert "axis shaft, and tick marks at final reduction" in doc
     assert "shifting only vertically" in doc
 
 
-def test_skill_treats_thin_stroke_warnings_as_print_findings() -> None:
-    doc = _read("skills/figure-agent/SKILL.md")
+def test_vision_critique_rubric_treats_thin_strokes_as_print_findings() -> None:
+    doc = _read_vision_critique_rubric()
 
     assert "`thin_stroke` warnings on claim-bearing curves" in doc
     assert "normal print-legibility findings" in doc
     assert "visible when\nzoomed in" in doc
 
 
-def test_skill_audits_panel_area_against_rendered_occupancy() -> None:
-    doc = _read("skills/figure-agent/SKILL.md")
+def test_vision_critique_rubric_audits_panel_area_and_occupancy() -> None:
+    doc = _read_vision_critique_rubric()
 
     assert "allocated area and rendered content occupancy" in doc
     assert "do not infer importance from area alone" in doc
@@ -109,24 +113,24 @@ def test_skill_audits_panel_area_against_rendered_occupancy() -> None:
     assert "fail at reduction scale" in doc
 
 
-def test_skill_requires_provenance_classification_before_using_loose_build_crops() -> None:
-    doc = _read("skills/figure-agent/SKILL.md")
+def test_vision_critique_rubric_requires_build_crop_provenance() -> None:
+    doc = _read_vision_critique_rubric()
 
     assert "diagnostic_artifact_provenance.py" in doc
     assert "unmanifested build crop" in doc
     assert "must not be used as current review evidence" in doc
 
 
-def test_skill_does_not_force_simultaneous_states_into_an_ordered_stage_gate() -> None:
-    doc = _read("skills/figure-agent/SKILL.md")
+def test_vision_critique_rubric_keeps_simultaneous_states_unordered() -> None:
+    doc = _read_vision_critique_rubric()
 
     assert "Use ordered stage checks only for genuinely sequential events" in doc
     assert "do not invent a left-to-right order between them" in doc
     assert "semantic/electrical topology contract" in doc
 
 
-def test_skill_carries_nature_communications_figure_constraints() -> None:
-    doc = _read("skills/figure-agent/SKILL.md")
+def test_vision_critique_rubric_carries_nature_communications_constraints() -> None:
+    doc = _read_vision_critique_rubric()
 
     assert "target is Nature Communications" in doc
     assert "lower-case bold panel letters" in doc

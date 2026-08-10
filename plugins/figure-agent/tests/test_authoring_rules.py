@@ -12,6 +12,16 @@ sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 import authoring_rules  # noqa: E402
 
 
+def _read_vision_critique_rubric() -> str:
+    return (
+        PLUGIN_ROOT
+        / "skills"
+        / "figure-agent"
+        / "references"
+        / "vision-critique-rubric.md"
+    ).read_text(encoding="utf-8")
+
+
 def test_pair001_rule_catalog_requires_source_anchored_rules() -> None:
     catalog = authoring_rules.load_rule_catalog(PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md")
 
@@ -170,9 +180,7 @@ def test_project_rule_preserves_reversed_cantilever_morphology() -> None:
     assert "sharply pointed specimen" in rule["rule"]
     assert rule["source"]["kind"] == "hand_patch_commit"
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "intended reflection about the fixed-end axis" in normalized_skill
     assert "one-state taper, angular cap" in normalized_skill
@@ -195,9 +203,7 @@ def test_project_rule_aligns_cross_panel_polarity_labels_with_the_drive_rail() -
     assert "red hairline is insufficient" in rule["rule"]
     assert "grounded specimen clip" in rule["rule"]
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "shared body rail and baseline" in normalized_skill
     assert "visibly legible neutral leader" in normalized_skill
@@ -231,9 +237,7 @@ def test_project_rule_preserves_force_competition_decision_threshold() -> None:
     assert "conditional decision threshold" in rule["rule"]
     assert "one readable line" in rule["rule"]
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "give the numeric high-voltage label to the drive-electrode lane" in normalized_skill
     assert (
@@ -255,9 +259,7 @@ def test_project_rule_requires_an_explicit_off_float_interval_in_response_traces
     assert "polarity-reversal marker" in rule["rule"]
     assert "duration ratio" in rule["rule"]
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "require a visible source-OFF/floating interval" in normalized_skill
     assert "precharge duration compete with the response timebase" in normalized_skill
@@ -276,9 +278,7 @@ def test_project_rule_keeps_manual_ground_separation_distinct_from_a_switch() ->
     assert "manual separation" in rule["rule"]
     assert "generic switch symbol" in rule["rule"]
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "depict the ground lead as a manual separation" in normalized_skill
     assert "generic electrical-switch glyph" in normalized_skill
@@ -299,9 +299,7 @@ def test_project_rule_names_both_owners_when_isolation_keeps_support_reference_f
     assert "electrically floating" in rule["rule"]
     assert "reference potential fixed" in rule["rule"]
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "name both electrical owners" in normalized_skill
     assert "explicit electrical qualifier" in normalized_skill
@@ -325,9 +323,7 @@ def test_project_rule_prevents_ground_topology_from_leaking_into_floating_state(
     assert "deflection difference" in rule["rule"]
     assert "unbent isolation cartoon" in rule["rule"]
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "entire mounted specimen electrically floating" in normalized_skill
     assert "residual attraction bend after source OFF" in normalized_skill
@@ -346,9 +342,7 @@ def test_project_rule_requires_a_straight_positive_response_plateau() -> None:
     assert "visibly horizontal hold segment" in rule["rule"]
     assert "rounded peak" in rule["rule"]
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "explicitly horizontal segment" in normalized_skill
     assert "rounded summit" in normalized_skill
@@ -366,9 +360,7 @@ def test_project_rule_requires_marker_label_leaders_to_clear_glyphs() -> None:
     assert "free edge" in rule["rule"]
     assert "outside the glyphs" in rule["rule"]
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "begin the leader outside the glyphs" in normalized_skill
 
@@ -436,9 +428,7 @@ def test_pair001_print_scale_registration_uses_declared_physical_size() -> None:
 
 
 def test_current_candidate_status_and_label_path_coverage_are_learned() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert (
         "Do not let a stale canonical root hide a fresh declared repair candidate"
@@ -464,9 +454,7 @@ def test_current_candidate_status_and_label_path_coverage_are_learned() -> None:
 
 
 def test_general_caliper_rule_requires_visible_endpoint_projections_at_reduction() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized = " ".join(skill.split())
 
     assert "Inspect both endpoint projections at final reduction" in normalized
@@ -491,9 +479,7 @@ def test_pair001_rejects_unbound_particle_like_host_texture() -> None:
 
 
 def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized = " ".join(skill.split())
     assert "Panel C-style amorphous-host regression rule" in skill
     assert "small number of non-periodic traces" in skill
@@ -520,9 +506,7 @@ def test_panel_c_amorphous_host_embedded_localization_regression() -> None:
 
 
 def test_bridge_panel_row_height_requires_two_claim_bearing_halves() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized = " ".join(skill.split())
     assert "full-width bridge panel" in normalized
     assert "both halves" in normalized
@@ -531,9 +515,7 @@ def test_bridge_panel_row_height_requires_two_claim_bearing_halves() -> None:
 
 
 def test_finite_width_charge_markers_and_force_origins_keep_visual_ownership() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized = " ".join(skill.split())
 
     assert "full marker silhouette" in normalized
@@ -548,9 +530,7 @@ def test_finite_width_charge_markers_and_force_origins_keep_visual_ownership() -
 
 
 def test_malformed_candidate_set_can_fail_without_forced_preference() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized = " ".join(skill.split())
 
     assert "no viable candidate" in normalized
@@ -558,9 +538,7 @@ def test_malformed_candidate_set_can_fail_without_forced_preference() -> None:
 
 
 def test_weaker_residual_force_keeps_a_shorter_lighter_vector() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized = " ".join(skill.split())
 
     assert "residual-state vector visibly shorter and lighter" in normalized
@@ -569,9 +547,7 @@ def test_weaker_residual_force_keeps_a_shorter_lighter_vector() -> None:
 
 
 def test_chemical_panel_whitespace_follows_reaction_flow() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized = " ".join(skill.split())
     assert "chemical reaction panel" in normalized
     assert "reaction-flow axis" in normalized
@@ -579,9 +555,7 @@ def test_chemical_panel_whitespace_follows_reaction_flow() -> None:
 
 
 def test_inverse_vulcanization_topology_does_not_invent_crosslinks() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized = " ".join(skill.split())
     assert "preserve the declared polymer topology" in normalized
     assert "linear/statistical" in normalized
@@ -633,9 +607,7 @@ def test_inverse_vulcanization_topology_does_not_invent_crosslinks() -> None:
 
 
 def test_force_result_labels_share_the_result_role_cue() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized = " ".join(skill.split())
 
     assert (
@@ -653,9 +625,7 @@ def test_force_result_labels_share_the_result_role_cue() -> None:
 
 
 def test_internal_subview_descriptors_stay_below_title_tier() -> None:
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized = " ".join(skill.split())
 
     assert "internal subviews such as real-space and energy-space halves" in normalized
@@ -916,9 +886,7 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert "same relative annotation lane and baseline" in lanes["rule"]
     assert "collision or semantic reason" in lanes["rule"]
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "same relative annotation lane and baseline" in normalized_skill
     assert "shared apparatus label from left to above to right" in normalized_skill
@@ -960,9 +928,7 @@ def test_design_philosophy_keeps_current_figures_as_revisable_baselines() -> Non
     assert "FROZEN reference" not in normalized
     assert "reached Nature-tier" not in normalized
 
-    skill = (PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
+    skill = _read_vision_critique_rubric()
     normalized_skill = " ".join(skill.split())
     assert "mechanically uniform finish" in normalized_skill
     assert "random jitter or decorative noise" in normalized_skill

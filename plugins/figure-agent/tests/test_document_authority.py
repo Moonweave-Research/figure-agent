@@ -24,6 +24,14 @@ AGENT_ENTRYPOINTS = (
     PLUGIN_ROOT / "docs" / "architecture-overview.md",
 )
 
+VISION_CRITIQUE_REFERENCE = (
+    PLUGIN_ROOT
+    / "skills"
+    / "figure-agent"
+    / "references"
+    / "vision-critique-rubric.md"
+)
+
 SUPERSEDED_DOCS = (
     "docs/quality-kernel-goal.md",
     "docs/architecture-v0.3-snippet-library.md",
@@ -119,6 +127,22 @@ def test_agent_entrypoints_link_the_single_authority() -> None:
     for path in AGENT_ENTRYPOINTS:
         text = _read(path)
         assert AUTHORITY_DOC in text, path
+
+
+def test_skill_entrypoint_uses_progressive_disclosure_for_vision_critique() -> None:
+    skill_path = PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md"
+    skill = _read(skill_path)
+
+    assert len(skill.splitlines()) < 500
+    assert "`references/vision-critique-rubric.md`" in skill
+    assert "read it completely" in skill
+    assert VISION_CRITIQUE_REFERENCE.is_file()
+
+    reference = _read(VISION_CRITIQUE_REFERENCE)
+    assert "## Contents" in reference
+    assert "### L4.5 Vision Critique (host-orchestrated)" in reference
+    assert "schema v1.17" in reference
+    assert "diagnostic_artifact_provenance.py" in reference
 
 
 def test_agent_entrypoints_keep_figure_agent_dogfood_on_its_own_workflow() -> None:

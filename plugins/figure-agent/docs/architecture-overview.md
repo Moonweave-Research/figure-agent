@@ -96,6 +96,25 @@ Compatibility commands remain callable only where their evidence contract is
 tested. They are not separate product authorities or permission to revive
 retired quality search, prompt orchestration, or SVG-polish machinery.
 
+## Agent context loading
+
+The shipped skill uses progressive disclosure so mechanical operations do not
+pay the context cost of the full visual-review contract:
+
+```text
+skill metadata
+  -> skills/figure-agent/SKILL.md (routing and workflow, always when triggered)
+  -> references/vision-critique-rubric.md (visual interpretation only)
+  -> context-pack-selected project/paper rule catalogs (fixture work only)
+```
+
+Authoring, visual critique, rendered-defect adjudication, and final render
+inspection load the vision rubric completely. Status, compile, export,
+packaging, and other mechanical-only work stop at the entry skill unless visual
+interpretation is also part of the task. The reference remains subordinate to
+this architecture and to the sole product authority; it does not introduce a
+second workflow or bypass context-pack source selection.
+
 ## Source and evidence ownership
 
 One fixture lives under `examples/<name>/`. Its editable authority and evidence
@@ -187,6 +206,7 @@ issues, and historical architecture records stay out of the generic package.
 | Operational architecture explanation | this file |
 | Document status/ship semantics | `docs/document-status.yaml` |
 | Public command contract | `commands/fig_*.md` and `bin/fig-agent` |
+| Agent routing and visual-review context | `skills/figure-agent/SKILL.md` and `skills/figure-agent/references/vision-critique-rubric.md` |
 | Build/check behavior | `scripts/compile.sh`, `scripts/checks/` |
 | Figure-specific intent | `examples/<name>/briefing.md`, `spec.yaml` |
 | Paper-local current state | declared `project_state` documents |

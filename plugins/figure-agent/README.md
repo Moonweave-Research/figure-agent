@@ -24,6 +24,7 @@ rendered evidence, and exports clean PDF/SVG.
 - **Build + visual QA** in one command — compile errors, label collisions, and clash warnings all in one report.
 - **Reference analysis** — `reference PNG -> OCR + palette clusters + optional vtracer structural hints`, then `coordinate_hints.yaml -> semantic TikZ authoring`. SVG-to-TikZ path conversion is not the active workflow.
 - **Vision critique without external API costs** — a vision-capable host (Codex or Claude) reads your compiled figure and writes feedback. No external API keys or per-figure inference bill.
+- **Progressive agent context** — the entry skill keeps routing and workflow compact; detailed rendered-meaning rules load only for authoring, visual review, adjudication, or final inspection.
 - **Export to PDF / SVG / TIFF / PNG** with text staying as text (SVG preserves editable labels).
 
 ## What this is NOT
@@ -181,6 +182,7 @@ declared meaning better.
 |---|---|
 | **Build pipeline** | `/fig_compile` runs Style Lock + lualatex + collision + clash checks. Report-only by default; manuscript runs use `FIGURE_AGENT_STRICT=1` for hard fail. |
 | **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, and optional aesthetic intent, then writes structured `critique.md`. A vision-capable host (Codex or Claude) performs the review; no external API. |
+| **Progressive skill context** | `skills/figure-agent/SKILL.md` owns routing and workflow; `skills/figure-agent/references/vision-critique-rubric.md` is loaded completely only for visual interpretation. Project/paper rule catalogs continue to enter through the authoring context pack. |
 | **Single next-action summary** | `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout` expose the same compact read-only `next_action_summary`, including `decision_boundary` so agents can tell deterministic gates, human decisions, release decisions, SVG-polish handoffs, and advisory-only aesthetic improvements apart. |
 | **Bounded safe runner** | `/fig_run` wraps `/fig_drive` and executes only allowlisted deterministic shell actions, then re-queries state. It can execute compile, missing adjudication scaffold, verify-only loop checkpoints, and non-golden draft export; host/human/existing-adjudication/accepted/golden/release/polish boundaries remain explicit stops. |
 | **Loop-centered compatibility wrapper** | `/fig_improve` wraps `/fig_run` for historical repeated one-fixture workflows while preserving host/human/patch/SVG/release boundaries. It is not the default route and cannot reactivate autonomous quality search. |
@@ -247,6 +249,9 @@ Falsified directions kept on record in `docs/historical/` and the relevant `arch
 - `docs/figure-agent.md` — the sole product contract and executable roadmap.
   Start here.
 - `docs/architecture-overview.md` — the shipped layer-by-layer reference.
+- `skills/figure-agent/SKILL.md` — compact agent routing and workflow entrypoint.
+- `skills/figure-agent/references/vision-critique-rubric.md` — detailed visual
+  review contract; load only through the entry skill's routing rule.
 - `docs/v0.9-operator-playbook.md` — release-candidate command sequence for
   single-fixture, queue, host critique, closeout, and release/golden operation.
 - `docs/document-status.yaml` — machine-readable class, ship, and
