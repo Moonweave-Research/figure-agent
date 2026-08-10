@@ -44,32 +44,45 @@ def test_fig2_critique_inputs_are_loadable_and_registered_in_nc_context() -> Non
     assert role["role"] == "overview_mechanism"
 
 
-def test_fig2_briefing_requires_host_critique_when_reference_is_absent() -> None:
-    """Reference-free intent/rules must still make the critique gate explicit."""
-    assert has_reference_free_grounding_context(FIXTURE)
+def test_fig2_briefing_enables_reference_free_grounding_after_audit_signal(
+    tmp_path: Path,
+) -> None:
+    """Reference-free intent/rules become usable only with audit evidence."""
+    isolated_fixture = tmp_path / "fig2_charge_transport_mechanism"
+    audit_dir = isolated_fixture / "build"
+    audit_dir.mkdir(parents=True)
+    (isolated_fixture / "briefing.md").write_text(
+        (FIXTURE / "briefing.md").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    (audit_dir / "visual_clash.json").write_text("{}\n", encoding="utf-8")
+
+    assert has_reference_free_grounding_context(isolated_fixture)
 
 
 def test_fig2_uses_progressive_trapping_sequence_and_standard_output() -> None:
     source = (FIXTURE / "fig2_charge_transport_mechanism.tex").read_text(encoding="utf-8")
     contract = yaml.safe_load((FIXTURE / "semantic_contract.yaml").read_text(encoding="utf-8"))
 
-    assert "$E_\\mathrm{app}=15\\,\\mathrm{MV\\,m^{-1}}$" in source
-    assert "held during acquisition" in source
-    assert "same MIM geometry; held field and time progress left to right" in source
-    assert "Idealized dielectric" in source
-    assert "bound polarization reference" in source
-    assert "Sulfur-rich copolymer: progressive trapping" in source
+    assert "$E_\\mathrm{app}=15\\,\\mathrm{MV\\,m^{-1}}$" not in source
+    assert "field strength, humidity, and cell matching belong to the caption" in source
+    assert "field held on throughout; growing occupancy weakens the mobile-current cue" in source
+    assert "every MIM cross-section" in source
+    assert "ONE sulfur-rich specimen at successive held-field" in source
+    assert "idealized dielectric" in source
+    assert "bound polarization, no accumulation" in source
+    assert "sulfur-rich copolymer" in source
     assert "early field-on" in source
     assert "progressive trapping" in source
     assert "long-lived occupied state" in source
     assert "trapState" in source
+    assert "trapStateFull" in source
     assert "currentDot" in source
     assert "captureCue" in source
-    assert "currentStrong" in source
-    assert "currentSoft" in source
-    assert "{empty}" in source
-    assert "{occupied}" in source
-    assert "Qualitative output" in source
+    assert "arrow LENGTH\n% never encodes strength" in source
+    assert "empty state" in source
+    assert "occupied state" in source
+    assert "qualitative output" in source
     assert "$\\log I$" in source
     assert "$\\log t$" in source
     assert "early power law" in source
@@ -77,7 +90,6 @@ def test_fig2_uses_progressive_trapping_sequence_and_standard_output() -> None:
     assert "traceEarly" in source
     assert "traceLate" in source
     assert "fitReference" in source
-    assert "at (12.20,2.35)" in source
     assert "ideal: rapid decay" not in source
     assert "localized charge capture" not in source
     assert "reduces mobile leakage" not in source
@@ -86,13 +98,18 @@ def test_fig2_uses_progressive_trapping_sequence_and_standard_output() -> None:
     assert "referenceRule" not in source
     assert "$I_\\mathrm{meas}/I_\\mathrm{early}$" not in source
     assert "PI/PTFE: below reference" not in source
-    assert "complete current blockage" not in source
     assert "panel_a.source_polarity_claim" in contract["forbidden_implications"]
     assert "panel_a.unmeasured_ideal_current_control" in contract["forbidden_implications"]
     assert "panel_a.direct_mobile_leakage_suppression_claim" in contract["forbidden_implications"]
     assert "transient_readout_uses_standard_log_log_current_grammar" in contract[
         "protected_relations"
     ]
+    progressive_role = next(
+        item
+        for item in contract["semantic_legibility"]["object_roles"]
+        if item["object_id"] == "panel_a.progressive_trapping_state"
+    )
+    assert "complete_blockage" in progressive_role["forbidden_readings"]
 
 
 def test_fig2_declares_the_parent_slot_and_a_single_panel_letter_owner() -> None:
