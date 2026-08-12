@@ -25,11 +25,7 @@ AGENT_ENTRYPOINTS = (
 )
 
 VISION_CRITIQUE_REFERENCE = (
-    PLUGIN_ROOT
-    / "skills"
-    / "figure-agent"
-    / "references"
-    / "vision-critique-rubric.md"
+    PLUGIN_ROOT / "skills" / "figure-agent" / "references" / "vision-critique-rubric.md"
 )
 
 SUPERSEDED_DOCS = (
@@ -69,9 +65,7 @@ def _read(path: Path) -> str:
 
 def test_exactly_one_active_authority_marker_exists() -> None:
     markdown_files = [REPO_ROOT / "README.md", *PLUGIN_ROOT.rglob("*.md")]
-    authority_hosts = [
-        path for path in markdown_files if AUTHORITY_MARKER in _read(path)
-    ]
+    authority_hosts = [path for path in markdown_files if AUTHORITY_MARKER in _read(path)]
 
     assert authority_hosts == [PLUGIN_ROOT / AUTHORITY_DOC]
 
@@ -103,9 +97,7 @@ def test_competing_authority_claims_require_an_earlier_legacy_boundary() -> None
             continue
 
         boundary_offsets = [
-            text.index(marker)
-            for marker in (LEGACY_MARKER, HISTORICAL_STATUS)
-            if marker in text
+            text.index(marker) for marker in (LEGACY_MARKER, HISTORICAL_STATUS) if marker in text
         ]
         assert boundary_offsets, path
         assert min(boundary_offsets) < min(claim_offsets), path
@@ -169,6 +161,7 @@ def test_host_vision_critique_contract_is_not_vendor_locked() -> None:
     driver = _read(PLUGIN_ROOT / "commands" / "fig_drive.md")
     readme = _read(PLUGIN_ROOT / "README.md")
     skill = _read(PLUGIN_ROOT / "skills" / "figure-agent" / "SKILL.md")
+    plugin_manifest = _read(PLUGIN_ROOT / ".claude-plugin" / "plugin.json")
 
     for text in (command, driver, readme, skill):
         assert "Codex" in text
@@ -176,6 +169,10 @@ def test_host_vision_critique_contract_is_not_vendor_locked() -> None:
 
     assert "host Claude Code main loop" not in command
     assert "non-Claude executor" not in driver
+    # The marketplace-facing manifest is the one surface a host reads before
+    # any other document; it must not re-introduce the vendor-locked wording.
+    assert "host Claude Code main loop" not in plugin_manifest
+    assert "vision-capable host" in plugin_manifest
 
 
 def test_prior_superseded_documents_remain_explicitly_historical() -> None:
