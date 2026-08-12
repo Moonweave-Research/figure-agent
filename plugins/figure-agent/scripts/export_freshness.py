@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from current_candidate import resolve_current_candidate  # noqa: E402
+from current_candidate import common_render_inputs, resolve_current_candidate  # noqa: E402
 from diff_pdf_content import expand_pdf, strip_metadata  # noqa: E402
 from git_tracked import is_tracked  # noqa: E402
 
@@ -33,15 +33,16 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _current_build_pdf(example_dir: Path, name: str) -> Path | None:
-    candidate = resolve_current_candidate(example_dir)
+    candidate = resolve_current_candidate(
+        example_dir,
+        common_render_inputs=common_render_inputs(example_dir),
+    )
     if candidate.get("state") == "NOT_DECLARED":
         return example_dir / "build" / f"{name}.pdf"
     if candidate.get("state") != "VALID":
         return None
     evidence_paths = candidate.get("evidence_paths")
-    render_relative = (
-        evidence_paths.get("render_pdf") if isinstance(evidence_paths, dict) else None
-    )
+    render_relative = evidence_paths.get("render_pdf") if isinstance(evidence_paths, dict) else None
     if not isinstance(render_relative, str) or candidate.get("render_state") != "FRESH":
         return None
     return (example_dir / render_relative).resolve()

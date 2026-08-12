@@ -53,9 +53,7 @@ from status_explanation import build_status_explanation
 # Shared build/export freshness source set. /fig_critique adds panel references
 # for crop/reference comparisons, but status should not require a rebuild for
 # critique-only panel-reference edits.
-STYLE_LOCK_PATH = (
-    runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
-)
+STYLE_LOCK_PATH = runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
 DECISION_RECORDS_ROOT = (
     runtime_paths.resolve_runtime_paths().plugin_root / "docs" / "decision-records"
 )
@@ -114,16 +112,6 @@ def _source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
 def _render_input_paths(example_dir: Path, name: str) -> dict[str, Path]:
     candidates = {
         "source_tex": example_dir / f"{name}.tex",
-        "briefing": example_dir / "briefing.md",
-        "spec": example_dir / "spec.yaml",
-        "claim_authority": example_dir / "claim_authority.yaml",
-        "style_lock": STYLE_LOCK_PATH,
-    }
-    return {role: path for role, path in candidates.items() if path.exists()}
-
-
-def _candidate_common_render_inputs(example_dir: Path) -> dict[str, Path]:
-    candidates = {
         "briefing": example_dir / "briefing.md",
         "spec": example_dir / "spec.yaml",
         "claim_authority": example_dir / "claim_authority.yaml",
@@ -369,9 +357,7 @@ def _compute_render_state(
     return RENDER_FRESH
 
 
-def _review_scale_previews_summary(
-    build_png: Path, spec: dict[str, Any]
-) -> dict[str, Any]:
+def _review_scale_previews_summary(build_png: Path, spec: dict[str, Any]) -> dict[str, Any]:
     """Describe opt-in 100/50/33 review evidence without trusting loose PNGs."""
     required = spec.get("review_scale_previews") == "required"
     if not required:
@@ -499,9 +485,7 @@ def _release_decision_summary(
             ),
         }
     non_release_records = [
-        record
-        for record in records
-        if record.get("decision_kind") in _NON_RELEASE_DECISION_ROUTES
+        record for record in records if record.get("decision_kind") in _NON_RELEASE_DECISION_ROUTES
     ]
     if non_release_records:
         record = non_release_records[-1]
@@ -513,9 +497,7 @@ def _release_decision_summary(
             "decision_kind": decision_kind,
             "record_path": record["record_path"],
             "route": route,
-            "message": (
-                "valid human decision record routes away from release-state mutation"
-            ),
+            "message": ("valid human decision record routes away from release-state mutation"),
             "follow_up": record.get("follow_up"),
         }
     return {
@@ -610,9 +592,7 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
             "reason": f"paper_figure_map_invalid:{type(exc).__name__}",
         }
     blocking = [
-        finding
-        for finding in report.get("findings", [])
-        if finding.get("severity") == "blocking"
+        finding for finding in report.get("findings", []) if finding.get("severity") == "blocking"
     ]
     if blocking:
         return {
@@ -902,10 +882,7 @@ def _silhouette_morphology_summary(
         spec_hash = hashlib.sha256(spec_path.read_bytes()).hexdigest()
     except OSError:
         return {"state": "stale", "path": display_path, "reason": "input_missing"}
-    if (
-        payload.get("render_pdf_sha256") != render_hash
-        or payload.get("spec_sha256") != spec_hash
-    ):
+    if payload.get("render_pdf_sha256") != render_hash or payload.get("spec_sha256") != spec_hash:
         return {"state": "stale", "path": display_path, "reason": "hash_mismatch"}
 
     if declared == 0 or checked != declared or group_checked != group_declared:
@@ -1009,10 +986,7 @@ def _declared_check_coverage_summary(
             "declared": declared,
             "reason": "input_missing",
         }
-    if (
-        payload.get("render_pdf_sha256") != render_hash
-        or payload.get("spec_sha256") != spec_hash
-    ):
+    if payload.get("render_pdf_sha256") != render_hash or payload.get("spec_sha256") != spec_hash:
         return {
             "state": "stale",
             "path": display_path,
@@ -1220,7 +1194,9 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
     if not isinstance(explicit_candidate, dict):
         explicit_candidate = current_candidate.resolve_current_candidate(
             example_dir,
-            common_render_inputs=_candidate_common_render_inputs(example_dir),
+            common_render_inputs=current_candidate.common_render_inputs(
+                example_dir, style_lock_path=STYLE_LOCK_PATH
+            ),
         )
         result["current_candidate"] = explicit_candidate
     if explicit_candidate.get("state") == "VALID":
@@ -1237,9 +1213,7 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
                 result.setdefault("checks", []).append(
                     (f"current_candidate_{label}_coverage", "gap")
                 )
-                result.setdefault("notes", []).append(
-                    f"current_candidate_{label}_coverage_gap"
-                )
+                result.setdefault("notes", []).append(f"current_candidate_{label}_coverage_gap")
     claim_summary = claim_authority.load_claim_authority(example_dir)
     result["claim_authority"] = claim_summary
     if claim_summary["state"] in {"BLOCKED", "INVALID"}:
@@ -1260,9 +1234,7 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         "blocked_no_eligible_outcomes",
         "blocked_single_eligible_fixture",
     }:
-        result.setdefault("notes", []).append(
-            f"learning_evidence_{learning_evidence['state']}"
-        )
+        result.setdefault("notes", []).append(f"learning_evidence_{learning_evidence['state']}")
     if "release_decision" not in result:
         name = result.get("name")
         if isinstance(name, str) and name:
@@ -1302,9 +1274,7 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         elif candidate_info.get("state") == "VALID":
             evidence_paths = candidate_info.get("evidence_paths")
             render_path = (
-                evidence_paths.get("render_pdf")
-                if isinstance(evidence_paths, dict)
-                else None
+                evidence_paths.get("render_pdf") if isinstance(evidence_paths, dict) else None
             )
             if isinstance(render_path, str) and render_path:
                 candidate_build_dir = (example_dir / render_path).parent
@@ -1438,7 +1408,9 @@ def _effective_current_candidate(
 ) -> dict[str, Any] | None:
     explicit = current_candidate.resolve_current_candidate(
         example_dir,
-        common_render_inputs=_candidate_common_render_inputs(example_dir),
+        common_render_inputs=current_candidate.common_render_inputs(
+            example_dir, style_lock_path=STYLE_LOCK_PATH
+        ),
     )
     if explicit.get("state") != "NOT_DECLARED":
         explicit["canonical_render_state"] = canonical_render_state
@@ -1518,9 +1490,7 @@ def _has_top_level_final_artifact_key(text: str) -> bool:
         return _flow_mapping_has_top_level_key(text, "final_artifact")
 
     lines = [
-        line
-        for line in text.splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
+        line for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")
     ]
     if not lines:
         return False
@@ -1577,30 +1547,33 @@ def infer_stage(example_dir: Path) -> dict:
     name = example_dir.name
     exports_substate = compute_export_state(example_dir, name)
     if not example_dir.exists() or not example_dir.is_dir():
-        return _finalize_status({
-            "stage": 0,
-            "name": name,
-            "checks": [],
-            "next": status_next_policy.select_next_hint(
-                stage=0,
-                name=name,
-                notes=[],
-                critique_state=CRITIQUE_NOT_REQUIRED,
-                exports_substate=exports_substate,
-            ),
-            "notes": [],
-            "accepted": None,
-            "exports_substate": exports_substate,
-            **_status_vector(
-                0,
-                [],
-                None,
-                exports_substate,
-                RENDER_NOT_SCAFFOLDED,
-                CRITIQUE_NOT_REQUIRED,
-                _default_final_artifact(name),
-            ),
-        }, example_dir)
+        return _finalize_status(
+            {
+                "stage": 0,
+                "name": name,
+                "checks": [],
+                "next": status_next_policy.select_next_hint(
+                    stage=0,
+                    name=name,
+                    notes=[],
+                    critique_state=CRITIQUE_NOT_REQUIRED,
+                    exports_substate=exports_substate,
+                ),
+                "notes": [],
+                "accepted": None,
+                "exports_substate": exports_substate,
+                **_status_vector(
+                    0,
+                    [],
+                    None,
+                    exports_substate,
+                    RENDER_NOT_SCAFFOLDED,
+                    CRITIQUE_NOT_REQUIRED,
+                    _default_final_artifact(name),
+                ),
+            },
+            example_dir,
+        )
 
     spec_path = example_dir / "spec.yaml"
     tex_path = example_dir / f"{name}.tex"
@@ -1669,9 +1642,7 @@ def infer_stage(example_dir: Path) -> dict:
         )
         if candidate_render_state in {RENDER_MISSING, RENDER_STALE, RENDER_FRESH}:
             render_state = candidate_render_state
-            checks.append(
-                ("current_candidate_render", candidate_render_state.lower())
-            )
+            checks.append(("current_candidate_render", candidate_render_state.lower()))
             if candidate_render_state == RENDER_STALE:
                 notes.append("current_candidate_render_stale")
             elif candidate_render_state == RENDER_MISSING:
@@ -1692,33 +1663,36 @@ def infer_stage(example_dir: Path) -> dict:
     if spec_path.exists() and not briefing_path.exists():
         checks.append(("spec_yaml", "present"))
         checks.append(("briefing_md", "missing"))
-        return _finalize_status({
-            "stage": 1,
-            "name": name,
-            "checks": checks,
-            "next": status_next_policy.select_next_hint(
-                stage=1,
-                name=name,
-                notes=notes,
-                critique_state=critique_state,
-                exports_substate=exports_substate,
-            ),
-            "notes": notes,
-            "accepted": accepted,
-            "exports_substate": exports_substate,
-            "canonical_render_state": canonical_render_state,
-            "current_candidate": current_candidate,
-            **_status_vector(
-                1,
-                notes,
-                accepted,
-                exports_substate,
-                render_state,
-                critique_state,
-                final_artifact,
-                publication_gate,
-            ),
-        }, example_dir)
+        return _finalize_status(
+            {
+                "stage": 1,
+                "name": name,
+                "checks": checks,
+                "next": status_next_policy.select_next_hint(
+                    stage=1,
+                    name=name,
+                    notes=notes,
+                    critique_state=critique_state,
+                    exports_substate=exports_substate,
+                ),
+                "notes": notes,
+                "accepted": accepted,
+                "exports_substate": exports_substate,
+                "canonical_render_state": canonical_render_state,
+                "current_candidate": current_candidate,
+                **_status_vector(
+                    1,
+                    notes,
+                    accepted,
+                    exports_substate,
+                    render_state,
+                    critique_state,
+                    final_artifact,
+                    publication_gate,
+                ),
+            },
+            example_dir,
+        )
 
     # Stage 4: any export artifact present
     if exports_dir.exists() and _has_export_artifact(exports_dir, name):
@@ -1735,9 +1709,7 @@ def infer_stage(example_dir: Path) -> dict:
             notes.append("partial_export")
         export_paths = _existing_export_paths(exports_dir, name)
         source_stale = (
-            _is_stale(sources, export_paths)
-            if exports_substate != EXPORT_FRESH
-            else False
+            _is_stale(sources, export_paths) if exports_substate != EXPORT_FRESH else False
         )
         export_content_stale = exports_substate == EXPORT_STALE
         is_stale = source_stale or export_content_stale
@@ -1845,91 +1817,100 @@ def infer_stage(example_dir: Path) -> dict:
         else:
             checks.append(("tex", "present"))
             checks.append(("build_pdf", "stale"))
-        return _finalize_status({
-            "stage": 2,
+        return _finalize_status(
+            {
+                "stage": 2,
+                "name": name,
+                "checks": checks,
+                "next": status_next_policy.select_next_hint(
+                    stage=2,
+                    name=name,
+                    notes=notes,
+                    critique_state=critique_state,
+                    exports_substate=exports_substate,
+                ),
+                "notes": notes,
+                "accepted": accepted,
+                "exports_substate": exports_substate,
+                "canonical_render_state": canonical_render_state,
+                "current_candidate": current_candidate,
+                **_status_vector(
+                    2,
+                    notes,
+                    accepted,
+                    exports_substate,
+                    render_state,
+                    critique_state,
+                    final_artifact,
+                    publication_gate,
+                ),
+            },
+            example_dir,
+        )
+
+    # Stage 1: spec.yaml exists, no .tex authored yet
+    if spec_path.exists():
+        checks.append(("spec_yaml", "present"))
+        return _finalize_status(
+            {
+                "stage": 1,
+                "name": name,
+                "checks": checks,
+                "next": status_next_policy.select_next_hint(
+                    stage=1,
+                    name=name,
+                    notes=notes,
+                    critique_state=critique_state,
+                    exports_substate=exports_substate,
+                ),
+                "notes": notes,
+                "accepted": accepted,
+                "exports_substate": exports_substate,
+                **_status_vector(
+                    1,
+                    notes,
+                    accepted,
+                    exports_substate,
+                    render_state,
+                    critique_state,
+                    final_artifact,
+                    publication_gate,
+                ),
+            },
+            example_dir,
+        )
+
+    # Stage 0 fallback (directory exists but no spec.yaml)
+    return _finalize_status(
+        {
+            "stage": 0,
             "name": name,
-            "checks": checks,
+            "checks": [],
             "next": status_next_policy.select_next_hint(
-                stage=2,
+                stage=0,
                 name=name,
-                notes=notes,
-                critique_state=critique_state,
+                notes=[],
+                critique_state=CRITIQUE_NOT_REQUIRED,
                 exports_substate=exports_substate,
             ),
-            "notes": notes,
+            "notes": [],
             "accepted": accepted,
             "exports_substate": exports_substate,
             "canonical_render_state": canonical_render_state,
             "current_candidate": current_candidate,
             **_status_vector(
-                2,
-                notes,
+                0,
+                [],
                 accepted,
                 exports_substate,
                 render_state,
                 critique_state,
-                final_artifact,
+                _default_final_artifact(name),
                 publication_gate,
             ),
-        }, example_dir)
-
-    # Stage 1: spec.yaml exists, no .tex authored yet
-    if spec_path.exists():
-        checks.append(("spec_yaml", "present"))
-        return _finalize_status({
-            "stage": 1,
-            "name": name,
-            "checks": checks,
-            "next": status_next_policy.select_next_hint(
-                stage=1,
-                name=name,
-                notes=notes,
-                critique_state=critique_state,
-                exports_substate=exports_substate,
-            ),
-            "notes": notes,
-            "accepted": accepted,
-            "exports_substate": exports_substate,
-            **_status_vector(
-                1,
-                notes,
-                accepted,
-                exports_substate,
-                render_state,
-                critique_state,
-                final_artifact,
-                publication_gate,
-            ),
-        }, example_dir)
-
-    # Stage 0 fallback (directory exists but no spec.yaml)
-    return _finalize_status({
-        "stage": 0,
-        "name": name,
-        "checks": [],
-        "next": status_next_policy.select_next_hint(
-            stage=0,
-            name=name,
-            notes=[],
-            critique_state=CRITIQUE_NOT_REQUIRED,
-            exports_substate=exports_substate,
-        ),
-        "notes": [],
-        "accepted": accepted,
-        "exports_substate": exports_substate,
-        "canonical_render_state": canonical_render_state,
-        "current_candidate": current_candidate,
-        **_status_vector(
-            0,
-            [],
-            accepted,
-            exports_substate,
-            render_state,
-            critique_state,
-            _default_final_artifact(name),
-            publication_gate,
-        ),
-    }, example_dir)
+        },
+        example_dir,
+    )
 
 
 def _print_single(result: dict) -> None:
@@ -1953,10 +1934,7 @@ def _print_single(result: dict) -> None:
                 f"assembly={paper_plan.get('assembly_state', '?')}"
             )
         elif paper_state == "NON_MAIN":
-            print(
-                "  Paper placement: "
-                f"non-main {paper_plan.get('classification', '?')}"
-            )
+            print(f"  Paper placement: non-main {paper_plan.get('classification', '?')}")
         elif paper_state == "UNMAPPED":
             print("  Paper placement: unmapped")
         elif paper_state == "INVALID":
@@ -1976,11 +1954,7 @@ def _print_single(result: dict) -> None:
     current_review = result.get("current_render_review")
     if isinstance(current_review, dict) and current_review.get("state") != "NOT_DECLARED":
         detail = current_review.get("human_review_state") or current_review.get("reason")
-        print(
-            "  Current human review: "
-            f"{current_review.get('state', '?')}"
-            f" ({detail or '?'})"
-        )
+        print(f"  Current human review: {current_review.get('state', '?')} ({detail or '?'})")
     current_candidate = result.get("current_candidate")
     if isinstance(current_candidate, dict) and current_candidate.get("state") != "NOT_DECLARED":
         if current_candidate.get("candidate_id"):
@@ -2035,33 +2009,19 @@ def _print_single(result: dict) -> None:
         conventions = spine_evidence.get("convention_receipt")
         physics = spine_evidence.get("physics_grounding")
         silhouette = spine_evidence.get("silhouette_morphology")
-        tex_state = (
-            tex_assertions.get("state")
-            if isinstance(tex_assertions, dict)
-            else "?"
-        )
-        convention_state = (
-            conventions.get("state") if isinstance(conventions, dict) else "?"
-        )
-        convention_total = (
-            conventions.get("total") if isinstance(conventions, dict) else "?"
-        )
+        tex_state = tex_assertions.get("state") if isinstance(tex_assertions, dict) else "?"
+        convention_state = conventions.get("state") if isinstance(conventions, dict) else "?"
+        convention_total = conventions.get("total") if isinstance(conventions, dict) else "?"
         physics_status = physics.get("status") if isinstance(physics, dict) else "?"
         semantic_assertion_state = (
-            semantic_assertions.get("state")
-            if isinstance(semantic_assertions, dict)
-            else "?"
+            semantic_assertions.get("state") if isinstance(semantic_assertions, dict) else "?"
         )
         semantic_contract_state = (
-            semantic_contract.get("state")
-            if isinstance(semantic_contract, dict)
-            else "?"
+            semantic_contract.get("state") if isinstance(semantic_contract, dict) else "?"
         )
         silhouette_state = silhouette.get("state") if isinstance(silhouette, dict) else "?"
         silhouette_checked = silhouette.get("checked") if isinstance(silhouette, dict) else "?"
-        silhouette_groups = (
-            silhouette.get("group_checked") if isinstance(silhouette, dict) else "?"
-        )
+        silhouette_groups = silhouette.get("group_checked") if isinstance(silhouette, dict) else "?"
         print(
             "  Spine evidence: "
             f"{spine_evidence.get('state', '?')} "

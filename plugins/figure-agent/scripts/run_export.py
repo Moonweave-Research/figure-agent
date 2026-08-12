@@ -118,7 +118,10 @@ def _export_inputs(example_dir: Path, name: str) -> tuple[Path, Path]:
     exporting a different root source.
     """
 
-    candidate = current_candidate.resolve_current_candidate(example_dir)
+    candidate = current_candidate.resolve_current_candidate(
+        example_dir,
+        common_render_inputs=current_candidate.common_render_inputs(example_dir),
+    )
     if candidate.get("state") == "NOT_DECLARED":
         return (
             example_dir / f"{name}.tex",

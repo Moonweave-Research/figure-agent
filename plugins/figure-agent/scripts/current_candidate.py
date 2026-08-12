@@ -14,8 +14,37 @@ from pathlib import Path
 from typing import Any
 
 import render_input_manifest
+import runtime_paths
 
 CURRENT_CANDIDATE_SCHEMA = "figure-agent.current-candidate-pointer.v1"
+
+
+def common_render_inputs(
+    example_dir: Path,
+    *,
+    style_lock_path: Path | None = None,
+) -> dict[str, Path]:
+    """Fixture-level render inputs shared by every candidate of the fixture.
+
+    Every resolve_current_candidate caller must pass this same set; resolving
+    with a smaller set makes the manifest comparison fail and misreports a
+    fresh candidate render as stale. status passes its own STYLE_LOCK_PATH so
+    an injected style lock stays authoritative for the whole set.
+    """
+    style_lock = (
+        style_lock_path
+        if style_lock_path is not None
+        else runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
+    )
+    candidates = {
+        "briefing": example_dir / "briefing.md",
+        "spec": example_dir / "spec.yaml",
+        "claim_authority": example_dir / "claim_authority.yaml",
+        "style_lock": style_lock,
+    }
+    return {role: path for role, path in candidates.items() if path.exists()}
+
+
 POINTER_RELATIVE_PATH = Path("review") / "current-candidate.json"
 _EVIDENCE_KEYS = {
     "render_pdf": "render_pdf",
@@ -47,8 +76,7 @@ def _artifact_state(sources: tuple[Path, ...], artifact: Path | None) -> str:
     if artifact is None or not artifact.is_file():
         return "MISSING"
     if any(
-        source.is_file() and artifact.stat().st_mtime < source.stat().st_mtime
-        for source in sources
+        source.is_file() and artifact.stat().st_mtime < source.stat().st_mtime for source in sources
     ):
         return "STALE"
     return "FRESH"
@@ -181,13 +209,9 @@ def resolve_current_candidate(
         ),
         "strict_state": _strict_state(artifacts["strict_status"]),
         "physics_state": _physics_state(artifacts["physics_grounding"]),
-        "text_boundary_state": _artifact_state(
-            freshness_sources, artifacts["text_boundary_clash"]
-        ),
+        "text_boundary_state": _artifact_state(freshness_sources, artifacts["text_boundary_clash"]),
         "text_boundary_checked": _checked_count(artifacts["text_boundary_clash"]),
-        "label_path_state": _artifact_state(
-            freshness_sources, artifacts["label_path_proximity"]
-        ),
+        "label_path_state": _artifact_state(freshness_sources, artifacts["label_path_proximity"]),
         "label_path_checked": _checked_count(artifacts["label_path_proximity"]),
         "evidence_paths": {
             key: path.relative_to(example_dir).as_posix() if path else None

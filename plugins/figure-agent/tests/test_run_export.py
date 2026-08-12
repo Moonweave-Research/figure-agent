@@ -388,7 +388,6 @@ def test_run_export_uses_declared_current_candidate_source_and_render(
     candidate_source = candidate / "repaired.tex"
     candidate_pdf = candidate / "build" / "repaired.pdf"
     candidate_source.write_text(_SATISFYING_TEX, encoding="utf-8")
-    candidate_pdf.write_bytes(b"%PDF current candidate")
     (fixture / "ref_fig.tex").write_text(_VIOLATING_TEX, encoding="utf-8")
     (fixture / "spec.yaml").write_text(
         "\n".join(
@@ -425,6 +424,9 @@ def test_run_export_uses_declared_current_candidate_source_and_render(
         ),
         encoding="utf-8",
     )
+    # The render must postdate every render input; a candidate rendered before
+    # a spec edit is honestly stale and run_export must refuse it.
+    candidate_pdf.write_bytes(b"%PDF current candidate")
     shallow = {"text": "shallow", "xmin": 0.0, "xmax": 10.0, "ymin": 5.0, "ymax": 15.0}
     deep = {"text": "deep", "xmin": 0.0, "xmax": 10.0, "ymin": 95.0, "ymax": 105.0}
     inspected_pdfs: list[Path] = []

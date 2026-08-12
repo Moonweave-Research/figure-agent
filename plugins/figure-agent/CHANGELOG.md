@@ -36,6 +36,12 @@ lives in git history and `docs/figure-agent.md` roadmap gates.
   coverage, stale detector evidence, missing-evidence assertion synthesis, and
   export gates now block instead of passing silently.
 
+### Fixed
+
+- Export freshness resolved the current candidate without the fixture-level
+  common render inputs, so nested-candidate fixtures reported a permanently
+  stale export even when build and export content hashes matched.
+
 ### Removed
 
 - Quarantined the inert SVG-semantic stack; removed orphaned `_handlers_*`
