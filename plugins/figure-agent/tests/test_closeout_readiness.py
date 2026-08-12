@@ -180,8 +180,7 @@ def test_closeout_ready_blocks_malformed_applied_candidate_result(
     candidate_check = readiness["checks"][0]
     assert candidate_check["state"] == "blocked"
     assert (
-        candidate_check["reason"]
-        == "candidate post-apply checks missing: compile, export, status"
+        candidate_check["reason"] == "candidate post-apply checks missing: compile, export, status"
     )
 
 
@@ -327,7 +326,7 @@ def test_closeout_ready_reports_release_ready_false_without_blocking_tracked_gol
             "final_artifact_state": "NONE",
             "final_artifact_kind": "generated_export",
             "final_artifact_path": "exports/candidate_demo.svg",
-            "publication_gate_state": "HUMAN_ACCEPTANCE_REQUIRED",
+            "publication_gate_state": "PASS",
             "publication_gate_failures": [],
         }
         return payload
@@ -344,7 +343,7 @@ def test_closeout_ready_reports_release_ready_false_without_blocking_tracked_gol
     checks = {check["id"]: check for check in readiness["checks"]}
     assert readiness["status"] == "ready"
     assert checks["release"]["state"] == "passed"
-    assert checks["release"]["reason"] == "publication gate has no reported failures"
+    assert checks["release"]["reason"] == "publication gate passed"
     assert checks["release"]["evidence"]["release_ready"] is False
 
 
@@ -360,11 +359,43 @@ def test_release_check_blocks_when_publication_gate_failures_not_a_list() -> Non
     assert check["state"] == "blocked"
 
 
-def test_release_check_passes_on_empty_failure_list() -> None:
+def test_release_check_passes_only_on_evaluated_gate_pass() -> None:
     check = closeout_readiness._release_check(
-        {"publication_gate_failures": [], "release_ready": True}
+        {
+            "publication_gate_failures": [],
+            "publication_gate_state": "PASS",
+            "release_ready": True,
+        }
     )
     assert check["state"] == "passed"
+
+
+def test_release_check_blocks_unevaluated_gate_despite_empty_failures() -> None:
+    # NOT_APPLICABLE means `accepted` was never declared; an empty failure
+    # list from a gate that never ran must not read as release-ready.
+    check = closeout_readiness._release_check(
+        {
+            "publication_gate_failures": [],
+            "publication_gate_state": "NOT_APPLICABLE",
+            "release_ready": True,
+        }
+    )
+    assert check["state"] == "blocked"
+    assert "accepted is not declared" in check["reason"]
+
+
+def test_release_check_blocks_declined_acceptance_despite_empty_failures() -> None:
+    # accepted: false yields HUMAN_ACCEPTANCE_REQUIRED with no failure records;
+    # an explicit human "not accepted" must block release readiness.
+    check = closeout_readiness._release_check(
+        {
+            "publication_gate_failures": [],
+            "publication_gate_state": "HUMAN_ACCEPTANCE_REQUIRED",
+            "release_ready": True,
+        }
+    )
+    assert check["state"] == "blocked"
+    assert "HUMAN_ACCEPTANCE_REQUIRED" in check["reason"]
 
 
 def test_final_artifact_check_blocks_unrecognized_state() -> None:

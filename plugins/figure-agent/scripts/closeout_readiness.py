@@ -7,6 +7,7 @@ from typing import Any
 
 import evidence_index
 import fixture_identity
+import publication_gate
 import runtime_paths
 
 SCHEMA = "figure-agent.closeout-readiness.v1"
@@ -252,33 +253,39 @@ def _release_check(status: dict[str, Any]) -> dict[str, Any]:
         "publication_gate_state": publication_state,
         "publication_gate_failures": failures_list,
     }
-    # Absent gate data cannot be read as "no failures": a status that never reported
-    # publication_gate_failures leaves the gate unevaluated, so block instead of pass.
-    if failures is None:
+    if failures_list or not isinstance(failures, list):
+        reason = (
+            f"publication gate reports {len(failures_list)} failure(s)"
+            if failures_list
+            else "publication gate not evaluated (publication_gate_failures absent)"
+        )
         return _check(
             check_id="release",
             state="blocked",
-            reason="publication gate not evaluated (publication_gate_failures absent)",
+            reason=reason,
             evidence=evidence,
         )
-    if not isinstance(failures, list):
+    # An empty failure list is only meaningful when the gate actually ran and
+    # passed. NOT_APPLICABLE means `accepted` was never declared — release
+    # readiness cannot be inferred from a gate that never evaluated.
+    if publication_state == publication_gate.PUBLICATION_GATE_PASS:
         return _check(
             check_id="release",
-            state="blocked",
-            reason="publication_gate_failures is not a list",
+            state="passed",
+            reason="publication gate passed",
             evidence=evidence,
         )
-    if failures_list:
+    if publication_state == publication_gate.PUBLICATION_GATE_NOT_APPLICABLE:
         return _check(
             check_id="release",
             state="blocked",
-            reason=f"publication gate reports {len(failures_list)} failure(s)",
+            reason="publication gate not evaluated (accepted is not declared)",
             evidence=evidence,
         )
     return _check(
         check_id="release",
-        state="passed",
-        reason="publication gate has no reported failures",
+        state="blocked",
+        reason=f"publication gate state is {publication_state or 'not reported'}",
         evidence=evidence,
     )
 
