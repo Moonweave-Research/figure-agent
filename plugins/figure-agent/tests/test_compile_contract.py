@@ -20,10 +20,7 @@ def test_compile_script_pins_uv_project_after_changing_to_workspace_fixture() ->
     assert 'UV_RUN=(uv run --project "$WORKFLOW_DIR")' in script
     assert 'uv run python3 "$WORKFLOW_DIR/scripts/perception_pack.py"' not in script
     assert '"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/perception_pack.py" "$BASE"' in script
-    assert (
-        '"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/visual_finding_artifacts.py" .'
-        in script
-    )
+    assert '"${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/visual_finding_artifacts.py" .' in script
     assert '--artifact-base "$BASE"' in script
 
 
@@ -55,9 +52,9 @@ def test_compile_live_repair_verification_does_not_use_historical_gate_relaxatio
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 
     assert 'LIVE_REPAIR_VERIFY="${FIGURE_AGENT_LIVE_REPAIR_VERIFY:-0}"' in script
-    assert 'LIVE_ASSERTION_TARGET=1' in script
-    assert 'if [[ $LIVE_ASSERTION_TARGET -eq 1' in script
-    assert 'if [[ $LIVE_ASSERTION_TARGET -eq 0' in script
+    assert "LIVE_ASSERTION_TARGET=1" in script
+    assert "if [[ $LIVE_ASSERTION_TARGET -eq 1" in script
+    assert "if [[ $LIVE_ASSERTION_TARGET -eq 0" in script
 
 
 def test_compile_runs_opt_in_state_field_geometry_checks_from_the_fixture_spec() -> None:
@@ -83,8 +80,8 @@ def test_compile_runs_opt_in_process_stage_visibility_checks_from_the_fixture_sp
 def test_compile_uses_known_false_positive_allowlist_in_every_mode() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 
-    assert 'VISUAL_CLASH_ARGS=(--ignore-known-fp)' in script
-    assert 'VISUAL_CLASH_ARGS=(--strict --ignore-known-fp)' in script
+    assert "VISUAL_CLASH_ARGS=(--ignore-known-fp)" in script
+    assert "VISUAL_CLASH_ARGS=(--strict --ignore-known-fp)" in script
 
 
 def test_compile_applies_fixture_layout_contract_to_nested_repairs() -> None:
@@ -113,10 +110,7 @@ def test_compile_keeps_physics_grounding_advisory_for_historical_replays() -> No
     assert "PHYSICS_GROUNDING_STRICT_ARGS=()" in script
     assert "$LIVE_ASSERTION_TARGET -eq 1" in script
     assert "semantic_contract_required" in script
-    assert (
-        'PHYSICS_GROUNDING_STRICT_ARGS[@]+"${PHYSICS_GROUNDING_STRICT_ARGS[@]}"'
-        in script
-    )
+    assert 'PHYSICS_GROUNDING_STRICT_ARGS[@]+"${PHYSICS_GROUNDING_STRICT_ARGS[@]}"' in script
 
 
 def test_compile_serializes_shared_fixture_reports() -> None:
@@ -124,8 +118,8 @@ def test_compile_serializes_shared_fixture_reports() -> None:
 
     assert 'COMPILE_LOCK="${BUILD_DIR}/.figure-agent-compile.lock"' in script
     assert 'exec 9>"$COMPILE_LOCK"' in script
-    assert 'lockf -s -t 0 9' in script
-    assert 'flock -n 9' in script
+    assert "lockf -s -t 0 9" in script
+    assert "flock -n 9" in script
     assert "another figure-agent compile is active for this fixture" in script
 
 
@@ -152,6 +146,23 @@ def test_compile_writes_explicit_strict_outcome_receipt_before_final_gate() -> N
     assert receipt_call in script
     assert '--json-output "${BUILD_DIR}/strict_status.json"' in script
     assert script.index(receipt_call) < script.index(final_gate)
+
+
+def test_compile_strict_failure_removes_render_outputs() -> None:
+    """A strict-gate failure must not leave a passable render behind.
+
+    The render-input manifest is only written after the final gate, so a
+    surviving PDF/PNG would pass the status mtime fallback and read as a
+    fresh successful compile in the next session.
+    """
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    final_gate = 'echo "ERROR: strict detector gate failed after review evidence generation"'
+    cleanup = 'rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"'
+    gate_index = script.index(final_gate)
+    gate_block = script[gate_index : script.index("fi", gate_index)]
+    assert cleanup in gate_block
+    assert "exit 1" in gate_block
 
 
 def test_compile_only_publishes_hash_bound_scale_previews_after_success() -> None:
@@ -191,9 +202,7 @@ def test_compile_failure_clears_previous_scale_preview_evidence(tmp_path: Path) 
     build.mkdir()
     for suffix in ("100pct", "50pct", "33pct", "review_scale_previews.json"):
         path = (
-            build / f"broken_{suffix}.png"
-            if suffix.endswith("pct")
-            else build / f"broken_{suffix}"
+            build / f"broken_{suffix}.png" if suffix.endswith("pct") else build / f"broken_{suffix}"
         )
         path.write_bytes(b"stale review evidence")
 
@@ -421,10 +430,7 @@ valid
 )
 def test_golden_trap_depth_picture_compiles_with_shared_preamble() -> None:
     tex_path = (
-        REPO_ROOT
-        / "examples"
-        / "golden_trap_depth_picture"
-        / "golden_trap_depth_picture.tex"
+        REPO_ROOT / "examples" / "golden_trap_depth_picture" / "golden_trap_depth_picture.tex"
     )
     if not tex_path.is_file():
         pytest.skip(
@@ -464,13 +470,7 @@ def test_golden_trap_depth_picture_compiles_with_shared_preamble() -> None:
     ],
 )
 def test_l3_snippet_smoke_fixtures_compile(fixture_dir: str, tex_name: str) -> None:
-    tex_path = (
-        REPO_ROOT
-        / "examples"
-        / "_snippet_smoke"
-        / fixture_dir
-        / f"{tex_name}.tex"
-    )
+    tex_path = REPO_ROOT / "examples" / "_snippet_smoke" / fixture_dir / f"{tex_name}.tex"
 
     result = subprocess.run(
         ["bash", "scripts/compile.sh", str(tex_path)],
@@ -482,12 +482,7 @@ def test_l3_snippet_smoke_fixtures_compile(fixture_dir: str, tex_name: str) -> N
 
     assert result.returncode == 0, result.stderr + result.stdout
     assert (
-        REPO_ROOT
-        / "examples"
-        / "_snippet_smoke"
-        / fixture_dir
-        / "build"
-        / f"{tex_name}.pdf"
+        REPO_ROOT / "examples" / "_snippet_smoke" / fixture_dir / "build" / f"{tex_name}.pdf"
     ).exists()
 
 

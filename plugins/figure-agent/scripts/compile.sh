@@ -411,6 +411,10 @@ trap - ERR
 
 if [[ $STRICT_CHECK_FAILURE -ne 0 ]]; then
   echo "ERROR: strict detector gate failed after review evidence generation" >&2
+  # Keep the failure durable: the render-input manifest is only written after
+  # this gate, so a surviving PDF/PNG would pass the status mtime fallback and
+  # read as a fresh compile. strict_status.json stays behind as the evidence.
+  rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"
   clear_review_scale_previews
   exit 1
 fi
