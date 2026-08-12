@@ -488,16 +488,26 @@ def _acceptance_payload(sandbox: Path) -> dict[str, Any] | None:
     return _load_json(path, "acceptance")
 
 
-def _human_review_labels(acceptance: dict[str, Any] | None) -> tuple[str | None, str | None]:
+def _human_review_labels(
+    acceptance: dict[str, Any] | None,
+) -> tuple[str | None, str | None, str | None]:
     # Only accept/reject are real human training signals; any other decision
     # string (defer, unknown) must not silently masquerade as one.
     if not isinstance(acceptance, dict):
-        return None, None
+        return None, None, None
     decision = acceptance.get("decision")
     human_label = decision if decision in {"accept", "reject"} else None
     decision_kind = acceptance.get("decision_kind")
     human_decision_kind = decision_kind if isinstance(decision_kind, str) else None
-    return human_label, human_decision_kind
+    # The acceptance sandbox is gitignored; without the reviewer copied into
+    # the durable record there is no way to audit later who issued the label.
+    raw_reviewer = acceptance.get("reviewer")
+    reviewer = (
+        raw_reviewer.strip()
+        if human_label is not None and isinstance(raw_reviewer, str) and raw_reviewer.strip()
+        else None
+    )
+    return human_label, human_decision_kind, reviewer
 
 
 def _record_with_id(record: dict[str, Any]) -> dict[str, Any]:
@@ -994,7 +1004,7 @@ def build_apply_records(
     candidate = _candidate_from_set(candidate_set, candidate_id)
     render_manifest = _load_json(sandbox / "render_manifest.json", "render_manifest")
     acceptance = _acceptance_payload(sandbox)
-    human_label, human_decision_kind = _human_review_labels(acceptance)
+    human_label, human_decision_kind, reviewer = _human_review_labels(acceptance)
     apply_path = sandbox / "apply_result.json"
     if apply_path.is_file():
         apply_result = _load_json(apply_path, "apply_result")
@@ -1063,6 +1073,7 @@ def build_apply_records(
             "pixel_delta": _pixel_delta(render_manifest),
             "human_label": human_label,
             "human_decision_kind": human_decision_kind,
+            "reviewer": reviewer,
         },
         "source_artifacts": [
             _fixture_relative(example_dir, resolved_candidate_set_path),
@@ -1332,9 +1343,7 @@ def append_manual_direct_edit_record(
             existing.get("outcome") if isinstance(existing.get("outcome"), dict) else {}
         )
         existing_params = (
-            existing_action.get("params")
-            if isinstance(existing_action.get("params"), dict)
-            else {}
+            existing_action.get("params") if isinstance(existing_action.get("params"), dict) else {}
         )
         if (
             existing_action.get("candidate_hash") == action["candidate_hash"]

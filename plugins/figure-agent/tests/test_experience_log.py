@@ -312,12 +312,7 @@ def test_record_manual_edit_cli_writes_receipt_and_rebuilds_memory_index(tmp_pat
     assert payload["idempotent"] is False
     assert payload["receipt"]["outcome"]["human_label"] == "accept"
     memory_index = (
-        workspace
-        / "examples"
-        / "direct_demo"
-        / "build"
-        / "memory"
-        / "quality_memory_index.json"
+        workspace / "examples" / "direct_demo" / "build" / "memory" / "quality_memory_index.json"
     )
     assert memory_index.is_file()
 
@@ -830,7 +825,11 @@ def test_quality_movement_error_recheck_never_improved() -> None:
 
 
 def _build_record_with_acceptance(
-    tmp_path: Path, *, decision: str, decision_kind: str | None = None
+    tmp_path: Path,
+    *,
+    decision: str,
+    decision_kind: str | None = None,
+    reviewer: str | None = None,
 ) -> dict[str, Any]:
     workspace = tmp_path / "workspace"
     plugin_root = tmp_path / "plugin"
@@ -842,6 +841,8 @@ def _build_record_with_acceptance(
     }
     if decision_kind is not None:
         acceptance["decision_kind"] = decision_kind
+    if reviewer is not None:
+        acceptance["reviewer"] = reviewer
     (sandbox / "acceptance.json").write_text(
         json.dumps(acceptance, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -870,6 +871,18 @@ def test_accept_decision_still_flows_to_human_label(tmp_path: Path) -> None:
 def test_unknown_decision_does_not_masquerade_as_human_label(tmp_path: Path) -> None:
     record = _build_record_with_acceptance(tmp_path, decision="defer")
     assert record["outcome"]["human_label"] is None
+
+
+def test_reviewer_identity_is_preserved_in_durable_record(tmp_path: Path) -> None:
+    # acceptance.json lives in a gitignored sandbox; the durable experience
+    # record must carry the reviewer or the label is unauditable later.
+    record = _build_record_with_acceptance(tmp_path, decision="accept", reviewer="moon")
+    assert record["outcome"]["reviewer"] == "moon"
+
+
+def test_reviewer_without_human_label_is_dropped(tmp_path: Path) -> None:
+    record = _build_record_with_acceptance(tmp_path, decision="defer", reviewer="moon")
+    assert record["outcome"]["reviewer"] is None
 
 
 def test_decision_kind_threads_from_acceptance_payload(tmp_path: Path) -> None:
