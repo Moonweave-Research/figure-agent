@@ -113,7 +113,31 @@ def test_human_verdict_rewards_once_when_detector_outcome_also_exists() -> None:
     index = quality_memory_index.build_memory_index([accepted, applied])
     assert index["families"]["label_offset"]["attempts"] == 1
     assert index["families"]["label_offset"]["improved"] == 1
-    assert index["duplicate_experience_attempt_count"] == 1
+    # The accept-only row is accepted_unverified, not an eligible attempt, so
+    # it no longer registers as a duplicate of the detector-backed apply.
+    assert index["duplicate_experience_attempt_count"] == 0
+
+
+def test_accept_without_detector_movement_earns_no_improved_reward() -> None:
+    accepted = _event(
+        "candidate_accepted", "label_offset", "unknown", "CAND001", quality_movement=None
+    )
+    accepted["outcome"]["human_label"] = "accept"
+    index = quality_memory_index.build_memory_index([accepted])
+    assert index["families"]["label_offset"]["attempts"] == 0
+    assert index["families"]["label_offset"]["improved"] == 0
+    assert index["families"]["label_offset"]["recommended_prior"] == 0.0
+    assert index["eligible_prior_count"] == 0
+
+
+def test_accept_with_neutral_detector_movement_stays_neutral() -> None:
+    accepted = _event(
+        "candidate_accepted", "label_offset", "neutral", "CAND001", quality_movement="neutral"
+    )
+    accepted["outcome"]["human_label"] = "accept"
+    index = quality_memory_index.build_memory_index([accepted])
+    assert index["families"]["label_offset"]["improved"] == 0
+    assert index["families"]["label_offset"]["neutral"] == 1
 
 
 def test_human_reject_is_negative_reward_without_detector_outcome() -> None:

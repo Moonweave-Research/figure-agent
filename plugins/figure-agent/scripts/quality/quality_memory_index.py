@@ -71,12 +71,15 @@ def _reward_state(event: dict[str, Any]) -> str:
     }:
         return "regressed"
     human_label = outcome.get("human_label")
-    if human_label == "accept":
-        return "improved"
     if human_label == "reject":
         return "regressed"
     if quality_movement in ELIGIBLE_OUTCOMES:
         return str(quality_movement)
+    # An accept without a detector-backed quality movement is a human (or
+    # self-issued) label with no verified improvement behind it; it must not
+    # earn the "improved" reward that steers ranking priors.
+    if human_label == "accept":
+        return "accepted_unverified"
     return "unknown"
 
 
@@ -278,10 +281,14 @@ def build_memory_index(
         # outcome.  Do not let that transport label hide the missing verdict
         # from the aggregate evidence counters. Generated lifecycle events
         # such as ``candidate_rendered`` remain outside this count.
-        unknown_outcome = is_attempt and reward_state == "unknown" and (
-            state in ELIGIBLE_OUTCOMES
-            or state == "unknown"
-            or state == experience_log.MANUAL_DIRECT_EDIT_KIND
+        unknown_outcome = (
+            is_attempt
+            and reward_state == "unknown"
+            and (
+                state in ELIGIBLE_OUTCOMES
+                or state == "unknown"
+                or state == experience_log.MANUAL_DIRECT_EDIT_KIND
+            )
         )
         if not family_known or not target_known or unknown_outcome:
             unknown_event_count += 1

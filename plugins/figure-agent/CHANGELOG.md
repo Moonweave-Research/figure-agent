@@ -41,6 +41,14 @@ lives in git history and `docs/figure-agent.md` roadmap gates.
 - Export freshness resolved the current candidate without the fixture-level
   common render inputs, so nested-candidate fixtures reported a permanently
   stale export even when build and export content hashes matched.
+- A strict detector-gate failure now removes the compiled PDF/PNG, so the
+  failed compile can no longer read as FRESH via the status mtime fallback.
+- Closeout's release check passes only on an evaluated publication-gate PASS;
+  a fixture that never declared (or explicitly declined) acceptance can no
+  longer reach closeout status ready.
+- Experience records now carry the reviewer identity for accept/reject
+  labels, and an accept without a detector-backed quality movement earns
+  `accepted_unverified` instead of the `improved` ranking reward.
 
 ### Removed
 
