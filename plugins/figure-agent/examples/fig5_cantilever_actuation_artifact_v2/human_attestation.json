@@ -1,0 +1,8 @@
+{
+  "created_at": "2026-08-13T01:27:08+00:00",
+  "fixture": "fig5_cantilever_actuation_artifact_v2",
+  "schema": "figure-agent.human-attestation.v1",
+  "signature": "sha256:763ddc7dc53d24034747562ecd1470e7b5e2d6991c4770bf9a60e0996443d67c",
+  "source_set_sha256": "sha256:b68276061a7f706af5d13db5162cf019ab7c405942f14133b401f585e6f2379c",
+  "tex_sha256": "sha256:c50650976f10649b1a490425ce59d89710d77b2f33c48e1d4671b552c41c9f10"
+}
