@@ -348,10 +348,12 @@ fixtures:
       - panel-separator-c-d
     label_path_check_ids:
       - panel-b-manual-lead-lift
+      - panel-c-beam-centerline
       - panel-c-coulomb-arrow
-      - trace-switch-line
       - panel-d-bend-angle-axis
       - panel-d-recovery-tail
+      - panel-d-time-axis
+      - trace-switch-line
     aesthetic_intent: true
     critique_reference_pack: false
     paper_aesthetic_context: nc-main-text-series

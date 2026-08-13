@@ -29,6 +29,11 @@
     line width=1.02pt},
   forceAway/.style={-{Stealth[length=4.8pt,width=3.5pt]},cRed!88!black,
     line width=1.02pt},
+  % A weaker force keeps the full-strength ink and encodes its magnitude in
+  % length, stroke weight, and head size instead of opacity, so the residual
+  % vector stays distinguishable from the drive-on vector in grayscale print.
+  forceResidual/.style={-{Stealth[length=3.9pt,width=2.8pt]},cRed!88!black,
+    line width=0.66pt},
   fieldCue/.style={cGray!48!black,dashed,line width=0.45pt,line cap=round},
   gapDimension/.style={Stealth-Stealth,cGray!58!black,line width=0.58pt,
     line cap=round},
@@ -166,9 +171,9 @@
   % preserve the shared arrow grammar but shorten and mute the vector.
   \coordinate (panel-b-residual-origin) at (1.87,3.02);
   \coordinate (panel-b-residual-head) at (2.70,3.02);
-  \draw[forceToward,opacity=0.62]
+  \draw[forceResidual]
     (panel-b-residual-origin)--(panel-b-residual-head);
-  \node[labelStd,text=cRed!72!black,anchor=south] at (2.60,3.34)
+  \node[labelStd,text=cRed!80!black,anchor=south] at (2.60,3.34)
     {residual attraction};
 \end{scope}
 
@@ -179,7 +184,9 @@
 \begin{scope}[shift={(8.90,0.00)}]
   \node[panelLetter,anchor=west] at (0.10,5.12) {c};
   \node[panelTitle,anchor=west] at (0.44,5.12) {reversed-drive force balance};
-  \node[labelMute,anchor=west] at (0.44,4.78) {after floating isolation};
+  % The floating state is already established by Panel B and restated by this
+  % panel's own "clip: floating" state label; a second subtitle only crowded
+  % the densest panel in the row.
 
   % Keep the fixed-end and electrode tops on the same datum as Panels A/B;
   % the reverse-bend silhouette changes direction, not its mounting height.
@@ -197,6 +204,7 @@
   % legible without introducing a second, supposedly observed bend snapshot.
   % Its free-end curvature and effective length mirror Panel A so the reader
   % sees one mounted film under reversed forcing, not a second sample.
+  % figure-agent-path: panel-c-beam-centerline
   \draw[beamOuter]
     (panel-c-beam-origin)
       .. controls (1.43,3.45) and (1.00,2.25) .. (0.68,1.65);
@@ -231,7 +239,9 @@
   \coordinate (panel-c-coulomb-head) at (0.14,2.32);
   % figure-agent-path: panel-c-coulomb-arrow
   \draw[forceAway] (panel-c-force-origin)--(panel-c-coulomb-head);
-  \node[labelStd,text=cRed!84!black,anchor=south west] at (0.18,2.48)
+  % Sit the label where the reversed-bend silhouette has already swung left:
+  % at the arrow's own height the film body runs through the trailing glyph.
+  \node[labelStd,text=cRed!84!black,anchor=south west] at (0.08,2.74)
     {Coulomb};
   \node[labelStd,anchor=north] at (2.24,0.82)
     {reverse bend if $|F_{\mathrm{C}}|>|F_{\mathrm{M}}|$};
@@ -248,6 +258,7 @@
   % Axes and zero line.
   % figure-agent-path: panel-d-bend-angle-axis
   \draw[axis] (0.62,1.02)--(0.62,4.08);
+  % figure-agent-path: panel-d-time-axis
   \draw[axis] (0.62,2.52)--(4.02,2.52);
   % Keep the rotated axis label visibly clear of the shaft at print reduction;
   % the label still owns the y-axis without sitting on its stroke.
@@ -285,7 +296,12 @@
   \node[labelMute,anchor=south west] at (1.66,3.78) {clip floating};
   \node[labelStd,text=cRed!84!black,anchor=south west] at (2.14,3.02)
     {reversed drive};
-  \node[labelMute,anchor=south west] at (3.05,2.16) {recovery};
+  % The recovery label owns the rising tail through a leader that touches the
+  % curve, so it no longer sits in the lane where the time axis terminates and
+  % reads as an axis annotation.
+  \fill[cGray!72!black] (3.65,2.24) circle (0.62pt);
+  \draw[leader] (3.65,2.24)--(3.65,1.62);
+  \node[labelMute,anchor=north east] at (4.02,1.54) {recovery};
 \end{scope}
 
 % Process separators: quiet continuous hairlines preserve the causal reading

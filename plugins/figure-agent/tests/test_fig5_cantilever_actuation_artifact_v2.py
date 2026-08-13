@@ -23,9 +23,7 @@ def _yaml(name: str) -> dict:
 
 
 def _panel_source(panel_id: str) -> str:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     start = tex.split(f"% Panel {panel_id}", 1)[1]
     following = chr(ord(panel_id) + 1)
     return start.split(f"% Panel {following}", 1)[0]
@@ -63,14 +61,8 @@ def _cubic_arc_length(points: list[tuple[float, float]], samples: int = 2000) ->
         t = index / samples
         u = 1.0 - t
         point = (
-            u**3 * p0[0]
-            + 3 * u**2 * t * p1[0]
-            + 3 * u * t**2 * p2[0]
-            + t**3 * p3[0],
-            u**3 * p0[1]
-            + 3 * u**2 * t * p1[1]
-            + 3 * u * t**2 * p2[1]
-            + t**3 * p3[1],
+            u**3 * p0[0] + 3 * u**2 * t * p1[0] + 3 * u * t**2 * p2[0] + t**3 * p3[0],
+            u**3 * p0[1] + 3 * u**2 * t * p1[1] + 3 * u * t**2 * p2[1] + t**3 * p3[1],
         )
         total += hypot(point[0] - previous[0], point[1] - previous[1])
         previous = point
@@ -205,9 +197,7 @@ def test_fig5_declares_grounded_then_floating_electrical_topology() -> None:
 
 
 def test_fig5_visible_connectors_do_not_claim_undrawn_cross_panel_arrows() -> None:
-    connectors = _yaml("semantic_contract.yaml")["semantic_legibility"][
-        "visible_connectors"
-    ]
+    connectors = _yaml("semantic_contract.yaml")["semantic_legibility"]["visible_connectors"]
 
     assert all(
         item["from_object"].split(".", 1)[0] == item["to_object"].split(".", 1)[0]
@@ -256,9 +246,7 @@ def test_fig5_contract_separates_actuation_charge_from_measurement_meanings() ->
 
 
 def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
 
     charge_subtitle = re.search(
@@ -279,9 +267,7 @@ def test_fig5_voltage_label_is_owned_by_drive_electrode_not_clip_ground() -> Non
 
 
 def test_fig5_trapped_charge_label_leader_starts_outside_its_glyphs() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
 
     assert re.search(r"anchor=east\] at \([^)]*\)\s*\n?\s*\{trapped", panel_a)
@@ -292,12 +278,10 @@ def test_fig5_trapped_charge_label_leader_starts_outside_its_glyphs() -> None:
 def test_fig5_marks_reverse_force_as_conditional_after_isolation() -> None:
     contract = _yaml("semantic_contract.yaml")
     connectors = {
-        item["connector_id"]: item
-        for item in contract["semantic_legibility"]["visible_connectors"]
+        item["connector_id"]: item for item in contract["semantic_legibility"]["visible_connectors"]
     }
     panel_story = {
-        item["panel_id"]: item
-        for item in contract["semantic_legibility"]["panel_story"]["panels"]
+        item["panel_id"]: item for item in contract["semantic_legibility"]["panel_story"]["panels"]
     }
 
     coulomb = connectors["panel_c.coulomb_originates_at_trapped_charge"]
@@ -317,10 +301,7 @@ def test_fig5_marks_reverse_force_as_conditional_after_isolation() -> None:
 
 def test_fig5_declares_the_reverse_bend_as_conditional_not_a_second_snapshot() -> None:
     contract = _yaml("semantic_contract.yaml")
-    roles = {
-        item["object_id"]: item
-        for item in contract["semantic_legibility"]["object_roles"]
-    }
+    roles = {item["object_id"]: item for item in contract["semantic_legibility"]["object_roles"]}
 
     reverse_bend = roles["panel_c.conditional_reverse_bend"]
     assert reverse_bend["declared_role"] == "conditional_reverse_bend_response"
@@ -329,13 +310,10 @@ def test_fig5_declares_the_reverse_bend_as_conditional_not_a_second_snapshot() -
 
 def test_fig5_binds_conditional_coulomb_force_to_a_visible_trapped_charge() -> None:
     contract = _yaml("semantic_contract.yaml")
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
     connectors = {
-        item["connector_id"]: item
-        for item in contract["semantic_legibility"]["visible_connectors"]
+        item["connector_id"]: item for item in contract["semantic_legibility"]["visible_connectors"]
     }
 
     force_origin = connectors["panel_c.coulomb_originates_at_trapped_charge"]
@@ -347,18 +325,14 @@ def test_fig5_binds_conditional_coulomb_force_to_a_visible_trapped_charge() -> N
 
 
 def test_fig5_charge_markers_remain_inside_each_cantilever() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     assert "minimum size=1.00mm" in tex
 
     expected_counts = {"A": 3, "B": 4, "C": 3}
     for panel_id, expected_count in expected_counts.items():
         coordinates = _named_coordinates(panel_id, f"panel-{panel_id.lower()}-q")
         if panel_id == "C":
-            coordinates.update(
-                _named_coordinates(panel_id, "panel-c-force-origin")
-            )
+            coordinates.update(_named_coordinates(panel_id, "panel-c-force-origin"))
         assert len(coordinates) == expected_count
         assert all(
             _distance_to_cubic(point, _cantilever_centerline(panel_id)) <= 0.012
@@ -388,16 +362,12 @@ def test_fig5_conditional_reverse_force_hierarchy_matches_the_drawn_vectors() ->
     coulomb.update(_named_coordinates("C", "panel-c-coulomb-head"))
     maxwell = _named_coordinates("C", "panel-c-maxwell-")
     coulomb_span = hypot(
-        coulomb["panel-c-coulomb-head"][0]
-        - coulomb["panel-c-force-origin"][0],
-        coulomb["panel-c-coulomb-head"][1]
-        - coulomb["panel-c-force-origin"][1],
+        coulomb["panel-c-coulomb-head"][0] - coulomb["panel-c-force-origin"][0],
+        coulomb["panel-c-coulomb-head"][1] - coulomb["panel-c-force-origin"][1],
     )
     maxwell_span = hypot(
-        maxwell["panel-c-maxwell-head"][0]
-        - maxwell["panel-c-maxwell-origin"][0],
-        maxwell["panel-c-maxwell-head"][1]
-        - maxwell["panel-c-maxwell-origin"][1],
+        maxwell["panel-c-maxwell-head"][0] - maxwell["panel-c-maxwell-origin"][0],
+        maxwell["panel-c-maxwell-head"][1] - maxwell["panel-c-maxwell-origin"][1],
     )
 
     assert coulomb_span >= 1.15 * maxwell_span
@@ -408,33 +378,45 @@ def test_fig5_conditional_reverse_force_hierarchy_matches_the_drawn_vectors() ->
 
 def test_fig5_residual_force_vector_is_visibly_shorter_than_drive_on() -> None:
     protected = set(_yaml("semantic_contract.yaml")["protected_relations"])
-    assert (
-        "residual_attraction_vector_is_shorter_than_drive_on_attraction"
-        in protected
-    )
+    assert "residual_attraction_vector_is_shorter_than_drive_on_attraction" in protected
 
     drive = _named_coordinates("A", "panel-a-attraction-")
     residual = _named_coordinates("B", "panel-b-residual-")
     drive_span = hypot(
-        drive["panel-a-attraction-head"][0]
-        - drive["panel-a-attraction-origin"][0],
-        drive["panel-a-attraction-head"][1]
-        - drive["panel-a-attraction-origin"][1],
+        drive["panel-a-attraction-head"][0] - drive["panel-a-attraction-origin"][0],
+        drive["panel-a-attraction-head"][1] - drive["panel-a-attraction-origin"][1],
     )
     residual_span = hypot(
-        residual["panel-b-residual-head"][0]
-        - residual["panel-b-residual-origin"][0],
-        residual["panel-b-residual-head"][1]
-        - residual["panel-b-residual-origin"][1],
+        residual["panel-b-residual-head"][0] - residual["panel-b-residual-origin"][0],
+        residual["panel-b-residual-head"][1] - residual["panel-b-residual-origin"][1],
     )
     assert residual_span <= 0.78 * drive_span
-    assert "\\draw[forceToward,opacity=0.62]" in _panel_source("B")
+    # The weaker vector must stay weaker without relying on opacity: a faded
+    # arrow is indistinguishable from the drive-on arrow in grayscale print,
+    # so magnitude is carried by length, stroke weight, and head size.
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
+    assert "\\draw[forceResidual]" in _panel_source("B")
+    assert "opacity" not in _panel_source("B")
+    residual_style = re.search(
+        r"forceResidual/\.style=\{-\{Stealth\[length=([\d.]+)pt,width=([\d.]+)pt\]\},"
+        r"[^}]*line width=([\d.]+)pt\}",
+        tex,
+    )
+    toward_style = re.search(
+        r"forceToward/\.style=\{-\{Stealth\[length=([\d.]+)pt,width=([\d.]+)pt\]\},"
+        r"[^}]*line width=([\d.]+)pt\}",
+        tex,
+    )
+    assert residual_style is not None
+    assert toward_style is not None
+    for residual_value, toward_value in zip(
+        residual_style.groups(), toward_style.groups(), strict=True
+    ):
+        assert float(residual_value) < float(toward_value)
 
 
 def test_fig5_panel_c_reserves_copy_for_the_reverse_bend_threshold() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
     assert "reverse bend if $|F_{\\mathrm{C}}|>|F_{\\mathrm{M}}|$" in panel_c
@@ -464,9 +446,7 @@ def test_fig5_declares_rendered_charge_to_isolation_and_response_stages() -> Non
 
 
 def test_fig5_response_trace_separates_off_float_from_reversal() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_d = tex.split("% Panel D", 1)[1]
 
     assert "+5\\,\\mathrm{kV}$ precharge" not in panel_d
@@ -480,9 +460,7 @@ def test_fig5_response_trace_separates_off_float_from_reversal() -> None:
 
 
 def test_fig5_response_trace_has_a_visible_sustained_positive_plateau() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_d = tex.split("% Panel D", 1)[1]
 
     assert "sustained positive plateau" in panel_d
@@ -494,9 +472,7 @@ def test_fig5_response_trace_has_a_visible_sustained_positive_plateau() -> None:
 
 
 def test_fig5_panel_b_keeps_the_specimen_mounted_and_lifts_the_lead_manually() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
     assert "clip: floating" in panel_b
@@ -510,9 +486,7 @@ def test_fig5_panel_b_keeps_the_specimen_mounted_and_lifts_the_lead_manually() -
 
 
 def test_fig5_keeps_clamp_state_labels_clear_of_the_drive_terminal() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
@@ -525,9 +499,7 @@ def test_fig5_keeps_clamp_state_labels_clear_of_the_drive_terminal() -> None:
 
 def test_fig5_declares_clearance_for_the_y_axis_angle_label() -> None:
     spec = _yaml("spec.yaml")
-    checks = {
-        item["id"]: item for item in spec["label_path_proximity_checks"]
-    }
+    checks = {item["id"]: item for item in spec["label_path_proximity_checks"]}
     axis_check = checks["panel-d-bend-angle-axis"]
 
     assert axis_check["kind"] == "vertical_line"
@@ -536,9 +508,7 @@ def test_fig5_declares_clearance_for_the_y_axis_angle_label() -> None:
     assert axis_check["clearance_pt"] == 2.5
     assert axis_check["text_phrases"] == [{"id": "angle_label", "words": ["angle"]}]
 
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_d = tex.split("% Panel D", 1)[1]
     assert re.search(
         r"anchor=south west\] at \(0\.20,4\.15\) \{angle\}",
@@ -548,24 +518,18 @@ def test_fig5_declares_clearance_for_the_y_axis_angle_label() -> None:
 
 def test_fig5_declares_clearance_for_the_recovery_label_and_trace_tail() -> None:
     spec = _yaml("spec.yaml")
-    checks = {
-        item["id"]: item for item in spec["label_path_proximity_checks"]
-    }
+    checks = {item["id"]: item for item in spec["label_path_proximity_checks"]}
     recovery = checks["panel-d-recovery-tail"]
 
     assert recovery["kind"] == "polyline"
     assert recovery["role"] == "qualitative_response_curve"
     assert recovery["clearance_pt"] == 3.0
     assert recovery["defect_kind"] == "label_curve_near_label"
-    assert recovery["text_phrases"] == [
-        {"id": "recovery_label", "words": ["recovery"]}
-    ]
+    assert recovery["text_phrases"] == [{"id": "recovery_label", "words": ["recovery"]}]
 
 
 def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
@@ -579,9 +543,7 @@ def test_fig5_keeps_opposite_drive_labels_on_one_body_rail() -> None:
 
 
 def test_fig5_force_and_gap_endpoints_bind_to_rendered_beam_geometry() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
@@ -589,16 +551,12 @@ def test_fig5_force_and_gap_endpoints_bind_to_rendered_beam_geometry() -> None:
     assert "\\coordinate (panel-b-residual-origin)" in panel_b
     assert "\\coordinate (panel-b-residual-head)" in panel_b
     assert (
-        "\\draw[forceToward,opacity=0.62]\n"
-        "    (panel-b-residual-origin)--(panel-b-residual-head);"
-        in panel_b
+        "\\draw[forceResidual]\n    (panel-b-residual-origin)--(panel-b-residual-head);" in panel_b
     )
 
 
 def test_fig5_air_gap_uses_explicit_dimension_heads_and_witness_ticks() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
 
     assert "gapDimension/.style={Stealth-Stealth" in tex
@@ -608,9 +566,7 @@ def test_fig5_air_gap_uses_explicit_dimension_heads_and_witness_ticks() -> None:
 
 
 def test_fig5_drive_on_and_residual_bends_have_visible_amplitude_contrast() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
@@ -638,9 +594,7 @@ def test_fig5_repeated_cantilevers_preserve_specimen_arc_length() -> None:
         for panel_id in ("A", "B", "C")
     }
     mean_length = sum(lengths.values()) / len(lengths)
-    relative_deviation = max(
-        abs(length - mean_length) / mean_length for length in lengths.values()
-    )
+    relative_deviation = max(abs(length - mean_length) / mean_length for length in lengths.values())
 
     # Deflection amplitude belongs to the state; specimen length does not.  A
     # small schematic tolerance allows hand-authored curvature without letting
@@ -651,8 +605,7 @@ def test_fig5_repeated_cantilevers_preserve_specimen_arc_length() -> None:
 def test_fig5_drive_electrodes_keep_clearance_from_the_maximum_bend() -> None:
     electrode_left = {"A": 3.42, "B": 3.42, "C": 3.44}
     centerline_clearances = {
-        panel_id: electrode_left[panel_id]
-        - _cubic_max_x(_cantilever_centerline(panel_id))
+        panel_id: electrode_left[panel_id] - _cubic_max_x(_cantilever_centerline(panel_id))
         for panel_id in electrode_left
     }
 
@@ -665,9 +618,7 @@ def test_fig5_drive_electrodes_keep_clearance_from_the_maximum_bend() -> None:
 def test_fig5_bend_states_have_a_reader_visible_stage_order() -> None:
     origins = {panel_id: _cantilever_centerline(panel_id)[0][0] for panel_id in "ABC"}
     tips = {panel_id: _cantilever_centerline(panel_id)[-1][0] for panel_id in "ABC"}
-    lateral_deflection = {
-        panel_id: tips[panel_id] - origins[panel_id] for panel_id in "ABC"
-    }
+    lateral_deflection = {panel_id: tips[panel_id] - origins[panel_id] for panel_id in "ABC"}
 
     # A is the strong drive-on attraction, B is the smaller retained residual,
     # and C reverses direction.  The ordering must survive print reduction,
@@ -682,9 +633,7 @@ def test_fig5_bend_states_have_a_reader_visible_stage_order() -> None:
 
 def test_fig5_panel_b_keeps_source_off_state_floating_with_residual_attraction() -> None:
     contract = _yaml("semantic_contract.yaml")
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
 
     assert "clip: floating" in panel_b
@@ -692,17 +641,14 @@ def test_fig5_panel_b_keeps_source_off_state_floating_with_residual_attraction()
     assert "support GND" not in panel_b
     assert "clip: GND" not in panel_b
     assert any(
-        connector["connector_id"]
-        == "panel_b.floating_state_retains_residual_attraction"
+        connector["connector_id"] == "panel_b.floating_state_retains_residual_attraction"
         for connector in contract["semantic_legibility"]["visible_connectors"]
     )
     assert "fixed support reference" not in panel_b
 
 
 def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
@@ -714,8 +660,11 @@ def test_fig5_makes_the_ground_to_floating_transition_reader_facing() -> None:
     assert "residual attraction" in panel_b
     assert "clip: GND" not in panel_b
     assert "drive inactive" not in panel_b
-    assert "after floating isolation" in panel_c
+    # Panel C must still declare the floating state it inherits from Panel B.
+    # The state label carries that; a second subtitle restating it only
+    # crowded the densest panel, so the label is the contract, not the prose.
     assert "clip: floating" in panel_c
+    assert "clip: GND" not in panel_c
 
 
 def test_fig5_declares_deterministic_clamp_axis_geometry_check() -> None:
@@ -760,9 +709,7 @@ def test_fig5_contract_keeps_style_free_and_coordinates_free() -> None:
 
 
 def test_fig5_response_trace_has_no_erased_gap_shortcut() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_d = tex.split("% Panel D", 1)[1]
     assert "\\draw[white" not in panel_d
     assert panel_d.count("\\draw[cBlue!82!black,line width=1.05pt]") == 1
@@ -772,9 +719,7 @@ def test_fig5_response_trace_has_no_erased_gap_shortcut() -> None:
 
 
 def test_fig5_source_off_label_is_owned_by_the_inactive_drive_electrode() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     match = re.search(
         r"\\node\[labelStd,anchor=south\] at \((\d+\.\d+),(\d+\.\d+)\)"
@@ -789,20 +734,14 @@ def test_fig5_source_off_label_is_owned_by_the_inactive_drive_electrode() -> Non
 
 
 def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panels = [
         tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0],
         tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0],
         tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0],
     ]
-    clamp_pattern = re.compile(
-        r"\\fill\[cGray![0-9]+\].*?4\.05\).*?4\.34\)", re.DOTALL
-    )
-    electrode_pattern = re.compile(
-        r"\\fill\[cGray!28\].*?1\.40\).*?4\.34\)", re.DOTALL
-    )
+    clamp_pattern = re.compile(r"\\fill\[cGray![0-9]+\].*?4\.05\).*?4\.34\)", re.DOTALL)
+    electrode_pattern = re.compile(r"\\fill\[cGray!28\].*?1\.40\).*?4\.34\)", re.DOTALL)
     assert all(clamp_pattern.search(panel) for panel in panels)
     assert all(electrode_pattern.search(panel) for panel in panels)
     assert all("\\draw[apparatus]" in panel for panel in panels)
@@ -816,9 +755,7 @@ def test_fig5_repeated_apparatus_keeps_shared_datum_and_electrode_role() -> None
 
 
 def test_fig5_reverse_bend_keeps_the_same_rounded_member_extent() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
 
@@ -835,9 +772,7 @@ def test_fig5_reverse_bend_keeps_the_same_rounded_member_extent() -> None:
 
 
 def test_fig5_source_off_residual_bend_is_visibly_smaller_than_drive_bends() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panel_a = tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     panel_b = tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     panel_c = tex.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
@@ -847,9 +782,7 @@ def test_fig5_source_off_residual_bend_is_visibly_smaller_than_drive_bends() -> 
 
 
 def test_fig5_centerline_beams_have_deliberate_free_end_terminations() -> None:
-    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (FIXTURE / "fig5_cantilever_actuation_artifact_v2.tex").read_text(encoding="utf-8")
     panels = {
         "a": tex.split("% Panel A", 1)[1].split("% Panel B", 1)[0],
         "b": tex.split("% Panel B", 1)[1].split("% Panel C", 1)[0],

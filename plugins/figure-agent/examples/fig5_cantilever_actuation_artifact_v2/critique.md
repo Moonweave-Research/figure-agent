@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-04T08:39:07Z'
-generator: Codex host vision critique
+generated_at: '2026-08-13T01:22:40Z'
+generator: Claude host vision critique
 generator_version: sha256:78cf3f9eff794f643906438081641c4f496a370cb3bf78bff39c863383018516
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:e2447c12ac9690ee7ab8850e6b99057ec7280c6e8b2535892537d97f7247f078
+critique_input_hash: sha256:50642359dfc182bfbc487fab92311e477439bf51c6219bd41bf3ec7c7e77e51f
 verdict: ready
 findings: []
 panels: []
@@ -19,7 +19,7 @@ audit_enumeration:
       - component: source-off floating state
         mount_support: yes
         rationale: Panel B shows the manual GND-lead lift directly at the mounted clip, source OFF, the resulting floating clip, and residual attraction.
-        connections: The shorter, lighter residual-attraction vector preserves the weaker-force hierarchy between actuation charge and polarity reversal.
+        connections: The shorter, thinner residual-attraction vector preserves the weaker-force hierarchy between actuation charge and polarity reversal without relying on opacity, so the contrast survives grayscale print.
       - component: reversed-drive force balance
         mount_support: yes
         rationale: Panel C shows the -5 kV drive, Maxwell attraction, Coulomb opposition, and floating clip.
@@ -423,7 +423,7 @@ aesthetic_lever_audit:
     verdict: pass
     confidence: high
     observed_positive_signals:
-      - A attraction exceeds the muted B residual cue and the C Coulomb vector is at least 15 percent longer than the Maxwell baseline.
+      - A attraction exceeds the B residual cue by length, stroke weight, and head size rather than by opacity, so the hierarchy survives grayscale conversion; the C Coulomb vector is at least 15 percent longer than the Maxwell baseline.
     observed_anti_patterns: []
     route: none
     linked_evidence: [quality_axes.scientific_plausibility, top_tier_audit.novelty_claim_support]
@@ -765,7 +765,7 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: The upper halves of Panels C and D retain clear force-balance and response roles.
+    rationale: The upper halves of Panels C and D retain clear force-balance and response roles; Panel C now carries the floating state on its state label alone, so the title lane is no longer doubled.
     unintended_visible_anomaly: none
     anomaly_rationale: No stray artifact is visible.
     anomaly_link: ''
@@ -791,7 +791,7 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: Panel C force hierarchy and Panel D trace, switch marker, and horizontal angle label are clear.
+    rationale: Panel C force hierarchy is clear and the Coulomb label now clears the film body by a measured 1.04 mm at the 178 mm working width; the Panel D recovery label sits below the rising tail on its own leader instead of in the terminating time-axis lane.
     unintended_visible_anomaly: none
     anomaly_rationale: No stray artifact is visible.
     anomaly_link: ''
@@ -804,7 +804,7 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: The full row remains legible at the declared working width.
+    rationale: The full row remains legible at the declared working width; the Coulomb-to-film gap and the residual-versus-drive arrow weights were both confirmed at this reduction rather than only at full resolution.
     unintended_visible_anomaly: none
     anomaly_rationale: No print-scale failure is visible.
     anomaly_link: ''
@@ -825,8 +825,31 @@ crop_audit_log:
     local_relationship: Left-to-right story remains intact.
     candidate_refs: []
 ---
-# Codex critique
+# Host vision critique
 
-This is a Codex-authored, report-only visual critique of the current rendered
-candidate. It does not assert experimental validation, human acceptance, or
+This is a report-only visual critique of the current rendered candidate,
+written by the in-session vision-capable host (Claude for this pass, Codex for
+earlier ones). It does not assert experimental validation, human acceptance, or
 publication-final status.
+
+## Changes audited in this pass
+
+Four author-eye defects were repaired between the previous critique and this
+render; each was re-inspected here rather than assumed fixed.
+
+1. The Panel D `recovery` label sat in the lane where the time axis
+   terminates and read as an axis annotation. It now sits below the rising
+   tail and owns the curve through a leader that touches a declared curve
+   sample point.
+2. Panel C carried both `after floating isolation` and `clip: floating`. The
+   subtitle restated the state label in the densest panel of the row and was
+   removed; the state label remains the contract.
+3. The Panel B residual vector encoded its weaker magnitude with
+   `opacity=0.62`, which disappears in grayscale conversion. It now uses a
+   dedicated style whose length, stroke weight, and head size are each smaller
+   than the drive-on vector.
+4. The Panel C `Coulomb` label was crossed by the film body at its trailing
+   glyph — a defect no declared check covered, since the specimen itself was
+   not a declared path. The label moved clear (measured 1.04 mm ink-to-ink at
+   the 178 mm working width) and the film centerline is now a declared
+   proximity path.

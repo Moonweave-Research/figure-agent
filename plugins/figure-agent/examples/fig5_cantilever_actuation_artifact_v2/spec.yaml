@@ -55,6 +55,15 @@ tex_assertions:
     direction: increasing
     minimum_matches: 1
     require_unidirectional_arrow: true
+  # The residual vector carries its own direction guard: it uses a dedicated
+  # weaker style, so the drive-on assertion above no longer covers it.
+  - id: residual-force-points-toward-drive
+    source_name: fig5_cantilever_actuation_artifact_v2.tex
+    anchor_style: forceResidual
+    axis: x
+    direction: increasing
+    minimum_matches: 1
+    require_unidirectional_arrow: true
   - id: illustrated-coulomb-force-points-away-from-drive
     source_name: fig5_cantilever_actuation_artifact_v2.tex
     anchor_style: forceAway
@@ -215,6 +224,30 @@ label_path_proximity_checks:
     text_phrases:
       - id: coulomb_label
         words: [Coulomb]
+  # The film body itself is a semantic path: at the Coulomb arrow's height the
+  # reversed-bend silhouette ran through the label's trailing glyph, and no
+  # declared check covered a label against the specimen it annotates.
+  - id: panel-c-beam-centerline
+    kind: polyline
+    role: specimen_body
+    # Rendered-PDF samples of the Panel C beam centerline (t = 0, .25, .5,
+    # .75, 1 of the authored curve). The clearance covers the drawn half-width
+    # (2.35 mm stroke) plus a visible gap, so the gate trips before a glyph
+    # reaches the film ink rather than after it overlaps.
+    points_pdf_cm:
+      - [10.89, 1.37]
+      - [10.82, 1.92]
+      - [10.63, 2.59]
+      - [10.38, 3.25]
+      - [10.13, 3.81]
+    clearance_pt: 5.5
+    defect_kind: label_path_near_miss
+    source_binding:
+      source_name: fig5_cantilever_actuation_artifact_v2.tex
+      selector: 'figure-agent-path: panel-c-beam-centerline'
+    text_phrases:
+      - id: coulomb_label_body_clearance
+        words: [Coulomb]
   - id: trace-switch-line
     kind: vertical_line
     role: polarity_switch
@@ -240,6 +273,21 @@ label_path_proximity_checks:
     text_phrases:
       - id: angle_label
         words: [angle]
+  # The recovery label previously crowded the terminating time axis, which no
+  # declared check covered: the tail polyline below owns the curve, not the axis.
+  - id: panel-d-time-axis
+    kind: horizontal_line
+    role: axis_label_lane
+    y_pdf_cm: 2.52
+    x_range_pdf_cm: [13.97, 17.37]
+    clearance_pt: 2.5
+    defect_kind: label_path_near_miss
+    source_binding:
+      source_name: fig5_cantilever_actuation_artifact_v2.tex
+      selector: 'figure-agent-path: panel-d-time-axis'
+    text_phrases:
+      - id: recovery_label_axis_clearance
+        words: [recovery]
   - id: panel-d-recovery-tail
     kind: polyline
     role: qualitative_response_curve
@@ -275,6 +323,13 @@ panels:
     bbox_pdf_cm: [12.75, 0.00, 17.80, 5.20]
 
 notes: |
-  Exploratory story artifact only. A clean compile is not a publication or
-  scientific acceptance claim. Representative video frames and the exact
-  protocol/data binding remain human gates.
+  A clean compile is not a publication or scientific acceptance claim.
+  Representative video frames and the exact protocol/data binding remain human
+  gates.
+
+  2026-08-13: accepted as the first-pass figure by the author after a
+  four-defect repair round (recovery-label lane, Panel C subtitle redundancy,
+  grayscale-safe residual vector, Coulomb label clear of the film body).
+  Acceptance is explicitly a first pass; further revision rounds are expected
+  and each one re-opens this declaration.
+accepted: true
