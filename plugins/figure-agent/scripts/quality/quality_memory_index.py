@@ -75,10 +75,14 @@ def _reward_state(event: dict[str, Any]) -> str:
         return "regressed"
     if quality_movement in ELIGIBLE_OUTCOMES:
         return str(quality_movement)
-    # An accept without a detector-backed quality movement is a human (or
-    # self-issued) label with no verified improvement behind it; it must not
-    # earn the "improved" reward that steers ranking priors.
     if human_label == "accept":
+        # Manual direct edits have no detector-recheck channel; their builder
+        # enforces a reviewer alongside the label, so the reviewed accept is
+        # the designed positive signal. A candidate accept without a
+        # detector-backed movement is an unverified label (possibly the
+        # accepting agent's own) and must not earn the ranking reward.
+        if outcome.get("reason") == "manual_direct_edit":
+            return "improved"
         return "accepted_unverified"
     return "unknown"
 
