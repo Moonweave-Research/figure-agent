@@ -4,7 +4,13 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
 from PIL import Image
+
+# quality_search is retired from the public CLI with no live caller; its
+# regression suite runs in the quarantine job, not on every push. The debt
+# ratchet (test_quality_search_ratchet.py) stays in the primary suite.
+pytestmark = pytest.mark.quarantine
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 for path in (
@@ -378,17 +384,20 @@ def test_quality_search_planner_is_read_only(tmp_path: Path, capsys) -> None:
     _write_minimal_fixture(workspace)
     before = _tree(workspace)
 
-    assert quality_search.main(
-        [
-            "quality_demo",
-            "--goal",
-            "plan only",
-            "--plan",
-            "--json",
-        ],
-        plugin_root=PLUGIN_ROOT,
-        workspace_root=workspace,
-    ) == 0
+    assert (
+        quality_search.main(
+            [
+                "quality_demo",
+                "--goal",
+                "plan only",
+                "--plan",
+                "--json",
+            ],
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+        == 0
+    )
 
     payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.quality-search-plan.v0"
@@ -6145,19 +6154,22 @@ def test_quality_search_executor_writes_only_scratch(tmp_path: Path, capsys) -> 
     _write_minimal_fixture(workspace)
     before = _tree(workspace)
 
-    assert quality_search.main(
-        [
-            "quality_demo",
-            "--goal",
-            "execute dry witness loop",
-            "--execute",
-            "--max-iterations",
-            "2",
-            "--json",
-        ],
-        plugin_root=PLUGIN_ROOT,
-        workspace_root=workspace,
-    ) == 0
+    assert (
+        quality_search.main(
+            [
+                "quality_demo",
+                "--goal",
+                "execute dry witness loop",
+                "--execute",
+                "--max-iterations",
+                "2",
+                "--json",
+            ],
+            plugin_root=PLUGIN_ROOT,
+            workspace_root=workspace,
+        )
+        == 0
+    )
     payload = json.loads(capsys.readouterr().out)
     assert payload["schema"] == "figure-agent.quality-search-execute.v0"
     assert payload["status"] == "dry_run_complete"
