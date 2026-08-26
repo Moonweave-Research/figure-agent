@@ -433,10 +433,18 @@ def test_test_a_valid_cycles_replay_byte_identically_from_current_and_copied_che
                 assert _sha256(root / receipt["render_path"]) == receipt["render_sha256"]
                 expected_receipt = receipt["runtime_receipt"]
                 assert runtime_receipt["python"]["implementation"] == "CPython"
+                assert runtime_receipt["rsvg"]["executable"] == (
+                    expected_receipt["rsvg"]["executable"]
+                )
+                volatile_tool_metadata = {"python", "rsvg"}
                 assert {
-                    key: value for key, value in runtime_receipt.items() if key != "python"
+                    key: value
+                    for key, value in runtime_receipt.items()
+                    if key not in volatile_tool_metadata
                 } == {
-                    key: value for key, value in expected_receipt.items() if key != "python"
+                    key: value
+                    for key, value in expected_receipt.items()
+                    if key not in volatile_tool_metadata
                 }
 
 
