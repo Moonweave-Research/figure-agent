@@ -37,10 +37,22 @@ def _run(command: list[str], *, cwd: Path | None = None, env: dict[str, str] | N
 
 def _network_disabled_command(command: list[str]) -> list[str]:
     sandbox = shutil.which("sandbox-exec")
-    if sandbox is None:
-        raise FragmentRenderError("network_sandbox_unavailable")
-    profile = "(version 1) (allow default) (deny network*)"
-    return [sandbox, "-p", profile, *command]
+    if sandbox is not None:
+        profile = "(version 1) (allow default) (deny network*)"
+        return [sandbox, "-p", profile, *command]
+    unshare = shutil.which("unshare")
+    sudo = shutil.which("sudo")
+    if sys.platform.startswith("linux") and unshare is not None and sudo is not None:
+        return [
+            sudo,
+            "-n",
+            "--preserve-env=FIGURE_AGENT_NETWORK,PYTHONHASHSEED,TZ",
+            unshare,
+            "--net",
+            "--",
+            *command,
+        ]
+    raise FragmentRenderError("network_sandbox_unavailable")
 
 
 def generate_deterministic_svg(generator_path: Path, output_path: Path) -> dict[str, Any]:

@@ -11,24 +11,50 @@ sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "hybrid"))
 
 from render_fragment import (  # noqa: E402
     FragmentRenderError,
+    _network_disabled_command,
     compare_svg_pdf_rasters,
     generate_deterministic_svg,
     render_svg_to_pdf,
 )
 
 
-@pytest.mark.skipif(
-    shutil.which("sandbox-exec") is None,
-    reason="requires sandbox-exec to prove network isolation",
-)
+def test_network_sandbox_uses_privileged_unshare_on_linux(monkeypatch) -> None:
+    monkeypatch.setattr(sys, "platform", "linux")
+    paths = {"sudo": "/usr/bin/sudo", "unshare": "/usr/bin/unshare"}
+    monkeypatch.setattr(shutil, "which", paths.get)
+
+    assert _network_disabled_command(["python", "generator.py"]) == [
+        "/usr/bin/sudo",
+        "-n",
+        "--preserve-env=FIGURE_AGENT_NETWORK,PYTHONHASHSEED,TZ",
+        "/usr/bin/unshare",
+        "--net",
+        "--",
+        "python",
+        "generator.py",
+    ]
+
+
+def test_network_sandbox_fails_closed_when_capability_is_missing(monkeypatch) -> None:
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setattr(shutil, "which", lambda _name: None)
+
+    with pytest.raises(FragmentRenderError, match="network_sandbox_unavailable"):
+        _network_disabled_command(["python", "generator.py"])
+
+
 def test_generator_runs_twice_with_network_disabled_and_requires_same_svg(
     tmp_path: Path,
 ) -> None:
     generator = tmp_path / "generator.py"
     generator.write_text(
-        "import argparse, os\n"
+        "import argparse, os, socket\n"
         "p=argparse.ArgumentParser(); p.add_argument('--output', required=True); a=p.parse_args()\n"
         "assert os.environ['FIGURE_AGENT_NETWORK'] == 'disabled'\n"
+        "s=socket.socket(type=socket.SOCK_DGRAM)\n"
+        "try: s.connect(('1.1.1.1', 53))\n"
+        "except OSError: pass\n"
+        "else: raise AssertionError('outbound network available')\n"
         "open(a.output, 'w').write('<svg xmlns=\"http://www.w3.org/2000/svg\"/>')\n",
         encoding="utf-8",
     )
@@ -41,10 +67,6 @@ def test_generator_runs_twice_with_network_disabled_and_requires_same_svg(
     assert result["network"] == "disabled"
 
 
-@pytest.mark.skipif(
-    shutil.which("sandbox-exec") is None,
-    reason="requires sandbox-exec to prove network isolation",
-)
 def test_generator_accepts_repo_relative_paths(tmp_path: Path, monkeypatch) -> None:
     fixture = tmp_path / "fixture"
     fixture.mkdir()

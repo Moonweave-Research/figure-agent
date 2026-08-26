@@ -59,6 +59,7 @@ jobs:
             ttf-mscorefonts-installer
           # Refresh the font cache so fontspec/lualatex can find Arial by name.
           sudo fc-cache -f
+          command -v unshare && sudo -n unshare --net -- true
 
       - name: Install dependencies
         run: uv sync --group dev
