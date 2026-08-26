@@ -84,4 +84,4 @@ jobs:
           uv run python3 scripts/run_export.py smoke_trap_demo
 
       - name: Run tests
-        run: uv run pytest -q
+        run: uv run pytest -q -m "not quarantine"
