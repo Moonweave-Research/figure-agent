@@ -17,6 +17,10 @@ from render_fragment import (  # noqa: E402
 )
 
 
+@pytest.mark.skipif(
+    shutil.which("sandbox-exec") is None,
+    reason="requires sandbox-exec to prove network isolation",
+)
 def test_generator_runs_twice_with_network_disabled_and_requires_same_svg(
     tmp_path: Path,
 ) -> None:
@@ -37,6 +41,10 @@ def test_generator_runs_twice_with_network_disabled_and_requires_same_svg(
     assert result["network"] == "disabled"
 
 
+@pytest.mark.skipif(
+    shutil.which("sandbox-exec") is None,
+    reason="requires sandbox-exec to prove network isolation",
+)
 def test_generator_accepts_repo_relative_paths(tmp_path: Path, monkeypatch) -> None:
     fixture = tmp_path / "fixture"
     fixture.mkdir()

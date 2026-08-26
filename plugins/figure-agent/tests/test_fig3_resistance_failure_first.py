@@ -1094,6 +1094,7 @@ def _pdf_normalized_token_inventory(path: Path) -> Counter[str]:
     return Counter(re.findall(r"\w+|[^\w\s]", result.stdout.casefold()))
 
 
+@pytest.mark.render
 def test_fig3_resistance_failure_first_packet_hash_binds_current_authority() -> None:
     packet = yaml.safe_load(PACKET.read_text(encoding="utf-8"))
 

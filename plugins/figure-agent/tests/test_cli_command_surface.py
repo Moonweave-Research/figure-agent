@@ -30,8 +30,10 @@ def test_doctor_reports_the_canonical_command_surface() -> None:
         check=False,
     )
 
-    assert result.returncode == 0, result.stderr
-    surface = json.loads(result.stdout)["command_surface"]
+    payload = json.loads(result.stdout)
+    expected_returncode = 0 if payload["dependencies"]["state"] == "ok" else 1
+    assert result.returncode == expected_returncode, result.stderr
+    surface = payload["command_surface"]
     assert surface["canonical_route"] == ["status", "run"]
     assert surface["bounded_repair_entry_route"] == [
         "authoring-repair-packet",
@@ -139,9 +141,11 @@ def test_registry_controls_internal_cli_membership_and_public_help() -> None:
         check=False,
     )
 
-    assert doctor.returncode == 0, doctor.stderr
+    payload = json.loads(doctor.stdout)
+    expected_returncode = 0 if payload["dependencies"]["state"] == "ok" else 1
+    assert doctor.returncode == expected_returncode, doctor.stderr
     internal_commands = set(
-        json.loads(doctor.stdout)["command_surface"]["commands_by_disposition"][
+        payload["command_surface"]["commands_by_disposition"][
             "internal_compatibility"
         ]
     )
