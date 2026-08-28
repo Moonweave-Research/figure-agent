@@ -1320,10 +1320,26 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
             result["acceptance_freshness_state"] = "accepted_but_stale"
     result["promotion_queue"] = _promotion_queue_summary(example_dir)
     build_dir = candidate_build_dir or example_dir / "build"
-    result["strict_evidence"] = _strict_status_summary(
+    strict_evidence = _strict_status_summary(
         build_dir / "strict_status.json",
         example_dir,
     )
+    result["strict_evidence"] = strict_evidence
+    strict_state = strict_evidence.get("state")
+    if strict_state in {"failed", "invalid"}:
+        note = f"strict_evidence_{strict_state}"
+        if note not in result.setdefault("notes", []):
+            result["notes"].append(note)
+        result["workflow_ready"] = False
+        result["golden_ready"] = False
+        result["release_ready"] = False
+        result["final_ready"] = False
+        if result.get("accepted") is True:
+            result["acceptance_freshness_state"] = "accepted_but_stale"
+    elif strict_state != "passed" and result.get("release_ready") is True:
+        result.setdefault("notes", []).append("strict_evidence_required_for_release")
+        result["release_ready"] = False
+        result["final_ready"] = False
     result["geometry_coverage"] = _geometry_coverage_summary(
         build_dir / "undeclared_geometry.json",
         example_dir,

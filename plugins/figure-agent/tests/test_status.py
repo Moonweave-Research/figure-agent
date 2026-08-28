@@ -4240,6 +4240,91 @@ def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
     assert result["final_ready"] is False
 
 
+def _write_strict_status(fig_dir: Path, *, state: str, detector_failed: bool) -> None:
+    (fig_dir / "build" / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": state != "not_requested",
+                "detector_failed": detector_failed,
+                "state": state,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def test_infer_stage_strict_failure_blocks_all_readiness(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    _write_strict_status(fig_dir, state="failed", detector_failed=True)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["state"] == "failed"
+    assert "strict_evidence_failed" in result["notes"]
+    assert result["workflow_ready"] is False
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+    assert result["acceptance_freshness_state"] == "accepted_but_stale"
+
+
+def test_infer_stage_release_requires_passing_strict_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+    monkeypatch.setattr(
+        status_mod,
+        "publication_gate_summary",
+        lambda *_args, **_kwargs: {
+            "publication_gate_state": "PASS",
+            "publication_gate_failures": [],
+        },
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["state"] == "missing"
+    assert "strict_evidence_required_for_release" in result["notes"]
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+
+
+def test_infer_stage_release_ready_with_passing_gate_and_strict_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    _write_strict_status(fig_dir, state="passed", detector_failed=False)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+    monkeypatch.setattr(
+        status_mod,
+        "publication_gate_summary",
+        lambda *_args, **_kwargs: {
+            "publication_gate_state": "PASS",
+            "publication_gate_failures": [],
+        },
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["state"] == "passed"
+    assert result["release_ready"] is True
+    assert result["final_ready"] is True
+
+
 def test_print_single_shows_exports_substate(tmp_path: Path, capsys) -> None:
     """_print_single must surface exports_substate so users see MISSING /
     TRACKED_GOLDEN / STALE / FRESH for each fixture.
