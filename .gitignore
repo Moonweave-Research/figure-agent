@@ -51,3 +51,8 @@ dist/
 # Local agent-native MCP registration (machine-specific absolute paths).
 # Root-anchored so the tracked bundle config plugins/figure-agent/.mcp.json stays committed.
 /.mcp.json
+
+# Browser-automation session captures. They are local debugging output, and an
+# untracked one used to break the fig3 scope guard, which reads the live git
+# surface.
+**/.playwright-mcp/
