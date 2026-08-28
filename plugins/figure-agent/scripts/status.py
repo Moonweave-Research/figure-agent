@@ -1286,21 +1286,38 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
                 candidate_build_dir = (example_dir / render_path).parent
         candidate_info.pop("build_pdf_abs", None)
     result["spine_evidence"] = _spine_evidence_summary(example_dir, candidate_build_dir)
+    # Every spine channel blocks on a defect it actually evaluated. The
+    # allowlist used to name three of the eight, so a fixture whose physics
+    # grounding was invalid or whose tex-geometry assertions had gone stale
+    # still read as ready — the class of defect the assertion layer exists to
+    # catch. The three declaration-driven channels also block on a missing
+    # report, because their spec declaration says the report must exist; the
+    # five build-artifact channels do not, since a fixture that never compiled
+    # them is early-stage, not defective.
+    declaration_driven = {
+        "silhouette_morphology",
+        "text_boundary_coverage",
+        "label_path_coverage",
+    }
+    defect_states = {"stale", "invalid", "incomplete", "needs_action"}
     blocking_evidence = {
-        "silhouette_morphology": result["spine_evidence"]["silhouette_morphology"],
-        "text_boundary_coverage": result["spine_evidence"]["text_boundary_coverage"],
-        "label_path_coverage": result["spine_evidence"]["label_path_coverage"],
+        name: result["spine_evidence"][name]
+        for name in (
+            "tex_assertions",
+            "semantic_assertions",
+            "semantic_contract",
+            "convention_receipt",
+            "physics_grounding",
+            *sorted(declaration_driven),
+        )
     }
     has_blocking_evidence = False
     for evidence_name, evidence in blocking_evidence.items():
         evidence_state = evidence.get("state")
-        if evidence_state not in {
-            "missing",
-            "stale",
-            "invalid",
-            "incomplete",
-            "needs_action",
-        }:
+        blocking_states = (
+            defect_states | {"missing"} if evidence_name in declaration_driven else defect_states
+        )
+        if evidence_state not in blocking_states:
             continue
         has_blocking_evidence = True
         note = f"{evidence_name}_{evidence_state}"

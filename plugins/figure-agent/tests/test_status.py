@@ -5041,3 +5041,40 @@ def test_tracked_golden_partial_export_gives_force_golden_hint(
     assert "partial_export" in result["notes"]
     assert "--force-golden" in result["next"]
     assert "re-run /fig_export <name> to generate" not in result["next"]
+
+
+def test_infer_stage_invalid_physics_grounding_blocks_readiness(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """physics_grounding was computed but not wired into blocking: a figure
+    whose physics evidence is invalid must not read as ready."""
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    _write_strict_status(fig_dir, state="passed", detector_failed=False)
+    (fig_dir / "build" / "physics_grounding.json").write_text("{ not json", encoding="utf-8")
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["spine_evidence"]["physics_grounding"]["state"] == "invalid"
+    assert "physics_grounding_invalid" in result["notes"]
+    assert result["workflow_ready"] is False
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
+
+
+def test_infer_stage_absent_build_assertions_do_not_block_early_stage_work(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A fixture that never compiled its assertion reports is early-stage, not
+    defective: only the declaration-driven channels block on absence."""
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["spine_evidence"]["tex_assertions"]["state"] == "missing"
+    assert result["workflow_ready"] is True
