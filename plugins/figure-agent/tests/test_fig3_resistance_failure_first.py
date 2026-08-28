@@ -1094,6 +1094,9 @@ def _pdf_normalized_token_inventory(path: Path) -> Counter[str]:
     return Counter(re.findall(r"\w+|[^\w\s]", result.stdout.casefold()))
 
 
+# The receipt replay compiles the fixture for real, so this belongs to the
+# render-capable environment surface.
+@pytest.mark.render
 def test_fig3_resistance_failure_first_packet_hash_binds_current_authority() -> None:
     packet = yaml.safe_load(PACKET.read_text(encoding="utf-8"))
 
@@ -2310,9 +2313,7 @@ def test_fig3_current_render_review_scaffold_is_bound_and_human_baseline_recorde
     assert tracked_receipts["render_receipt"]["sha256"] != _sha256(RENDER_RECEIPT)
     tracked_inputs = provenance["tracked_inputs"]
     assert tracked_inputs["tex"]["path"] == "fig3_resistance_mechanism.tex"
-    assert tracked_inputs["tex"]["sha256"] != _sha256(
-        FIXTURE / "fig3_resistance_mechanism.tex"
-    )
+    assert tracked_inputs["tex"]["sha256"] != _sha256(FIXTURE / "fig3_resistance_mechanism.tex")
     assert tracked_inputs["briefing"] == {
         "path": "briefing.md",
         "sha256": _sha256(FIXTURE / "briefing.md"),
