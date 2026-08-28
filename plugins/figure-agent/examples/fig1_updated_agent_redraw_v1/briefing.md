@@ -3,7 +3,7 @@
 > **Current handoff (2026-07-26):** the maintained render is the explicit
 > nested candidate `review/failure-first/comparable-v3-repair-c5/repaired.tex`.
 > It is a development baseline (`candidate_only`), not publication-final.
-> The single redraw brief is `FIG1_CANONICAL_HANDOFF.md`; reproducibility and
+> The single redraw brief is `FIG1_CURRENT_CANDIDATE_HANDOFF.md`; reproducibility and
 > next-figure instructions live in `docs/current-sulfur-paper-figure-state.md`.
 
 This is an additive full-figure candidate, not a modification of the historical

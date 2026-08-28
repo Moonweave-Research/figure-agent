@@ -12,6 +12,7 @@ import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1"
+CURRENT_HANDOFF = FIXTURE / "FIG1_CURRENT_CANDIDATE_HANDOFF.md"
 REPAIRED_SOURCE = (
     FIXTURE
     / "review"
@@ -73,6 +74,14 @@ def test_redraw_pins_unchanged_visual_and_physics_authorities() -> None:
         assert tree == source["source_tree"]
         historical = _historical_bytes(source["source_commit"], source["source_path"])
         assert hashlib.sha256(historical).hexdigest() == source["sha256"]
+
+
+def test_redraw_handoff_names_a_current_candidate_without_canonical_promotion() -> None:
+    assert CURRENT_HANDOFF.is_file()
+    assert not (FIXTURE / "FIG1_CANONICAL_HANDOFF.md").exists()
+    handoff = CURRENT_HANDOFF.read_text(encoding="utf-8")
+    assert "current-candidate handoff" in handoff
+    assert "candidate_only" in handoff
 
 
 def test_redraw_is_independent_and_keeps_floating_panel_f_topology() -> None:

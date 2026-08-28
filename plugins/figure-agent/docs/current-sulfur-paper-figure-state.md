@@ -37,6 +37,18 @@ at direct `examples/<fixture>` paths: moving them for cosmetic folder grouping
 would break their compile, status, pointer, and regression contracts. Lifecycle
 classification belongs in the machine map, not in a new directory name.
 
+## Current schematic edit entry points
+
+| Figure | Edit from | Do not treat as |
+|---|---|---|
+| Fig1 | `review/current-candidate.json` → its resolved nested `repaired.tex` | the fixture-root TeX or a v5f reference vault |
+| Fig2a | `fig2_charge_transport_mechanism.tex` | the external Fig2b–d data-plot assembly |
+| Fig5 mechanism | `fig5_cantilever_actuation_artifact_v2.tex` | a full assembled paper figure |
+
+Run `./bin/fig-agent status <fixture>` before editing to resolve the current
+candidate and evidence state. The active baseline is a development route, not a
+canonical paper-artifact declaration.
+
 All other real fixtures are explicitly classified in the map as regression,
 pilot, reference, superseded, SI, or sandbox evidence. They do not override an
 active binding.
