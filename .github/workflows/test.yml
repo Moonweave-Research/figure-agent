@@ -19,7 +19,11 @@ jobs:
       run:
         working-directory: plugins/figure-agent
     steps:
+      # History-pinned provenance tests replay recorded commits; a shallow
+      # clone turns them into unconditional failures.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
@@ -49,6 +53,8 @@ jobs:
         working-directory: plugins/figure-agent
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
