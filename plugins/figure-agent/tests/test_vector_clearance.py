@@ -311,18 +311,14 @@ def test_small_filled_circle_extracts_as_marker_and_matches_kind_selector() -> N
 
 def test_v5f_panel_e_peak_crowding_declaration_is_resolved() -> None:
     fixture = ROOT / "examples" / "fig1_overview_v5f_art_direction_001_vault"
-    tex = (fixture / "fig1_overview_v5f_art_direction_001_vault.tex").read_text(
-        encoding="utf-8"
-    )
+    tex = (fixture / "fig1_overview_v5f_art_direction_001_vault.tex").read_text(encoding="utf-8")
     checks = vector_clearance.parse_vector_clearance_checks(
         vector_clearance._load_spec(fixture / "spec.yaml")
     )
 
     issues = vector_clearance.check_vector_clearance(tex, checks)
 
-    assert [
-        item for item in issues if item["id"] == "panelE-deep-peak-caliper-min-clearance"
-    ] == []
+    assert [item for item in issues if item["id"] == "panelE-deep-peak-caliper-min-clearance"] == []
 
 
 def test_foreach_ball_shaded_markers_are_extracted_for_declared_checks() -> None:
@@ -419,3 +415,60 @@ def test_payload_structure_records_source_hashes(tmp_path: Path) -> None:
     assert payload["checked"] == 2
     assert payload["total"] == 0
     assert payload["source_hashes"]["examples/fig_demo/fig_demo.tex"].startswith("sha256:")
+
+
+def test_polyline_chain_is_one_element_with_every_point() -> None:
+    text = r"\draw[thick] (0,0) -- (0,1.2) -- (2.5,1.2) -- (2.5,0);"
+
+    elements = vector_clearance.extract_vector_elements(text)
+
+    assert len(elements) == 1
+    assert elements[0]["kind"] == "line"
+    assert elements[0]["points_cm"] == [(0.0, 0.0), (0.0, 1.2), (2.5, 1.2), (2.5, 0.0)]
+
+
+def test_polyline_middle_segment_violation_is_detected() -> None:
+    """Pairwise segment parsing dropped the middle segment of a chain, so an
+    obstacle under it was invisible to every declared clearance check."""
+    tex = (
+        r"\draw[thick] (0,0) -- (0,1.2) -- (2.5,1.2) -- (2.5,0);"
+        "\n"
+        r"\draw (1.0,1.0) rectangle (1.5,1.1);"
+    )
+    checks = [
+        {
+            "id": "VC-mid",
+            "relation": "min_clearance_cm",
+            "min_clearance_cm": 0.3,
+            "element_a": {"source_line": 2, "kind": "rect"},
+            "element_b": {"source_line": 1, "kind": "line"},
+        }
+    ]
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert [issue["id"] for issue in issues if issue.get("status") == "violated"] == ["VC-mid"]
+
+
+def test_polyline_circle_clearance_uses_nearest_segment() -> None:
+    tex = (
+        r"\draw (0,0) -- (0,1) -- (3,1) -- (3,0);"
+        "\n"
+        r"\draw (1.5,0.5) circle (0.1);"
+    )
+    checks = [
+        {
+            "id": "VC-circ",
+            "relation": "min_clearance_cm",
+            "min_clearance_cm": 0.5,
+            "element_a": {"source_line": 2, "kind": "circle"},
+            "element_b": {"source_line": 1, "kind": "line"},
+        }
+    ]
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    violated = [issue for issue in issues if issue.get("status") == "violated"]
+    assert [issue["id"] for issue in violated] == ["VC-circ"]
+    # nearest segment is the middle one: 1.0 - 0.5 - 0.1 = 0.4 < 0.5
+    assert violated[0]["measured_clearance_cm"] == pytest.approx(0.4, abs=1e-6)

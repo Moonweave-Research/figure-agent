@@ -35,7 +35,10 @@ _FOREACH_PAIR_RE = re.compile(
     r"\s+in\s*\{(?P<pairs>[^}]*)\}\s*\{(?P<body>.*?)\}",
     re.DOTALL,
 )
-_SEGMENT_RE = re.compile(rf"{_POINT_RE}\s*--\s*{_POINT_RE}")
+# A full `--` chain: two or more literal points. Parsed as ONE element so the
+# middle segments of a rerouted path stay visible to clearance checks.
+_CHAIN_RE = re.compile(rf"{_POINT_RE}(?:\s*--\s*{_POINT_RE})+")
+_POINT_ONLY_RE = re.compile(_POINT_RE)
 _RECT_RE = re.compile(rf"{_POINT_RE}\s*rectangle\s*{_POINT_RE}")
 _CIRCLE_RE = re.compile(rf"{_POINT_RE}\s*circle\s*\(\s*(-?\d+(?:\.\d+)?)(cm|mm|pt)?\s*\)")
 _BEZIER_RE = re.compile(
@@ -155,9 +158,8 @@ def extract_vector_elements(tex_text: str) -> list[dict[str, Any]]:
             "options": operation["options"],
             "tex_anchor": text.strip(),
         }
-        for match in _SEGMENT_RE.finditer(text):
-            x0, y0, x1, y1 = (float(value) for value in match.groups())
-            points = [(x0, y0), (x1, y1)]
+        for match in _CHAIN_RE.finditer(text):
+            points = [(float(x), float(y)) for x, y in _POINT_ONLY_RE.findall(match.group(0))]
             elements.append(
                 {
                     **base,
@@ -197,10 +199,7 @@ def extract_vector_elements(tex_text: str) -> list[dict[str, Any]]:
             )
         for match in _BEZIER_RE.finditer(text):
             values = [float(value) for value in match.groups()]
-            points = [
-                (values[index], values[index + 1])
-                for index in range(0, len(values), 2)
-            ]
+            points = [(values[index], values[index + 1]) for index in range(0, len(values), 2)]
             elements.append(
                 {
                     **base,
@@ -332,8 +331,7 @@ def _matches_selector(
 
 def _bbox_almost_equal(a: list[float], b: list[float]) -> bool:
     return all(
-        abs(left - right) <= SELECTOR_BBOX_TOLERANCE_CM
-        for left, right in zip(a, b, strict=True)
+        abs(left - right) <= SELECTOR_BBOX_TOLERANCE_CM for left, right in zip(a, b, strict=True)
     )
 
 
@@ -409,10 +407,14 @@ def _segments_intersect(
     if o1 * o2 < 0 and o3 * o4 < 0:
         return True
     return (
-        abs(o1) < 1e-9 and _on_segment(a0, b0, a1)
-        or abs(o2) < 1e-9 and _on_segment(a0, b1, a1)
-        or abs(o3) < 1e-9 and _on_segment(b0, a0, b1)
-        or abs(o4) < 1e-9 and _on_segment(b0, a1, b1)
+        abs(o1) < 1e-9
+        and _on_segment(a0, b0, a1)
+        or abs(o2) < 1e-9
+        and _on_segment(a0, b1, a1)
+        or abs(o3) < 1e-9
+        and _on_segment(b0, a0, b1)
+        or abs(o4) < 1e-9
+        and _on_segment(b0, a1, b1)
     )
 
 
@@ -455,19 +457,27 @@ def _bbox_distance(a: list[float], b: list[float]) -> float:
     return math.hypot(dx, dy)
 
 
+def _element_segments(
+    element: dict[str, Any],
+) -> list[tuple[tuple[float, float], tuple[float, float]]]:
+    points = element["points_cm"]
+    return list(zip(points, points[1:], strict=False))
+
+
 def _line_circle_distance(line: dict[str, Any], circle: dict[str, Any]) -> float:
-    a, b = line["points_cm"]
     center = (float(circle["center_cm"][0]), float(circle["center_cm"][1]))
-    return max(0.0, _point_segment_distance(center, a, b) - float(circle["radius_cm"]))
+    nearest = min(
+        _point_segment_distance(center, start, end) for start, end in _element_segments(line)
+    )
+    return max(0.0, nearest - float(circle["radius_cm"]))
 
 
 def _element_distance(a: dict[str, Any], b: dict[str, Any]) -> float:
     if a["kind"] == "line" and b["kind"] == "line":
-        return _segment_distance(
-            a["points_cm"][0],
-            a["points_cm"][1],
-            b["points_cm"][0],
-            b["points_cm"][1],
+        return min(
+            _segment_distance(a0, a1, b0, b1)
+            for a0, a1 in _element_segments(a)
+            for b0, b1 in _element_segments(b)
         )
     if a["kind"] == "line" and b["kind"] == "circle":
         return _line_circle_distance(a, b)
@@ -542,8 +552,7 @@ def check_vector_clearance(tex_text: str, checks: list[dict[str, Any]]) -> list[
         issue["non_auto_promotable"] = non_auto
         issue["promotion_tier"] = "review_queue" if non_auto else "auto"
         issue["message"] = (
-            f"vector_clearance {check['id']!r} violated {relation}: "
-            f"clearance {distance_cm:.3f}cm"
+            f"vector_clearance {check['id']!r} violated {relation}: clearance {distance_cm:.3f}cm"
         )
         issues.append(issue)
     return issues
@@ -613,8 +622,7 @@ def main(argv: list[str] | None = None) -> int:
     output = args.json_output or pdf_path.parent / "vector_clearance.json"
     payload = vector_clearance_payload(pdf_path, issues, len(checks), tex_path=tex_path)
     output.write_text(
-        json.dumps(payload, indent=2, sort_keys=True)
-        + "\n",
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     for issue in issues:
