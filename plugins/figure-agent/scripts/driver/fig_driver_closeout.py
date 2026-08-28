@@ -18,8 +18,22 @@ def closeout_report(name: str, *, repo_root: Path) -> dict[str, Any]:
 
     try:
         return compute_closeout(name, repo_root=repo_root)
-    except FigCloseoutError:
-        return {"closeout_complete": True, "next_action": "closeout not applicable"}
+    except FigCloseoutError as exc:
+        # An unreadable fixture, an invalid name, or a status that will not
+        # compute is a blocked closeout, never a finished one: reporting
+        # completion here let the driver declare done on a broken fixture.
+        return {
+            "closeout_complete": False,
+            "next_action": f"closeout could not be computed: {exc}",
+            "blocking_step_ids": ["closeout_uncomputable"],
+            "steps": [
+                {
+                    "step_id": "closeout_uncomputable",
+                    "state": "blocked",
+                    "reason": str(exc),
+                }
+            ],
+        }
 
 
 def compact_closeout(report: dict[str, Any]) -> dict[str, Any]:
@@ -66,8 +80,7 @@ def closeout_recommendation(report: dict[str, Any] | None) -> CloseoutRecommenda
                 return CloseoutRecommendation(
                     kind="force_golden",
                     reason=(
-                        "closeout is incomplete; tracked golden export requires "
-                        "manual approval."
+                        "closeout is incomplete; tracked golden export requires manual approval."
                     ),
                 )
     return CloseoutRecommendation(

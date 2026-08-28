@@ -2642,3 +2642,18 @@ def test_driver_dry_run_does_not_mutate_fixture_files(tmp_path: Path) -> None:
         if path.is_file()
     }
     assert after == before
+
+
+def test_closeout_report_surfaces_an_uncomputable_fixture_as_blocked(tmp_path: Path) -> None:
+    """A closeout that cannot be computed is blocked, never complete: the
+    swallowed error let the driver declare done on a broken fixture."""
+    report = fig_driver.closeout_mod.closeout_report("missing_fixture", repo_root=tmp_path)
+
+    assert report["closeout_complete"] is False
+    assert report["blocking_step_ids"] == ["closeout_uncomputable"]
+    assert "could not be computed" in report["next_action"]
+
+    recommendation = fig_driver.closeout_mod.closeout_recommendation(report)
+
+    assert recommendation is not None
+    assert recommendation.kind == "blocked"
