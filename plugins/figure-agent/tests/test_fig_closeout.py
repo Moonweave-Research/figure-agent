@@ -304,9 +304,7 @@ def test_closeout_requests_text_boundary_helper_when_checks_are_missing(
     step = _steps_by_id(report)["text_boundary_checks"]
 
     assert step["state"] == "needs_action"
-    assert step["command"] == (
-        "fig-agent text-boundary loop_demo --write"
-    )
+    assert step["command"] == ("fig-agent text-boundary loop_demo --write")
     assert report["next_action"] == step["command"]
     assert report["next_action_summary"]["action"] == "create_or_fix_source"
     assert report["next_action_summary"]["safe_command"] == step["command"]
@@ -808,3 +806,40 @@ def test_fig_agent_closeout_uses_plugin_workspace_from_repo_root() -> None:
     data = json.loads(result.stdout)
     assert data["fixture"] == "smoke_trap_demo"
     assert result.returncode == (0 if data["closeout_complete"] else 1)
+
+
+def _step_by_id(report: dict, step_id: str) -> dict:
+    return next(step for step in report["steps"] if step["id"] == step_id)
+
+
+def test_closeout_skips_the_golden_contract_for_a_non_accepted_fixture(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _make_fixture(tmp_path)
+    monkeypatch.setattr(fig_closeout_mod, "infer_stage", lambda _dir: _status())
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+
+    assert _step_by_id(report, "golden_contract")["state"] == "not_required"
+
+
+def test_closeout_runs_the_golden_contract_when_acceptance_is_declared(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """check_example's theory-guard, audit-freshness and raster gates had no
+    production caller: an accepted fixture could close out with all of them
+    unevaluated."""
+    fixture = _make_fixture(tmp_path)
+    (fixture / "spec.yaml").write_text(
+        "name: loop_demo\npanels: []\nstyle_profile: polymer-default\naccepted: true\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(fig_closeout_mod, "infer_stage", lambda _dir: _status())
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+
+    step = _step_by_id(report, "golden_contract")
+    assert step["state"] == "needs_action"
+    assert step["evidence"]["failures"]
+    assert report["closeout_complete"] is False
+    assert "golden_contract" in report["blocking_step_ids"]
