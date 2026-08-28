@@ -10,6 +10,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "quality"))
 
 import critique_scaffold  # noqa: E402
+import render_input_manifest  # noqa: E402
+import status as status_mod  # noqa: E402
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
@@ -50,6 +52,12 @@ style_profile: polymer-default
     (build / f"{name}.pdf").write_bytes(b"%PDF demo\n")
     crop_path = crops / "full_q1.png"
     crop_path.write_bytes(b"crop\n")
+    render_input_manifest.write_manifest(
+        fixture=name,
+        render_pdf=build / f"{name}.pdf",
+        inputs=status_mod._render_input_paths(fixture, name),
+        output=render_input_manifest.manifest_path(build / f"{name}.pdf"),
+    )
     (crops / "manifest.json").write_text(
         json.dumps(
             {

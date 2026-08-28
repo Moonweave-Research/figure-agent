@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import quality_memory_index  # noqa: E402
+import render_input_manifest  # noqa: E402
 import status as status_mod  # noqa: E402
 from critique_schema_vocab import AESTHETIC_ANTIPATTERN_IDS  # noqa: E402
 from current_render_review_scaffold import review_scaffold_summary  # noqa: E402
@@ -611,27 +612,14 @@ def _make_spec(
     (directory / "briefing.md").write_text("briefing", encoding="utf-8")
 
 
-def _write_render_input_manifest(directory: Path, name: str) -> None:
-    build = directory / "build"
-    pdf = build / f"{name}.pdf"
-    inputs = {
-        "source_tex": directory / f"{name}.tex",
-        "briefing": directory / "briefing.md",
-        "spec": directory / "spec.yaml",
-        "style_lock": status_mod.STYLE_LOCK_PATH,
-    }
-    payload = {
-        "schema": "figure-agent.render-input-manifest.v1",
-        "fixture": name,
-        "render": {
-            "path": f"build/{name}.pdf",
-            "sha256": _sha256(pdf),
-        },
-        "inputs": {role: {"sha256": _sha256(path)} for role, path in inputs.items()},
-    }
-    (build / f"{name}_render_inputs.json").write_text(
-        json.dumps(payload, sort_keys=True) + "\n",
-        encoding="utf-8",
+def _write_render_input_manifest(directory: Path, name: str | None = None) -> None:
+    name = name or directory.name
+    build_pdf = directory / "build" / f"{name}.pdf"
+    render_input_manifest.write_manifest(
+        fixture=name,
+        render_pdf=build_pdf,
+        inputs=status_mod._render_input_paths(directory, name),
+        output=render_input_manifest.manifest_path(build_pdf),
     )
 
 
@@ -1154,6 +1142,7 @@ Explain transient-current trapping in a compact mechanism schematic.
         '{"fixture":"briefed_fig","candidates":[{"id":"VC001"}],"total":1}\n',
         encoding="utf-8",
     )
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -1280,6 +1269,7 @@ def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     os.utime(fig_dir / "spec.yaml", (old_time, old_time))
     new_time = time.time() - 10
     os.utime(pdf, (new_time, new_time))
+    _write_render_input_manifest(fig_dir)
     result = infer_stage(fig_dir)
     assert result["stage"] == 3
 
@@ -1378,6 +1368,7 @@ def test_status_separates_render_freshness_from_strict_and_geometry_evidence(
     for path in (tex, fig_dir / "briefing.md", fig_dir / "spec.yaml"):
         os.utime(path, (old_time, old_time))
     os.utime(pdf, (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -1954,6 +1945,7 @@ def test_stage_3_panel_reference_missing_critique_redirects_to_fig_critique(
     ):
         os.utime(path, (old_time, old_time))
     os.utime(build_dir / "panel_ref_fig.pdf", (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -1990,6 +1982,7 @@ def test_stage_3_reference_stale_critique_redirects_to_fig_critique(
         os.utime(path, (middle_time, middle_time))
     os.utime(fig_dir / "critique.md", (old_time, old_time))
     os.utime(build_dir / "stale_critique_fig.pdf", (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -2075,6 +2068,7 @@ polish_triggers:
         os.utime(path, (old_time, old_time))
     for path in (build_dir / f"{name}.pdf", fig_dir / "critique.md"):
         os.utime(path, (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -2112,6 +2106,7 @@ def test_status_surfaces_passed_lint_summary_for_fresh_valid_critique(tmp_path: 
     build_dir.mkdir()
     (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
     _write_hashed_critique(fig_dir, name)
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -2501,6 +2496,7 @@ def test_stage_3_authoring_doc_stale_critique_redirects_to_fig_critique(
     os.utime(fig_dir / "critique.md", (critique_time, critique_time))
     os.utime(authoring_path, (fresh_time, fresh_time))
     os.utime(build_dir / f"{name}.pdf", (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -2521,6 +2517,7 @@ def _make_fresh_exports(fig_dir: Path, name: str) -> None:
     (exports_dir / f"{name}.svg").write_bytes(b"<svg/>")
     (exports_dir / f"{name}.tif").write_bytes(b"TIFF")
     (exports_dir / f"{name}.png").write_bytes(b"\x89PNG")
+    _write_render_input_manifest(fig_dir)
 
 
 def _make_status_ready_fixture(fig_dir: Path, *, accepted: bool | None = None) -> None:
@@ -2545,6 +2542,7 @@ def _mark_sources_older_than_outputs(fig_dir: Path) -> None:
     os.utime(fig_dir / "build" / f"{name}.pdf", (fresh_time, fresh_time))
     for path in (fig_dir / "exports").iterdir():
         os.utime(path, (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
 
 def _write_final_artifact_spec(fig_dir: Path, *, kind: str = "generated_export") -> None:
@@ -2980,6 +2978,7 @@ def test_malformed_spec_with_fresh_build_routes_to_spec_fix_first(
     for path in (fig_dir / "spec.yaml", fig_dir / "briefing.md", fig_dir / f"{fig_dir.name}.tex"):
         os.utime(path, (old_time, old_time))
     os.utime(build / f"{fig_dir.name}.pdf", (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "MISSING")
 
     result = infer_stage(fig_dir)
@@ -3659,6 +3658,7 @@ def test_declared_missing_reference_next_hint_requires_fix_not_critique(
     for path in (fig_dir / "spec.yaml", fig_dir / "briefing.md", fig_dir / "goldenfig.tex"):
         os.utime(path, (old_time, old_time))
     os.utime(build_dir / "goldenfig.pdf", (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -4027,6 +4027,7 @@ def test_no_arg_summary_shows_actionable_audit_evidence(
     (fig_dir / "build").mkdir()
     (fig_dir / "build" / "auditfig.pdf").write_bytes(b"%PDF")
     _write_hashed_critique(fig_dir, "auditfig", schema="figure-agent.critique.v1.10")
+    _write_render_input_manifest(fig_dir)
     monkeypatch.chdir(tmp_path)
 
     import status as status_mod
@@ -4071,6 +4072,7 @@ def test_infer_stage_returns_status_vector_for_ready_final(
     os.utime(build / "ready_fig.pdf", (fresh_time, fresh_time))
     for path in exports.iterdir():
         os.utime(path, (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     import status as status_mod
 
@@ -4104,6 +4106,7 @@ def test_infer_stage_status_vector_not_ready_when_not_accepted(
     (exports / "goldenfig.svg").write_bytes(b"<svg/>")
     (exports / "goldenfig.tif").write_bytes(b"TIFF")
     (exports / "goldenfig.png").write_bytes(b"\x89PNG")
+    _write_render_input_manifest(fig_dir)
 
     import status as status_mod
 
@@ -4223,6 +4226,7 @@ def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
     (exports / "goldenfig.svg").write_bytes(b"<svg/>")
     (exports / "goldenfig.tif").write_bytes(b"TIFF")
     (exports / "goldenfig.png").write_bytes(b"\x89PNG")
+    _write_render_input_manifest(fig_dir)
 
     import status as status_mod
 
@@ -4980,6 +4984,7 @@ def test_tracked_golden_stale_with_fresh_render_and_missing_critique_skips_compi
     os.utime(fig_dir / "build" / "golden_fig.pdf", (build_time, build_time))
     for path in (fig_dir / "exports").iterdir():
         os.utime(path, (export_time, export_time))
+    _write_render_input_manifest(fig_dir)
 
     monkeypatch.setattr(export_freshness, "REPO_ROOT", repo)
 

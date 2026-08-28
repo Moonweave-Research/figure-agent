@@ -334,7 +334,6 @@ def _compute_render_state(
     spec_path: Path,
     tex_path: Path,
     build_pdf: Path,
-    sources: tuple[Path, ...],
 ) -> str:
     if not example_dir.exists() or not example_dir.is_dir() or not spec_path.exists():
         return RENDER_NOT_SCAFFOLDED
@@ -350,11 +349,7 @@ def _compute_render_state(
     )
     if hash_state == render_input_manifest.FRESH:
         return RENDER_FRESH
-    if hash_state != render_input_manifest.MISSING:
-        return RENDER_STALE
-    if _is_stale(sources, (build_pdf,)):
-        return RENDER_STALE
-    return RENDER_FRESH
+    return RENDER_STALE
 
 
 def _review_scale_previews_summary(build_png: Path, spec: dict[str, Any]) -> dict[str, Any]:
@@ -1645,7 +1640,7 @@ def infer_stage(example_dir: Path) -> dict:
     )
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
-    render_state = _compute_render_state(example_dir, spec_path, tex_path, build_pdf, sources)
+    render_state = _compute_render_state(example_dir, spec_path, tex_path, build_pdf)
     review_scale_summary = _review_scale_previews_summary(build_png, spec)
     if review_scale_summary["required"]:
         preview_state = review_scale_summary["state"]
