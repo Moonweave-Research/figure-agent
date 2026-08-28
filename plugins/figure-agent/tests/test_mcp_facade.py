@@ -1127,6 +1127,10 @@ def test_mcp_candidate_read_only_tools_and_apply_blocks_without_acceptance(
 def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     fixture = _write_candidate_fixture(workspace)
+    # A stale index used to be preferred whenever the file existed, so this
+    # planted a prior of 0.2 that no experience row supported. Ranking now
+    # derives the prior from the log, and this fixture has no rows; the
+    # prior-to-score path itself is covered in test_candidate_rank.
     memory_dir = fixture / "build" / "memory"
     memory_dir.mkdir(parents=True)
     (memory_dir / "quality_memory_index.json").write_text(
@@ -1202,7 +1206,7 @@ def test_mcp_candidate_render_rank_review_flow(tmp_path: Path) -> None:
     assert rank["success"] is True
     assert rank["rank_result"]["schema"] == "figure-agent.candidate-rank-result.v1"
     assert rank["rank_result"]["scores"][0]["render_status"] != "not_rendered"
-    assert rank["rank_result"]["scores"][0]["scores"]["memory_prior"] == 0.2
+    assert rank["rank_result"]["scores"][0]["scores"]["memory_prior"] == 0.0
     assert review["schema"] == "figure-agent.mcp.prepare-human-review.v1"
     assert review["success"] is True
     assert review["review_packet"]["schema"] == "figure-agent.candidate-review-packet.v1"

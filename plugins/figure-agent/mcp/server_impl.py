@@ -1178,24 +1178,16 @@ def _rank_candidates(arguments: dict[str, Any]) -> dict[str, Any]:
         candidates = candidate_set.get("candidates") if isinstance(candidate_set, dict) else None
         if not isinstance(candidates, list):
             raise ValueError("candidate_set_candidates_invalid")
-        memory_path = candidate_contracts.fixture_local_output_path(
-            workspace_root,
+        # Always derive the ranking prior from the experience log. Preferring
+        # the on-disk index whenever it existed made it a cache with no
+        # invalidation, so a fixture whose index was written months before its
+        # newest experience rows ranked against evidence that had moved on.
+        memory = quality_memory_index.build_fixture_index(
             name,
-            "build/memory/quality_memory_index.json",
+            write=False,
+            plugin_root=_plugin_root(),
+            workspace_root=workspace_root,
         )
-        if memory_path.is_symlink():
-            raise ValueError("memory_index_unsafe")
-        if memory_path.is_file():
-            memory = json.loads(memory_path.read_text(encoding="utf-8"))
-            if not isinstance(memory, dict):
-                raise ValueError("memory_index_invalid")
-        else:
-            memory = quality_memory_index.build_fixture_index(
-                name,
-                write=False,
-                plugin_root=_plugin_root(),
-                workspace_root=workspace_root,
-            )
         scores = []
         for candidate in candidates:
             if not isinstance(candidate, dict):
@@ -2167,8 +2159,7 @@ TOOLS: dict[str, dict[str, Any]] = {
     },
     "figure_agent_accept_candidate": {
         "description": (
-            "Record an explicit local human verdict (accept or reject) "
-            "for one rendered candidate."
+            "Record an explicit local human verdict (accept or reject) for one rendered candidate."
         ),
         "inputSchema": {
             "type": "object",
