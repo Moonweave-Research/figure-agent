@@ -787,3 +787,91 @@ def test_apply_refuses_multiple_source_blocks(tmp_path: Path) -> None:
             source_mutation_decision=_source_mutation_decision(plan),
             apply=True,
         )
+
+
+def _patch_result(fixture: Path, plan: dict, **overrides: object) -> Path:
+    result = {
+        "schema": quality_patch_apply.SCHEMA,
+        "fixture": fixture.name,
+        "plan_id": plan["plan_id"],
+        "applied": True,
+        "changed_files": [f"examples/{fixture.name}/{fixture.name}.tex"],
+        "outcome": "verification_pending",
+        "publication_acceptance": "not_claimed",
+        "post_render_verification": "pending",
+        "authorization": None,
+        "recovery_required": False,
+        "rollback_patch": "",
+        "verification_commands": [],
+    }
+    result.update(overrides)
+    path = fixture / "build" / "quality" / "patch_result.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(result, indent=2, sort_keys=True), encoding="utf-8")
+    return path
+
+
+def test_verify_plan_rejects_a_result_from_a_different_plan(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    plan = _plan(fixture)
+    plan_path = _write_plan(fixture, plan)
+    _patch_result(fixture, plan, plan_id="sha256:" + "9" * 64)
+
+    result = _run_fig_agent(
+        workspace, "verify-plan", fixture.name, "--plan", str(plan_path), "--json"
+    )
+
+    assert result.returncode == 1
+    assert "result_plan_mismatch" in result.stderr
+
+
+def test_verify_plan_rejects_an_unapplied_result(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    plan = _plan(fixture)
+    plan_path = _write_plan(fixture, plan)
+    _patch_result(fixture, plan, applied=False, outcome="mutation_prepared")
+
+    result = _run_fig_agent(
+        workspace, "verify-plan", fixture.name, "--plan", str(plan_path), "--json"
+    )
+
+    assert result.returncode == 1
+    assert "outcome_mutation_prepared" in result.stderr
+
+
+def test_verify_plan_rejects_a_result_needing_recovery(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    plan = _plan(fixture)
+    plan_path = _write_plan(fixture, plan)
+    _patch_result(fixture, plan, recovery_required=True)
+
+    result = _run_fig_agent(
+        workspace, "verify-plan", fixture.name, "--plan", str(plan_path), "--json"
+    )
+
+    assert result.returncode == 1
+    assert "recovery_required" in result.stderr
+
+
+def test_verify_plan_runs_the_required_commands_and_records_failure(tmp_path: Path) -> None:
+    """A pending result is not reportable until the plan's own verification
+    commands actually run; the fixture cannot compile, so this fails loud."""
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    plan = _plan(fixture)
+    plan_path = _write_plan(fixture, plan)
+    result_path = _patch_result(fixture, plan)
+
+    result = _run_fig_agent(
+        workspace, "verify-plan", fixture.name, "--plan", str(plan_path), "--json"
+    )
+
+    assert result.returncode == 1
+    assert "fig-agent compile" in result.stderr
+    recorded = json.loads(result_path.read_text(encoding="utf-8"))
+    assert recorded["post_render_verification"] == "failed"
+    assert recorded["outcome"] == "verification_failed"
+    assert recorded["verification_commands"][0]["returncode"] != 0

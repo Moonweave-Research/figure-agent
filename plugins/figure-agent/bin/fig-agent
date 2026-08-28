@@ -1965,6 +1965,12 @@ def _apply_plan(argv: list[str]) -> int:
 
 
 def _verify_plan(argv: list[str]) -> int:
+    """Report a patch result only when it belongs to this plan and verified."""
+    import shlex
+
+    import quality_patch_apply
+    import quality_patch_plan
+
     parser = argparse.ArgumentParser(prog="fig-agent verify-plan")
     parser.add_argument("name")
     parser.add_argument("--plan", required=True)
@@ -1972,14 +1978,84 @@ def _verify_plan(argv: list[str]) -> int:
     parser.add_argument("--format", choices=("json",), default=None)
     args = parser.parse_args(argv)
     name = _validated_fixture_name(parser, args.name)
-    result_path = _paths().examples_dir / name / "build" / "quality" / "patch_result.json"
+    fixture = _paths().examples_dir / name
+    result_path = fixture / "build" / "quality" / "patch_result.json"
     if not result_path.is_file():
         print(
             "fig-agent verify-plan: verification_failed: patch_result.json missing",
             file=sys.stderr,
         )
         return 1
-    print(result_path.read_text(encoding="utf-8"), end="")
+    try:
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        plan = json.loads(Path(args.plan).read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        print(f"fig-agent verify-plan: verification_failed: unreadable: {exc}", file=sys.stderr)
+        return 1
+    if not isinstance(result, dict) or not isinstance(plan, dict):
+        print("fig-agent verify-plan: verification_failed: malformed payload", file=sys.stderr)
+        return 1
+
+    failures: list[str] = []
+    if result.get("schema") != quality_patch_apply.SCHEMA:
+        failures.append("result_schema_mismatch")
+    if result.get("fixture") != name:
+        failures.append("result_fixture_mismatch")
+    # The result must belong to the plan named on the command line, and the
+    # plan must still hash to its own id: otherwise this reports a stale
+    # verification for a different edit.
+    plan_id = plan.get("plan_id")
+    if plan.get("schema") != quality_patch_apply.PLAN_SCHEMA or plan.get("fixture") != name:
+        failures.append("plan_not_for_fixture")
+    elif plan_id != quality_patch_plan.compute_plan_id(plan):
+        failures.append("plan_id_mismatch")
+    elif result.get("plan_id") != plan_id:
+        failures.append("result_plan_mismatch")
+    if result.get("recovery_required") is True:
+        failures.append("recovery_required")
+    if result.get("applied") is not True:
+        failures.append(f"outcome_{result.get('outcome')}")
+    if failures:
+        print(
+            "fig-agent verify-plan: verification_failed: " + ", ".join(failures),
+            file=sys.stderr,
+        )
+        return 1
+
+    # Nothing else promotes a patch result past verification_pending, so the
+    # verification runs here: the plan's own required commands, executed now
+    # against the mutated source, decide the outcome.
+    executed: list[dict[str, object]] = []
+    verified = True
+    for command in (plan.get("verification") or {}).get("required_commands", []):
+        parts = shlex.split(str(command))
+        if parts[:1] != ["fig-agent"] or len(parts) < 2:
+            print(
+                f"fig-agent verify-plan: verification_failed: unsupported command {command!r}",
+                file=sys.stderr,
+            )
+            return 1
+        completed = subprocess.run(  # noqa: S603
+            [sys.executable, str(Path(__file__).resolve()), *parts[1:]],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        executed.append({"command": command, "returncode": completed.returncode})
+        if completed.returncode != 0:
+            verified = False
+    result["verification_commands"] = executed
+    result["post_render_verification"] = "passed" if verified else "failed"
+    result["outcome"] = "verified" if verified else "verification_failed"
+    result_path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if not verified:
+        failed = [entry["command"] for entry in executed if entry["returncode"] != 0]
+        print(
+            "fig-agent verify-plan: verification_failed: " + ", ".join(failed),
+            file=sys.stderr,
+        )
+        return 1
+    print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
 
