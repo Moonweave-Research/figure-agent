@@ -18,6 +18,10 @@ def _fixture(workspace: Path) -> Path:
     return fixture
 
 
+def _provision_key() -> None:
+    human_attestation._load_or_create_key()
+
+
 def test_verify_attestation_rejects_forged_json_without_valid_hmac(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -52,6 +56,7 @@ def test_verify_attestation_rejects_stale_source_set_hash(
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     fixture = _fixture(tmp_path / "workspace")
+    _provision_key()
     human_attestation.write_attestation(fixture)
     (fixture / "demo_fig.tex").write_text("changed\n", encoding="utf-8")
 
@@ -68,6 +73,7 @@ def test_verify_attestation_rejects_stale_briefing_hash(
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     fixture = _fixture(tmp_path / "workspace")
     (fixture / "briefing.md").write_text("briefing\n", encoding="utf-8")
+    _provision_key()
     human_attestation.write_attestation(fixture)
 
     (fixture / "briefing.md").write_text("changed briefing\n", encoding="utf-8")
@@ -85,6 +91,7 @@ def test_verify_attestation_missing_key_does_not_create_home(
     home = tmp_path / "home"
     monkeypatch.setenv("HOME", str(home))
     fixture = _fixture(tmp_path / "workspace")
+    _provision_key()
     human_attestation.write_attestation(fixture)
     (home / ".figure-agent" / "attest.key").unlink()
     (home / ".figure-agent").rmdir()
@@ -104,6 +111,7 @@ def test_verify_attestation_missing_key_tolerates_read_only_home(
     writable_home = tmp_path / "writable_home"
     monkeypatch.setenv("HOME", str(writable_home))
     fixture = _fixture(tmp_path / "workspace")
+    _provision_key()
     human_attestation.write_attestation(fixture)
 
     readonly_home = tmp_path / "readonly_home"
@@ -152,6 +160,7 @@ def test_verify_attestation_accepts_valid_hmac_with_tmp_home(
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     fixture = _fixture(tmp_path / "workspace")
+    _provision_key()
 
     payload = human_attestation.write_attestation(fixture)
     ok, reason = human_attestation.verify_attestation(fixture)
@@ -163,6 +172,77 @@ def test_verify_attestation_accepts_valid_hmac_with_tmp_home(
     key_path = tmp_path / "home" / ".figure-agent" / "attest.key"
     assert key_path.is_file()
     assert key_path.stat().st_mode & 0o777 == 0o600
+
+
+def test_write_attestation_refuses_to_mint_a_key(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    home = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home))
+    fixture = _fixture(tmp_path / "workspace")
+
+    with pytest.raises(ValueError, match="missing_attestation_key"):
+        human_attestation.write_attestation(fixture)
+
+    assert not (fixture / "human_attestation.json").exists()
+    assert not home.exists()
+
+
+def test_write_attestation_refuses_symlinked_source(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    fixture = _fixture(tmp_path / "workspace")
+    _provision_key()
+    real = tmp_path / "elsewhere.tex"
+    real.write_text("other source\n", encoding="utf-8")
+    (fixture / "demo_fig.tex").unlink()
+    (fixture / "demo_fig.tex").symlink_to(real)
+
+    with pytest.raises(ValueError, match="symlink"):
+        human_attestation.write_attestation(fixture)
+
+    assert not (fixture / "human_attestation.json").exists()
+
+
+def test_verify_attestation_rejects_symlinked_source_member(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    fixture = _fixture(tmp_path / "workspace")
+    _provision_key()
+    human_attestation.write_attestation(fixture)
+    content = (fixture / "demo_fig.tex").read_text(encoding="utf-8")
+    real = tmp_path / "elsewhere.tex"
+    real.write_text(content, encoding="utf-8")
+    (fixture / "demo_fig.tex").unlink()
+    (fixture / "demo_fig.tex").symlink_to(real)
+
+    ok, reason = human_attestation.verify_attestation(fixture)
+
+    assert ok is False
+    assert reason == "source_set_unreadable"
+
+
+def test_verify_attestation_rejects_symlinked_attestation_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    fixture = _fixture(tmp_path / "workspace")
+    _provision_key()
+    human_attestation.write_attestation(fixture)
+    real = tmp_path / "moved_attestation.json"
+    (fixture / "human_attestation.json").rename(real)
+    (fixture / "human_attestation.json").symlink_to(real)
+
+    ok, reason = human_attestation.verify_attestation(fixture)
+
+    assert ok is False
+    assert reason == "attestation_unreadable"
 
 
 def test_create_cli_rejects_non_tty_stdin(

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import render_input_manifest
+import status as status_mod
 from PIL import Image
 from review_scale_previews import build_scale_previews
 from status import infer_stage
@@ -23,6 +25,12 @@ def _source_fixture(root: Path) -> Path:
     )
     (build / f"{name}.pdf").write_bytes(b"%PDF")
     Image.new("RGB", (300, 150), color="red").save(build / f"{name}.png", "PNG")
+    render_input_manifest.write_manifest(
+        fixture=name,
+        render_pdf=build / f"{name}.pdf",
+        inputs=status_mod._render_input_paths(fixture, name),
+        output=render_input_manifest.manifest_path(build / f"{name}.pdf"),
+    )
     return fixture
 
 

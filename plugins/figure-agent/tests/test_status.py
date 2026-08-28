@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import quality_memory_index  # noqa: E402
+import render_input_manifest  # noqa: E402
 import status as status_mod  # noqa: E402
 from critique_schema_vocab import AESTHETIC_ANTIPATTERN_IDS  # noqa: E402
 from current_render_review_scaffold import review_scaffold_summary  # noqa: E402
@@ -59,9 +60,7 @@ def _write_explicit_candidate_render(fig_dir: Path) -> tuple[Path, Path]:
             "path": "build/repaired.pdf",
             "sha256": _sha256(render_pdf),
         },
-        "inputs": {
-            role: {"sha256": _sha256(path)} for role, path in render_inputs.items()
-        },
+        "inputs": {role: {"sha256": _sha256(path)} for role, path in render_inputs.items()},
     }
     (build / "repaired_render_inputs.json").write_text(
         json.dumps(manifest, sort_keys=True) + "\n",
@@ -232,16 +231,12 @@ def test_current_render_review_scaffold_detects_machine_gate_geometry_drift(
             "coverage_ratio": 0.84,
         }
     }
-    (build / "undeclared_geometry.json").write_text(
-        json.dumps(geometry) + "\n", encoding="utf-8"
-    )
+    (build / "undeclared_geometry.json").write_text(json.dumps(geometry) + "\n", encoding="utf-8")
 
     assert review_scaffold_summary(fig_dir)["state"] == "PENDING"
 
     geometry["geometry_parse_coverage"]["parsed_operations"] = 20
-    (build / "undeclared_geometry.json").write_text(
-        json.dumps(geometry) + "\n", encoding="utf-8"
-    )
+    (build / "undeclared_geometry.json").write_text(json.dumps(geometry) + "\n", encoding="utf-8")
     stale = review_scaffold_summary(fig_dir)
     assert stale["state"] == "STALE"
     assert stale["stale_fields"] == ["machine_gate.geometry_coverage.parsed_operations"]
@@ -386,6 +381,8 @@ def test_status_projects_declared_repair_candidate_evidence(tmp_path: Path) -> N
     assert result["spine_evidence"]["physics_grounding"]["status"] == "grounded"
     assert result["spine_evidence"]["convention_receipt"]["state"] == "present"
     assert result["spine_evidence"]["convention_receipt"]["path"] == "build/convention_receipt.json"
+
+
 def test_status_surfaces_explicit_nested_current_candidate_without_promoting_it(
     tmp_path: Path,
 ) -> None:
@@ -615,29 +612,14 @@ def _make_spec(
     (directory / "briefing.md").write_text("briefing", encoding="utf-8")
 
 
-def _write_render_input_manifest(directory: Path, name: str) -> None:
-    build = directory / "build"
-    pdf = build / f"{name}.pdf"
-    inputs = {
-        "source_tex": directory / f"{name}.tex",
-        "briefing": directory / "briefing.md",
-        "spec": directory / "spec.yaml",
-        "style_lock": status_mod.STYLE_LOCK_PATH,
-    }
-    payload = {
-        "schema": "figure-agent.render-input-manifest.v1",
-        "fixture": name,
-        "render": {
-            "path": f"build/{name}.pdf",
-            "sha256": _sha256(pdf),
-        },
-        "inputs": {
-            role: {"sha256": _sha256(path)} for role, path in inputs.items()
-        },
-    }
-    (build / f"{name}_render_inputs.json").write_text(
-        json.dumps(payload, sort_keys=True) + "\n",
-        encoding="utf-8",
+def _write_render_input_manifest(directory: Path, name: str | None = None) -> None:
+    name = name or directory.name
+    build_pdf = directory / "build" / f"{name}.pdf"
+    render_input_manifest.write_manifest(
+        fixture=name,
+        render_pdf=build_pdf,
+        inputs=status_mod._render_input_paths(directory, name),
+        output=render_input_manifest.manifest_path(build_pdf),
     )
 
 
@@ -1160,6 +1142,7 @@ Explain transient-current trapping in a compact mechanism schematic.
         '{"fixture":"briefed_fig","candidates":[{"id":"VC001"}],"total":1}\n',
         encoding="utf-8",
     )
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -1286,6 +1269,7 @@ def test_stage_3_fresh_pdf_no_exports(tmp_path: Path) -> None:
     os.utime(fig_dir / "spec.yaml", (old_time, old_time))
     new_time = time.time() - 10
     os.utime(pdf, (new_time, new_time))
+    _write_render_input_manifest(fig_dir)
     result = infer_stage(fig_dir)
     assert result["stage"] == 3
 
@@ -1384,6 +1368,7 @@ def test_status_separates_render_freshness_from_strict_and_geometry_evidence(
     for path in (tex, fig_dir / "briefing.md", fig_dir / "spec.yaml"):
         os.utime(path, (old_time, old_time))
     os.utime(pdf, (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -1764,9 +1749,7 @@ def test_spine_fails_closed_when_declared_label_coverage_is_missing_or_zero(
 
     missing = status_mod._spine_evidence_summary(tmp_path, build)
     coverage_key = (
-        "text_boundary_coverage"
-        if spec_field == "text_boundary_checks"
-        else "label_path_coverage"
+        "text_boundary_coverage" if spec_field == "text_boundary_checks" else "label_path_coverage"
     )
     assert missing[coverage_key]["state"] == "missing"
     assert missing["state"] == "needs_action"
@@ -1962,6 +1945,7 @@ def test_stage_3_panel_reference_missing_critique_redirects_to_fig_critique(
     ):
         os.utime(path, (old_time, old_time))
     os.utime(build_dir / "panel_ref_fig.pdf", (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -1998,6 +1982,7 @@ def test_stage_3_reference_stale_critique_redirects_to_fig_critique(
         os.utime(path, (middle_time, middle_time))
     os.utime(fig_dir / "critique.md", (old_time, old_time))
     os.utime(build_dir / "stale_critique_fig.pdf", (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -2083,6 +2068,7 @@ polish_triggers:
         os.utime(path, (old_time, old_time))
     for path in (build_dir / f"{name}.pdf", fig_dir / "critique.md"):
         os.utime(path, (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -2120,6 +2106,7 @@ def test_status_surfaces_passed_lint_summary_for_fresh_valid_critique(tmp_path: 
     build_dir.mkdir()
     (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
     _write_hashed_critique(fig_dir, name)
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -2509,6 +2496,7 @@ def test_stage_3_authoring_doc_stale_critique_redirects_to_fig_critique(
     os.utime(fig_dir / "critique.md", (critique_time, critique_time))
     os.utime(authoring_path, (fresh_time, fresh_time))
     os.utime(build_dir / f"{name}.pdf", (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -2529,6 +2517,7 @@ def _make_fresh_exports(fig_dir: Path, name: str) -> None:
     (exports_dir / f"{name}.svg").write_bytes(b"<svg/>")
     (exports_dir / f"{name}.tif").write_bytes(b"TIFF")
     (exports_dir / f"{name}.png").write_bytes(b"\x89PNG")
+    _write_render_input_manifest(fig_dir)
 
 
 def _make_status_ready_fixture(fig_dir: Path, *, accepted: bool | None = None) -> None:
@@ -2553,6 +2542,7 @@ def _mark_sources_older_than_outputs(fig_dir: Path) -> None:
     os.utime(fig_dir / "build" / f"{name}.pdf", (fresh_time, fresh_time))
     for path in (fig_dir / "exports").iterdir():
         os.utime(path, (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
 
 def _write_final_artifact_spec(fig_dir: Path, *, kind: str = "generated_export") -> None:
@@ -2600,9 +2590,7 @@ def _write_human_decision_record(
                 "agent_recommendation": "Record the release decision separately.",
                 "human_decision": decision_kind,
                 "human_note": "Human decision record only; status must not mutate release state.",
-                "follow_up": {
-                    "implementation_slice": "route the next explicit operation"
-                },
+                "follow_up": {"implementation_slice": "route the next explicit operation"},
                 "mutation_boundary": "no_source_mutation",
             },
             indent=2,
@@ -2685,6 +2673,8 @@ def test_final_artifact_block_without_kind_blocks_release_as_invalid(
     assert result["final_artifact_kind"] == "missing"
     assert "final_artifact_invalid" in result["notes"]
     assert result["release_ready"] is False
+
+
 def test_malformed_spec_reports_final_artifact_invalid_without_crashing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -2895,6 +2885,8 @@ def test_malformed_yaml_with_nested_final_artifact_does_not_become_final_artifac
     assert result["final_artifact_state"] == "NONE"
     assert "final_artifact_invalid" not in result["notes"]
     assert "fix malformed" in result["next"]
+
+
 def test_invalid_utf8_spec_reports_spec_parse_error_without_crashing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -2986,6 +2978,7 @@ def test_malformed_spec_with_fresh_build_routes_to_spec_fix_first(
     for path in (fig_dir / "spec.yaml", fig_dir / "briefing.md", fig_dir / f"{fig_dir.name}.tex"):
         os.utime(path, (old_time, old_time))
     os.utime(build / f"{fig_dir.name}.pdf", (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "MISSING")
 
     result = infer_stage(fig_dir)
@@ -3015,6 +3008,8 @@ def test_unknown_final_artifact_kind_blocks_release(
     assert result["golden_ready"] is True
     assert result["release_ready"] is False
     assert result["final_ready"] is False
+
+
 def test_stage_4_export_present_critique_stale_redirects_to_fig_critique(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -3663,6 +3658,7 @@ def test_declared_missing_reference_next_hint_requires_fix_not_critique(
     for path in (fig_dir / "spec.yaml", fig_dir / "briefing.md", fig_dir / "goldenfig.tex"):
         os.utime(path, (old_time, old_time))
     os.utime(build_dir / "goldenfig.pdf", (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     result = infer_stage(fig_dir)
 
@@ -3901,7 +3897,7 @@ def test_no_arg_summary_shows_publication_gate_state(tmp_path: Path, capsys, mon
 
     captured = capsys.readouterr()
     assert "goldenfig  stage 4/4 (accepted)" in captured.out
-    assert "ready: true" in captured.out
+    assert "ready: false" in captured.out
     assert "publication: PROVENANCE_REQUIRED" in captured.out
 
 
@@ -4031,6 +4027,7 @@ def test_no_arg_summary_shows_actionable_audit_evidence(
     (fig_dir / "build").mkdir()
     (fig_dir / "build" / "auditfig.pdf").write_bytes(b"%PDF")
     _write_hashed_critique(fig_dir, "auditfig", schema="figure-agent.critique.v1.10")
+    _write_render_input_manifest(fig_dir)
     monkeypatch.chdir(tmp_path)
 
     import status as status_mod
@@ -4075,6 +4072,7 @@ def test_infer_stage_returns_status_vector_for_ready_final(
     os.utime(build / "ready_fig.pdf", (fresh_time, fresh_time))
     for path in exports.iterdir():
         os.utime(path, (fresh_time, fresh_time))
+    _write_render_input_manifest(fig_dir)
 
     import status as status_mod
 
@@ -4108,6 +4106,7 @@ def test_infer_stage_status_vector_not_ready_when_not_accepted(
     (exports / "goldenfig.svg").write_bytes(b"<svg/>")
     (exports / "goldenfig.tif").write_bytes(b"TIFF")
     (exports / "goldenfig.png").write_bytes(b"\x89PNG")
+    _write_render_input_manifest(fig_dir)
 
     import status as status_mod
 
@@ -4158,7 +4157,8 @@ def test_infer_stage_surfaces_publication_provenance_gate_when_audit_is_incomple
 
     assert result["acceptance_state"] == "ACCEPTED"
     assert result["golden_ready"] is True
-    assert result["release_ready"] is True
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
     assert result["publication_gate_state"] == "PROVENANCE_REQUIRED"
     assert result["publication_gate_failures"] == [
         {
@@ -4226,6 +4226,7 @@ def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
     (exports / "goldenfig.svg").write_bytes(b"<svg/>")
     (exports / "goldenfig.tif").write_bytes(b"TIFF")
     (exports / "goldenfig.png").write_bytes(b"\x89PNG")
+    _write_render_input_manifest(fig_dir)
 
     import status as status_mod
 
@@ -4241,6 +4242,91 @@ def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
     assert result["golden_ready"] is True
     assert result["release_ready"] is False
     assert result["final_ready"] is False
+
+
+def _write_strict_status(fig_dir: Path, *, state: str, detector_failed: bool) -> None:
+    (fig_dir / "build" / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": state != "not_requested",
+                "detector_failed": detector_failed,
+                "state": state,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def test_infer_stage_strict_failure_blocks_all_readiness(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    _write_strict_status(fig_dir, state="failed", detector_failed=True)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["state"] == "failed"
+    assert "strict_evidence_failed" in result["notes"]
+    assert result["workflow_ready"] is False
+    assert result["golden_ready"] is False
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+    assert result["acceptance_freshness_state"] == "accepted_but_stale"
+
+
+def test_infer_stage_release_requires_passing_strict_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+    monkeypatch.setattr(
+        status_mod,
+        "publication_gate_summary",
+        lambda *_args, **_kwargs: {
+            "publication_gate_state": "PASS",
+            "publication_gate_failures": [],
+        },
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["state"] == "missing"
+    assert "strict_evidence_required_for_release" in result["notes"]
+    assert result["workflow_ready"] is True
+    assert result["golden_ready"] is True
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
+
+
+def test_infer_stage_release_ready_with_passing_gate_and_strict_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    _write_strict_status(fig_dir, state="passed", detector_failed=False)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+    monkeypatch.setattr(
+        status_mod,
+        "publication_gate_summary",
+        lambda *_args, **_kwargs: {
+            "publication_gate_state": "PASS",
+            "publication_gate_failures": [],
+        },
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["state"] == "passed"
+    assert result["release_ready"] is True
+    assert result["final_ready"] is True
 
 
 def test_print_single_shows_exports_substate(tmp_path: Path, capsys) -> None:
@@ -4275,14 +4361,25 @@ def test_print_single_surfaces_main_paper_placement(tmp_path: Path, capsys) -> N
         "lifecycle": "active_candidate",
         "fixture_scope": "panel_a_schematic_candidate",
         "assembly_state": "external_full_figure_ready",
+        "paper_artifact_registry": {
+            "system": "researchos",
+            "registry": "docs/figure_set/FIGURE_REGISTRY.yaml",
+        },
+        "current_schematic_baseline": "pair001-main-schematics",
+        "paper_aesthetic_context": "nc-main-text-series",
     }
     status_mod._print_single(result)
 
+    output = capsys.readouterr().out
     assert (
         "Paper placement: main fig2 "
         "role=charge_transport_mechanism_schematic lifecycle=active_candidate "
         "scope=panel_a_schematic_candidate assembly=external_full_figure_ready"
-    ) in capsys.readouterr().out
+    ) in output
+    assert "Artifact authority: researchos docs/figure_set/FIGURE_REGISTRY.yaml" in output
+    assert (
+        "Current schematic baseline: pair001-main-schematics context=nc-main-text-series"
+    ) in output
 
 
 def test_print_single_surfaces_non_main_classification(tmp_path: Path, capsys) -> None:
@@ -4887,6 +4984,7 @@ def test_tracked_golden_stale_with_fresh_render_and_missing_critique_skips_compi
     os.utime(fig_dir / "build" / "golden_fig.pdf", (build_time, build_time))
     for path in (fig_dir / "exports").iterdir():
         os.utime(path, (export_time, export_time))
+    _write_render_input_manifest(fig_dir)
 
     monkeypatch.setattr(export_freshness, "REPO_ROOT", repo)
 

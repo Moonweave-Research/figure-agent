@@ -200,8 +200,8 @@ def test_manual_direct_edit_receipt_keeps_compile_out_of_reward(tmp_path: Path) 
     )
     event = quality_memory_index._event_from_experience_record(row)  # type: ignore[attr-defined]
     index = quality_memory_index.build_memory_index([event])
-    assert index["families"]["mechanism_redraw"]["attempts"] == 0
-    assert index["families"]["mechanism_redraw"]["unknown"] == 1
+    assert index["families"]["subregion_redraw"]["attempts"] == 0
+    assert index["families"]["subregion_redraw"]["unknown"] == 1
     assert index["unknown_event_count"] == 1
     assert index["unknown_event_rate"] == 1.0
 
@@ -241,9 +241,41 @@ def test_manual_direct_edit_human_accept_becomes_the_only_positive_signal(tmp_pa
         quality_memory_index._event_from_experience_record(accepted["record"]),  # type: ignore[attr-defined]
     ]
     index = quality_memory_index.build_memory_index(events)
-    bucket = index["families"]["mechanism_redraw"]
+    bucket = index["families"]["subregion_redraw"]
     assert bucket["attempts"] == 1
     assert bucket["improved"] == 1
+
+
+def test_manual_direct_edit_same_family_different_target_is_not_a_replay(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    _manual_edit_fixture(workspace)
+    common = {
+        "edit_family": "mechanism_redraw",
+        "rationale": "replace an ambiguous trap indication",
+        "human_label": "accept",
+        "reviewer": "figure-owner",
+        "workspace_root": workspace,
+        "plugin_root": plugin_root,
+    }
+
+    first = experience_log.append_manual_direct_edit_record(
+        "direct_demo",
+        target_panel="A",
+        target_subregion="sulfur-trap-route",
+        **common,
+    )
+    second = experience_log.append_manual_direct_edit_record(
+        "direct_demo",
+        target_panel="C",
+        target_subregion="coulomb-label",
+        **common,
+    )
+
+    assert first is not None
+    assert second is not None
 
 
 def test_manual_direct_edit_rejects_stale_semantic_evidence(tmp_path: Path) -> None:
@@ -402,7 +434,7 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
     row = rows[0]
     assert row["schema"] == "figure-agent.experience-record.v1"
     assert row["action"]["candidate_id"] == "QS001"
-    assert row["action"]["edit_family"] == "panel_f_qtr_apparatus_lane"
+    assert row["action"]["edit_family"] == "element_reposition"
     assert row["action"]["rank_score"] == 0.81
     assert row["action"]["rank"] == 1
     assert row["outcome"]["apply_status"] == "blocked"
@@ -441,7 +473,7 @@ def test_append_recommendation_record_writes_auto_accept_recommendation(
     ]
     unchosen = rows[1]
     assert unchosen["action"]["candidate_id"] == "QS002"
-    assert unchosen["action"]["edit_family"] == "panel_f_qtr_label_lane"
+    assert unchosen["action"]["edit_family"] == "label_reposition"
     assert unchosen["action"]["rank_score"] == 0.52
     assert unchosen["action"]["rank"] == 2
     assert unchosen["outcome"]["apply_status"] == "unchosen"

@@ -13,6 +13,7 @@ sys.path.insert(0, str(TESTS_ROOT))
 sys.path.insert(0, str(TESTS_ROOT.parents[0] / "scripts"))
 
 import fig_driver  # noqa: E402
+import render_input_manifest  # noqa: E402
 import status as status_mod  # noqa: E402
 from real_fixture_contract_helpers import (  # noqa: E402
     copy_fixture_to_repo,
@@ -45,6 +46,14 @@ def test_real_fixture_status_contract_matrix(
     style_lock = stable_style_lock(tmp_path)
 
     monkeypatch.setattr(status_mod, "STYLE_LOCK_PATH", style_lock)
+    build_pdf = fixture / "build" / f"{fixture_name}.pdf"
+    if build_pdf.is_file():
+        render_input_manifest.write_manifest(
+            fixture=fixture_name,
+            render_pdf=build_pdf,
+            inputs=status_mod._render_input_paths(fixture, fixture_name),
+            output=render_input_manifest.manifest_path(build_pdf),
+        )
     monkeypatch.setattr(
         status_mod,
         "compute_export_state",

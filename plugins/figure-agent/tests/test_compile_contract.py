@@ -149,17 +149,24 @@ def test_compile_writes_explicit_strict_outcome_receipt_before_final_gate() -> N
 
 
 def test_compile_strict_failure_removes_render_outputs() -> None:
-    """A strict-gate failure must not leave a passable render behind.
-
-    The render-input manifest is only written after the final gate, so a
-    surviving PDF/PNG would pass the status mtime fallback and read as a
-    fresh successful compile in the next session.
-    """
+    """A strict-gate failure must not leave a partial render behind."""
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 
     final_gate = 'echo "ERROR: strict detector gate failed after review evidence generation"'
     cleanup = 'rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"'
     gate_index = script.index(final_gate)
+    gate_block = script[gate_index : script.index("fi", gate_index)]
+    assert cleanup in gate_block
+    assert "exit 1" in gate_block
+
+
+def test_compile_preview_failure_removes_render_outputs() -> None:
+    """A preview-generation failure exits 1 and must not leave a partial render."""
+    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+
+    preview_gate = 'echo "ERROR: review scale preview generation failed"'
+    cleanup = 'rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"'
+    gate_index = script.index(preview_gate)
     gate_block = script[gate_index : script.index("fi", gate_index)]
     assert cleanup in gate_block
     assert "exit 1" in gate_block

@@ -70,6 +70,8 @@ def test_invalid_final_artifact_blocks_release_readiness_only() -> None:
     assert vector["golden_ready"] is True
     assert vector["release_ready"] is False
     assert vector["final_ready"] is False
+
+
 def test_publication_gate_fields_are_preserved_in_status_vector() -> None:
     publication_gate = {
         "publication_gate_state": "PROVENANCE_REQUIRED",
@@ -79,9 +81,33 @@ def test_publication_gate_fields_are_preserved_in_status_vector() -> None:
     vector = _vector(publication_gate=publication_gate)
 
     assert vector["publication_gate_state"] == "PROVENANCE_REQUIRED"
-    assert vector["publication_gate_failures"] == [
-        {"code": "missing_submission_safe_true"}
-    ]
+    assert vector["publication_gate_failures"] == [{"code": "missing_submission_safe_true"}]
+
+
+def test_publication_gate_not_pass_blocks_release_but_not_golden_readiness() -> None:
+    vector = _vector(
+        publication_gate={
+            "publication_gate_state": "PROVENANCE_REQUIRED",
+            "publication_gate_failures": [{"code": "invalid_human_attestation"}],
+        }
+    )
+
+    assert vector["workflow_ready"] is True
+    assert vector["golden_ready"] is True
+    assert vector["release_ready"] is False
+    assert vector["final_ready"] is False
+
+
+def test_publication_gate_pass_allows_release_readiness() -> None:
+    vector = _vector(
+        publication_gate={
+            "publication_gate_state": "PASS",
+            "publication_gate_failures": [],
+        }
+    )
+
+    assert vector["release_ready"] is True
+    assert vector["final_ready"] is True
 
 
 def test_accepted_stale_vector_preserves_history_but_blocks_current_readiness() -> None:

@@ -1,4 +1,4 @@
-# Fig1 canonical handoff — sulfur-rich polymer charge trapping
+# Fig1 current-candidate handoff — sulfur-rich polymer charge trapping
 
 ## Use this first
 

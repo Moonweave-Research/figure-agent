@@ -104,6 +104,7 @@ def test_publication_gate_summary_accepts_valid_human_attestation(
     fixture = tmp_path / "examples" / "demo_fig"
     fixture.mkdir(parents=True)
     (fixture / "demo_fig.tex").write_text("source\n", encoding="utf-8")
+    human_attestation._load_or_create_key()
     human_attestation.write_attestation(fixture)
     audit = fixture / "QUALITY_AUDIT.md"
     audit.write_text(

@@ -1,9 +1,30 @@
 schema: figure-agent.paper-figure-map.v2
 paper_id: pair001
 plan_doc: docs/superpowers/specs/2026-06-22-sulfur-paper-figure-plan-design.md
+authority_scope: figure_agent_candidate_bindings
+paper_artifact_registry:
+  system: researchos
+  registry: docs/figure_set/FIGURE_REGISTRY.yaml
+  owner: 02_Surfur_Polymer canonical project root
+  scope: Exact paper artifact identity, lifecycle, source/build provenance, and human gate.
 
-# This file is the machine-readable source of truth for paper placement. Human
-# prose may explain these bindings, but must not override them.
+# This map is the machine-readable source of truth for Figure Agent fixture-to-
+# paper-role bindings. It does not own the paper artifact itself: a fixture is a
+# development candidate until the external ResearchOS registry promotes a
+# separately declared paper artifact.
+#
+# The active fixtures remain direct `examples/<fixture>` roots. Their location
+# is a reproducibility contract, not a lifecycle label: historical fixtures are
+# classified below, and Fig1's nested repair is resolved only through its
+# current-candidate pointer.
+current_schematic_baseline:
+  id: pair001-main-schematics
+  aesthetic_context: nc-main-text-series
+  fixtures:
+    - fig1_updated_agent_redraw_v1
+    - fig2_charge_transport_mechanism
+    - fig5_cantilever_actuation_artifact_v2
+
 figures:
   fig1:
     figure_id: fig1

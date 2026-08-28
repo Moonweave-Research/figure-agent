@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from export_freshness import EXPORT_FRESH, EXPORT_TRACKED_GOLDEN
+from publication_gate import PUBLICATION_GATE_PASS
 from status_next_policy import critique_needs_action
 
 _NON_BLOCKING_WORKFLOW_NOTE_PREFIXES = ("coordinate_hints_", "final_artifact_")
@@ -19,9 +20,7 @@ def workflow_ready(
     critique_requires_action: bool,
 ) -> bool:
     blocking_notes = [
-        note
-        for note in notes
-        if not note.startswith(_NON_BLOCKING_WORKFLOW_NOTE_PREFIXES)
+        note for note in notes if not note.startswith(_NON_BLOCKING_WORKFLOW_NOTE_PREFIXES)
     ]
     return (
         stage == 4
@@ -41,8 +40,11 @@ def release_ready(
     golden_ready: bool,
     exports_substate: str,
     final_artifact: Mapping[str, object],
+    publication_gate_state: str,
 ) -> bool:
     if not golden_ready or exports_substate != EXPORT_FRESH:
+        return False
+    if publication_gate_state != PUBLICATION_GATE_PASS:
         return False
     if final_artifact.get("kind") != "generated_export":
         return False
@@ -94,6 +96,7 @@ def build_status_vector(
         golden_ready=is_golden_ready,
         exports_substate=exports_substate,
         final_artifact=final_artifact,
+        publication_gate_state=str(publication_gate["publication_gate_state"]),
     )
     return {
         "render_state": render_state,

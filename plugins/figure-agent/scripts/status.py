@@ -334,7 +334,6 @@ def _compute_render_state(
     spec_path: Path,
     tex_path: Path,
     build_pdf: Path,
-    sources: tuple[Path, ...],
 ) -> str:
     if not example_dir.exists() or not example_dir.is_dir() or not spec_path.exists():
         return RENDER_NOT_SCAFFOLDED
@@ -350,11 +349,7 @@ def _compute_render_state(
     )
     if hash_state == render_input_manifest.FRESH:
         return RENDER_FRESH
-    if hash_state != render_input_manifest.MISSING:
-        return RENDER_STALE
-    if _is_stale(sources, (build_pdf,)):
-        return RENDER_STALE
-    return RENDER_FRESH
+    return RENDER_STALE
 
 
 def _review_scale_previews_summary(build_png: Path, spec: dict[str, Any]) -> dict[str, Any]:
@@ -603,6 +598,9 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
             "map_path": "docs/paper_figure_map.yaml",
         }
     plan_map = check_plan_consistency._load_map(map_path)
+    authority_scope = plan_map.get("authority_scope", "figure_agent_candidate_bindings")
+    artifact_registry = plan_map.get("paper_artifact_registry")
+    baseline = plan_map.get("current_schematic_baseline")
     figures = plan_map.get("figures") if isinstance(plan_map, dict) else None
     if isinstance(figures, dict):
         for figure, entry in figures.items():
@@ -616,6 +614,14 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
                 "lifecycle": entry.get("status"),
                 "fixture_scope": entry.get("fixture_scope"),
                 "assembly_state": entry.get("assembly_state"),
+                "authority_scope": authority_scope,
+                "paper_artifact_registry": artifact_registry,
+                "current_schematic_baseline": baseline.get("id")
+                if isinstance(baseline, dict) and name in baseline.get("fixtures", [])
+                else None,
+                "paper_aesthetic_context": baseline.get("aesthetic_context")
+                if isinstance(baseline, dict) and name in baseline.get("fixtures", [])
+                else None,
                 "map_path": "docs/paper_figure_map.yaml",
             }
     non_main = plan_map.get("non_main") if isinstance(plan_map, dict) else None
@@ -1309,10 +1315,26 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
             result["acceptance_freshness_state"] = "accepted_but_stale"
     result["promotion_queue"] = _promotion_queue_summary(example_dir)
     build_dir = candidate_build_dir or example_dir / "build"
-    result["strict_evidence"] = _strict_status_summary(
+    strict_evidence = _strict_status_summary(
         build_dir / "strict_status.json",
         example_dir,
     )
+    result["strict_evidence"] = strict_evidence
+    strict_state = strict_evidence.get("state")
+    if strict_state in {"failed", "invalid"}:
+        note = f"strict_evidence_{strict_state}"
+        if note not in result.setdefault("notes", []):
+            result["notes"].append(note)
+        result["workflow_ready"] = False
+        result["golden_ready"] = False
+        result["release_ready"] = False
+        result["final_ready"] = False
+        if result.get("accepted") is True:
+            result["acceptance_freshness_state"] = "accepted_but_stale"
+    elif strict_state != "passed" and result.get("release_ready") is True:
+        result.setdefault("notes", []).append("strict_evidence_required_for_release")
+        result["release_ready"] = False
+        result["final_ready"] = False
     result["geometry_coverage"] = _geometry_coverage_summary(
         build_dir / "undeclared_geometry.json",
         example_dir,
@@ -1618,7 +1640,7 @@ def infer_stage(example_dir: Path) -> dict:
     )
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
-    render_state = _compute_render_state(example_dir, spec_path, tex_path, build_pdf, sources)
+    render_state = _compute_render_state(example_dir, spec_path, tex_path, build_pdf)
     review_scale_summary = _review_scale_previews_summary(build_png, spec)
     if review_scale_summary["required"]:
         preview_state = review_scale_summary["state"]
@@ -1933,6 +1955,20 @@ def _print_single(result: dict) -> None:
                 f"scope={paper_plan.get('fixture_scope', '?')} "
                 f"assembly={paper_plan.get('assembly_state', '?')}"
             )
+            registry = paper_plan.get("paper_artifact_registry")
+            if isinstance(registry, dict):
+                print(
+                    "  Artifact authority: "
+                    f"{registry.get('system', '?')} "
+                    f"{registry.get('registry', '?')}"
+                )
+            baseline = paper_plan.get("current_schematic_baseline")
+            if isinstance(baseline, str) and baseline:
+                print(
+                    "  Current schematic baseline: "
+                    f"{baseline} "
+                    f"context={paper_plan.get('paper_aesthetic_context', '?')}"
+                )
         elif paper_state == "NON_MAIN":
             print(f"  Paper placement: non-main {paper_plan.get('classification', '?')}")
         elif paper_state == "UNMAPPED":

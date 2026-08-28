@@ -8,6 +8,7 @@ import yaml
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 HANDOFF = PLUGIN_ROOT / "docs/current-sulfur-paper-figure-state.md"
 PLAN_MAP = PLUGIN_ROOT / "docs/paper_figure_map.yaml"
+EXAMPLES_README = PLUGIN_ROOT / "examples/README.md"
 
 
 def _plan_map() -> dict[str, object]:
@@ -32,6 +33,17 @@ def test_handoff_describes_every_machine_resolved_main_figure() -> None:
             assert entry["status"] == "planned_missing"
             assert entry["slot_status"] == "fixed"
             assert "fixed main slot" in text
+
+
+def test_candidate_map_declares_external_paper_artifact_authority() -> None:
+    plan_map = _plan_map()
+    registry = plan_map["paper_artifact_registry"]
+    assert isinstance(registry, dict)
+    assert plan_map["authority_scope"] == "figure_agent_candidate_bindings"
+    assert registry["system"] == "researchos"
+    assert registry["registry"] == "docs/figure_set/FIGURE_REGISTRY.yaml"
+    text = HANDOFF.read_text(encoding="utf-8")
+    assert "FIGURE_REGISTRY.yaml" in text
 
 
 def test_handoff_contains_durable_experiment_contracts() -> None:
@@ -120,6 +132,63 @@ def test_only_current_three_authoring_baselines_are_active() -> None:
     non_main = plan_map["non_main"]
     assert isinstance(non_main, dict)
     assert "fig4_trap_energy_diagram" in non_main["superseded"]
+
+
+def test_named_current_schematic_baseline_matches_active_bindings_and_context() -> None:
+    plan_map = _plan_map()
+    baseline = plan_map["current_schematic_baseline"]
+    assert isinstance(baseline, dict)
+    assert baseline["id"] == "pair001-main-schematics"
+    assert baseline["aesthetic_context"] == "nc-main-text-series"
+    assert baseline["fixtures"] == [
+        "fig1_updated_agent_redraw_v1",
+        "fig2_charge_transport_mechanism",
+        "fig5_cantilever_actuation_artifact_v2",
+    ]
+
+    figures = plan_map["figures"]
+    assert isinstance(figures, dict)
+    active = {
+        entry["fixture"]
+        for entry in figures.values()
+        if isinstance(entry, dict) and entry["status"] == "active_candidate"
+    }
+    assert set(baseline["fixtures"]) == active
+
+    context_path = (
+        PLUGIN_ROOT
+        / "examples"
+        / "_paper_aesthetic_contexts"
+        / f"{baseline['aesthetic_context']}.yaml"
+    )
+    context = yaml.safe_load(context_path.read_text(encoding="utf-8"))
+    assert isinstance(context, dict)
+    context_fixtures = {
+        role["fixture"]
+        for role in context["figure_roles"]
+        if isinstance(role, dict) and "fixture" in role
+    }
+    assert set(baseline["fixtures"]) <= context_fixtures
+
+    for fixture in baseline["fixtures"]:
+        spec = yaml.safe_load(
+            (PLUGIN_ROOT / "examples" / fixture / "spec.yaml").read_text(encoding="utf-8")
+        )
+        assert spec["paper_aesthetic_context"] == baseline["aesthetic_context"]
+
+
+def test_examples_navigation_distinguishes_active_baseline_from_legacy_history() -> None:
+    text = EXAMPLES_README.read_text(encoding="utf-8")
+    assert "pair001-main-schematics" in text
+    assert "docs/paper_figure_map.yaml" in text
+    assert "review/current-candidate.json" in text
+    assert "generated evidence" in text
+    for fixture in (
+        "fig1_updated_agent_redraw_v1",
+        "fig2_charge_transport_mechanism",
+        "fig5_cantilever_actuation_artifact_v2",
+    ):
+        assert fixture in text
 
 
 def test_fixed_external_main_slots_are_not_reported_as_optional_plans() -> None:

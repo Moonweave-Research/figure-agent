@@ -10,6 +10,7 @@ from pathlib import Path
 from statistics import median
 from typing import Any
 
+import edit_family_vocab
 import experience_log
 import fixture_identity
 import runtime_paths
@@ -234,7 +235,9 @@ def build_memory_index(
         if not event.get("candidate_id"):
             continue
         candidate_event_count += 1
-        family = str(event.get("edit_family") or "unknown")
+        # Fold historical aliases so pre-vocabulary rows accumulate into the
+        # same buckets that new canonical writes feed.
+        family = edit_family_vocab.canonical_edit_family(str(event.get("edit_family") or "unknown"))
         target = event.get("target") if isinstance(event.get("target"), dict) else {}
         panel = str(target.get("panel") or "unknown")
         subregion = str(target.get("subregion") or "unknown")

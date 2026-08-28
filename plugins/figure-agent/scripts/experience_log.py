@@ -11,6 +11,7 @@ from typing import Any
 
 import candidate_contracts
 import convergence_models
+import edit_family_vocab
 import fixture_identity
 import runtime_paths
 
@@ -333,7 +334,11 @@ def _candidate_family(manifest: dict[str, Any], candidate: dict[str, Any]) -> st
         or manifest.get("family")
         or candidate.get("family")
     )
-    return str(value) if value else "unknown"
+    if not value:
+        return "unknown"
+    # Mechanical candidate sets fold to canonical; only the free-typed manual
+    # path hard-rejects, so legacy sets on disk stay replayable.
+    return edit_family_vocab.canonical_edit_family(str(value))
 
 
 def _normalize_anchor_text(text: str) -> str:
@@ -1252,7 +1257,9 @@ def build_manual_direct_edit_record(
         source_relative=source_relative,
         build_relative=build_relative,
     )
-    family = _direct_edit_text(edit_family, label="manual_edit_family")
+    family = edit_family_vocab.validate_edit_family(
+        _direct_edit_text(edit_family, label="manual_edit_family")
+    )
     panel = _direct_edit_text(target_panel, label="manual_target_panel")
     subregion = _direct_edit_text(target_subregion, label="manual_target_subregion")
     note = _direct_edit_text(rationale, label="manual_rationale")
@@ -1337,6 +1344,7 @@ def append_manual_direct_edit_record(
     )
     action = record["action"]
     outcome = record["outcome"]
+    target = record["state"]["target"]
     for existing in load_experience_records(paths.plugin_root, name):
         existing_action = existing.get("action") if isinstance(existing.get("action"), dict) else {}
         existing_outcome = (
@@ -1345,11 +1353,19 @@ def append_manual_direct_edit_record(
         existing_params = (
             existing_action.get("params") if isinstance(existing_action.get("params"), dict) else {}
         )
+        existing_state = existing.get("state") if isinstance(existing.get("state"), dict) else {}
+        existing_target = (
+            existing_state.get("target") if isinstance(existing_state.get("target"), dict) else {}
+        )
         if (
             existing_action.get("candidate_hash") == action["candidate_hash"]
             and existing_action.get("edit_family") == action["edit_family"]
             and existing_params.get("authoring_mode") == MANUAL_DIRECT_EDIT_KIND
             and existing_outcome.get("human_label") == outcome["human_label"]
+            # Two distinct edits of the same family on one source state are
+            # separate observations; only an identical target is a replay.
+            and existing_target.get("panel") == target["panel"]
+            and existing_target.get("subregion_key") == target["subregion_key"]
         ):
             return None
     output = _experience_log_path(name, paths.plugin_root)

@@ -8,11 +8,13 @@ repository at run time.
 
 ## Machine source of truth
 
-`docs/paper_figure_map.yaml` owns paper placement. Each active fixture carries
+`docs/paper_figure_map.yaml` owns Figure Agent candidate placement. The external
+ResearchOS `docs/figure_set/FIGURE_REGISTRY.yaml` owns the exact paper artifact,
+source/build provenance, lifecycle, and human gate. Each active fixture carries
 the same exact `paper_id`, `figure_id`, and `role_id` in `spec.yaml`. A fixture
 is not a main-paper figure merely because its name or briefing resembles a role.
 
-The current paper bindings are:
+The current Figure Agent candidate bindings are:
 
 | Figure | Role | Fixture authority |
 |---|---|---|
@@ -28,6 +30,24 @@ ownership of a full assembled paper figure. A fixture candidate does not imply
 human acceptance, a promoted external artifact, or publication readiness.
 Earlier figure fixtures and backend experiments remain non-main evidence unless
 the machine map explicitly promotes them.
+
+`current_schematic_baseline` in the machine map names this exact three-fixture
+set and its common Nature Communications series context. The fixtures remain
+at direct `examples/<fixture>` paths: moving them for cosmetic folder grouping
+would break their compile, status, pointer, and regression contracts. Lifecycle
+classification belongs in the machine map, not in a new directory name.
+
+## Current schematic edit entry points
+
+| Figure | Edit from | Do not treat as |
+|---|---|---|
+| Fig1 | `review/current-candidate.json` → its resolved nested `repaired.tex` | the fixture-root TeX or a v5f reference vault |
+| Fig2a | `fig2_charge_transport_mechanism.tex` | the external Fig2b–d data-plot assembly |
+| Fig5 mechanism | `fig5_cantilever_actuation_artifact_v2.tex` | a full assembled paper figure |
+
+Run `./bin/fig-agent status <fixture>` before editing to resolve the current
+candidate and evidence state. The active baseline is a development route, not a
+canonical paper-artifact declaration.
 
 All other real fixtures are explicitly classified in the map as regression,
 pilot, reference, superseded, SI, or sandbox evidence. They do not override an

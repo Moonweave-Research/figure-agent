@@ -99,7 +99,7 @@ fixtures:
       - panel-f-ground-return
     aesthetic_intent: false
     critique_reference_pack: false
-    paper_aesthetic_context:
+    paper_aesthetic_context: nc-main-text-series
     journal_art_direction_playbook:
     adoption_status: adopted_high_risk
     rationale: >

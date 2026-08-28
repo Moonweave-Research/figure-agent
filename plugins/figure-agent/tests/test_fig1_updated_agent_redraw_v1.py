@@ -12,6 +12,8 @@ import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1"
+CURRENT_HANDOFF = FIXTURE / "FIG1_CURRENT_CANDIDATE_HANDOFF.md"
+REVIEW_LINEAGE = FIXTURE / "review" / "README.md"
 REPAIRED_SOURCE = (
     FIXTURE
     / "review"
@@ -73,6 +75,29 @@ def test_redraw_pins_unchanged_visual_and_physics_authorities() -> None:
         assert tree == source["source_tree"]
         historical = _historical_bytes(source["source_commit"], source["source_path"])
         assert hashlib.sha256(historical).hexdigest() == source["sha256"]
+
+
+def test_redraw_handoff_names_a_current_candidate_without_canonical_promotion() -> None:
+    assert CURRENT_HANDOFF.is_file()
+    assert not (FIXTURE / "FIG1_CANONICAL_HANDOFF.md").exists()
+    handoff = CURRENT_HANDOFF.read_text(encoding="utf-8")
+    assert "current-candidate handoff" in handoff
+    assert "candidate_only" in handoff
+
+
+def test_review_lineage_distinguishes_current_child_from_preserved_history() -> None:
+    assert REVIEW_LINEAGE.is_file()
+    lineage = REVIEW_LINEAGE.read_text(encoding="utf-8")
+    assert "review/current-candidate.json" in lineage
+    assert "comparable-v3-repair-c5" in lineage
+    assert "candidate_only" in lineage
+    for historical_path in (
+        "comparable-v1",
+        "comparable-v3-repair-c1",
+        "r5-prospective-v1",
+        "closed-loop-archive/",
+    ):
+        assert historical_path in lineage
 
 
 def test_redraw_is_independent_and_keeps_floating_panel_f_topology() -> None:

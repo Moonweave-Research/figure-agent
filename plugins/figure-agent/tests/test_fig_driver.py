@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_driver  # noqa: E402
 import fig_driver_guidance  # noqa: E402
+import render_input_manifest  # noqa: E402
 import status as status_mod  # noqa: E402
 
 
@@ -67,6 +68,12 @@ def _write_fresh_build_and_exports(fixture: Path, name: str = "driver_demo") -> 
         os.utime(path, (old_time, old_time))
     for path in [build / f"{name}.pdf", *exports.iterdir()]:
         os.utime(path, (fresh_time, fresh_time))
+    render_input_manifest.write_manifest(
+        fixture=name,
+        render_pdf=build / f"{name}.pdf",
+        inputs=status_mod._render_input_paths(fixture, name),
+        output=render_input_manifest.manifest_path(build / f"{name}.pdf"),
+    )
 
 
 def _write_visual_clash_report(fixture: Path, *, total: int, name: str = "driver_demo") -> None:
@@ -719,10 +726,7 @@ def test_final_mode_recommends_strict_compile_for_stale_render(
     summary = _run_driver("driver_demo", mode="final", goal="final", repo_root=tmp_path)
 
     assert summary["action"] == "run_compile"
-    assert (
-        summary["safe_command"]
-        == "fig-agent compile driver_demo --strict"
-    )
+    assert summary["safe_command"] == "fig-agent compile driver_demo --strict"
     assert summary["final_readiness_profile"]["strict_compile"]["state"] == "needs_action"
     assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
     assert "strict compile" in summary["operator_guidance"]["next_step"]
@@ -835,9 +839,7 @@ def test_final_warning_budget_excludes_all_reviewed_nondefects(tmp_path: Path) -
         }
     }
 
-    summary = fig_driver._final_warning_budget(
-        fixture, "final", "FRESH", status
-    )
+    summary = fig_driver._final_warning_budget(fixture, "final", "FRESH", status)
 
     assert summary is not None
     assert summary["state"] == "pass"
@@ -860,10 +862,7 @@ def test_final_mode_requests_strict_compile_when_warning_budget_report_missing(
     summary = _run_driver("driver_demo", mode="final", goal="final", repo_root=tmp_path)
 
     assert summary["action"] == "run_compile"
-    assert (
-        summary["safe_command"]
-        == "fig-agent compile driver_demo --strict"
-    )
+    assert summary["safe_command"] == "fig-agent compile driver_demo --strict"
     assert "warning budget input is missing" in summary["reason"]
     assert summary["final_readiness_profile"]["warning_budget"]["state"] == "needs_action"
     assert summary["final_readiness_profile"]["warning_budget"]["budget_state"] == "missing_input"
@@ -880,9 +879,7 @@ def test_final_mode_requires_loop_checkpoint_before_complete(
     summary = _run_driver("driver_demo", mode="final", goal="final", repo_root=tmp_path)
 
     assert summary["action"] == "run_fig_loop"
-    assert summary["safe_command"] == (
-        "fig-agent loop driver_demo --goal final --json"
-    )
+    assert summary["safe_command"] == ("fig-agent loop driver_demo --goal final --json")
     assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
     assert summary["final_readiness_profile"]["loop_checkpoint"]["state"] == "needs_action"
     assert summary["final_readiness_profile"]["overall_state"] == "needs_action"
@@ -1026,10 +1023,7 @@ def test_review_mode_recommends_adjudicate_when_critique_fresh(
 
     assert summary["action"] == "run_adjudicate"
     assert summary["stop_boundary"] is None
-    assert (
-        summary["safe_command"]
-        == "fig-agent adjudicate driver_demo"
-    )
+    assert summary["safe_command"] == "fig-agent adjudicate driver_demo"
 
 
 def test_review_mode_runs_fig_loop_when_prerequisites_closed(
@@ -1042,10 +1036,7 @@ def test_review_mode_runs_fig_loop_when_prerequisites_closed(
     summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
 
     assert summary["action"] == "run_fig_loop"
-    assert (
-        summary["safe_command"]
-            == "fig-agent loop driver_demo --goal review --json"
-    )
+    assert summary["safe_command"] == "fig-agent loop driver_demo --goal review --json"
     assert summary["stop_boundary"] is None
 
 
@@ -1137,10 +1128,7 @@ def test_review_mode_uses_closeout_next_action_before_rerunning_loop(
     summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
 
     assert summary["action"] == "run_fig_loop"
-    assert (
-        summary["safe_command"]
-            == "fig-agent loop driver_demo --goal review --json"
-    )
+    assert summary["safe_command"] == "fig-agent loop driver_demo --goal review --json"
     assert summary["stop_boundary"] == "closeout_required"
     assert summary["closeout"]["blocking_step_ids"] == ["loop_rerun"]
     assert "closeout is incomplete" in summary["reason"]
@@ -1287,10 +1275,7 @@ def test_review_mode_fig_loop_goal_is_shell_safe(
     summary = _run_driver("driver_demo", mode="review", goal="it's a goal", repo_root=tmp_path)
 
     assert summary["action"] == "run_fig_loop"
-    assert (
-        summary["safe_command"]
-        == "fig-agent loop driver_demo --goal 'it'\"'\"'s a goal' --json"
-    )
+    assert summary["safe_command"] == "fig-agent loop driver_demo --goal 'it'\"'\"'s a goal' --json"
 
 
 def test_review_mode_surfaces_latest_loop_patch_handoff(
@@ -1724,8 +1709,6 @@ def test_review_mode_ignores_loop_checkpoint_older_than_adjudication(
     assert "loop_checkpoint" not in summary
 
 
-
-
 def test_review_mode_surfaces_adjudication_and_release_blockers(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1774,6 +1757,7 @@ def test_review_mode_surfaces_adjudication_and_release_blockers(
     assert next_action["release_blockers"][0]["stop_boundary"] == "force_golden_required"
     assert next_action["release_blockers"][1]["blocking_source"] == "publication_gate_required"
     assert summary["operator_guidance"]["required_actor"] == "workflow_agent"
+
 
 # --- release mode ------------------------------------------------------------
 
@@ -2062,9 +2046,7 @@ def test_release_mode_requires_adjudication_before_completion(
     summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
 
     assert summary["action"] == "run_adjudicate"
-    assert summary["safe_command"] == (
-        "fig-agent adjudicate driver_demo"
-    )
+    assert summary["safe_command"] == ("fig-agent adjudicate driver_demo")
     assert summary["stop_boundary"] is None
     assert "critique_adjudication.yaml is missing or stale" in summary["reason"]
     assert summary["action"] not in summary["forbidden_actions"]
@@ -2239,9 +2221,7 @@ def test_polish_mode_not_required_critique_routes_to_release_or_final(
     assert summary["status"]["critique_state"] == "NOT_REQUIRED"
     assert summary["action"] == "run_fig_loop"
     assert summary["stop_boundary"] == "mode_forbidden_action"
-    assert summary["safe_command"] == (
-            "fig-agent loop driver_demo --goal polish --json"
-    )
+    assert summary["safe_command"] == ("fig-agent loop driver_demo --goal polish --json")
     assert "ready_for_svg_polish" not in summary["reason"]
     assert "NOT_REQUIRED" in summary["reason"]
     assert "--mode release" in summary["reason"]
@@ -2254,6 +2234,8 @@ def test_polish_mode_not_required_critique_routes_to_release_or_final(
     assert "--mode review" not in next_step
     assert "--mode release" in next_step
     assert "--mode final" in next_step
+
+
 def test_polish_mode_fresh_critique_requires_loop_checkpoint_before_svg_handoff(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -2287,9 +2269,7 @@ def test_polish_mode_fresh_critique_requires_loop_checkpoint_before_svg_handoff(
     assert summary["status"]["critique_state"] == "FRESH"
     assert summary["action"] == "run_fig_loop"
     assert summary["stop_boundary"] == "mode_forbidden_action"
-    assert summary["safe_command"] == (
-            "fig-agent loop driver_demo --goal polish --json"
-    )
+    assert summary["safe_command"] == ("fig-agent loop driver_demo --goal polish --json")
     assert "ready_for_svg_polish" in summary["reason"]
     assert summary["svg_polish_gate"]["state"] == "no_current_checkpoint"
     assert summary["svg_polish_gate"]["can_start_svg_polish"] is False
@@ -2476,9 +2456,7 @@ def test_polish_mode_routes_editorial_continue_tikz_back_to_loop(
     summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
 
     assert summary["action"] == "run_fig_loop"
-    assert summary["safe_command"] == (
-            "fig-agent loop driver_demo --goal polish --json"
-    )
+    assert summary["safe_command"] == ("fig-agent loop driver_demo --goal polish --json")
     assert summary["stop_boundary"] == "mode_forbidden_action"
     assert "continue_tikz" in summary["reason"]
     assert "Run the selected command" not in summary["operator_guidance"]["next_step"]
@@ -2583,6 +2561,8 @@ def test_polish_mode_routes_editorial_semantic_backport_to_boundary(
     assert summary["safe_command"] is None
     assert summary["stop_boundary"] == "semantic_backport_required"
     assert "semantic_backport_required" in summary["reason"]
+
+
 # --- stage 0 / 1 -------------------------------------------------------------
 
 
