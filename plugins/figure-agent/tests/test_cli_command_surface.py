@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
 SCRIPTS_ROOT = PLUGIN_ROOT / "scripts"
@@ -15,6 +17,9 @@ sys.path.insert(0, str(SCRIPTS_ROOT))
 import compatibility_command_contracts  # noqa: E402
 
 
+# doctor asserts exit 0, which requires the full render toolchain
+# (lualatex/qpdf); on toolchain-less runners it honestly reports rc 1.
+@pytest.mark.render
 def test_doctor_reports_the_canonical_command_surface() -> None:
     env = os.environ.copy()
     env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
@@ -89,6 +94,7 @@ def test_retired_default_commands_refuse_public_cli_dispatch() -> None:
     assert "figure_agent_rank_candidates" in rank.stderr
 
 
+@pytest.mark.render
 def test_registry_controls_internal_cli_membership_and_public_help() -> None:
     contracts = compatibility_command_contracts.serialize_registry()["contracts"]
     registry_commands = {contract["command"] for contract in contracts}
