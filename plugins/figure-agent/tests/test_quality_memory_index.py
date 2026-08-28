@@ -964,3 +964,23 @@ def test_build_suite_index_excludes_out_of_suite_experience_logs(
     assert index["suite_diagnostics"] == [
         {"fixture": "suite_demo", "status": "included", "reason": ""}
     ]
+
+
+def test_mcp_rank_derives_the_prior_from_the_log_not_a_stale_index(tmp_path, monkeypatch) -> None:
+    """The MCP rank path preferred build/memory/quality_memory_index.json
+    whenever it existed, making it a cache with no invalidation: an index
+    written before the newest experience rows still drove ranking."""
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "mcp"))
+    import server_impl
+
+    source = (Path(__file__).resolve().parents[1] / "mcp" / "server_impl.py").read_text(
+        encoding="utf-8"
+    )
+    rank_body = source[source.index("def _rank_candidates") :]
+    rank_body = rank_body[: rank_body.index("\ndef ")]
+
+    assert "build/memory/quality_memory_index.json" not in rank_body
+    assert "build_fixture_index" in rank_body
+    assert hasattr(server_impl, "_rank_candidates")
