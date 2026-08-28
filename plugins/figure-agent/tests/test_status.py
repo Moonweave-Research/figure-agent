@@ -4279,6 +4279,8 @@ def test_print_single_surfaces_main_paper_placement(tmp_path: Path, capsys) -> N
             "system": "researchos",
             "registry": "docs/figure_set/FIGURE_REGISTRY.yaml",
         },
+        "current_schematic_baseline": "pair001-main-schematics",
+        "paper_aesthetic_context": "nc-main-text-series",
     }
     status_mod._print_single(result)
 
@@ -4289,6 +4291,10 @@ def test_print_single_surfaces_main_paper_placement(tmp_path: Path, capsys) -> N
         "scope=panel_a_schematic_candidate assembly=external_full_figure_ready"
     ) in output
     assert "Artifact authority: researchos docs/figure_set/FIGURE_REGISTRY.yaml" in output
+    assert (
+        "Current schematic baseline: pair001-main-schematics "
+        "context=nc-main-text-series"
+    ) in output
 
 
 def test_print_single_surfaces_non_main_classification(tmp_path: Path, capsys) -> None:

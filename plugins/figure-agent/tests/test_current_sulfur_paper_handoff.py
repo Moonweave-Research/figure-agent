@@ -133,6 +133,49 @@ def test_only_current_three_authoring_baselines_are_active() -> None:
     assert "fig4_trap_energy_diagram" in non_main["superseded"]
 
 
+def test_named_current_schematic_baseline_matches_active_bindings_and_context() -> None:
+    plan_map = _plan_map()
+    baseline = plan_map["current_schematic_baseline"]
+    assert isinstance(baseline, dict)
+    assert baseline["id"] == "pair001-main-schematics"
+    assert baseline["aesthetic_context"] == "nc-main-text-series"
+    assert baseline["fixtures"] == [
+        "fig1_updated_agent_redraw_v1",
+        "fig2_charge_transport_mechanism",
+        "fig5_cantilever_actuation_artifact_v2",
+    ]
+
+    figures = plan_map["figures"]
+    assert isinstance(figures, dict)
+    active = {
+        entry["fixture"]
+        for entry in figures.values()
+        if isinstance(entry, dict) and entry["status"] == "active_candidate"
+    }
+    assert set(baseline["fixtures"]) == active
+
+    context_path = (
+        PLUGIN_ROOT
+        / "examples"
+        / "_paper_aesthetic_contexts"
+        / f"{baseline['aesthetic_context']}.yaml"
+    )
+    context = yaml.safe_load(context_path.read_text(encoding="utf-8"))
+    assert isinstance(context, dict)
+    context_fixtures = {
+        role["fixture"]
+        for role in context["figure_roles"]
+        if isinstance(role, dict) and "fixture" in role
+    }
+    assert set(baseline["fixtures"]) <= context_fixtures
+
+    for fixture in baseline["fixtures"]:
+        spec = yaml.safe_load(
+            (PLUGIN_ROOT / "examples" / fixture / "spec.yaml").read_text(encoding="utf-8")
+        )
+        assert spec["paper_aesthetic_context"] == baseline["aesthetic_context"]
+
+
 def test_fixed_external_main_slots_are_not_reported_as_optional_plans() -> None:
     import sys
 

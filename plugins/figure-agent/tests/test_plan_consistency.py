@@ -21,21 +21,22 @@ def _write_fixture(
     paper_id: str = "paper-demo",
     figure_id: str = "fig1",
     role_id: str = "role-demo",
+    paper_aesthetic_context: str | None = None,
 ) -> None:
     fixture = examples / name
     fixture.mkdir(parents=True)
+    spec = {
+        "name": name,
+        "paper_binding": {
+            "paper_id": paper_id,
+            "figure_id": figure_id,
+            "role_id": role_id,
+        },
+    }
+    if paper_aesthetic_context is not None:
+        spec["paper_aesthetic_context"] = paper_aesthetic_context
     (fixture / "spec.yaml").write_text(
-        yaml.safe_dump(
-            {
-                "name": name,
-                "paper_binding": {
-                    "paper_id": paper_id,
-                    "figure_id": figure_id,
-                    "role_id": role_id,
-                },
-            },
-            sort_keys=False,
-        ),
+        yaml.safe_dump(spec, sort_keys=False),
         encoding="utf-8",
     )
 
@@ -109,6 +110,40 @@ def test_plan_consistency_rejects_binding_mismatch_and_unmapped_fixture(
     assert ("paper_binding_mismatch", "mapped") in blocking
     assert ("unmapped_fixture", "unmapped") in blocking
     assert report["blocking_count"] == 2
+
+
+def test_plan_consistency_binds_named_schematic_baseline_to_active_context(
+    tmp_path: Path,
+) -> None:
+    examples = tmp_path / "examples"
+    context = "paper-series"
+    _write_fixture(examples, "mapped", paper_aesthetic_context=context)
+    context_path = examples / "_paper_aesthetic_contexts" / f"{context}.yaml"
+    context_path.parent.mkdir()
+    context_path.write_text("schema: placeholder\n", encoding="utf-8")
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map, include_extra_classification=False)
+    payload = yaml.safe_load(plan_map.read_text(encoding="utf-8"))
+    payload["current_schematic_baseline"] = {
+        "id": "paper-main-schematics",
+        "aesthetic_context": context,
+        "fixtures": ["mapped"],
+    }
+    plan_map.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+    report = check_plan_consistency.build_report(examples, plan_map)
+
+    assert report["blocking_count"] == 0
+
+    payload["current_schematic_baseline"]["fixtures"] = ["mapped", "nonexistent"]
+    plan_map.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    invalid = check_plan_consistency.build_report(examples, plan_map)
+
+    assert any(
+        finding["code"] == "current_schematic_baseline_active_fixture_mismatch"
+        and finding["severity"] == "blocking"
+        for finding in invalid["findings"]
+    )
 
 
 def test_plan_consistency_resolves_declared_current_candidate_pointer(

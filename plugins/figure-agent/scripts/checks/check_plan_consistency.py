@@ -124,6 +124,86 @@ def _validate_source_pointer(
     return []
 
 
+def _validate_current_schematic_baseline(
+    plan_map: dict[str, Any],
+    figures: dict[str, Any],
+    examples_dir: Path,
+) -> list[dict[str, Any]]:
+    """Keep the named working schematic set aligned with active map bindings."""
+
+    baseline = plan_map.get("current_schematic_baseline")
+    if baseline is None:
+        return []
+    if not isinstance(baseline, dict):
+        return [_finding("invalid_current_schematic_baseline")]
+
+    findings: list[dict[str, Any]] = []
+    baseline_id = baseline.get("id")
+    context = baseline.get("aesthetic_context")
+    fixture_names = baseline.get("fixtures")
+    if not isinstance(baseline_id, str) or not baseline_id.strip():
+        findings.append(_finding("current_schematic_baseline_missing_id"))
+    if not isinstance(context, str) or not context.strip():
+        findings.append(_finding("current_schematic_baseline_missing_aesthetic_context"))
+    elif not (
+        examples_dir / "_paper_aesthetic_contexts" / f"{context.strip()}.yaml"
+    ).is_file():
+        findings.append(
+            _finding(
+                "current_schematic_baseline_aesthetic_context_missing",
+                aesthetic_context=context,
+            )
+        )
+    if not isinstance(fixture_names, list) or not fixture_names:
+        return [*findings, _finding("current_schematic_baseline_missing_fixtures")]
+    if not all(isinstance(fixture, str) and fixture.strip() for fixture in fixture_names):
+        findings.append(_finding("invalid_current_schematic_baseline_fixture"))
+        return findings
+
+    normalized = [fixture.strip() for fixture in fixture_names]
+    if len(normalized) != len(set(normalized)):
+        findings.append(_finding("duplicate_current_schematic_baseline_fixture"))
+
+    active = {
+        entry.get("fixture")
+        for entry in figures.values()
+        if isinstance(entry, dict) and entry.get("status") == ACTIVE_STATUS
+        and isinstance(entry.get("fixture"), str)
+    }
+    baseline_fixtures = set(normalized)
+    if baseline_fixtures != active:
+        findings.append(
+            _finding(
+                "current_schematic_baseline_active_fixture_mismatch",
+                baseline_fixtures=sorted(baseline_fixtures),
+                active_fixtures=sorted(active),
+            )
+        )
+
+    for fixture in normalized:
+        entry = next(
+            (
+                candidate
+                for candidate in figures.values()
+                if isinstance(candidate, dict) and candidate.get("fixture") == fixture
+            ),
+            None,
+        )
+        if not isinstance(entry, dict):
+            continue
+        fixture_spec = _load_spec(examples_dir / fixture / "spec.yaml")
+        if fixture_spec.get("paper_aesthetic_context") != context:
+            findings.append(
+                _finding(
+                    "current_schematic_baseline_context_mismatch",
+                    fixture=fixture,
+                    expected=context,
+                    actual=fixture_spec.get("paper_aesthetic_context"),
+                )
+            )
+    return findings
+
+
 def build_report(examples_dir: Path, map_path: Path) -> dict[str, Any]:
     plan_map = _load_map(map_path)
     example_dirs = {path.name: path for path in _example_dirs(examples_dir)}
@@ -137,6 +217,8 @@ def build_report(examples_dir: Path, map_path: Path) -> dict[str, Any]:
     if not isinstance(figures, dict):
         figures = {}
         findings.append(_finding("invalid_figures_mapping"))
+
+    findings.extend(_validate_current_schematic_baseline(plan_map, figures, examples_dir))
 
     claimed: dict[str, str] = {}
     for figure_key, entry in sorted(figures.items()):

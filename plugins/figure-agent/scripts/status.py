@@ -605,6 +605,7 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
     plan_map = check_plan_consistency._load_map(map_path)
     authority_scope = plan_map.get("authority_scope", "figure_agent_candidate_bindings")
     artifact_registry = plan_map.get("paper_artifact_registry")
+    baseline = plan_map.get("current_schematic_baseline")
     figures = plan_map.get("figures") if isinstance(plan_map, dict) else None
     if isinstance(figures, dict):
         for figure, entry in figures.items():
@@ -620,6 +621,12 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
                 "assembly_state": entry.get("assembly_state"),
                 "authority_scope": authority_scope,
                 "paper_artifact_registry": artifact_registry,
+                "current_schematic_baseline": baseline.get("id")
+                if isinstance(baseline, dict) and name in baseline.get("fixtures", [])
+                else None,
+                "paper_aesthetic_context": baseline.get("aesthetic_context")
+                if isinstance(baseline, dict) and name in baseline.get("fixtures", [])
+                else None,
                 "map_path": "docs/paper_figure_map.yaml",
             }
     non_main = plan_map.get("non_main") if isinstance(plan_map, dict) else None
@@ -1943,6 +1950,13 @@ def _print_single(result: dict) -> None:
                     "  Artifact authority: "
                     f"{registry.get('system', '?')} "
                     f"{registry.get('registry', '?')}"
+                )
+            baseline = paper_plan.get("current_schematic_baseline")
+            if isinstance(baseline, str) and baseline:
+                print(
+                    "  Current schematic baseline: "
+                    f"{baseline} "
+                    f"context={paper_plan.get('paper_aesthetic_context', '?')}"
                 )
         elif paper_state == "NON_MAIN":
             print(f"  Paper placement: non-main {paper_plan.get('classification', '?')}")
