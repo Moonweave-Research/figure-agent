@@ -59,9 +59,7 @@ def _write_explicit_candidate_render(fig_dir: Path) -> tuple[Path, Path]:
             "path": "build/repaired.pdf",
             "sha256": _sha256(render_pdf),
         },
-        "inputs": {
-            role: {"sha256": _sha256(path)} for role, path in render_inputs.items()
-        },
+        "inputs": {role: {"sha256": _sha256(path)} for role, path in render_inputs.items()},
     }
     (build / "repaired_render_inputs.json").write_text(
         json.dumps(manifest, sort_keys=True) + "\n",
@@ -232,16 +230,12 @@ def test_current_render_review_scaffold_detects_machine_gate_geometry_drift(
             "coverage_ratio": 0.84,
         }
     }
-    (build / "undeclared_geometry.json").write_text(
-        json.dumps(geometry) + "\n", encoding="utf-8"
-    )
+    (build / "undeclared_geometry.json").write_text(json.dumps(geometry) + "\n", encoding="utf-8")
 
     assert review_scaffold_summary(fig_dir)["state"] == "PENDING"
 
     geometry["geometry_parse_coverage"]["parsed_operations"] = 20
-    (build / "undeclared_geometry.json").write_text(
-        json.dumps(geometry) + "\n", encoding="utf-8"
-    )
+    (build / "undeclared_geometry.json").write_text(json.dumps(geometry) + "\n", encoding="utf-8")
     stale = review_scaffold_summary(fig_dir)
     assert stale["state"] == "STALE"
     assert stale["stale_fields"] == ["machine_gate.geometry_coverage.parsed_operations"]
@@ -386,6 +380,8 @@ def test_status_projects_declared_repair_candidate_evidence(tmp_path: Path) -> N
     assert result["spine_evidence"]["physics_grounding"]["status"] == "grounded"
     assert result["spine_evidence"]["convention_receipt"]["state"] == "present"
     assert result["spine_evidence"]["convention_receipt"]["path"] == "build/convention_receipt.json"
+
+
 def test_status_surfaces_explicit_nested_current_candidate_without_promoting_it(
     tmp_path: Path,
 ) -> None:
@@ -631,9 +627,7 @@ def _write_render_input_manifest(directory: Path, name: str) -> None:
             "path": f"build/{name}.pdf",
             "sha256": _sha256(pdf),
         },
-        "inputs": {
-            role: {"sha256": _sha256(path)} for role, path in inputs.items()
-        },
+        "inputs": {role: {"sha256": _sha256(path)} for role, path in inputs.items()},
     }
     (build / f"{name}_render_inputs.json").write_text(
         json.dumps(payload, sort_keys=True) + "\n",
@@ -1764,9 +1758,7 @@ def test_spine_fails_closed_when_declared_label_coverage_is_missing_or_zero(
 
     missing = status_mod._spine_evidence_summary(tmp_path, build)
     coverage_key = (
-        "text_boundary_coverage"
-        if spec_field == "text_boundary_checks"
-        else "label_path_coverage"
+        "text_boundary_coverage" if spec_field == "text_boundary_checks" else "label_path_coverage"
     )
     assert missing[coverage_key]["state"] == "missing"
     assert missing["state"] == "needs_action"
@@ -2600,9 +2592,7 @@ def _write_human_decision_record(
                 "agent_recommendation": "Record the release decision separately.",
                 "human_decision": decision_kind,
                 "human_note": "Human decision record only; status must not mutate release state.",
-                "follow_up": {
-                    "implementation_slice": "route the next explicit operation"
-                },
+                "follow_up": {"implementation_slice": "route the next explicit operation"},
                 "mutation_boundary": "no_source_mutation",
             },
             indent=2,
@@ -2685,6 +2675,8 @@ def test_final_artifact_block_without_kind_blocks_release_as_invalid(
     assert result["final_artifact_kind"] == "missing"
     assert "final_artifact_invalid" in result["notes"]
     assert result["release_ready"] is False
+
+
 def test_malformed_spec_reports_final_artifact_invalid_without_crashing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -2895,6 +2887,8 @@ def test_malformed_yaml_with_nested_final_artifact_does_not_become_final_artifac
     assert result["final_artifact_state"] == "NONE"
     assert "final_artifact_invalid" not in result["notes"]
     assert "fix malformed" in result["next"]
+
+
 def test_invalid_utf8_spec_reports_spec_parse_error_without_crashing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -3015,6 +3009,8 @@ def test_unknown_final_artifact_kind_blocks_release(
     assert result["golden_ready"] is True
     assert result["release_ready"] is False
     assert result["final_ready"] is False
+
+
 def test_stage_4_export_present_critique_stale_redirects_to_fig_critique(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -3901,7 +3897,7 @@ def test_no_arg_summary_shows_publication_gate_state(tmp_path: Path, capsys, mon
 
     captured = capsys.readouterr()
     assert "goldenfig  stage 4/4 (accepted)" in captured.out
-    assert "ready: true" in captured.out
+    assert "ready: false" in captured.out
     assert "publication: PROVENANCE_REQUIRED" in captured.out
 
 
@@ -4158,7 +4154,8 @@ def test_infer_stage_surfaces_publication_provenance_gate_when_audit_is_incomple
 
     assert result["acceptance_state"] == "ACCEPTED"
     assert result["golden_ready"] is True
-    assert result["release_ready"] is True
+    assert result["release_ready"] is False
+    assert result["final_ready"] is False
     assert result["publication_gate_state"] == "PROVENANCE_REQUIRED"
     assert result["publication_gate_failures"] == [
         {
@@ -4292,8 +4289,7 @@ def test_print_single_surfaces_main_paper_placement(tmp_path: Path, capsys) -> N
     ) in output
     assert "Artifact authority: researchos docs/figure_set/FIGURE_REGISTRY.yaml" in output
     assert (
-        "Current schematic baseline: pair001-main-schematics "
-        "context=nc-main-text-series"
+        "Current schematic baseline: pair001-main-schematics context=nc-main-text-series"
     ) in output
 
 
