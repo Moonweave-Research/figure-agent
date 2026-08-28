@@ -71,6 +71,7 @@ def _ready_payload(*, critique_state: str = "passed") -> dict:
             "id": "loop_rerun",
             "state": "blocked",
             "reason": "closeout prerequisites are incomplete: export",
+            "evidence": {"blocked_by": ["export"]},
         },
     ]
     return {
@@ -204,9 +205,7 @@ def test_closeout_accept_allows_first_time_tracked_golden_acceptance(
                 {
                     "id": "export",
                     "state": "blocked",
-                    "reason": (
-                        "tracked golden export acceptance is invalid: missing"
-                    ),
+                    "reason": ("tracked golden export acceptance is invalid: missing"),
                     "command": None,
                 },
                 {
@@ -224,14 +223,16 @@ def test_closeout_accept_allows_first_time_tracked_golden_acceptance(
                 {
                     "id": "release",
                     "state": "blocked",
-                    "reason": "release_ready is false",
+                    "reason": "publication gate not evaluated (accepted is not declared)",
                     "command": None,
+                    "evidence": {"release_ready": False},
                 },
                 {
                     "id": "loop_rerun",
                     "state": "blocked",
                     "reason": "closeout prerequisites are incomplete: export",
                     "command": None,
+                    "evidence": {"blocked_by": ["export"]},
                 },
             ],
         }
@@ -488,3 +489,54 @@ def test_closeout_accept_rejects_symlinked_closeout_dir(tmp_path: Path, monkeypa
             workspace_root=workspace,
             plugin_root=_write_release_decision_record(workspace),
         )
+
+
+def test_pre_acceptance_waivers_are_keyed_on_evidence_not_reason_prose() -> None:
+    """The waivers used to match reason sentences. _release_check stopped
+    producing the string the release waiver looked for in 3ae90b60, which left
+    golden acceptance unreachable, and the loop_rerun waiver matched any path
+    under exports/. Both now read structured evidence."""
+    readiness = {
+        "checks": [
+            {
+                "id": "release",
+                "state": "blocked",
+                "reason": "publication gate not evaluated (accepted is not declared)",
+                "evidence": {"release_ready": False},
+            },
+            {
+                "id": "loop_rerun",
+                "state": "blocked",
+                "reason": "exports/demo.pdf is newer than latest loop record",
+                "evidence": {"newest_input_is_export_artifact": True},
+            },
+        ]
+    }
+
+    waived = golden_acceptance._allowed_pre_acceptance_blocks(readiness)
+
+    assert [check["id"] for check in waived] == ["release", "loop_rerun"]
+
+
+def test_stale_loop_record_is_not_waived_without_export_evidence() -> None:
+    """A source edit that outdates the loop record says "export" nowhere and
+    must not be waived — but the old substring test saw exports/ in the path
+    of any export artifact and waived every stale record after /fig_export."""
+    readiness = {
+        "checks": [
+            {
+                "id": "loop_rerun",
+                "state": "blocked",
+                "reason": "examples/demo/demo.tex is newer than latest loop record",
+                "evidence": {"newest_input_is_export_artifact": False},
+            },
+            {
+                "id": "release",
+                "state": "blocked",
+                "reason": "publication gate reports 1 failure(s)",
+                "evidence": {"release_ready": True},
+            },
+        ]
+    }
+
+    assert golden_acceptance._allowed_pre_acceptance_blocks(readiness) == []
