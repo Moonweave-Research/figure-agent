@@ -65,6 +65,54 @@ def _step(
     }
 
 
+def _golden_contract_step(name: str, example_dir: Path) -> dict[str, Any]:
+    """Run the accepted-fixture artifact contract inside closeout.
+
+    check_example carries the theory-guard, checker-budget, audit-freshness,
+    label-inventory and raster-resolution gates. Until now its only caller was
+    a test, so an accepted fixture could close out with every one of them
+    unevaluated.
+    """
+    from checks import check_golden_artifacts  # noqa: PLC0415
+
+    spec = example_dir / "spec.yaml"
+    try:
+        declares_accepted = check_golden_artifacts.spec_declares_accepted_key(spec)
+    except (OSError, ValueError) as exc:
+        return _step(
+            step_id="golden_contract",
+            state="blocked",
+            reason=f"spec.yaml is unreadable: {exc}",
+        )
+    if not declares_accepted:
+        return _step(
+            step_id="golden_contract",
+            state="not_required",
+            reason="spec.yaml declares no acceptance, so the golden contract does not apply",
+        )
+    try:
+        failures = check_golden_artifacts.check_example(example_dir, require_accepted=True)
+    except (OSError, ValueError) as exc:
+        return _step(
+            step_id="golden_contract",
+            state="blocked",
+            reason=f"golden contract could not be evaluated: {exc}",
+        )
+    if failures:
+        return _step(
+            step_id="golden_contract",
+            state="needs_action",
+            reason=f"golden artifact contract failed: {failures[0]}",
+            command=f"./bin/fig-agent helper check_golden_artifacts.py examples/{name}",
+            evidence={"failures": failures},
+        )
+    return _step(
+        step_id="golden_contract",
+        state="passed",
+        reason="golden artifact contract holds",
+    )
+
+
 def _compile_step(name: str, status_result: dict[str, Any]) -> dict[str, Any]:
     render_state = status_result.get("render_state")
     if render_state == "FRESH":
@@ -115,9 +163,7 @@ def _text_boundary_checks_step(name: str, example_dir: Path) -> dict[str, Any]:
             return _step(
                 step_id="text_boundary_checks",
                 state="passed",
-                reason=(
-                    f"{len(explicit_checks)} explicit text_boundary_checks are declared"
-                ),
+                reason=(f"{len(explicit_checks)} explicit text_boundary_checks are declared"),
                 evidence_path=spec_path,
                 evidence={"check_count": len(explicit_checks), "source": "explicit"},
             )
@@ -131,9 +177,7 @@ def _text_boundary_checks_step(name: str, example_dir: Path) -> dict[str, Any]:
         return _step(
             step_id="text_boundary_checks",
             state="not_required",
-            reason=(
-                "no text_boundary_layout or explicit text_boundary_checks are declared"
-            ),
+            reason=("no text_boundary_layout or explicit text_boundary_checks are declared"),
             evidence_path=spec_path,
         )
     try:
@@ -270,11 +314,7 @@ def _export_step(
 ) -> dict[str, Any]:
     export_state = status_result.get("export_state")
     prerequisite_steps = (compile_step, critique_step)
-    incomplete = [
-        step["id"]
-        for step in prerequisite_steps
-        if step["state"] not in COMPLETE_STATES
-    ]
+    incomplete = [step["id"] for step in prerequisite_steps if step["state"] not in COMPLETE_STATES]
     if incomplete:
         return _step(
             step_id="export",
@@ -544,11 +584,7 @@ def _loop_rerun_step(
     runs_root: Path,
     prerequisite_steps: tuple[dict[str, Any], ...],
 ) -> dict[str, Any]:
-    incomplete = [
-        step["id"]
-        for step in prerequisite_steps
-        if step["state"] not in COMPLETE_STATES
-    ]
+    incomplete = [step["id"] for step in prerequisite_steps if step["state"] not in COMPLETE_STATES]
     if incomplete:
         return _step(
             step_id="loop_rerun",
@@ -635,6 +671,7 @@ def compute_closeout(
         critique_step,
         adjudication_step,
         export_step,
+        _golden_contract_step(name, example_dir),
         loop_rerun_step,
     ]
     incomplete = [step for step in steps if step["state"] not in COMPLETE_STATES]
@@ -654,9 +691,7 @@ def compute_closeout(
             "critique_state": status_result.get("critique_state"),
             "export_state": status_result.get("export_state"),
             "acceptance_state": status_result.get("acceptance_state"),
-            "acceptance_freshness_state": status_result.get(
-                "acceptance_freshness_state"
-            ),
+            "acceptance_freshness_state": status_result.get("acceptance_freshness_state"),
             "workflow_ready": status_result.get("workflow_ready"),
             "golden_ready": status_result.get("golden_ready"),
             "release_ready": status_result.get("release_ready"),
