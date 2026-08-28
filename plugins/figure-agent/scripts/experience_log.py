@@ -1337,6 +1337,7 @@ def append_manual_direct_edit_record(
     )
     action = record["action"]
     outcome = record["outcome"]
+    target = record["state"]["target"]
     for existing in load_experience_records(paths.plugin_root, name):
         existing_action = existing.get("action") if isinstance(existing.get("action"), dict) else {}
         existing_outcome = (
@@ -1345,11 +1346,19 @@ def append_manual_direct_edit_record(
         existing_params = (
             existing_action.get("params") if isinstance(existing_action.get("params"), dict) else {}
         )
+        existing_state = existing.get("state") if isinstance(existing.get("state"), dict) else {}
+        existing_target = (
+            existing_state.get("target") if isinstance(existing_state.get("target"), dict) else {}
+        )
         if (
             existing_action.get("candidate_hash") == action["candidate_hash"]
             and existing_action.get("edit_family") == action["edit_family"]
             and existing_params.get("authoring_mode") == MANUAL_DIRECT_EDIT_KIND
             and existing_outcome.get("human_label") == outcome["human_label"]
+            # Two distinct edits of the same family on one source state are
+            # separate observations; only an identical target is a replay.
+            and existing_target.get("panel") == target["panel"]
+            and existing_target.get("subregion_key") == target["subregion_key"]
         ):
             return None
     output = _experience_log_path(name, paths.plugin_root)

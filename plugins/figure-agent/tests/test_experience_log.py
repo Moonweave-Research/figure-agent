@@ -246,6 +246,38 @@ def test_manual_direct_edit_human_accept_becomes_the_only_positive_signal(tmp_pa
     assert bucket["improved"] == 1
 
 
+def test_manual_direct_edit_same_family_different_target_is_not_a_replay(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    plugin_root = tmp_path / "plugin"
+    _manual_edit_fixture(workspace)
+    common = {
+        "edit_family": "mechanism_redraw",
+        "rationale": "replace an ambiguous trap indication",
+        "human_label": "accept",
+        "reviewer": "figure-owner",
+        "workspace_root": workspace,
+        "plugin_root": plugin_root,
+    }
+
+    first = experience_log.append_manual_direct_edit_record(
+        "direct_demo",
+        target_panel="A",
+        target_subregion="sulfur-trap-route",
+        **common,
+    )
+    second = experience_log.append_manual_direct_edit_record(
+        "direct_demo",
+        target_panel="C",
+        target_subregion="coulomb-label",
+        **common,
+    )
+
+    assert first is not None
+    assert second is not None
+
+
 def test_manual_direct_edit_rejects_stale_semantic_evidence(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     plugin_root = tmp_path / "plugin"
