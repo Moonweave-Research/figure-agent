@@ -147,7 +147,7 @@ def test_quality_next_experiment_selects_highest_uncertainty_fixture_family(
     assert payload["schema"] == "figure-agent.quality-next-experiment.v1"
     assert payload["recommendation"]["kind"] == "fixture_family_uncertainty_probe"
     assert payload["recommendation"]["fixture"] == "beta"
-    assert payload["recommendation"]["family"] == "hierarchy_rebalance"
+    assert payload["recommendation"]["family"] == "label_reposition"
     assert payload["recommendation"]["allowed"] is True
     command = payload["recommendation"]["command"]
     for forbidden in ("--write", "--apply", "--accept", "--overwrite", "--force"):

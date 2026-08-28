@@ -9,24 +9,16 @@ from pathlib import Path
 from typing import Any
 
 import benchmark_contracts
+import edit_family_vocab
 import quality_benchmark
 import quality_memory_index
 import runtime_paths
 
 SCHEMA = "figure-agent.quality-next-experiment.v1"
 FORBIDDEN_TOKENS = ("--write", "--apply", "--accept", "--overwrite", "--force")
-DEFAULT_FAMILIES = (
-    "hierarchy_rebalance",
-    "panel_c_hero_finish",
-    "apparatus_strengthen",
-    "panel_f_final_finish",
-    "panel_f_label_route_finish",
-    "panel_f_density_relief",
-    "panel_f_qtr_apparatus_lane",
-    "panel_f_qtr_label_lane",
-    "panel_f_boundary_polish",
-    "density_reduce",
-)
+# Exploration arms come from the controlled vocabulary instead of a
+# fixture-specific campaign list; vocabulary order is the tiebreak priority.
+DEFAULT_FAMILIES = tuple(edit_family_vocab.CANONICAL_EDIT_FAMILIES)
 
 
 def _safe_command(command: str) -> bool:
@@ -153,9 +145,7 @@ def build_next_experiment(
     smoke = benchmark_list.get("suites", {}).get("smoke", {})
     smoke_fixtures = smoke.get("fixtures") if isinstance(smoke, dict) else []
     fixtures = (
-        [str(fixture) for fixture in smoke_fixtures]
-        if isinstance(smoke_fixtures, list)
-        else []
+        [str(fixture) for fixture in smoke_fixtures] if isinstance(smoke_fixtures, list) else []
     )
     candidates = _experiment_candidates(fixtures, paths=paths)
     selected = candidates[0] if candidates else None
