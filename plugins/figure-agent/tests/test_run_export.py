@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -417,6 +418,10 @@ def test_run_export_uses_declared_current_candidate_source_and_render(
                 "candidate_id": "repair-c1",
                 "candidate_root": "review/repair-c1",
                 "source_path": "repaired.tex",
+                "source_sha256": "sha256:"
+                + hashlib.sha256(
+                    (fixture / "review" / "repair-c1" / "repaired.tex").read_bytes()
+                ).hexdigest(),
                 "evidence": {"render_pdf": "build/repaired.pdf"},
                 "promotion_state": "candidate_only",
                 "human_gate": "pending",

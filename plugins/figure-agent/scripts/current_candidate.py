@@ -174,8 +174,13 @@ def resolve_current_candidate(
         return {**base, "state": "INVALID", "reason": "pointer_path_invalid"}
     if not candidate_root.is_dir() or not source_path.is_file():
         return {**base, "state": "INVALID", "reason": "candidate_source_missing"}
+    # A pointer without a declared hash used to skip the comparison entirely,
+    # so omitting the field bought a pass that declaring it honestly could
+    # fail. The binding is the point of the pointer: it is now required.
     expected_hash = pointer.get("source_sha256")
-    if expected_hash is not None and expected_hash != _sha256(source_path):
+    if not isinstance(expected_hash, str) or not expected_hash.strip():
+        return {**base, "state": "INVALID", "reason": "candidate_source_hash_missing"}
+    if expected_hash != _sha256(source_path):
         return {**base, "state": "INVALID", "reason": "candidate_source_hash_mismatch"}
 
     evidence = pointer.get("evidence")

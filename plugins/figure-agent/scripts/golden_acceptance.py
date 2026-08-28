@@ -57,8 +57,7 @@ def _has_authorizing_decision_record(name: str, plugin_root: Path) -> bool:
             continue
         if (
             record.get("fixture") == name
-            and record.get("packet_schema")
-            == human_decision_record.RELEASE_DECISION_PACKET_SCHEMA
+            and record.get("packet_schema") == human_decision_record.RELEASE_DECISION_PACKET_SCHEMA
             and record.get("decision_kind") == "accept_current_generated_export"
         ):
             return True
@@ -110,11 +109,34 @@ def _allowed_pre_acceptance_blocks(readiness: dict[str, Any]) -> list[dict[str, 
         if check_id == "golden_acceptance" and "tracked golden export" in reason:
             allowed.append(check)
             continue
-        if check_id == "loop_rerun" and "export" in reason:
-            allowed.append(check)
+        # Only a loop record that is stale purely because the export artifacts
+        # moved may be waived. The old substring test on the reason sentence
+        # matched every path under exports/, so any stale loop record was
+        # waived once /fig_export had run.
+        if check_id == "loop_rerun":
+            evidence = check.get("evidence")
+            if not isinstance(evidence, dict):
+                continue
+            # (a) the loop record is stale only because the export artifacts
+            # moved, or (b) it is waiting on prerequisites that are themselves
+            # part of this pre-acceptance set.
+            blocked_by = evidence.get("blocked_by")
+            waived_prerequisites = isinstance(blocked_by, list) and set(blocked_by) <= {
+                "export",
+                "golden_acceptance",
+            }
+            if evidence.get("newest_input_is_export_artifact") or waived_prerequisites:
+                allowed.append(check)
             continue
-        if check_id == "release" and reason == "release_ready is false":
-            allowed.append(check)
+        # Release is blocked precisely because acceptance has not happened yet,
+        # so it is the chicken-and-egg case this waiver exists for. It used to
+        # be matched by an exact reason string that _release_check stopped
+        # producing in 3ae90b60, which left golden acceptance unreachable; the
+        # structured evidence says the same thing durably.
+        if check_id == "release":
+            evidence = check.get("evidence")
+            if isinstance(evidence, dict) and evidence.get("release_ready") is False:
+                allowed.append(check)
             continue
         continue
     return allowed
@@ -147,11 +169,7 @@ def write_golden_acceptance(
         workspace_root=paths.workspace_root,
         plugin_root=paths.plugin_root,
     )
-    export_state = (
-        readiness.get("evidence_index", {})
-        .get("status", {})
-        .get("export_state")
-    )
+    export_state = readiness.get("evidence_index", {}).get("status", {}).get("export_state")
     if decision == "accept" and export_state == "TRACKED_GOLDEN" and not accept_golden:
         raise GoldenAcceptanceError("accept_golden_required")
     blocking = _allowed_pre_acceptance_blocks(readiness)
@@ -170,9 +188,7 @@ def write_golden_acceptance(
     tex_path = example_dir / f"{name}.tex"
     critique_path = example_dir / "critique.md"
     apply_path_value = (
-        readiness.get("evidence_index", {})
-        .get("candidate", {})
-        .get("apply_result_path")
+        readiness.get("evidence_index", {}).get("candidate", {}).get("apply_result_path")
         if isinstance(readiness.get("evidence_index", {}).get("candidate"), dict)
         else None
     )
@@ -182,7 +198,10 @@ def write_golden_acceptance(
         "figure_name": name,
         "decision": decision,
         "reviewer": reviewer,
-        "reviewed_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace(
+        "reviewed_at": datetime.now(UTC)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace(
             "+00:00",
             "Z",
         ),

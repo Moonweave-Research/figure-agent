@@ -604,12 +604,21 @@ def _loop_rerun_step(
     inputs = _tracked_closeout_inputs(example_dir, name)
     newest_input = max(inputs, key=lambda path: path.stat().st_mtime, default=None)
     if newest_input and newest_input.stat().st_mtime > latest_iteration.stat().st_mtime:
+        try:
+            newest_relative = newest_input.resolve().relative_to(example_dir.resolve())
+            newest_is_export = newest_relative.parts[:1] == ("exports",)
+        except ValueError:
+            newest_is_export = False
         return _step(
             step_id="loop_rerun",
             state="needs_action",
             reason=f"{_display_path(newest_input, repo_root)} is newer than latest loop record",
             command=command,
             evidence_path=latest_iteration,
+            # Consumers used to infer "only the export moved" by searching this
+            # reason for the substring "export", which any path under exports/
+            # satisfies. State it as a fact instead.
+            evidence={"newest_input_is_export_artifact": newest_is_export},
         )
     return _step(
         step_id="loop_rerun",

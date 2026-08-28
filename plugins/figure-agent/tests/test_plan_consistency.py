@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -12,6 +13,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks
 import check_plan_consistency  # noqa: E402
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+
+
+
+def _sha256_file(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _write_fixture(
@@ -163,6 +169,7 @@ def test_plan_consistency_resolves_declared_current_candidate_pointer(
                 "candidate_id": "candidate-1",
                 "candidate_root": "review/candidate",
                 "source_path": "repaired.tex",
+                "source_sha256": _sha256_file(candidate_root / "repaired.tex"),
                 "evidence": {
                     "render_pdf": "build/repaired.pdf",
                     "render_png": "build/repaired.png",
