@@ -20,6 +20,7 @@ import experience_log
 import figure_intent_model
 import fixture_identity
 import label_refit_derive
+import path_reroute
 import quality_defect_ledger
 import runtime_paths
 from check_visual_clash import extract_pdf_words_and_page
@@ -37,6 +38,7 @@ ACTIONABILITY_REFUSAL_CODES = frozenset(
     }
 )
 EDIT_FAMILY = "bounded_coordinate_offset"
+PATH_REROUTE_EDIT_FAMILY = "path_reroute"
 FAMILY = "bounded-coordinate-offset"
 VECTOR_CLEARANCE_EDIT_FAMILY = "vector_clearance_offset"
 VECTOR_CLEARANCE_FAMILY = "vector-clearance-offset"
@@ -546,6 +548,16 @@ def _vector_clearance_candidates(
                 }
             )
             continue
+        reroute_candidate = _vector_reroute_candidate(
+            name=name,
+            issue=issue,
+            lines=lines,
+            source_rel=source_rel,
+            current_source_hash=current_source_hash,
+        )
+        if reroute_candidate is not None:
+            supported_count += 1
+            candidates.append(reroute_candidate)
         dy_cm = _vector_clearance_dy_cm(issue)
         line_number = issue.get("element_b_source_line")
         if (
@@ -631,6 +643,112 @@ def _vector_clearance_candidates(
         )
         candidates.append(candidate)
     return candidates, refusals, {"vector_clearance_supported_defect_count": supported_count}
+
+
+def _vector_reroute_candidate(
+    *,
+    name: str,
+    issue: dict[str, Any],
+    lines: list[str],
+    source_rel: Path,
+    current_source_hash: str,
+) -> dict[str, Any] | None:
+    """Detour variant for a straight vector: reroute over/under the obstacle.
+
+    Restricted to circle obstacles: they are the only review-queue kind the
+    detector measures segment-wise against a line. Marker and curve obstacles
+    are measured bbox-to-bbox, and a detour never grows that distance, so a
+    reroute against them could not verify honestly.
+    """
+    if issue.get("relation") != "min_clearance_cm":
+        return None
+    if issue.get("element_a_kind") != "circle":
+        return None
+    required = issue.get("required_clearance_cm")
+    obstacle_bbox = issue.get("element_a_bbox_cm")
+    line_number = issue.get("element_b_source_line")
+    if (
+        isinstance(required, bool)
+        or not isinstance(required, int | float)
+        or not isinstance(obstacle_bbox, list)
+        or isinstance(line_number, bool)
+        or not isinstance(line_number, int)
+        or line_number < 1
+        or line_number > len(lines)
+    ):
+        return None
+    line = lines[line_number - 1]
+    detour = path_reroute.reroute_detour(
+        line,
+        obstacle_bbox_cm=obstacle_bbox,
+        clearance_cm=float(required),
+    )
+    if detour is None:
+        return None
+    issue_id = str(issue.get("id") or "vector_clearance")
+    template_id = str(detour["template_id"])
+    selector_text_hash = candidate_contracts.canonical_hash(line)
+    candidate = _label_offset_candidate(
+        name=name,
+        candidate_id="",
+        source_rel=source_rel,
+        line_number=line_number,
+        line=line,
+        replacement=str(detour["replacement"]),
+        apply_authority="review_only",
+        target={
+            "panel": _issue_panel(issue_id),
+            "subregion": f"vector_clearance:{issue_id}",
+        },
+        source_hash=current_source_hash,
+        source_defect={
+            "id": issue_id,
+            "source": "deterministic_audit",
+            "defect_class": "vector_clearance_violation",
+            "evidence": [issue],
+            "source_fingerprint": candidate_contracts.canonical_hash(issue),
+            "ledger_hash": "",
+        },
+        edit_class="vector_clearance_violation",
+        variant_id=template_id,
+        variant_dx_cm=0.0,
+        selector_text_hash=selector_text_hash,
+    )
+    candidate["edit_family"] = PATH_REROUTE_EDIT_FAMILY
+    candidate["family"] = PATH_REROUTE_EDIT_FAMILY
+    candidate["variant"] = {
+        "id": template_id,
+        "waypoint_y_cm": detour["waypoint_y_cm"],
+        "predicted_clearance_cm": detour["predicted_clearance_cm"],
+    }
+    candidate["operations"][0]["semantic_kind"] = PATH_REROUTE_EDIT_FAMILY
+    candidate["operations"][0]["template_id"] = template_id
+    candidate["operations"][0]["line_start"] = line_number
+    candidate["operations"][0]["line_end"] = line_number
+    candidate["risk"] = "medium"
+    candidate["expected_delta"] = [
+        "reroute the vector around the declared neighbour without moving its endpoints"
+    ]
+    candidate["semantic_risks"] = [
+        "reroute changes an authored path shape; human must confirm the detour "
+        "reads as intended flow"
+    ]
+    candidate["blocked_if"] = [
+        "semantic_invariant_failed",
+        "render_failed",
+        "human_rejected",
+    ]
+    candidate["candidate_hash"] = candidate_contracts.canonical_hash(
+        {
+            "edit_family": PATH_REROUTE_EDIT_FAMILY,
+            "issue": issue,
+            "source_hash": current_source_hash,
+            "source_path": source_rel.as_posix(),
+            "start_line": line_number,
+            "variant_id": template_id,
+        }
+    )
+    return candidate
 
 
 def _defect_sort_key(
