@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 import candidate_contracts
-import edit_family_vocab
 import convergence_models
+import edit_family_vocab
 import fixture_identity
 import runtime_paths
 
