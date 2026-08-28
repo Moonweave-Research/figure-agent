@@ -1299,3 +1299,83 @@ def test_build_candidate_set_still_refuses_absent_fixture(tmp_path):
     )
     codes = {refusal.get("code") for refusal in result["refusals"]}
     assert "source_missing" in codes, result["refusals"]
+
+
+def test_vector_clearance_circle_obstacle_also_generates_path_reroute_candidate(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    source = "\\draw (2.0,1.05) circle (0.1);\n\\draw[flow] (0,1.0) -- (4,1.0);\n"
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    source_hash = file_sha256(fixture / "candidate_demo.tex")
+    build_dir = fixture / "build"
+    build_dir.mkdir(exist_ok=True)
+    (build_dir / "vector_clearance.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.vector-clearance.v1",
+                "source_hashes": {"examples/candidate_demo/candidate_demo.tex": source_hash},
+                "issues": [
+                    {
+                        "id": "panelB-flow-circle-min-clearance",
+                        "status": "violated",
+                        "relation": "min_clearance_cm",
+                        "element_a": "VE001",
+                        "element_b": "VE002",
+                        "element_a_kind": "circle",
+                        "element_b_kind": "line",
+                        "element_a_source_line": 1,
+                        "element_b_source_line": 2,
+                        "element_a_bbox_cm": [1.9, 0.95, 2.1, 1.15],
+                        "element_b_bbox_cm": [0.0, 1.0, 4.0, 1.0],
+                        "measured_clearance_cm": 0.0,
+                        "required_clearance_cm": 0.3,
+                        "clearance_delta_cm": -0.3,
+                        "non_auto_promotable": True,
+                        "promotion_tier": "review_queue",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_ledger(_name, **_kwargs):
+        return {"defects": [], "ledger_hash": "sha256:" + "0" * 64}
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+
+    payload = candidate_generator.build_candidate_set(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    reroutes = [
+        candidate
+        for candidate in payload["candidates"]
+        if candidate["edit_family"] == "path_reroute"
+    ]
+    assert len(reroutes) == 1
+    candidate = reroutes[0]
+    assert candidate["family"] == "path_reroute"
+    assert candidate["apply_authority"] == "review_only"
+    assert candidate["variant"]["id"] == "reroute_under_neighbor"
+    assert candidate["variant"]["waypoint_y_cm"] == pytest.approx(0.6)
+    operation = candidate["operations"][0]
+    assert operation["semantic_kind"] == "path_reroute"
+    assert operation["template_id"] == "reroute_under_neighbor"
+    assert operation["line_start"] == 2
+    assert operation["replacement"] == (
+        "\\draw[flow] (0,1.0) -- (0,0.6) -- (4,0.6) -- (4,1.0);"
+    )
+    assert candidate["source_defect"]["defect_class"] == "vector_clearance_violation"
+    # the bounded dy nudge variant is still offered alongside the reroute
+    assert any(
+        item["edit_family"] == "vector_clearance_offset" for item in payload["candidates"]
+    )
