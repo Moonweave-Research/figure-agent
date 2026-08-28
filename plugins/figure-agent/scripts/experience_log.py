@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import candidate_contracts
+import edit_family_vocab
 import convergence_models
 import fixture_identity
 import runtime_paths
@@ -333,7 +334,11 @@ def _candidate_family(manifest: dict[str, Any], candidate: dict[str, Any]) -> st
         or manifest.get("family")
         or candidate.get("family")
     )
-    return str(value) if value else "unknown"
+    if not value:
+        return "unknown"
+    # Mechanical candidate sets fold to canonical; only the free-typed manual
+    # path hard-rejects, so legacy sets on disk stay replayable.
+    return edit_family_vocab.canonical_edit_family(str(value))
 
 
 def _normalize_anchor_text(text: str) -> str:
@@ -1252,7 +1257,9 @@ def build_manual_direct_edit_record(
         source_relative=source_relative,
         build_relative=build_relative,
     )
-    family = _direct_edit_text(edit_family, label="manual_edit_family")
+    family = edit_family_vocab.validate_edit_family(
+        _direct_edit_text(edit_family, label="manual_edit_family")
+    )
     panel = _direct_edit_text(target_panel, label="manual_target_panel")
     subregion = _direct_edit_text(target_subregion, label="manual_target_subregion")
     note = _direct_edit_text(rationale, label="manual_rationale")

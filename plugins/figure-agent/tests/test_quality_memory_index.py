@@ -397,9 +397,9 @@ def test_memory_index_tracks_family_template_attempts_separately() -> None:
         ]
     )
 
-    assert index["families"]["panel_f_auto_composite_lane"]["attempts"] == 2
-    assert index["family_templates"]["panel_f_auto_composite_lane::variant_a"]["attempts"] == 1
-    assert index["family_templates"]["panel_f_auto_composite_lane::variant_b"]["attempts"] == 1
+    assert index["families"]["subregion_redraw"]["attempts"] == 2
+    assert index["family_templates"]["subregion_redraw::variant_a"]["attempts"] == 1
+    assert index["family_templates"]["subregion_redraw::variant_b"]["attempts"] == 1
 
 
 def test_duplicate_recommendation_experience_rows_do_not_inflate_attempts() -> None:
