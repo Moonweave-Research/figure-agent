@@ -124,10 +124,47 @@ def _write_current_review_scaffold(directory: Path) -> None:
             "print_proxy": "build/audit_crops/print_178mm.png",
             "print_proxy_sha256": _sha256(print_proxy),
         },
-        "machine_gate": {"publication_acceptance": "not_claimed"},
+        "machine_gate": {
+            "publication_acceptance": "not_claimed",
+            "strict_compile": "passed",
+            "visual_clash_strict_candidates": 0,
+            "geometry_coverage": {
+                "parsed_operations": 21,
+                "total_operations": 25,
+                "coverage_ratio": 0.84,
+            },
+        },
         "agent_observations": [{"id": "OBS-001", "question": "review it"}],
         "human_review": {"state": "pending", "verdict": "not_recorded"},
     }
+    (build_dir / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": True,
+                "detector_failed": False,
+                "state": "passed",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (build_dir / "visual_clash.json").write_text(
+        json.dumps({"candidates": []}) + "\n", encoding="utf-8"
+    )
+    (build_dir / "undeclared_geometry.json").write_text(
+        json.dumps(
+            {
+                "geometry_parse_coverage": {
+                    "parsed_operations": 21,
+                    "total_operations": 25,
+                    "coverage_ratio": 0.84,
+                }
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     review_dir = directory / "review" / "failure-first"
     review_dir.mkdir(parents=True)
     (review_dir / "current_render_review_scaffold_v1.yaml").write_text(
@@ -5078,3 +5115,54 @@ def test_infer_stage_absent_build_assertions_do_not_block_early_stage_work(
 
     assert result["spine_evidence"]["tex_assertions"]["state"] == "missing"
     assert result["workflow_ready"] is True
+
+
+def test_current_render_review_rejects_withheld_machine_evidence(tmp_path: Path) -> None:
+    """Declaring no machine facts used to pass clean while declaring them
+    honestly could be marked stale — absence is now the same failure as a
+    partial declaration."""
+    fig_dir = tmp_path / "review_demo"
+    _write_current_review_scaffold(fig_dir)
+    scaffold_path = fig_dir / "review" / "failure-first" / "current_render_review_scaffold_v1.yaml"
+    scaffold = json.loads(scaffold_path.read_text(encoding="utf-8"))
+    scaffold["machine_gate"] = {"publication_acceptance": "not_claimed"}
+    scaffold_path.write_text(json.dumps(scaffold, sort_keys=True) + "\n", encoding="utf-8")
+
+    summary = review_scaffold_summary(fig_dir)
+
+    assert summary["state"] == "INVALID"
+    assert summary["reason"] == "machine_gate_evidence_incomplete"
+
+
+def test_current_candidate_pointer_requires_a_declared_source_hash(tmp_path: Path) -> None:
+    """Omitting source_sha256 used to skip the binding check entirely, so a
+    pointer that declared less was harder to invalidate than an honest one."""
+    fig_dir = tmp_path / "candidate_status_demo"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    source = fig_dir / "review" / "candidate-c1" / "repaired.tex"
+    source.parent.mkdir(parents=True)
+    source.write_text("candidate", encoding="utf-8")
+    pointer = {
+        "schema": "figure-agent.current-candidate-pointer.v1",
+        "fixture": fig_dir.name,
+        "candidate_id": "candidate-c1",
+        "candidate_root": "review/candidate-c1",
+        "source_path": "repaired.tex",
+        "evidence": {
+            "render_pdf": "build/repaired.pdf",
+            "render_png": "build/repaired.png",
+            "strict_status": "build/strict_status.json",
+            "physics_grounding": "build/physics_grounding.json",
+        },
+        "promotion_state": "candidate_only",
+        "human_gate": "pending",
+    }
+    (fig_dir / "review" / "current-candidate.json").write_text(
+        json.dumps(pointer), encoding="utf-8"
+    )
+
+    candidate = infer_stage(fig_dir)["current_candidate"]
+
+    assert candidate["state"] == "INVALID"
+    assert candidate["reason"] == "candidate_source_hash_missing"

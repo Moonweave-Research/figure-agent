@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import pytest  # noqa: E402
 from semantic_assertions import (  # noqa: E402
+    MAX_TOLERANCE_PT,
     SemanticAssertionError,
     check_semantic_assertions,
     parse_assertions,
@@ -473,3 +474,19 @@ def test_main_uses_explicit_fixture_spec_for_nested_repair_pdf(
         == 0
     )
     assert output.is_file()
+
+
+def test_relation_tolerance_is_capped() -> None:
+    """An unbounded tolerance makes any geometry satisfy the assertion, which
+    reads downstream as a passing check."""
+    base = {"id": "a", "relation": "above", "subject": "s", "reference": "d"}
+
+    with pytest.raises(SemanticAssertionError, match="tolerance_pt must be <="):
+        parse_assertions(
+            {"semantic_assertions": [{**base, "tolerance_pt": MAX_TOLERANCE_PT + 1}]}
+        )
+
+    at_ceiling = parse_assertions(
+        {"semantic_assertions": [{**base, "tolerance_pt": MAX_TOLERANCE_PT}]}
+    )
+    assert at_ceiling[0]["tolerance_pt"] == MAX_TOLERANCE_PT

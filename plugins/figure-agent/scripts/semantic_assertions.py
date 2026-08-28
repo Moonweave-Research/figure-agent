@@ -48,6 +48,9 @@ ALIGNMENT_KINDS = (
     "center_aligned_y",
 )
 DEFAULT_TOLERANCE_PT = 2.0
+# ~12.7mm, three times the widest tolerance any real fixture declares and a
+# fourteenth of a 180mm figure. Past this an assertion stops meaning "aligned".
+MAX_TOLERANCE_PT = 36.0
 DEFAULT_ALIGNMENT_TOLERANCE_CM = 0.05
 PT_PER_CM = 72.0 / 2.54
 
@@ -92,6 +95,12 @@ def _parse_relation_assertion(item: dict[str, Any], index: int) -> dict[str, Any
             )
         if tolerance <= 0:
             raise SemanticAssertionError(f"semantic_assertions[{index}].tolerance_pt must be > 0")
+        # Without a ceiling a spec can declare a tolerance so wide that the
+        # assertion holds for any geometry, which reads as a passing check.
+        if tolerance > MAX_TOLERANCE_PT:
+            raise SemanticAssertionError(
+                f"semantic_assertions[{index}].tolerance_pt must be <= {MAX_TOLERANCE_PT}"
+            )
         parsed["tolerance_pt"] = float(tolerance)
     return parsed
 
@@ -170,8 +179,7 @@ def _resolve_word(
             "anchor": anchor,
             "match_count": len(matches),
             "message": (
-                f"assertion {assertion_id!r}: text anchor {anchor!r} matched "
-                f"{len(matches)} words"
+                f"assertion {assertion_id!r}: text anchor {anchor!r} matched {len(matches)} words"
             ),
         }
     return matches[0], None
@@ -313,9 +321,7 @@ def _check_alignment_assertion(
         issue["edit_target"] = edit_target
     if "target_panel" in assertion:
         issue["target_panel"] = assertion["target_panel"]
-    return [
-        issue
-    ]
+    return [issue]
 
 
 def _hash_file(path: Path) -> str:

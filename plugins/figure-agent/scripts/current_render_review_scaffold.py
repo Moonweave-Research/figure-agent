@@ -72,10 +72,11 @@ def _machine_gate_stale_fields(
         "visual_clash_strict_candidates",
         "geometry_coverage",
     }
-    present = declared_fields & machine_gate.keys()
-    if not present:
-        return [], None
-    if present != declared_fields:
+    # Declaring every machine fact gets it compared against the reports;
+    # declaring some was incomplete; declaring none used to pass clean. That
+    # rewarded withholding evidence, so absence is now the same failure as a
+    # partial declaration.
+    if declared_fields & machine_gate.keys() != declared_fields:
         return [], "machine_gate_evidence_incomplete"
 
     strict_compile = machine_gate["strict_compile"]
