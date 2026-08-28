@@ -16,13 +16,10 @@ sys.path.insert(0, str(SCRIPTS_ROOT))
 import release_gate  # noqa: E402
 
 
-def test_release_gate_targeted_tests_cover_composition_accept_apply_contracts() -> None:
+def test_release_gate_targeted_tests_cover_surviving_composition_surfaces() -> None:
     required = {
-        "tests/test_composition_p6_acceptance.py",
-        "tests/test_composition_p6_cli.py",
-        "tests/test_composition_p7_apply.py",
-        "tests/test_composition_p7_cli.py",
-        "tests/test_composition_structural_families.py",
+        "tests/test_composition_scene.py",
+        "tests/test_composition_lint.py",
         "tests/test_human_attestation.py",
     }
 
@@ -38,11 +35,7 @@ def _benchmark_payload(
     render_mode: str = "rendered",
     refusal_count: int = 1,
 ) -> dict:
-    refusals = (
-        [{"code": "manual_review", "defect_id": "D1"}]
-        if refusal_count
-        else []
-    )
+    refusals = [{"code": "manual_review", "defect_id": "D1"}] if refusal_count else []
     return {
         "run_id": f"TEST-{suite}",
         "suite": suite,
@@ -329,8 +322,8 @@ def test_release_gate_reports_missing_smoke_fixture_package_paths() -> None:
     step = release_gate._verify_smoke_fixture_paths(names)
 
     assert step["state"] == "failed"
-    assert "examples/smoke_label_overlap_demo/benchmark_contract.yaml" in (
-        step["details"]["missing"]
+    assert (
+        "examples/smoke_label_overlap_demo/benchmark_contract.yaml" in (step["details"]["missing"])
     )
 
 
@@ -346,8 +339,9 @@ def test_release_gate_reports_missing_smoke_detector_report_package_paths() -> N
     step = release_gate._verify_smoke_fixture_paths(names)
 
     assert step["state"] == "failed"
-    assert "examples/smoke_label_overlap_demo/benchmark_reports/text_boundary.json" in (
-        step["details"]["missing"]
+    assert (
+        "examples/smoke_label_overlap_demo/benchmark_reports/text_boundary.json"
+        in (step["details"]["missing"])
     )
 
 
