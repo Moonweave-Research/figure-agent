@@ -65,10 +65,12 @@ Layer 8: Status, driver, queue, and package evidence
   one truthful next actor/action; deterministic work only across safe boundaries
 ```
 
-Composition exploration is a bounded research surface below the default route.
-Its declared families live in `scripts/composition_families.py`; it cannot
-silently promote a composition, mutate an accepted/golden artifact, or replace
-the canonical evidence lifecycle.
+Composition exploration was retired on 2026-08-28 along with the direct-SVG
+and illustration backends; only the read-only analysis surfaces
+(`scripts/composition_scene.py`, `scripts/composition_lint.py`,
+`scripts/composition_profile.py`) remain. Nothing on this surface can promote
+a composition, mutate an accepted/golden artifact, or replace the canonical
+evidence lifecycle.
 
 ## Canonical runtime surfaces
 

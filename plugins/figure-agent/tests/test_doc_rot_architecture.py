@@ -14,7 +14,7 @@ def _read(path: str) -> str:
 def test_composition_layer_documented() -> None:
     text = _read(ARCH_DOC)
     assert "composition" in text.lower()
-    assert "composition_families" in text
+    assert "composition_scene" in text
 
 
 def test_cited_script_paths_exist() -> None:
