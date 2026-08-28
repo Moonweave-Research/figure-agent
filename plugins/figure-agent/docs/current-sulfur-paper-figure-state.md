@@ -8,11 +8,13 @@ repository at run time.
 
 ## Machine source of truth
 
-`docs/paper_figure_map.yaml` owns paper placement. Each active fixture carries
+`docs/paper_figure_map.yaml` owns Figure Agent candidate placement. The external
+ResearchOS `docs/figure_set/FIGURE_REGISTRY.yaml` owns the exact paper artifact,
+source/build provenance, lifecycle, and human gate. Each active fixture carries
 the same exact `paper_id`, `figure_id`, and `role_id` in `spec.yaml`. A fixture
 is not a main-paper figure merely because its name or briefing resembles a role.
 
-The current paper bindings are:
+The current Figure Agent candidate bindings are:
 
 | Figure | Role | Fixture authority |
 |---|---|---|

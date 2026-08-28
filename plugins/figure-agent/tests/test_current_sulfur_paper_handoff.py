@@ -34,6 +34,17 @@ def test_handoff_describes_every_machine_resolved_main_figure() -> None:
             assert "fixed main slot" in text
 
 
+def test_candidate_map_declares_external_paper_artifact_authority() -> None:
+    plan_map = _plan_map()
+    registry = plan_map["paper_artifact_registry"]
+    assert isinstance(registry, dict)
+    assert plan_map["authority_scope"] == "figure_agent_candidate_bindings"
+    assert registry["system"] == "researchos"
+    assert registry["registry"] == "docs/figure_set/FIGURE_REGISTRY.yaml"
+    text = HANDOFF.read_text(encoding="utf-8")
+    assert "FIGURE_REGISTRY.yaml" in text
+
+
 def test_handoff_contains_durable_experiment_contracts() -> None:
     text = HANDOFF.read_text(encoding="utf-8")
 

@@ -603,6 +603,8 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
             "map_path": "docs/paper_figure_map.yaml",
         }
     plan_map = check_plan_consistency._load_map(map_path)
+    authority_scope = plan_map.get("authority_scope", "figure_agent_candidate_bindings")
+    artifact_registry = plan_map.get("paper_artifact_registry")
     figures = plan_map.get("figures") if isinstance(plan_map, dict) else None
     if isinstance(figures, dict):
         for figure, entry in figures.items():
@@ -616,6 +618,8 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
                 "lifecycle": entry.get("status"),
                 "fixture_scope": entry.get("fixture_scope"),
                 "assembly_state": entry.get("assembly_state"),
+                "authority_scope": authority_scope,
+                "paper_artifact_registry": artifact_registry,
                 "map_path": "docs/paper_figure_map.yaml",
             }
     non_main = plan_map.get("non_main") if isinstance(plan_map, dict) else None
@@ -1933,6 +1937,13 @@ def _print_single(result: dict) -> None:
                 f"scope={paper_plan.get('fixture_scope', '?')} "
                 f"assembly={paper_plan.get('assembly_state', '?')}"
             )
+            registry = paper_plan.get("paper_artifact_registry")
+            if isinstance(registry, dict):
+                print(
+                    "  Artifact authority: "
+                    f"{registry.get('system', '?')} "
+                    f"{registry.get('registry', '?')}"
+                )
         elif paper_state == "NON_MAIN":
             print(f"  Paper placement: non-main {paper_plan.get('classification', '?')}")
         elif paper_state == "UNMAPPED":
