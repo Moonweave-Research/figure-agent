@@ -47,10 +47,26 @@ def _load_existing_key() -> tuple[bytes | None, str | None]:
         return None, "attestation_key_unreadable"
 
 
+def _require_key() -> bytes:
+    key, error = _load_existing_key()
+    if key is None:
+        raise ValueError(
+            f"{error}: provision the key with `fig-agent attest <fixture>` "
+            "from an interactive terminal"
+        )
+    return key
+
+
+def _refuse_symlink(path: Path) -> Path:
+    if path.is_symlink():
+        raise ValueError(f"attestation evidence never follows symlinks: {path}")
+    return path
+
+
 def tex_sha256(example_dir: Path) -> str:
     fixture = example_dir.name
     fixture_identity.validate_fixture_name(fixture)
-    tex_path = example_dir / f"{fixture}.tex"
+    tex_path = _refuse_symlink(example_dir / f"{fixture}.tex")
     digest = hashlib.sha256()
     with tex_path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
@@ -74,6 +90,7 @@ def source_set_paths(example_dir: Path) -> tuple[Path, ...]:
 def source_set_sha256(example_dir: Path) -> str:
     entries: list[dict[str, str]] = []
     for path in sorted(source_set_paths(example_dir), key=lambda item: str(item.resolve())):
+        _refuse_symlink(path)
         digest = hashlib.sha256()
         with path.open("rb") as handle:
             for chunk in iter(lambda: handle.read(1024 * 1024), b""):
@@ -107,7 +124,7 @@ def write_attestation(example_dir: Path) -> dict[str, Any]:
         "tex_sha256": tex_hash,
         "source_set_sha256": source_hash,
         "created_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
-        "signature": _signature(fixture, source_hash, _load_or_create_key()),
+        "signature": _signature(fixture, source_hash, _require_key()),
     }
     output = example_dir / "human_attestation.json"
     output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -116,6 +133,8 @@ def write_attestation(example_dir: Path) -> dict[str, Any]:
 
 def verify_attestation(example_dir: Path) -> tuple[bool, str]:
     path = example_dir / "human_attestation.json"
+    if path.is_symlink():
+        return False, "attestation_unreadable"
     if not path.is_file():
         return False, "missing_human_attestation"
     try:
@@ -159,6 +178,9 @@ def _create(args: argparse.Namespace) -> int:
     if typed != fixture:
         print("human attestation cancelled: fixture name mismatch", file=sys.stderr)
         return 1
+    # Key provisioning is confined to this interactive path: a library caller
+    # with an empty HOME must not be able to mint a key and a valid signature.
+    _load_or_create_key()
     payload = write_attestation(example_dir)
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
