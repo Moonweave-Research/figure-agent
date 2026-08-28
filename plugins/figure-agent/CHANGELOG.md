@@ -47,13 +47,39 @@ lives in git history and `docs/figure-agent.md` roadmap gates.
   a fixture that never declared (or explicitly declined) acceptance can no
   longer reach closeout status ready.
 - Experience records now carry the reviewer identity for accept/reject
-  labels, and an accept without a detector-backed quality movement earns
-  `accepted_unverified` instead of the `improved` ranking reward.
+  labels. A candidate accept without a detector-backed quality movement earns
+  `accepted_unverified` instead of the `improved` ranking reward; a reviewed
+  manual direct edit remains the designed positive signal.
+- Readiness consumes the gates it computes: release requires a passing
+  publication gate, a durable strict-detector failure blocks every tier, all
+  eight spine-evidence channels block on an evaluated defect, and a render
+  without its hash-bound input manifest is stale rather than fresh.
+- `verify-plan` binds the patch result to the named plan and runs that plan's
+  own verification commands instead of reporting whichever result file
+  existed; an uncomputable closeout reports blocked rather than complete; the
+  accepted-fixture artifact contract runs as a closeout step.
+- Evidence declarations fail closed: a current-candidate pointer must declare
+  its source hash, a review scaffold must declare all machine facts or none
+  of them counts, and `tolerance_pt` is capped so an assertion cannot be
+  widened until any geometry satisfies it.
+- Pre-acceptance waivers key on structured evidence rather than reason prose,
+  which restores golden acceptance (unreachable since the release-check
+  rewording) and stops waiving loop records that a source edit outdated.
+- Edit families use a controlled vocabulary: 17 canonical families with a
+  full alias map for historical names, enforced on manual writes and folded
+  on read so pre-vocabulary rows accumulate into the same buckets.
+- `path_reroute` proposes a waypoint detour for a vector blocked by a circle,
+  the first composition-level operator; clearance now measures every segment
+  of a `--` chain instead of dropping the middle ones.
 
 ### Removed
 
 - Quarantined the inert SVG-semantic stack; removed orphaned `_handlers_*`
   shims and unreachable retired CLI handlers.
+- Deleted the retired surfaces the CLI and the authority doc had already
+  closed: the fig1-Panel-F-hardcoded `quality_search` engine, the direct-SVG
+  and illustration/hybrid backends, and the composition stack minus its three
+  read-only analysis surfaces (~32k lines, unreachable from any entry point).
 
 <!-- The version bump (0.9.3 -> 0.10.0) is a coordinated release-contract change
      across plugin.json, pyproject.toml, README, the issue-100 inventory,
