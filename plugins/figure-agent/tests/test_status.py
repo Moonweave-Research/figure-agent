@@ -1416,6 +1416,7 @@ def test_status_separates_render_freshness_from_strict_and_geometry_evidence(
         "schema": "figure-agent.strict-status.v1",
         "strict_requested": True,
         "detector_failed": True,
+        "live_assertion_target": True,
     }
     assert result["geometry_coverage"] == {
         "state": "present",
@@ -5166,3 +5167,57 @@ def test_current_candidate_pointer_requires_a_declared_source_hash(tmp_path: Pat
 
     assert candidate["state"] == "INVALID"
     assert candidate["reason"] == "candidate_source_hash_missing"
+
+
+def test_replay_compile_receipt_cannot_pass_as_a_fully_gated_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A replay of immutable execution-repair evidence runs the spec-driven
+    assertions with nothing declared, so their reports are clean because
+    nothing ran. The receipt has to say so, and release must not follow."""
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    (fig_dir / "build" / "strict_status.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.strict-status.v1",
+                "strict_requested": True,
+                "detector_failed": False,
+                "live_assertion_target": False,
+                "state": "passed_without_live_assertions",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+    monkeypatch.setattr(
+        status_mod,
+        "publication_gate_summary",
+        lambda *_args, **_kwargs: {
+            "publication_gate_state": "PASS",
+            "publication_gate_failures": [],
+        },
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["state"] == "passed_without_live_assertions"
+    assert result["strict_evidence"]["live_assertion_target"] is False
+    assert result["workflow_ready"] is True
+    assert result["release_ready"] is False
+
+
+def test_legacy_strict_receipt_without_the_field_reads_as_a_live_compile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    _write_strict_status(fig_dir, state="passed", detector_failed=False)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["live_assertion_target"] is True
