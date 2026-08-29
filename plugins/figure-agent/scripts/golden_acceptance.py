@@ -40,10 +40,19 @@ def _canonical_hash(payload: dict[str, Any]) -> str:
     return "sha256:" + sha256(encoded).hexdigest()
 
 
-def _has_authorizing_decision_record(name: str, plugin_root: Path) -> bool:
+def _authorizing_decision_record(name: str, plugin_root: Path) -> dict[str, str] | None:
+    """Return which decision record authorizes this release, if any.
+
+    The record says "accept_current_generated_export", but nothing pins which
+    export was current when a human signed it, so an authorization stays valid
+    for every later export of the fixture. That cannot be tightened without
+    invalidating the records already written, so at minimum the acceptance
+    names the authorization it rode: an accept riding a months-old decision is
+    then legible in the receipt instead of indistinguishable from a fresh one.
+    """
     records_root = plugin_root / "docs" / "decision-records"
     if not records_root.is_dir():
-        return False
+        return None
     for path in sorted(records_root.glob("**/*.json")):
         try:
             raw = json.loads(path.read_text(encoding="utf-8"))
@@ -60,8 +69,13 @@ def _has_authorizing_decision_record(name: str, plugin_root: Path) -> bool:
             and record.get("packet_schema") == human_decision_record.RELEASE_DECISION_PACKET_SCHEMA
             and record.get("decision_kind") == "accept_current_generated_export"
         ):
-            return True
-    return False
+            return {
+                "path": path.relative_to(plugin_root).as_posix(),
+                "sha256": _sha256_file(path),
+                "packet_timestamp": str(record.get("packet_timestamp") or ""),
+                "queue_run_id": str(record.get("queue_run_id") or ""),
+            }
+    return None
 
 
 def _fixture_relative(example_dir: Path, path: Path) -> str:
@@ -162,7 +176,8 @@ def write_golden_acceptance(
         workspace_root=workspace_root,
     )
     example_dir = paths.examples_dir / name
-    if decision == "accept" and not _has_authorizing_decision_record(name, paths.plugin_root):
+    authorization = _authorizing_decision_record(name, paths.plugin_root)
+    if decision == "accept" and authorization is None:
         raise GoldenAcceptanceError("release_decision_record_required")
     readiness = closeout_readiness.build_closeout_readiness(
         name,
@@ -207,6 +222,7 @@ def write_golden_acceptance(
         ),
         "rationale": rationale,
         "accept_golden": accept_golden,
+        "release_authorization": authorization,
         "source_sha256": _sha256_fixture_file(tex_path, f"{name}.tex"),
         "exports": _export_hashes(example_dir, name),
         "critique_sha256": _sha256_fixture_file(critique_path, "critique.md"),

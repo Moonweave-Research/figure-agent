@@ -540,3 +540,66 @@ def test_stale_loop_record_is_not_waived_without_export_evidence() -> None:
     }
 
     assert golden_acceptance._allowed_pre_acceptance_blocks(readiness) == []
+
+
+def test_acceptance_names_the_authorization_it_rode(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The decision kind says "accept_current_generated_export" but nothing
+    pins which export was current, so one authorization stays valid for every
+    later export. The receipt at least has to name the one it used."""
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _write_authorizing_decision_record(workspace)
+    (fixture / "critique.md").write_text("critique\n", encoding="utf-8")
+    (fixture / "exports").mkdir()
+    (fixture / "exports" / "candidate_demo.pdf").write_bytes(b"pdf")
+    monkeypatch.setattr(
+        golden_acceptance.closeout_readiness,
+        "build_closeout_readiness",
+        lambda *args, **kwargs: _ready_payload(),
+    )
+
+    golden_acceptance.write_golden_acceptance(
+        "candidate_demo",
+        decision="accept",
+        reviewer="local-user",
+        rationale="Reviewed tracked golden export.",
+        accept_golden=True,
+        workspace_root=workspace,
+        plugin_root=_write_release_decision_record(workspace),
+    )
+
+    payload = json.loads(
+        (fixture / "build" / "closeout" / "golden_acceptance.json").read_text(encoding="utf-8")
+    )
+    authorization = payload["release_authorization"]
+    assert authorization["path"].endswith(
+        "candidate_demo_accept_current_generated_export.json"
+    )
+    assert authorization["sha256"].startswith("sha256:")
+    assert authorization["packet_timestamp"] == "2026-07-01T00:00:00Z"
+
+
+def test_reject_records_no_authorization_when_none_exists(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    (fixture / "critique.md").write_text("critique\n", encoding="utf-8")
+    (fixture / "exports").mkdir()
+    (fixture / "exports" / "candidate_demo.pdf").write_bytes(b"pdf")
+
+    golden_acceptance.write_golden_acceptance(
+        "candidate_demo",
+        decision="reject",
+        reviewer="local-user",
+        rationale="Do not promote this generated export.",
+        accept_golden=False,
+        workspace_root=workspace,
+        plugin_root=workspace,
+    )
+
+    payload = json.loads(
+        (fixture / "build" / "closeout" / "golden_acceptance.json").read_text(encoding="utf-8")
+    )
+    assert payload["release_authorization"] is None
