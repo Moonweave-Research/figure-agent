@@ -36,6 +36,9 @@ import package_cowork_plugin  # noqa: E402
 import quality_benchmark  # noqa: E402
 
 SCHEMA = "figure-agent.release-gate.v1"
+# States a release may carry. "skipped" is an operator's explicit opt-out and
+# "warning" is a recorded environment gap; anything outside this set blocks.
+PASSING_STATES = frozenset({"passed", "skipped", "warning"})
 
 TARGETED_TESTS = [
     "tests/test_figure_intent_model.py",
@@ -442,17 +445,20 @@ def run_release_gate(
                 _step("claude_validate_marketplace", "skipped", details={"reason": "explicit skip"})
             )
         elif claude is None:
+            # A missing CLI is an environment gap, not an operator decision.
+            # Recording it as a plain skip made it indistinguishable from
+            # "explicit skip" and from a validation that actually ran.
             steps.append(
                 _step(
                     "claude_validate_package",
-                    "skipped",
+                    "warning",
                     details={"reason": "claude not found"},
                 )
             )
             steps.append(
                 _step(
                     "claude_validate_marketplace",
-                    "skipped",
+                    "warning",
                     details={"reason": "claude not found"},
                 )
             )
@@ -472,7 +478,11 @@ def run_release_gate(
                 )
             )
 
-    failed = [step for step in steps if step["state"] == "failed"]
+    # Success is decided by an allowlist of states known to be acceptable, not
+    # by counting one bad one: a step reporting a state nobody enumerated here
+    # should stop the release rather than pass by omission.
+    failed = [step for step in steps if step["state"] not in PASSING_STATES]
+    warnings = [step for step in steps if step["state"] == "warning"]
     return {
         "schema": SCHEMA,
         "success": not failed,
@@ -480,6 +490,9 @@ def run_release_gate(
         "package_size_mib": round(size_mib, 3),
         "steps": steps,
         "failure_categories": [step["name"] for step in failed],
+        # Warnings do not block, so they have to be legible in the summary or
+        # a check that never ran reads exactly like one that passed.
+        "warning_categories": [step["name"] for step in warnings],
     }
 
 

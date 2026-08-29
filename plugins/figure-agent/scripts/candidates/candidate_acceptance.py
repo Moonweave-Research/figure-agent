@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -451,6 +452,11 @@ def write_acceptance(
         ),
         "rationale": rationale,
         "human_review_required": True,
+        # reviewer is a free string and this record is reachable from the MCP
+        # tool surface, so "a human accepted this" cannot be asserted — only
+        # how the acceptance was obtained. An agent's own accept and a person
+        # at a terminal used to be identical on disk.
+        "acceptance_channel": ("interactive_terminal" if sys.stdin.isatty() else "non_interactive"),
     }
     acceptance_path.write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n",

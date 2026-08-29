@@ -445,3 +445,30 @@ def test_readiness_ignores_stale_apply_result_for_reused_candidate_id(
 
     assert readiness["status"] == "ready_for_local_acceptance"
     assert "already_applied" not in readiness["blocking_reasons"]
+
+
+def test_acceptance_records_how_it_was_obtained(tmp_path: Path) -> None:
+    """reviewer is a free string and this record is reachable from the MCP
+    tool surface, so an agent accepting its own candidate and a person at a
+    terminal used to be identical on disk."""
+    workspace = tmp_path / "workspace"
+    fixture = _fixture(workspace)
+    _write_semantic_review(fixture)
+
+    candidate_acceptance.write_acceptance(
+        "candidate_demo",
+        "CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        decision="accept",
+        reviewer="local-user",
+        rationale="reviewed exact render",
+        workspace_root=workspace,
+    )
+
+    acceptance = json.loads(
+        (fixture / "build" / "candidates" / "CAND001" / "acceptance.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    # pytest captures stdin, so this run is non-interactive by construction.
+    assert acceptance["acceptance_channel"] == "non_interactive"

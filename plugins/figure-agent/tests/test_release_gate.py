@@ -363,3 +363,34 @@ def test_fig_agent_helper_allowlist_includes_release_gate() -> None:
     fig_agent = (PLUGIN_ROOT / "bin" / "fig-agent").read_text(encoding="utf-8")
 
     assert '"release_gate.py"' in fig_agent
+
+
+def test_release_gate_blocks_on_a_state_it_does_not_recognise() -> None:
+    """Success used to be "no step said failed", so any state nobody
+    enumerated passed by omission."""
+    assert "quarantined" not in release_gate.PASSING_STATES
+    assert release_gate.PASSING_STATES == {"passed", "skipped", "warning"}
+
+
+def test_missing_claude_cli_is_a_recorded_warning_not_a_plain_skip(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An absent CLI is an environment gap, not an operator decision; recording
+    it as a skip made it read like a deliberate opt-out."""
+    monkeypatch.setattr(release_gate.shutil, "which", lambda _name: None)
+
+    report = release_gate.run_release_gate(
+        output_dir=tmp_path / "dist",
+        max_mib=50,
+        run_targeted_tests=False,
+        run_full_pytest=False,
+        run_ruff=False,
+        run_claude_validate=True,
+    )
+
+    states = {step["name"]: step["state"] for step in report["steps"]}
+    assert states["claude_validate_package"] == "warning"
+    assert states["claude_validate_marketplace"] == "warning"
+    assert "claude_validate_package" in report["warning_categories"]
+    assert report["success"] is True
