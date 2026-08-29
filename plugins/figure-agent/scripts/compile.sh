@@ -286,6 +286,7 @@ run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_coll
 run_report_check "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/checks/check_visual_clash.py" \
   ${VISUAL_CLASH_ARGS[@]+"${VISUAL_CLASH_ARGS[@]}"} \
   ${COLLISION_FIXTURE_ARGS[@]+"${COLLISION_FIXTURE_ARGS[@]}"} \
+  --source "$TEX_INPUT" \
   --json-output "${BUILD_DIR}/visual_clash.json" \
   "$PDF_OUT"
 if [[ ${#SILHOUETTE_MORPHOLOGY_SPEC_ARGS[@]} -ne 0 ]]; then
