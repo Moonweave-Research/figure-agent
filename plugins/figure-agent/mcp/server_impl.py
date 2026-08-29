@@ -1835,12 +1835,26 @@ def _export(arguments: dict[str, Any]) -> dict[str, Any]:
         if isinstance(result, dict):
             return result
     success = result.returncode == 0
+    # Exit 0 covers three different outcomes: exports were written, they were
+    # already fresh, or a tracked golden export refused to be overwritten. The
+    # caller cannot tell those apart from a boolean, and reading it out of the
+    # prose is the kind of inference that breaks when the prose changes — so
+    # report the state the export is actually in now.
+    import export_freshness  # noqa: PLC0415
+
+    try:
+        export_state = export_freshness.compute_export_state(
+            workspace_root / "examples" / name, name
+        )
+    except (OSError, ValueError):
+        export_state = None
     return _tool_envelope(
         schema,
         success=success,
         started=started,
         name=name,
         exit_code=result.returncode,
+        export_state=export_state,
         stdout=_bounded(result.stdout),
         stderr=_bounded(result.stderr),
         artifacts=_status_artifacts(workspace_root, name),

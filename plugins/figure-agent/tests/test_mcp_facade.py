@@ -1895,3 +1895,28 @@ class TestVersionConsistency:
             f"figure_agent_server.SERVER_VERSION={figure_agent_server.SERVER_VERSION!r} "
             f"≠ pyproject.toml version={pyproject_version!r}"
         )
+
+
+def test_mcp_export_reports_the_resulting_export_state(tmp_path: Path) -> None:
+    """Exit 0 covers exports written, exports already fresh, and a tracked
+    golden export refusing to be overwritten. The envelope has to say which,
+    and saying it as a fact beats inferring it from the prose."""
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace, name="export_demo")
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {"name": "figure_agent_export", "arguments": {"name": "export_demo"}},
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.export.v1"
+    assert "export_state" in payload
+    assert payload["export_state"] in {"FRESH", "STALE", "MISSING", "TRACKED_GOLDEN", None}

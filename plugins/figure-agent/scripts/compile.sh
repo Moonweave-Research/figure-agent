@@ -404,6 +404,9 @@ fi
 if [[ $STRICT_CHECK_FAILURE -ne 0 ]]; then
   STRICT_STATUS_ARGS+=(--detector-failed)
 fi
+if [[ $LIVE_ASSERTION_TARGET -eq 0 ]]; then
+  STRICT_STATUS_ARGS+=(--no-live-assertions)
+fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/strict_status.py" \
   --json-output "${BUILD_DIR}/strict_status.json" \
   "${STRICT_STATUS_ARGS[@]}"

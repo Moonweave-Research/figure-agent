@@ -459,11 +459,7 @@ def is_legible_reversed_label(image: Image.Image, issue: VisualIssue) -> bool:
     light_fraction = float(np.mean(arr > 200))
     median = float(np.percentile(arr, 50))
     bright = float(np.percentile(arr, 95))
-    return (
-        dark_fraction >= 0.65
-        and light_fraction >= 0.05
-        and bright - median >= 100.0
-    )
+    return dark_fraction >= 0.65 and light_fraction >= 0.05 and bright - median >= 100.0
 
 
 def classify_promotion_tier(image: Image.Image, issue: VisualIssue) -> tuple[str, str | None]:
@@ -616,6 +612,7 @@ def visual_clash_payload(
     attribution_context: dict | None = None,
     fixture: str | None = None,
     tiers: list[tuple[str, str | None]] | None = None,
+    suppressed_total: int = 0,
 ) -> dict:
     """Return the stable machine-readable visual-clash report.
 
@@ -663,6 +660,12 @@ def visual_clash_payload(
     if tiers is not None:
         payload["blocking_total"] = blocking_total
         payload["report_only_total"] = report_only_total
+    # Known-false-positive suppression used to leave no trace in the durable
+    # report, so a filtered run and a genuinely clean one were identical to
+    # every downstream gate. Emitted only when something was suppressed, so an
+    # unsuppressed report keeps its byte-stable legacy shape.
+    if suppressed_total:
+        payload["suppressed_total"] = suppressed_total
     return payload
 
 
@@ -673,11 +676,18 @@ def write_visual_clash_json(
     *,
     fixture: str | None = None,
     tiers: list[tuple[str, str | None]] | None = None,
+    suppressed_total: int = 0,
 ) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(
-            visual_clash_payload(pdf_path, issues, fixture=fixture, tiers=tiers),
+            visual_clash_payload(
+                pdf_path,
+                issues,
+                fixture=fixture,
+                tiers=tiers,
+                suppressed_total=suppressed_total,
+            ),
             indent=2,
             sort_keys=True,
         )
@@ -757,6 +767,7 @@ def main() -> int:
             args.json_output,
             fixture=args.fixture,
             tiers=tiers,
+            suppressed_total=suppressed_count,
         )
 
     print(f"visual clash report: {args.pdf.name} ({len(words)} words)")

@@ -814,6 +814,7 @@ def _strict_status_summary(path: Path, example_dir: Path | None = None) -> dict[
     if payload.get("schema") != STRICT_STATUS_SCHEMA or state not in {
         "not_requested",
         "passed",
+        "passed_without_live_assertions",
         "failed",
     }:
         return {"state": "invalid", "path": display_path}
@@ -823,6 +824,8 @@ def _strict_status_summary(path: Path, example_dir: Path | None = None) -> dict[
         "schema": payload["schema"],
         "strict_requested": payload.get("strict_requested") is True,
         "detector_failed": payload.get("detector_failed") is True,
+        # Receipts written before this field existed described live compiles.
+        "live_assertion_target": payload.get("live_assertion_target") is not False,
     }
 
 
