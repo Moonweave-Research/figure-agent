@@ -605,6 +605,16 @@ def _fixture_name(pdf_path: Path) -> str:
     return pdf_path.stem
 
 
+def _bound_tex_lines(source_tex: str | None, text: str) -> list[int] | None:
+    """Return the single node line for this text, as an inclusive pair."""
+    if not source_tex:
+        return None
+    import tex_node_index  # noqa: PLC0415
+
+    line = tex_node_index.unique_source_line(source_tex, text)
+    return None if line is None else [line, line]
+
+
 def visual_clash_payload(
     pdf_path: Path,
     issues: list[VisualIssue],
@@ -613,6 +623,7 @@ def visual_clash_payload(
     fixture: str | None = None,
     tiers: list[tuple[str, str | None]] | None = None,
     suppressed_total: int = 0,
+    source_tex: str | None = None,
 ) -> dict:
     """Return the stable machine-readable visual-clash report.
 
@@ -632,7 +643,11 @@ def visual_clash_payload(
             "text": issue.text,
             "bbox_px": list(issue.bbox),
             "metric": _metric_from_detail(issue.detail),
-            "tex_lines": None,
+            # A finding about a label could never name the line to edit, so
+            # this stayed None and a reviewer typed line numbers into
+            # critique.md by hand. Bound only when exactly one node carries the
+            # text; anything less certain stays None.
+            "tex_lines": _bound_tex_lines(source_tex, issue.text),
         }
         if tiers is not None:
             tier, grounds = tiers[index - 1]
@@ -677,6 +692,7 @@ def write_visual_clash_json(
     fixture: str | None = None,
     tiers: list[tuple[str, str | None]] | None = None,
     suppressed_total: int = 0,
+    source_tex: str | None = None,
 ) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
@@ -687,6 +703,7 @@ def write_visual_clash_json(
                 fixture=fixture,
                 tiers=tiers,
                 suppressed_total=suppressed_total,
+                source_tex=source_tex,
             ),
             indent=2,
             sort_keys=True,
@@ -701,6 +718,12 @@ def main() -> int:
         description="Render-based visual clash detector for compiled TikZ PDFs"
     )
     parser.add_argument("pdf", type=Path, help="컴파일된 PDF 경로")
+    parser.add_argument(
+        "--source",
+        type=Path,
+        default=None,
+        help="fixture .tex; binds a clash candidate to the node line that made it",
+    )
     parser.add_argument("--dpi", type=int, default=600, help="렌더 DPI (기본 600)")
     parser.add_argument(
         "--overlay",
@@ -741,6 +764,13 @@ def main() -> int:
     if args.fixture and len(Path(args.fixture).parts) != 1:
         parser.error("fixture must be one safe path component")
 
+    source_tex = None
+    if args.source is not None:
+        try:
+            source_tex = args.source.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            # An unreadable source binds nothing; it must not fail the report.
+            source_tex = None
     words, page_size = extract_pdf_words_and_page(args.pdf)
     image = render_pdf_first_page(args.pdf, args.dpi)
     issues = detect_visual_clashes(image, words, page_size)
@@ -768,6 +798,7 @@ def main() -> int:
             fixture=args.fixture,
             tiers=tiers,
             suppressed_total=suppressed_count,
+            source_tex=source_tex,
         )
 
     print(f"visual clash report: {args.pdf.name} ({len(words)} words)")
