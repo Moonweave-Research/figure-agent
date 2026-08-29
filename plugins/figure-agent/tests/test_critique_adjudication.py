@@ -1185,7 +1185,8 @@ def test_policy_auto_applies_at_most_one_safe_nit_style_patch(tmp_path: Path) ->
     decisions = {item["finding_id"]: item for item in scaffold["decisions"]}
     assert decisions["C001"]["decision"] == "apply"
     assert decisions["C001"]["patch_target"] == "examples/demo_fig/demo_fig.tex lines 10-12"
-    assert decisions["C001"]["reason"].startswith("AUTO_APPLY_SINGLE_SAFE_NIT_STYLE_PATCH:")
+    assert decisions["C001"]["reason"].startswith("AUTO_APPLY_SINGLE_SAFE_STYLE_PATCH:")
+    assert "single local NIT style" in decisions["C001"]["reason"]
     assert decisions["C002"]["decision"] == "defer"
     assert decisions["C002"]["reason"].startswith("AUTO_DEFER_APPLY_LIMIT_ONE_TARGET:")
 
@@ -2711,3 +2712,58 @@ def test_cli_reports_controlled_error_for_invalid_fixture_name(
     assert exit_code == 1
     assert captured.out == ""
     assert "invalid fixture path" in captured.err
+
+
+def test_policy_auto_applies_a_minor_style_patch(tmp_path: Path) -> None:
+    """Measuring the corpus found this route had never fired: of 34 findings
+    exactly one was a NIT, because reviewers write MINOR. BLOCKER and MAJOR
+    stay human-gated."""
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.10",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    severity: MINOR\n"
+            "    category: label_placement\n"
+            "    status: open\n"
+            "    tex_lines: [10, 12]\n"
+            "    observation: label offset is slightly crowded\n"
+            "    suggested_fix: move label by 0.05 cm to improve spacing\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir, policy="conservative-v1")
+
+    decision = scaffold["decisions"][0]
+    assert decision["decision"] == "apply"
+    assert "single local MINOR style" in decision["reason"]
+    assert decision["patch_target"] == "examples/demo_fig/demo_fig.tex lines 10-12"
+
+
+def test_policy_still_gates_major_findings_to_a_human(tmp_path: Path) -> None:
+    """Widening to MINOR must not reach the severities a person owns."""
+    fig_dir = tmp_path / "demo_fig"
+    fig_dir.mkdir()
+    _write_v1_2_critique_with_quality_axes(
+        fig_dir,
+        critique_schema="figure-agent.critique.v1.10",
+        extra_frontmatter_yaml=_complete_v1_3_top_tier_audit_yaml() + "micro_defects: []\n",
+        findings_yaml=(
+            "findings:\n"
+            "  - id: C001\n"
+            "    severity: MAJOR\n"
+            "    category: label_placement\n"
+            "    status: open\n"
+            "    tex_lines: [10, 12]\n"
+            "    observation: label offset is slightly crowded\n"
+            "    suggested_fix: move label by 0.05 cm to improve spacing\n"
+        ),
+    )
+
+    scaffold = build_adjudication_scaffold(fig_dir, policy="conservative-v1")
+
+    assert scaffold["decisions"][0]["decision"] == "needs_human"

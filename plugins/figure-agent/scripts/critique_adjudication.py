@@ -79,9 +79,7 @@ def _validate_repair_evidence(
     if value is None:
         return
     if decision != "apply":
-        raise CritiqueAdjudicationError(
-            f"{label} is only valid for apply decisions"
-        )
+        raise CritiqueAdjudicationError(f"{label} is only valid for apply decisions")
     evidence = _require_mapping(value, label)
     expected = {"report_path", "finding_id", "selector_registry_path"}
     if set(evidence) != expected:
@@ -92,9 +90,7 @@ def _validate_repair_evidence(
         text = _require_non_empty_string(evidence, key, label=label)
         if key.endswith("_path"):
             path = Path(text)
-            if path.is_absolute() or any(
-                part in {"", ".", ".."} for part in path.parts
-            ):
+            if path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
                 raise CritiqueAdjudicationError(
                     f"{label}.{key} must be workspace-relative and safe"
                 )
@@ -194,6 +190,13 @@ POLICY_CHOICES = frozenset({POLICY_CONSERVATIVE_V1})
 DECISION_DIFF_SCHEMA = "figure-agent.adjudication-decision-diff.v1"
 
 _AUTO_CATEGORIES = frozenset({"style", "palette", "whitespace", "hierarchy", "label_placement"})
+# Severities a single local style patch may be applied for. Measuring the
+# corpus on 2026-08-29 found this route had never once fired: of 34 findings,
+# 22 carried tex_lines and 27 sat in an auto category, but exactly one was a
+# NIT — reviewers write MINOR. BLOCKER and MAJOR stay human-gated by
+# _requires_human, and every applied patch still faces the detector recheck
+# and its rollback.
+_AUTO_SEVERITIES = frozenset({"NIT", "MINOR"})
 _HUMAN_CATEGORIES = frozenset({"physics", "structural"})
 _HUMAN_TERMS = (
     "target_journal_fit",
@@ -305,7 +308,7 @@ def _policy_decision_for(
 
     if (
         apply_available
-        and severity == "NIT"
+        and severity in _AUTO_SEVERITIES
         and category in _AUTO_CATEGORIES
         and _has_two_int_tex_lines(finding)
         and decision.get("patch_target")
@@ -315,7 +318,7 @@ def _policy_decision_for(
             **decision,
             "decision": "apply",
             "reason": (
-                "AUTO_APPLY_SINGLE_SAFE_NIT_STYLE_PATCH: single local NIT style "
+                f"AUTO_APPLY_SINGLE_SAFE_STYLE_PATCH: single local {severity} style "
                 "patch target selected by conservative policy."
             ),
             "evidence": f"critique.md finding {finding_id}.",
@@ -323,7 +326,7 @@ def _policy_decision_for(
 
     if (
         not apply_available
-        and severity == "NIT"
+        and severity in _AUTO_SEVERITIES
         and category in _AUTO_CATEGORIES
         and _has_two_int_tex_lines(finding)
         and decision.get("patch_target")
@@ -333,7 +336,7 @@ def _policy_decision_for(
             **decision,
             "decision": "defer",
             "reason": (
-                "AUTO_DEFER_APPLY_LIMIT_ONE_TARGET: another safe NIT style "
+                "AUTO_DEFER_APPLY_LIMIT_ONE_TARGET: another safe style "
                 "finding was already selected for apply in this scaffold."
             ),
             "patch_target": "",
