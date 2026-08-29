@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from current_candidate import common_render_inputs, resolve_current_candidate  # noqa: E402
 from diff_pdf_content import expand_pdf, strip_metadata  # noqa: E402
-from git_tracked import is_tracked  # noqa: E402
+from git_tracked import is_tracked, repo_root_for  # noqa: E402
 
 EXPORT_MISSING = "MISSING"
 EXPORT_TRACKED_GOLDEN = "TRACKED_GOLDEN"
@@ -63,7 +63,12 @@ def compute_export_state(example_dir: Path, name: str) -> str:
 
     if not exports_pdf.is_file():
         return EXPORT_MISSING
-    if is_tracked(exports_pdf, REPO_ROOT):
+    # Ask the repository that actually holds the fixture. Asking the plugin's
+    # own repository answers for the wrong tree whenever the fixture lives in
+    # an external workspace, where a committed golden export read as untracked
+    # and could be overwritten without --force-golden.
+    tracking_root = repo_root_for(exports_pdf) or REPO_ROOT
+    if is_tracked(exports_pdf, tracking_root):
         return EXPORT_TRACKED_GOLDEN
 
     # All four artifacts must be present; any missing sibling → STALE

@@ -10,6 +10,31 @@ import subprocess
 from pathlib import Path
 
 
+def repo_root_for(path: Path) -> Path | None:
+    """Return the git repository that contains ``path``, or None.
+
+    Golden protection asks whether an export is committed. Asking that of the
+    plugin's own repository answers for the wrong tree whenever the fixture
+    lives in an external workspace, where the path is not under the plugin at
+    all — so a committed golden export reported as untracked and lost its
+    protection.
+    """
+    directory = path if path.is_dir() else path.parent
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(directory), "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+    except OSError:
+        return None
+    if result.returncode != 0:
+        return None
+    top = result.stdout.strip()
+    return Path(top) if top else None
+
+
 def is_tracked(path: Path, repo_root: Path) -> bool:
     """Return True iff `git ls-files --error-unmatch` finds `path` in `repo_root`.
 
