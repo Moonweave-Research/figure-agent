@@ -4384,6 +4384,34 @@ def test_print_single_shows_exports_substate(tmp_path: Path, capsys) -> None:
     assert "Exports: MISSING" in captured.out
 
 
+def test_print_single_shows_every_publication_blocker(tmp_path: Path, capsys) -> None:
+    """Printing only failures[0] hides remaining human gates, so an operator
+    reads one blocker and believes the fixture is one action from release.
+    """
+    fixture = tmp_path / "two_blocker_fig"
+    fixture.mkdir(parents=True)
+    _make_spec(fixture)
+
+    import status as status_mod
+
+    result = status_mod.infer_stage(fixture)
+    result["publication_gate_state"] = "PROVENANCE_REQUIRED"
+    result["publication_gate_failures"] = [
+        {
+            "code": "missing_submission_safe_true",
+            "required_action": "declare submission-safe",
+        },
+        {
+            "code": "invalid_human_attestation",
+            "required_action": "run `fig-agent attest two_blocker_fig`",
+        },
+    ]
+    status_mod._print_single(result)
+    captured = capsys.readouterr()
+    assert "missing_submission_safe_true" in captured.out
+    assert "invalid_human_attestation" in captured.out
+
+
 def test_print_single_surfaces_main_paper_placement(tmp_path: Path, capsys) -> None:
     fixture = tmp_path / "main_fixture"
     fixture.mkdir(parents=True)

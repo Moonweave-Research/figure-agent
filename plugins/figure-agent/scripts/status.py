@@ -2116,12 +2116,12 @@ def _print_single(result: dict) -> None:
         print(f"  Publication gate: {publication_gate_state}")
         failures = result.get("publication_gate_failures")
         if isinstance(failures, list) and failures:
-            first = failures[0]
-            if isinstance(first, dict):
-                print(
-                    "  Publication blocker: "
-                    f"{first.get('code', '?')} — {first.get('required_action', '?')}"
-                )
+            for failure in failures:
+                if isinstance(failure, dict):
+                    print(
+                        "  Publication blocker: "
+                        f"{failure.get('code', '?')} — {failure.get('required_action', '?')}"
+                    )
     if notes:
         print(f"  Notes: {', '.join(notes)}")
 
