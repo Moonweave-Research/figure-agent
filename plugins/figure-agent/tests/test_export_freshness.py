@@ -7,6 +7,7 @@ asserting build/PDF == exports/PDF after run_export.py succeeds.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -78,7 +79,8 @@ def test_state_fresh_against_declared_current_candidate_render(tmp_path: Path) -
     other = _scaffold_minimal_fixture(tmp_path, "candidate_source", body="candidate")
     candidate = fixture / "review" / "repair-c1"
     (candidate / "build").mkdir(parents=True)
-    (candidate / "repaired.tex").write_text("% candidate\n", encoding="utf-8")
+    candidate_source = candidate / "repaired.tex"
+    candidate_source.write_text("% candidate\n", encoding="utf-8")
     candidate_pdf = candidate / "build" / "repaired.pdf"
     shutil.copy(other / "build" / "candidate_source.pdf", candidate_pdf)
     (fixture / "review" / "current-candidate.json").write_text(
@@ -89,6 +91,8 @@ def test_state_fresh_against_declared_current_candidate_render(tmp_path: Path) -
                 "candidate_id": "repair-c1",
                 "candidate_root": "review/repair-c1",
                 "source_path": "repaired.tex",
+                "source_sha256": "sha256:"
+                + hashlib.sha256(candidate_source.read_bytes()).hexdigest(),
                 "evidence": {"render_pdf": "build/repaired.pdf"},
                 "promotion_state": "candidate_only",
                 "human_gate": "pending",
