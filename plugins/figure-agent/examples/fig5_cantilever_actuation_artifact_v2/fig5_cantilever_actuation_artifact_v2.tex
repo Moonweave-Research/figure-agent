@@ -284,7 +284,9 @@
   % figure-agent-path: panel-d-trace-switch-line
   \draw[cGray!42!black,dashed,line width=0.55pt] (1.94,1.04)--(1.94,3.58);
   \draw[cGray!72!black,line width=0.45pt] (0.74,2.52)--(0.74,2.38);
-  \node[labelMute,anchor=north] at (0.74,2.30) {$t=0$};
+  % The angle axis runs down to y=1.02, so a north-anchored label centred on the
+  % origin tick is bisected by the axis stroke; start it clear of the axis instead.
+  \node[labelMute,anchor=north west] at (0.72,2.30) {$t=0$};
   % A short event-owned interval separates source OFF / floating from the
   % later polarity reversal; it is schematic and carries no exact duration.
   % The source-OFF text owns the plateau event through a short vertical tick;
