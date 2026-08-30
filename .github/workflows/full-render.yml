@@ -77,9 +77,15 @@ jobs:
           done
           uv run python3 scripts/checks/check_visual_clash_budget.py examples
 
+      # One unrelated fixture failing its compile contract used to end the job
+      # here, so the render-marked tests below never ran on main. Both signals
+      # are wanted and neither should mask the other; the job still fails if
+      # any step fails.
       - name: Pre-build smoke export (required by stage-assertion test)
+        if: ${{ !cancelled() }}
         run: |
           uv run python3 scripts/run_export.py smoke_trap_demo
 
       - name: Run tests
+        if: ${{ !cancelled() }}
         run: uv run pytest -q
