@@ -1,4 +1,5 @@
 name: fig3_trap_schematic_slice3_semantic
+visual_clash_cap: 18
 panels:
   - id: a
     caption: 측정 셋업

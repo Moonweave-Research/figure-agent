@@ -262,9 +262,17 @@ def _fixture_dirs(target: Path) -> list[Path]:
 
 def check_targets(targets: list[Path]) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
+    failures: list[str] = []
     for target in targets:
         for fixture_dir in _fixture_dirs(target):
-            results.append(check_fixture(fixture_dir))
+            try:
+                results.append(check_fixture(fixture_dir))
+            except VisualClashBudgetError as exc:
+                # Keep going so one run names every fixture over budget, not
+                # only the first in sort order.
+                failures.append(str(exc))
+    if failures:
+        raise VisualClashBudgetError("\n".join(failures))
     return results
 
 

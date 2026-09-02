@@ -213,6 +213,24 @@ def test_visual_clash_budget_skips_review_only_fixture_without_tex_source(
     assert "OK demo: visual_clash total 1 <= cap 2" in out
 
 
+def test_visual_clash_budget_reports_every_failing_fixture_in_one_run(tmp_path: Path) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture_at(examples / "alpha_over", cap=0, total=3)
+    _write_fixture_at(examples / "beta_ok", cap=2, total=1)
+    _write_fixture_at(examples / "gamma_over", cap=1, total=4)
+
+    try:
+        budget.check_targets([examples])
+    except budget.VisualClashBudgetError as exc:
+        message = str(exc)
+    else:
+        raise AssertionError("expected VisualClashBudgetError")
+
+    assert "alpha_over: visual clash budget exceeded: 3 > 0" in message
+    assert "gamma_over: visual clash budget exceeded: 4 > 1" in message
+    assert "beta_ok" not in message
+
+
 def test_visual_clash_budget_checks_all_fixture_dirs_under_examples(tmp_path: Path) -> None:
     examples = tmp_path / "examples"
     _write_fixture(tmp_path, cap=2, total=1)
