@@ -380,6 +380,9 @@ def source_inventory_failures(tex_path: Path, patterns: dict | None) -> list[str
 
 
 AUDIT_INPUT_HASH_KEY = "audit_input_hash"
+THEORY_GUARD_DECLARATION_KEY = "theory-guard"
+THEORY_GUARD_NOT_APPLICABLE = "not-applicable"
+THEORY_GUARD_REASON_KEY = "theory-guard-reason"
 
 
 def audit_source_paths(example_dir: Path) -> tuple[Path, ...]:
@@ -506,11 +509,36 @@ def checker_budget_failures(
     return failures
 
 
+def _theory_guard_waiver_failures(theory_guard_path: Path) -> list[str]:
+    """Failures for a guard that declares no BLOCKER row at all.
+
+    Silence used to read as success: a 0-byte theory_guard.md yielded no
+    parseable rows, therefore no failures, and was indistinguishable from a
+    guard whose every BLOCKER is verified. Declaring the absence is now an
+    explicit, structured act."""
+    front = yaml_frontmatter(theory_guard_path)
+    if front.get(THEORY_GUARD_DECLARATION_KEY) != THEORY_GUARD_NOT_APPLICABLE:
+        return [
+            "theory guard declares no BLOCKER row and no "
+            f"`{THEORY_GUARD_DECLARATION_KEY}: {THEORY_GUARD_NOT_APPLICABLE}` "
+            "front-matter declaration: theory_guard.md"
+        ]
+    reason = front.get(THEORY_GUARD_REASON_KEY)
+    if not isinstance(reason, str) or not reason.strip():
+        return [
+            f"theory guard `{THEORY_GUARD_DECLARATION_KEY}: "
+            f"{THEORY_GUARD_NOT_APPLICABLE}` requires a non-empty "
+            f"`{THEORY_GUARD_REASON_KEY}`: theory_guard.md"
+        ]
+    return []
+
+
 def theory_guard_failures(theory_guard_path: Path) -> list[str]:
     if not theory_guard_path.exists():
         return ["missing theory guard: theory_guard.md"]
 
     failures: list[str] = []
+    blocker_rows = 0
     for line in theory_guard_path.read_text(encoding="utf-8").splitlines():
         if "|" not in line:
             continue
@@ -519,6 +547,7 @@ def theory_guard_failures(theory_guard_path: Path) -> list[str]:
             # A row that declares BLOCKER severity but is missing columns cannot be
             # evaluated for its pass/fail evidence: fail closed rather than skip it.
             if len(cells) >= 2 and cells[1] == "BLOCKER":
+                blocker_rows += 1
                 failures.append(
                     f"malformed theory guard BLOCKER row (missing columns): {line.strip()}"
                 )
@@ -526,12 +555,15 @@ def theory_guard_failures(theory_guard_path: Path) -> list[str]:
         guard_id, severity, _claim, _method, evidence = cells[:5]
         if severity != "BLOCKER" or guard_id == "ID":
             continue
+        blocker_rows += 1
 
         status = evidence.lower().lstrip()
         has_bad_status = status.startswith(("fail", "failed", "unresolved", "unknown", "open"))
         has_pass_status = status.startswith(("pass", "passed", "closed", "resolved", "verified"))
         if has_bad_status or not has_pass_status:
             failures.append(f"theory BLOCKER not passing: {guard_id}")
+    if blocker_rows == 0:
+        failures.extend(_theory_guard_waiver_failures(theory_guard_path))
     return failures
 
 

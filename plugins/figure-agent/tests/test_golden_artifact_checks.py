@@ -367,6 +367,8 @@ def _add_quality_audit_disclosure(fixture: Path) -> None:
         audit.read_text(encoding="utf-8") + "disclosure-needed: no\n",
         encoding="utf-8",
     )
+
+
 def _make_passing_accepted_fixture(fixture: Path, monkeypatch) -> None:
     _write_minimal_accepted_fixture(fixture)
     monkeypatch.setenv("HOME", str(fixture.parent / "home"))
@@ -497,10 +499,7 @@ def test_cli_rejects_traversal_or_outside_relative_fixture_path(
     (fixture / "outside.tex").write_text("% empty\n", encoding="utf-8")
     _write_minimal_export_set(fixture / "exports", "outside")
     script = (
-        Path(__file__).resolve().parents[1]
-        / "scripts"
-        / "checks"
-        / "check_golden_artifacts.py"
+        Path(__file__).resolve().parents[1] / "scripts" / "checks" / "check_golden_artifacts.py"
     )
 
     result = subprocess.run(
@@ -828,6 +827,8 @@ def test_check_example_basic_mode_skips_semantic_spec_error(tmp_path: Path, monk
     failures = check_example(fixture, require_accepted=False)
 
     assert not any(failure.startswith("invalid spec.yaml:") for failure in failures)
+
+
 def test_checker_warning_counts_reads_quality_audit() -> None:
     audit = """
     Observed:
@@ -1030,6 +1031,75 @@ def test_theory_guard_malformed_blocker_row_fails(tmp_path: Path) -> None:
     failures = golden_checks.theory_guard_failures(guard)
 
     assert any("malformed theory guard BLOCKER row" in failure for failure in failures)
+
+
+def test_theory_guard_empty_file_fails(tmp_path: Path) -> None:
+    """A 0-byte guard yielded no parseable rows, therefore no failures, and so
+    passed the gate exactly like a guard whose every BLOCKER is verified."""
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text("", encoding="utf-8")
+
+    failures = golden_checks.theory_guard_failures(guard)
+
+    assert failures == [
+        "theory guard declares no BLOCKER row and no "
+        "`theory-guard: not-applicable` front-matter declaration: theory_guard.md"
+    ]
+
+
+def test_theory_guard_prose_without_blocker_rows_fails(tmp_path: Path) -> None:
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text(
+        "# Theory guard\n\nEvery invariant was reviewed and holds.\n",
+        encoding="utf-8",
+    )
+
+    failures = golden_checks.theory_guard_failures(guard)
+
+    assert any("declares no BLOCKER row" in failure for failure in failures)
+
+
+def test_theory_guard_not_applicable_declaration_with_reason_passes(tmp_path: Path) -> None:
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text(
+        "---\n"
+        "theory-guard: not-applicable\n"
+        "theory-guard-reason: layout-only comparison plate, it asserts no physics.\n"
+        "---\n"
+        "# Theory guard\n",
+        encoding="utf-8",
+    )
+
+    assert golden_checks.theory_guard_failures(guard) == []
+
+
+def test_theory_guard_not_applicable_without_reason_fails(tmp_path: Path) -> None:
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text("---\ntheory-guard: not-applicable\n---\n", encoding="utf-8")
+
+    failures = golden_checks.theory_guard_failures(guard)
+
+    assert failures == [
+        "theory guard `theory-guard: not-applicable` requires a non-empty "
+        "`theory-guard-reason`: theory_guard.md"
+    ]
+
+
+def test_theory_guard_waiver_does_not_excuse_a_failing_blocker_row(tmp_path: Path) -> None:
+    """The waiver applies only when there is nothing to evaluate."""
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text(
+        "---\n"
+        "theory-guard: not-applicable\n"
+        "theory-guard-reason: claims nothing.\n"
+        "---\n"
+        "| ID | Severity | Claim | Check Method | Pass/Fail Evidence |\n"
+        "|---|---|---|---|---|\n"
+        "| TG-1 | BLOCKER | invariant | source review | open |\n",
+        encoding="utf-8",
+    )
+
+    assert golden_checks.theory_guard_failures(guard) == ["theory BLOCKER not passing: TG-1"]
 
 
 def test_theory_guard_header_and_separator_rows_are_not_false_positives(tmp_path: Path) -> None:
