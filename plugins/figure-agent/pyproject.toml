@@ -23,6 +23,7 @@ select = ["E", "F", "I", "UP"]
 testpaths = ["tests"]
 markers = [
     "render: requires TeX/render/OCR system tools",
+    "local_render_signature: pins a pdftotext content signature recorded on the authoring machine; text extraction differs across TeX/poppler builds, so the render CI job deselects these explicitly instead of failing on platform drift.",
     "quarantine: covers inactive-on-real-figure surfaces such as retired direct-SVG history and the composition stack. CI runs it in a separate job so it cannot obscure the primary Figure Agent signal.",
 ]
 

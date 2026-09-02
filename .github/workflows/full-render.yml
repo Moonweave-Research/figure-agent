@@ -26,6 +26,10 @@ jobs:
       PYTHONPATH: ${{ github.workspace }}/plugins/figure-agent/scripts:${{ github.workspace }}/plugins/figure-agent/scripts/checks
     steps:
       - uses: actions/checkout@v5
+        with:
+          # History-pinned render tests replay recorded commits; a shallow
+          # clone fails them with CalledProcessError before any figure is judged.
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
@@ -97,4 +101,7 @@ jobs:
 
       - name: Run tests
         if: ${{ !cancelled() }}
-        run: uv run pytest -q
+        # local_render_signature tests pin pdftotext output recorded on the
+        # authoring machine; Ubuntu TeX/poppler extract different text, so they
+        # are excluded here by name rather than left to fail on platform drift.
+        run: uv run pytest -q -m "not local_render_signature"
