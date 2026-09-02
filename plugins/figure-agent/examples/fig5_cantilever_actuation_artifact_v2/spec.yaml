@@ -387,6 +387,61 @@ vector_clearance_checks:
       matched_text: '\draw[axis] (0.62,2.52)--(4.02,2.52)'
       kind: line
     min_clearance_cm: 0.05
+  # The four relations below terminate on named \coordinate anchors, so they
+  # only became measurable once the extractor resolved those names. Against a
+  # bezier the detector measures the control hull, not the drawn curve: the
+  # two must_touch pairs catch a vector detaching from the member entirely,
+  # they cannot see sub-hull drift.
+  #
+  # Electrostatic attraction is a body force on the film: its tail belongs on
+  # the specimen, not floating in the gap beside it.
+  - id: panelA-attraction-arrow-starts-on-specimen
+    element_a:
+      source_line: 116
+      matched_text: '\draw[forceToward] (panel-a-attraction-origin)--(panel-a-attraction-head)'
+      kind: line
+    element_b:
+      source_line: 76
+      matched_text: 'controls (1.37,3.45) and (1.78,2.25)'
+      kind: curve
+    must_touch: true
+  # The same vector must stop short of the drive electrode: a force arrow that
+  # lands on the plate reads as a conductor bridging the air gap.
+  - id: panelA-attraction-arrow-clear-of-drive-electrode
+    element_a:
+      source_line: 116
+      matched_text: '\draw[forceToward] (panel-a-attraction-origin)--(panel-a-attraction-head)'
+      kind: line
+    element_b:
+      source_line: 85
+      matched_text: '\draw[apparatus] (3.42,1.40) rectangle (3.72,4.34)'
+      kind: rect
+    min_clearance_cm: 0.50
+  # Panel C states the reversed-drive balance: the Coulomb repulsion vector
+  # originates at a representative trapped charge carried by the film.
+  - id: panelC-coulomb-arrow-starts-on-specimen
+    element_a:
+      source_line: 241
+      matched_text: '\draw[forceAway] (panel-c-force-origin)--(panel-c-coulomb-head)'
+      kind: line
+    element_b:
+      source_line: 208
+      matched_text: 'controls (1.43,3.45) and (1.00,2.25)'
+      kind: curve
+    must_touch: true
+  # Panel B is the source-off state, and it only reads as source-off because
+  # the GND lead is visibly off the specimen. Closing that gap puts the film
+  # back on a grounded conductor, which is the opposite claim.
+  - id: panelB-lifted-lead-clear-of-specimen
+    element_a:
+      source_line: 145
+      matched_text: '\draw[wire] (1.22,4.66)--(1.46,4.58)'
+      kind: line
+    element_b:
+      source_line: 149
+      matched_text: 'controls (1.69,3.45) and (1.75,2.30)'
+      kind: curve
+    min_clearance_cm: 0.50
 
 panels:
   - id: A

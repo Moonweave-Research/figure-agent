@@ -751,6 +751,13 @@ DECLARED_CLEARANCE_CM = {
     ("fig5_cantilever_actuation_artifact_v2", "panelD-extrapolated-tail-clear-of-time-axis"): 0.1,
     ("fig5_cantilever_actuation_artifact_v2", "panelD-floating-rail-clear-of-plateau-trace"): 0.12,
     ("fig5_cantilever_actuation_artifact_v2", "panelD-recovery-leader-clear-of-time-axis"): 0.28,
+    ("fig5_cantilever_actuation_artifact_v2", "panelA-attraction-arrow-starts-on-specimen"): 0.0,
+    (
+        "fig5_cantilever_actuation_artifact_v2",
+        "panelA-attraction-arrow-clear-of-drive-electrode",
+    ): 0.58,
+    ("fig5_cantilever_actuation_artifact_v2", "panelC-coulomb-arrow-starts-on-specimen"): 0.0,
+    ("fig5_cantilever_actuation_artifact_v2", "panelB-lifted-lead-clear-of-specimen"): 0.577754,
 }
 
 
