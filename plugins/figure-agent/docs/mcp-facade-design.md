@@ -4,6 +4,10 @@ Status: draft approved for planning
 Date: 2026-06-07
 Target: figure-agent 0.10.x after the 0.9.3 Cowork plugin package
 
+> This is a 2026-06-07 design record, not a tool reference. It names 6 tools;
+> the server now advertises 30. For the current list, read the operator surface
+> inventory in `docs/figure-agent.md`, which a test binds to the live registry.
+
 ## Current State
 
 figure-agent is currently a Claude/Cowork plugin with a stable CLI core:

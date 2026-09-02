@@ -28,6 +28,16 @@ classes:
 rules:
   - path: docs/figure-agent.md
     class: authority
+  # Shipped by scripts/package_cowork_plugin.py from the plugin root, so they
+  # reach an installed bundle and must carry a class like any governed document.
+  - paths:
+      - .mcp.json
+      - AGENTS.md
+      - CHANGELOG.md
+      - README.md
+      - pyproject.toml
+      - uv.lock
+    class: reference
   - paths:
       - docs/architecture-overview.md
       - docs/authoring-rules-project.md
