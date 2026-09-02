@@ -437,6 +437,7 @@ def test_check_visual_clash_json_payload_uses_machine_readable_metrics(tmp_path:
             }
         ],
         "total": 1,
+        "tex_binding": "not_requested",
     }
 
 
@@ -723,9 +724,7 @@ def test_promotion_tier_demotes_one_sided_path_proximity() -> None:
     image = Image.new("RGB", (200, 200), "white")
     bbox = (80, 80, 120, 120)
     ImageDraw.Draw(image).line((123, 75, 123, 125), fill="black", width=2)
-    issue = check_visual_clash.VisualIssue(
-        "text_on_path", "V", "dark=0.050, edge=0.010", bbox
-    )
+    issue = check_visual_clash.VisualIssue("text_on_path", "V", "dark=0.050, edge=0.010", bbox)
 
     assert check_visual_clash.classify_promotion_tier(image, issue) == (
         "report_only",
@@ -737,9 +736,7 @@ def test_promotion_tier_keeps_opposing_side_through_path_blocking() -> None:
     image = Image.new("RGB", (200, 200), "white")
     bbox = (80, 80, 120, 120)
     ImageDraw.Draw(image).line((75, 100, 125, 100), fill="black", width=2)
-    issue = check_visual_clash.VisualIssue(
-        "text_on_path", "V", "dark=0.050, edge=0.010", bbox
-    )
+    issue = check_visual_clash.VisualIssue("text_on_path", "V", "dark=0.050, edge=0.010", bbox)
 
     assert check_visual_clash.is_one_sided_proximity(image, issue) is False
     assert check_visual_clash.classify_promotion_tier(image, issue) == ("blocking", None)
@@ -751,9 +748,7 @@ def test_promotion_tier_demotes_legible_reversed_display_label() -> None:
     draw = ImageDraw.Draw(image)
     draw.rectangle((40, 40, 160, 160), fill=(50, 50, 50))
     draw.rectangle((96, 84, 103, 116), fill="white")
-    issue = check_visual_clash.VisualIssue(
-        "text_on_path", "V", "dark=0.800, edge=0.014", bbox
-    )
+    issue = check_visual_clash.VisualIssue("text_on_path", "V", "dark=0.800, edge=0.014", bbox)
 
     assert check_visual_clash.classify_promotion_tier(image, issue) == (
         "report_only",
