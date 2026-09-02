@@ -227,6 +227,10 @@ def summarize_fixture(
 
 
 def check_fixture(example_dir: Path) -> dict[str, Any]:
+    # Review-only fixtures (spec + briefing, no <name>.tex) never compile, so
+    # there is no report to budget; say so instead of demanding one.
+    if not (example_dir / f"{example_dir.name}.tex").is_file():
+        return {"fixture": example_dir.name, "total": None, "cap": None, "status": "no_tex_source"}
     summary = summarize_fixture(example_dir)
     name = str(summary.get("fixture") or example_dir.name)
     visual_clash = summary.get("visual_clash")
@@ -333,6 +337,12 @@ def main() -> int:
         return 1
 
     for result in results:
+        if result["status"] == "no_tex_source":
+            print(
+                f"SKIP {result['fixture']}: no {result['fixture']}.tex source, "
+                "nothing compiled to budget"
+            )
+            continue
         print(
             f"OK {result['fixture']}: visual_clash total {result['total']} <= "
             f"cap {result['cap']}"

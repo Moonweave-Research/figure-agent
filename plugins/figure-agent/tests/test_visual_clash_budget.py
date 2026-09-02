@@ -21,6 +21,7 @@ def _write_fixture_at(fixture: Path, *, cap: int | None, total: int) -> Path:
     if cap is not None:
         spec += f"visual_clash_cap: {cap}\n"
     (fixture / "spec.yaml").write_text(spec, encoding="utf-8")
+    (fixture / f"{fixture.name}.tex").write_text("% compiled source\n", encoding="utf-8")
     (fixture / "build" / "visual_clash.json").write_text(
         json.dumps(
             {
@@ -175,6 +176,7 @@ def test_visual_clash_budget_fails_when_report_is_missing(tmp_path: Path) -> Non
     fixture = tmp_path / "examples" / "demo"
     fixture.mkdir(parents=True)
     (fixture / "spec.yaml").write_text("name: demo\nvisual_clash_cap: 0\n", encoding="utf-8")
+    (fixture / "demo.tex").write_text("% compiled source\n", encoding="utf-8")
 
     try:
         budget.check_fixture(fixture)
@@ -182,6 +184,33 @@ def test_visual_clash_budget_fails_when_report_is_missing(tmp_path: Path) -> Non
         assert "missing build/visual_clash.json" in str(exc)
     else:
         raise AssertionError("expected VisualClashBudgetError")
+
+
+def test_visual_clash_budget_skips_review_only_fixture_without_tex_source(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(tmp_path, cap=2, total=1)
+    review_only = examples / "composition_review"
+    review_only.mkdir()
+    (review_only / "spec.yaml").write_text(
+        "name: composition_review\nvisual_clash_cap: 0\n", encoding="utf-8"
+    )
+    (review_only / "briefing.md").write_text("review-only\n", encoding="utf-8")
+
+    results = budget.check_targets([examples])
+
+    assert results == [
+        {"fixture": "composition_review", "total": None, "cap": None, "status": "no_tex_source"},
+        {"fixture": "demo", "total": 1, "cap": 2, "status": "ok"},
+    ]
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["check_visual_clash_budget.py", "examples"])
+    assert budget.main() == 0
+    out = capsys.readouterr().out
+    assert "SKIP composition_review: no composition_review.tex source" in out
+    assert "OK demo: visual_clash total 1 <= cap 2" in out
 
 
 def test_visual_clash_budget_checks_all_fixture_dirs_under_examples(tmp_path: Path) -> None:
