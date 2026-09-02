@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -12,11 +13,8 @@ import golden_acceptance  # noqa: E402
 from test_evidence_index import _fixture  # noqa: E402
 
 
-def _write_release_decision_record(plugin_root: Path) -> Path:
-    records_root = plugin_root / "docs" / "decision-records" / "tests"
-    records_root.mkdir(parents=True, exist_ok=True)
-    path = records_root / "candidate_demo_accept_current_generated_export.json"
-    path.write_text(
+def _decision_record_text(*, packet_timestamp: str, note: str) -> str:
+    return (
         json.dumps(
             {
                 "schema": "figure-agent.human-decision-record.v1",
@@ -24,20 +22,61 @@ def _write_release_decision_record(plugin_root: Path) -> Path:
                 "packet_schema": "figure-agent.release-decision-packet.v1",
                 "packet_path": "docs/decision-packets/candidate_demo.json",
                 "packet_recommendation": "accept_current_generated_export",
-                "packet_timestamp": "2026-07-01T00:00:00Z",
+                "packet_timestamp": packet_timestamp,
                 "decision_kind": "accept_current_generated_export",
                 "agent_recommendation": "Record explicit acceptance separately.",
                 "human_decision": "accept_current_generated_export",
-                "human_note": "Authorizes naming the release operation only.",
+                "human_note": note,
                 "follow_up": {"implementation_slice": "run explicit release operation"},
                 "mutation_boundary": "no_source_mutation",
             },
             indent=2,
             sort_keys=True,
         )
-        + "\n",
+        + "\n"
+    )
+
+
+def _commit_everything(plugin_root: Path) -> None:
+    """An authorization must be committed, so the tmp plugin root is a real repo."""
+    subprocess.run(["git", "init", "-q"], cwd=plugin_root, check=True, capture_output=True)
+    subprocess.run(["git", "add", "-A"], cwd=plugin_root, check=True, capture_output=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.email=t@example.com",
+            "-c",
+            "user.name=Test",
+            "commit",
+            "-q",
+            "--allow-empty",
+            "-m",
+            "authorization",
+        ],
+        cwd=plugin_root,
+        check=True,
+        capture_output=True,
+    )
+
+
+def _write_release_decision_record(
+    plugin_root: Path,
+    *,
+    stem: str = "candidate_demo_accept_current_generated_export",
+    packet_timestamp: str = "2026-07-01T00:00:00Z",
+    note: str = "Authorizes naming the release operation only.",
+    commit: bool = True,
+) -> Path:
+    records_root = plugin_root / "docs" / "decision-records" / "tests"
+    records_root.mkdir(parents=True, exist_ok=True)
+    path = records_root / f"{stem}.json"
+    path.write_text(
+        _decision_record_text(packet_timestamp=packet_timestamp, note=note),
         encoding="utf-8",
     )
+    if commit:
+        _commit_everything(plugin_root)
     return plugin_root
 
 
@@ -222,10 +261,14 @@ def test_closeout_accept_allows_first_time_tracked_golden_acceptance(
                 },
                 {
                     "id": "release",
-                    "state": "blocked",
-                    "reason": "publication gate not evaluated (accepted is not declared)",
+                    "state": "passed",
+                    "reason": "publication gate passed",
                     "command": None,
-                    "evidence": {"release_ready": False},
+                    "evidence": {
+                        "release_ready": False,
+                        "publication_gate_state": "PASS",
+                        "publication_gate_failures": [],
+                    },
                 },
                 {
                     "id": "loop_rerun",
@@ -501,8 +544,12 @@ def test_pre_acceptance_waivers_are_keyed_on_evidence_not_reason_prose() -> None
             {
                 "id": "release",
                 "state": "blocked",
-                "reason": "publication gate not evaluated (accepted is not declared)",
-                "evidence": {"release_ready": False},
+                "reason": "release is waiting on the acceptance itself",
+                "evidence": {
+                    "release_ready": False,
+                    "publication_gate_state": "PASS",
+                    "publication_gate_failures": [],
+                },
             },
             {
                 "id": "loop_rerun",
@@ -516,6 +563,39 @@ def test_pre_acceptance_waivers_are_keyed_on_evidence_not_reason_prose() -> None
     waived = golden_acceptance._allowed_pre_acceptance_blocks(readiness)
 
     assert [check["id"] for check in waived] == ["release", "loop_rerun"]
+
+
+def test_release_blocked_by_the_publication_gate_is_never_waived() -> None:
+    """`release_ready is False` alone waived every blocked release check,
+    including one blocked because no human attested, so the check could never
+    block an accept."""
+
+    def readiness(gate_state: str, failures: list[dict[str, str]]) -> dict:
+        return {
+            "checks": [
+                {
+                    "id": "release",
+                    "state": "blocked",
+                    "reason": f"publication gate state is {gate_state}",
+                    "evidence": {
+                        "release_ready": False,
+                        "publication_gate_state": gate_state,
+                        "publication_gate_failures": failures,
+                    },
+                }
+            ]
+        }
+
+    forged = [{"code": "invalid_human_attestation"}]
+    assert (
+        golden_acceptance._allowed_pre_acceptance_blocks(readiness("PROVENANCE_REQUIRED", forged))
+        == []
+    )
+    assert (
+        golden_acceptance._allowed_pre_acceptance_blocks(readiness("HUMAN_ACCEPTANCE_REQUIRED", []))
+        == []
+    )
+    assert golden_acceptance._allowed_pre_acceptance_blocks(readiness("NOT_APPLICABLE", [])) == []
 
 
 def test_stale_loop_record_is_not_waived_without_export_evidence() -> None:
@@ -575,9 +655,7 @@ def test_acceptance_names_the_authorization_it_rode(
         (fixture / "build" / "closeout" / "golden_acceptance.json").read_text(encoding="utf-8")
     )
     authorization = payload["release_authorization"]
-    assert authorization["path"].endswith(
-        "candidate_demo_accept_current_generated_export.json"
-    )
+    assert authorization["path"].endswith("candidate_demo_accept_current_generated_export.json")
     assert authorization["sha256"].startswith("sha256:")
     assert authorization["packet_timestamp"] == "2026-07-01T00:00:00Z"
 
@@ -603,3 +681,156 @@ def test_reject_records_no_authorization_when_none_exists(tmp_path: Path) -> Non
         (fixture / "build" / "closeout" / "golden_acceptance.json").read_text(encoding="utf-8")
     )
     assert payload["release_authorization"] is None
+
+
+def _accept(workspace: Path, *, rationale: str = "Reviewed tracked golden export.") -> dict:
+    return golden_acceptance.write_golden_acceptance(
+        "candidate_demo",
+        decision="accept",
+        reviewer="local-user",
+        rationale=rationale,
+        accept_golden=True,
+        workspace_root=workspace,
+        plugin_root=workspace,
+    )
+
+
+def _accept_ready_fixture(
+    workspace: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    pdf: bytes = b"pdf",
+) -> Path:
+    fixture = _fixture(workspace)
+    (fixture / "critique.md").write_text("critique\n", encoding="utf-8")
+    (fixture / "exports").mkdir()
+    (fixture / "exports" / "candidate_demo.pdf").write_bytes(pdf)
+    monkeypatch.setattr(
+        golden_acceptance.closeout_readiness,
+        "build_closeout_readiness",
+        lambda *args, **kwargs: _ready_payload(),
+    )
+    return fixture
+
+
+def test_an_uncommitted_decision_record_cannot_authorize_an_accept(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An agent that can write JSON could otherwise author its own release
+    authorization: the review wrote docs/decision-records/adversarial/*.json
+    and the real closeout-accept honoured it."""
+    workspace = tmp_path / "workspace"
+    _accept_ready_fixture(workspace, monkeypatch)
+    _commit_everything(workspace)
+    _write_release_decision_record(workspace, commit=False)
+
+    with pytest.raises(
+        golden_acceptance.GoldenAcceptanceError,
+        match="release_decision_record_required",
+    ):
+        _accept(workspace)
+
+
+def test_committing_the_same_decision_record_authorizes_the_accept(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Positive control for the test above: only the commit differs."""
+    workspace = tmp_path / "workspace"
+    fixture = _accept_ready_fixture(workspace, monkeypatch)
+    _write_release_decision_record(workspace, commit=True)
+
+    _accept(workspace)
+
+    payload = json.loads(
+        (fixture / "build" / "closeout" / "golden_acceptance.json").read_text(encoding="utf-8")
+    )
+    assert payload["release_authorization"]["packet_timestamp"] == "2026-07-01T00:00:00Z"
+
+
+def test_the_newest_authorization_wins_not_the_lexicographically_first(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Records live in date-prefixed directories, so sorted(glob(...)) named
+    the oldest authorization in the receipt — the opposite of the intent."""
+    workspace = tmp_path / "workspace"
+    fixture = _accept_ready_fixture(workspace, monkeypatch)
+    _write_release_decision_record(
+        workspace,
+        stem="aaa_first_alphabetically",
+        packet_timestamp="2026-07-01T00:00:00Z",
+        commit=False,
+    )
+    _write_release_decision_record(
+        workspace,
+        stem="zzz_last_alphabetically",
+        packet_timestamp="2026-08-30T00:00:00Z",
+        commit=True,
+    )
+
+    _accept(workspace)
+
+    payload = json.loads(
+        (fixture / "build" / "closeout" / "golden_acceptance.json").read_text(encoding="utf-8")
+    )
+    authorization = payload["release_authorization"]
+    assert authorization["packet_timestamp"] == "2026-08-30T00:00:00Z"
+    assert authorization["path"].endswith("zzz_last_alphabetically.json")
+
+
+def test_one_authorization_cannot_accept_a_second_different_export(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The review accepted fig3's PDF as fig5 by swapping the export and
+    re-running the accept: release_authorization stayed byte-identical while
+    the export hash moved."""
+    workspace = tmp_path / "workspace"
+    fixture = _accept_ready_fixture(workspace, monkeypatch)
+    _write_release_decision_record(workspace)
+
+    _accept(workspace)
+    receipt = fixture / "build" / "closeout" / "golden_acceptance.json"
+    first_export = json.loads(receipt.read_text(encoding="utf-8"))["exports"]["pdf"]
+    (fixture / "exports" / "candidate_demo.pdf").write_bytes(b"a different figure entirely")
+
+    with pytest.raises(
+        golden_acceptance.GoldenAcceptanceError,
+        match="release_authorization_predates_export_change",
+    ):
+        _accept(workspace)
+
+    payload = json.loads(receipt.read_text(encoding="utf-8"))
+    assert payload["exports"]["pdf"] == first_export
+
+
+def test_a_newer_authorization_can_accept_the_changed_export(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Positive control: the same second accept succeeds once a human signs
+    again after the export changed."""
+    workspace = tmp_path / "workspace"
+    fixture = _accept_ready_fixture(workspace, monkeypatch)
+    _write_release_decision_record(workspace)
+
+    _accept(workspace)
+    (fixture / "exports" / "candidate_demo.pdf").write_bytes(b"a different figure entirely")
+    _write_release_decision_record(
+        workspace,
+        stem="zzz_signed_after_the_export_changed",
+        packet_timestamp="2099-01-01T00:00:00Z",
+        commit=True,
+    )
+
+    _accept(workspace)
+
+    payload = json.loads(
+        (fixture / "build" / "closeout" / "golden_acceptance.json").read_text(encoding="utf-8")
+    )
+    assert payload["release_authorization"]["packet_timestamp"] == "2099-01-01T00:00:00Z"
+    assert payload["exports"]["pdf"] == golden_acceptance._sha256_file(
+        fixture / "exports" / "candidate_demo.pdf"
+    )

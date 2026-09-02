@@ -2,9 +2,10 @@
 
 Reads exports/ sub-state for `<name>` and dispatches:
 
-  MISSING / STALE  -> regenerate (PDF copy, dvisvgm SVG, pdftocairo TIFF, rsvg-convert PNG)
-  FRESH            -> no-op
-  TRACKED_GOLDEN   -> skip with warning. --force-golden overrides.
+  MISSING / STALE      -> regenerate (PDF copy, dvisvgm SVG, pdftocairo TIFF, rsvg-convert PNG)
+  FRESH                -> no-op
+  TRACKED_GOLDEN       -> skip with warning. --force-golden overrides.
+  GOLDEN_UNVERIFIABLE  -> refuse with rc 1. --force-golden overrides.
 
 Usage: uv run python scripts/run_export.py <name> [--force-golden] [--skip-critique]
 """
@@ -45,6 +46,7 @@ from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
 from critique_lint import lint_critique  # noqa: E402
 from export_freshness import (  # noqa: E402
     EXPORT_FRESH,
+    EXPORT_GOLDEN_UNVERIFIABLE,
     EXPORT_TRACKED_GOLDEN,
     compute_export_state,
 )
@@ -132,9 +134,7 @@ def _export_inputs(example_dir: Path, name: str) -> tuple[Path, Path]:
             "current candidate is invalid: " + str(candidate.get("reason") or "unknown")
         )
     evidence_paths = candidate.get("evidence_paths")
-    render_relative = (
-        evidence_paths.get("render_pdf") if isinstance(evidence_paths, dict) else None
-    )
+    render_relative = evidence_paths.get("render_pdf") if isinstance(evidence_paths, dict) else None
     source_relative = candidate.get("source_path")
     if not isinstance(source_relative, str) or not isinstance(render_relative, str):
         raise ValueError("current candidate source/render evidence is incomplete")
@@ -148,9 +148,7 @@ def _export_inputs(example_dir: Path, name: str) -> tuple[Path, Path]:
     return source_path, build_pdf
 
 
-def _live_tex_blockers(
-    example_dir: Path, name: str, tex_path: Path | None = None
-) -> list[dict]:
+def _live_tex_blockers(example_dir: Path, name: str, tex_path: Path | None = None) -> list[dict]:
     """Re-run the tex-assertion check against the current source at export time.
 
     Never reads build/tex_assertions.json: it is gitignored (absent on a fresh
@@ -330,6 +328,18 @@ def main(
             file=sys.stderr,
         )
         return 0  # not an error — golden protection is the success path
+
+    if state == EXPORT_GOLDEN_UNVERIFIABLE and not args.force_golden:
+        # Unlike TRACKED_GOLDEN this is an unhealthy environment, not a routine
+        # skip: git could not say whether exports/ is committed, so regenerating
+        # might destroy a golden artifact.
+        print(
+            f"run_export.py: git could not say whether exports/ for {args.name} is "
+            f"a committed golden artifact; refusing to overwrite it. "
+            f"Repair git, or use --force-golden.",
+            file=sys.stderr,
+        )
+        return 1
 
     # Regenerate path requires build/PDF.
     if not build_pdf.is_file():
