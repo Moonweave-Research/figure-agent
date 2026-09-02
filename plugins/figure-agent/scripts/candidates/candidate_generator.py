@@ -339,6 +339,11 @@ def _bbox_center_y(bbox: Any) -> float | None:
     return (float(bbox[1]) + float(bbox[3])) / 2.0
 
 
+def _issue_movable(issue: dict[str, Any]) -> str:
+    """Which declared side a repair may move; `element_a` unless declared `b`."""
+    return "b" if issue.get("movable") == "b" else "a"
+
+
 def _vector_clearance_dy_cm(issue: dict[str, Any]) -> float | None:
     if issue.get("relation") != "min_clearance_cm":
         return None
@@ -358,7 +363,10 @@ def _vector_clearance_dy_cm(issue: dict[str, Any]) -> float | None:
     element_b_y = _bbox_center_y(issue.get("element_b_bbox_cm"))
     if element_a_y is None or element_b_y is None:
         return None
-    direction = 1.0 if element_b_y >= element_a_y else -1.0
+    movable = _issue_movable(issue)
+    mover_y = element_a_y if movable == "a" else element_b_y
+    fixed_y = element_b_y if movable == "a" else element_a_y
+    direction = 1.0 if mover_y >= fixed_y else -1.0
     # Add a small cushion beyond the measured deficit while staying inside the
     # primitive's bounded 0.10 cm movement cap.
     return direction * min(deficit + 0.02, bounded_coordinate_offset.MAX_TRANSLATE_CM)
@@ -529,7 +537,8 @@ def _vector_clearance_candidates(
         if issue.get("promotion_tier") != "review_queue":
             continue
         issue_id = str(issue.get("id") or "vector_clearance")
-        if issue.get("element_b_kind") != "line":
+        movable = _issue_movable(issue)
+        if issue.get(f"element_{movable}_kind") != "line":
             curve_candidate = _vector_curve_marker_candidate(
                 name=name,
                 issue=issue,
@@ -559,7 +568,7 @@ def _vector_clearance_candidates(
             supported_count += 1
             candidates.append(reroute_candidate)
         dy_cm = _vector_clearance_dy_cm(issue)
-        line_number = issue.get("element_b_source_line")
+        line_number = issue.get(f"element_{movable}_source_line")
         if (
             dy_cm is None
             or isinstance(line_number, bool)
@@ -655,18 +664,21 @@ def _vector_reroute_candidate(
 ) -> dict[str, Any] | None:
     """Detour variant for a straight vector: reroute over/under the obstacle.
 
-    Restricted to circle obstacles: they are the only review-queue kind the
-    detector measures segment-wise against a line. Marker and curve obstacles
-    are measured bbox-to-bbox, and a detour never grows that distance, so a
-    reroute against them could not verify honestly.
+    The declared movable side is the path that detours; the other side is the
+    obstacle. Restricted to circle obstacles: they are the only review-queue
+    kind the detector measures segment-wise against a line. Marker and curve
+    obstacles are measured bbox-to-bbox, and a detour never grows that
+    distance, so a reroute against them could not verify honestly.
     """
     if issue.get("relation") != "min_clearance_cm":
         return None
-    if issue.get("element_a_kind") != "circle":
+    movable = _issue_movable(issue)
+    obstacle = "b" if movable == "a" else "a"
+    if issue.get(f"element_{obstacle}_kind") != "circle":
         return None
     required = issue.get("required_clearance_cm")
-    obstacle_bbox = issue.get("element_a_bbox_cm")
-    line_number = issue.get("element_b_source_line")
+    obstacle_bbox = issue.get(f"element_{obstacle}_bbox_cm")
+    line_number = issue.get(f"element_{movable}_source_line")
     if (
         isinstance(required, bool)
         or not isinstance(required, int | float)

@@ -31,6 +31,10 @@ semantic_assertions:
   target_panel: E
 vector_clearance_checks:
 - id: panelE-deep-peak-caliper-min-clearance
+  # The measured peak is the physics; the caliper tick is the annotation, so a
+  # repair moves the tick. This declaration predates the `movable` field and
+  # was authored obstacle-first, hence the explicit `b`.
+  movable: b
   element_a:
     source_line: 1781
     matched_text: "(6.48, 0.4) .. controls (6.66, 0.4) and (6.66, 1.23)"

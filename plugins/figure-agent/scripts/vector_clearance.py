@@ -45,6 +45,14 @@ _BEZIER_RE = re.compile(
     rf"{_POINT_RE}\s*\.\.\s*controls\s*{_POINT_RE}\s*and\s*{_POINT_RE}\s*\.\.\s*{_POINT_RE}",
     re.DOTALL,
 )
+# `\coordinate (name) at (x,y);` — the only definition form resolved. A name
+# defined from another name or from a calc expression stays unresolved, so a
+# check that selects it fails as `selector_missing` instead of measuring a
+# guessed position.
+_COORDINATE_DEF_RE = re.compile(
+    rf"\\coordinate(?:\[[^\]]*\])?\s*\(\s*(?P<name>[A-Za-z][^(),]*?)\s*\)\s*at\s*{_POINT_RE}\s*;"
+)
+_COORDINATE_REF_RE = re.compile(r"\(\s*(?P<name>[A-Za-z][^(),]*?)\s*\)")
 
 
 class VectorClearanceError(ValueError):
@@ -138,17 +146,54 @@ def _parse_foreach_pairs(raw: str) -> list[tuple[str, str]]:
     return pairs
 
 
+def collect_named_coordinates(tex_text: str) -> dict[str, str]:
+    """Return `\\coordinate` names mapped to their literal `(x,y)` token.
+
+    A name defined twice with different points is dropped: measuring against
+    one of two candidate positions would be a guess, and a dropped name simply
+    leaves the path unparsed, which a declaration reports as selector_missing.
+    """
+    coordinates: dict[str, str] = {}
+    conflicting: set[str] = set()
+    for match in _COORDINATE_DEF_RE.finditer(tex_text):
+        name = str(match.group("name"))
+        point = f"({match.group(2)},{match.group(3)})"
+        if name in coordinates and coordinates[name] != point:
+            conflicting.add(name)
+        coordinates[name] = point
+    for name in conflicting:
+        del coordinates[name]
+    return coordinates
+
+
+def _resolve_named_coordinates(text: str, coordinates: dict[str, str]) -> str:
+    """Substitute known `\\coordinate` names with their literal point token."""
+    if not coordinates:
+        return text
+
+    def _replace(match: re.Match[str]) -> str:
+        return coordinates.get(str(match.group("name")), match.group(0))
+
+    return _COORDINATE_REF_RE.sub(_replace, text)
+
+
 def extract_vector_elements(tex_text: str) -> list[dict[str, Any]]:
-    """Return literal TikZ vector elements in source cm coordinates."""
+    """Return literal TikZ vector elements in source cm coordinates.
+
+    Named `\\coordinate` endpoints are resolved to their literal points before
+    parsing, so a path the author wrote as `(name)--(other)` is measured; the
+    element still records the source token the author wrote as `tex_anchor`.
+    """
+    coordinates = collect_named_coordinates(tex_text)
     elements: list[dict[str, Any]] = []
     for operation in _iter_operations(tex_text):
-        text = str(operation["text"])
+        text = _resolve_named_coordinates(str(operation["text"]), coordinates)
         source_line = int(operation["source_line"])
         base = {
             "source_line": source_line,
             "command": operation["command"],
             "options": operation["options"],
-            "tex_anchor": text.strip(),
+            "tex_anchor": str(operation["text"]).strip(),
         }
         for match in _CHAIN_RE.finditer(text):
             points = [(float(x), float(y)) for x, y in _POINT_ONLY_RE.findall(match.group(0))]
@@ -229,11 +274,17 @@ def parse_vector_clearance_checks(spec: dict[str, Any]) -> list[dict[str, Any]]:
                 f"vector_clearance_checks[{index}] must declare exactly one relation"
             )
         relation = relation_keys[0]
+        movable = item.get("movable", "a")
+        if movable not in {"a", "b"}:
+            raise VectorClearanceError(
+                f"vector_clearance_checks[{index}].movable must be 'a' or 'b'"
+            )
         parsed: dict[str, Any] = {
             "id": check_id.strip(),
             "element_a": element_a,
             "element_b": element_b,
             "relation": relation,
+            "movable": movable,
         }
         if relation == "min_clearance_cm":
             value = item[relation]
@@ -508,6 +559,9 @@ def check_vector_clearance(tex_text: str, checks: list[dict[str, Any]]) -> list[
             "id": check["id"],
             "status": "violated",
             "relation": relation,
+            # Which side a repair may move; the other side is the body, axis or
+            # obstacle the declaration measures against.
+            "movable": check.get("movable", "a"),
             "element_a": element_a["id"],
             "element_b": element_b["id"],
             "element_a_kind": element_a["kind"],
