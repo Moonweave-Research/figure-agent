@@ -26,6 +26,10 @@ jobs:
       PYTHONPATH: ${{ github.workspace }}/plugins/figure-agent/scripts:${{ github.workspace }}/plugins/figure-agent/scripts/checks
     steps:
       - uses: actions/checkout@v5
+        with:
+          # History-pinned render tests replay recorded commits; a shallow
+          # clone fails them with CalledProcessError before any figure is judged.
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
