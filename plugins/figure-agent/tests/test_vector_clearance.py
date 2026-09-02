@@ -1,14 +1,24 @@
 from __future__ import annotations
 
+import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import vector_clearance  # noqa: E402
+
+DECLARING_FIXTURES = (
+    "fig2_charge_transport_mechanism",
+    "fig5_cantilever_actuation_artifact_v2",
+    "fig1_overview_v5f_art_direction_001_vault",
+)
 
 
 def test_parse_absent_vector_clearance_checks_is_empty() -> None:
@@ -472,3 +482,88 @@ def test_polyline_circle_clearance_uses_nearest_segment() -> None:
     assert [issue["id"] for issue in violated] == ["VC-circ"]
     # nearest segment is the middle one: 1.0 - 0.5 - 0.1 = 0.4 < 0.5
     assert violated[0]["measured_clearance_cm"] == pytest.approx(0.4, abs=1e-6)
+
+
+DECLARED_CHECK_TEX = r"""\documentclass[border=2pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\begin{document}
+\begin{tikzpicture}
+\draw[line width=0.5pt] (0,0)--(2,0);
+\draw[line width=0.5pt] (0,0.4)--(2,0.4);
+\end{tikzpicture}
+\end{document}
+"""
+
+DECLARED_CHECK_SPEC = {
+    "name": "vector_clearance_declared_demo",
+    "style_profile": "polymer-default",
+    "panels": [],
+    "vector_clearance_checks": [
+        {
+            "id": "rails-stay-apart",
+            "element_a": {
+                "source_line": 5,
+                "matched_text": "(0,0)--(2,0)",
+                "kind": "line",
+            },
+            "element_b": {
+                "source_line": 6,
+                "matched_text": "(0,0.4)--(2,0.4)",
+                "kind": "line",
+            },
+            "min_clearance_cm": 0.2,
+        }
+    ],
+}
+
+
+def _compile_declared_demo(workspace: Path, spec: dict) -> dict:
+    fixture = workspace / "examples" / "vector_clearance_declared_demo"
+    fixture.mkdir(parents=True, exist_ok=True)
+    (fixture / "spec.yaml").write_text(yaml.safe_dump(spec, sort_keys=False), encoding="utf-8")
+    tex_path = fixture / "vector_clearance_declared_demo.tex"
+    tex_path.write_text(DECLARED_CHECK_TEX, encoding="utf-8")
+
+    result = subprocess.run(
+        ["bash", "scripts/compile.sh", str(tex_path)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+    report = fixture / "build" / "vector_clearance.json"
+    assert report.is_file(), result.stdout + result.stderr
+    return json.loads(report.read_text(encoding="utf-8"))
+
+
+@pytest.mark.render
+def test_compile_measures_a_declared_clearance_check(tmp_path: Path) -> None:
+    """A declared check makes the detector measure something; without the
+    declaration the same compile reports `checked: 0`, which is the state every
+    canonical fixture was in before its spec declared any pair."""
+    declared = _compile_declared_demo(tmp_path / "declared", DECLARED_CHECK_SPEC)
+
+    assert declared["checked"] == 1
+    assert declared["issues"] == []
+
+    undeclared_spec = {
+        key: value for key, value in DECLARED_CHECK_SPEC.items() if key != "vector_clearance_checks"
+    }
+    undeclared = _compile_declared_demo(tmp_path / "undeclared", undeclared_spec)
+
+    assert undeclared["checked"] == 0
+
+
+@pytest.mark.parametrize("fixture_name", DECLARING_FIXTURES)
+def test_declared_fixture_checks_parse_and_bind(fixture_name: str) -> None:
+    """Every declaring fixture must parse against the schema, resolve each
+    selector to exactly one live element, and hold its declared relations."""
+    fixture = ROOT / "examples" / fixture_name
+    spec = yaml.safe_load((fixture / "spec.yaml").read_text(encoding="utf-8"))
+    tex = (fixture / f"{fixture_name}.tex").read_text(encoding="utf-8")
+
+    checks = vector_clearance.parse_vector_clearance_checks(spec)
+
+    assert checks, f"{fixture_name} declares no vector_clearance_checks"
+    assert vector_clearance.check_vector_clearance(tex, checks) == []
