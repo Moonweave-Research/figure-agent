@@ -17,6 +17,7 @@ import fig_driver  # noqa: E402
 import fig_driver_guidance  # noqa: E402
 import render_input_manifest  # noqa: E402
 import status as status_mod  # noqa: E402
+from fig_loop_records import run_input_hashes  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -125,6 +126,7 @@ def _write_loop_run(
         "run_dir": str(run_dir),
         "final_stop_reason": stop_reason,
         "iterations": ["iteration_001.json"],
+        **run_input_hashes(repo_root / "examples" / name, name),
     }
     iteration = {
         "iteration": 1,

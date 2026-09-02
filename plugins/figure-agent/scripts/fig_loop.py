@@ -65,7 +65,7 @@ from fig_loop_patch_evidence import (  # noqa: E402
     patch_evidence_baseline,
     post_patch_evidence_verdict,
 )
-from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
+from fig_loop_records import json_stdout_summary, run_input_hashes, write_json  # noqa: E402
 from fig_loop_stop_diagnoser import diagnose_run as build_stop_diagnosis  # noqa: E402
 from fig_loop_stop_router import route_stop_cause  # noqa: E402
 from inputs import parse_spec  # noqa: E402
@@ -737,6 +737,7 @@ def _run_loop_after_admission(
         "commit": _git_value(repo_root, ("rev-parse", "HEAD")),
         "iterations": ["iteration_001.json"],
         "command_results": [],
+        **run_input_hashes(example_dir, name),
     }
 
     write_json(run_dir / "iteration_001.json", iteration)
