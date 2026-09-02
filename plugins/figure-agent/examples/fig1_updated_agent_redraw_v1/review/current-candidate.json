@@ -2,12 +2,12 @@
   "schema": "figure-agent.current-candidate-pointer.v1",
   "fixture": "fig1_updated_agent_redraw_v1",
   "candidate_id": "comparable-v3-repair-c5",
-  "candidate_root": "review/failure-first/comparable-v3-repair-c5",
-  "source_path": "repaired.tex",
+  "candidate_root": ".",
+  "source_path": "fig1_updated_agent_redraw_v1.tex",
   "source_sha256": "sha256:2f4f2e01b92606ab72984fa6fe0c67846ed295c7a983f7315d6fbdb54899ae65",
   "evidence": {
-    "render_pdf": "build/repaired.pdf",
-    "render_png": "build/repaired.png",
+    "render_pdf": "build/fig1_updated_agent_redraw_v1.pdf",
+    "render_png": "build/fig1_updated_agent_redraw_v1.png",
     "strict_status": "build/strict_status.json",
     "print_size_contract": "build/print_size_contract.json",
     "physics_grounding": "build/physics_grounding.json",
@@ -15,6 +15,7 @@
     "label_path_proximity": "build/label_path_proximity.json",
     "visual_clash": "build/visual_clash.json"
   },
-  "promotion_state": "candidate_only",
+  "promotion_state": "promoted_to_canonical_root",
+  "promoted_from": "review/failure-first/comparable-v3-repair-c5/repaired.tex",
   "human_gate": "pending"
 }

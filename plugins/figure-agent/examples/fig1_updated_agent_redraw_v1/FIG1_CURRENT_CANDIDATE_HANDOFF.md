@@ -5,12 +5,14 @@
 This is the single working brief for redrawing or refining Fig1. It is a development baseline, not a publication-final claim.
 
 - **Active paper role:** Fig1, overview of structure and charge trapping in sulfur-rich poly(S-r-DIB).
-- **Working source:** `review/failure-first/comparable-v3-repair-c5/repaired.tex`.
-- **Working render:** `review/failure-first/comparable-v3-repair-c5/build/repaired.png`.
+- **Working source:** `fig1_updated_agent_redraw_v1.tex` at the fixture root.
+- **Working render:** `build/fig1_updated_agent_redraw_v1.png`.
 - **Machine pointer:** `review/current-candidate.json`. If it later disagrees with this document, the pointer wins and this handoff must be refreshed.
-- **Authority state:** `candidate_only`; human selection and publication acceptance are pending.
+- **Authority state:** `promoted_to_canonical_root`; human selection and publication acceptance are pending.
 
-Do not edit the historical v5f vault as the working source. It is the visual and narrative reference, not the active paper fixture. Do not promote this candidate merely because it compiles or passes deterministic checks.
+The fixture root was promoted byte-for-byte from `review/failure-first/comparable-v3-repair-c5/repaired.tex`, which is preserved as the promotion origin and must not be edited as the working source. Promotion moved the source only: it grants no acceptance, and passing compile or deterministic checks still does not make this a paper artifact.
+
+Do not edit the historical v5f vault as the working source. It is the visual and narrative reference, not the active paper fixture.
 
 ## The one-sentence story
 
@@ -91,11 +93,11 @@ The current baseline still needs human/master visual judgment. In particular, v5
 
 ## Edit and verification routine
 
-Work from the source path above, not from the fixture-root `.tex` or an old vault. From `plugins/figure-agent`:
+Work from the source path above, not from a preserved review child or an old vault. From `plugins/figure-agent`:
 
 ```bash
 FIGURE_AGENT_STRICT=1 bash scripts/compile.sh \
-  examples/fig1_updated_agent_redraw_v1/review/failure-first/comparable-v3-repair-c5/repaired.tex
+  examples/fig1_updated_agent_redraw_v1/fig1_updated_agent_redraw_v1.tex
 ./bin/fig-agent status fig1_updated_agent_redraw_v1 --json
 ```
 
