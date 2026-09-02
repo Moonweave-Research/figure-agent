@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import textwrap
 from pathlib import Path
 
@@ -288,6 +289,9 @@ def _doctor(argv: list[str]) -> int:
         print(f"bundle: {payload['bundle']['state']} ({paths.plugin_root})")
         print(f"workspace: {payload['workspace']['state']} ({paths.workspace_root})")
         print(f"dependencies: {deps['state']}")
+        print(f"compile_smoke: {deps['compile_smoke']['state']}")
+        if deps["compile_smoke"]["stderr_tail"]:
+            print(deps["compile_smoke"]["stderr_tail"])
         for item in payload["bundle"]["missing"]:
             print(f"missing bundle: {item}")
         for item in payload["workspace"]["missing"]:
@@ -295,6 +299,42 @@ def _doctor(argv: list[str]) -> int:
         for item in deps["missing"]:
             print(f"missing dependency: {item}")
     return 0 if ok else 1
+
+
+SMOKE_DOCUMENT = (
+    "\\documentclass[tikz,border=2pt]{standalone}\n"
+    "\\begin{document}\n"
+    "\\begin{tikzpicture}\\node {smoke};\\end{tikzpicture}\n"
+    "\\end{document}\n"
+)
+
+
+def _compile_smoke(tex_engine: str) -> dict:
+    """Compile one TikZ node so a broken TeX tree cannot report itself as ok."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        (tmp_dir / "smoke.tex").write_text(SMOKE_DOCUMENT, encoding="utf-8")
+        try:
+            result = subprocess.run(
+                [tex_engine, "-interaction=nonstopmode", "-halt-on-error", "smoke.tex"],
+                cwd=tmp_dir,
+                env=_with_runtime_env(),
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=120,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return {"state": "failed", "engine": tex_engine, "stderr_tail": str(exc)}
+        if result.returncode == 0 and (tmp_dir / "smoke.pdf").is_file():
+            return {"state": "ok", "engine": tex_engine, "stderr_tail": ""}
+        # TeX engines report errors on stdout; stderr is usually empty.
+        output = result.stderr.strip() or result.stdout.strip()
+        return {
+            "state": "failed",
+            "engine": tex_engine,
+            "stderr_tail": "\n".join(output.splitlines()[-20:]),
+        }
 
 
 def _dependency_diagnostics() -> dict:
@@ -307,7 +347,13 @@ def _dependency_diagnostics() -> dict:
             importlib.import_module(module_name)
         except ImportError:
             missing.append(f"python:{module_name}")
-    return {"state": "ok" if not missing else "missing", "missing": missing}
+    if missing:
+        smoke = {"state": "skipped", "engine": tex_engine, "stderr_tail": ""}
+        state = "missing"
+    else:
+        smoke = _compile_smoke(tex_engine)
+        state = "ok" if smoke["state"] == "ok" else "compile_failed"
+    return {"state": state, "missing": missing, "compile_smoke": smoke}
 
 
 def _status(argv: list[str]) -> int:

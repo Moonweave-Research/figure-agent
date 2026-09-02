@@ -249,9 +249,7 @@ def test_fig_agent_closeout_uses_public_wrapper_without_type_error(
     monkeypatch.setitem(sys.modules, "fig_closeout", types.SimpleNamespace(main=fake_main))
 
     assert module._closeout(["smoke_trap_demo", "--json"]) == 7
-    assert calls == [
-        ["smoke_trap_demo", "--json", "--repo-root", str(PLUGIN_ROOT)]
-    ]
+    assert calls == [["smoke_trap_demo", "--json", "--repo-root", str(PLUGIN_ROOT)]]
 
 
 def test_public_wrapper_bootstrap_checks_pdfplumber(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -303,7 +301,66 @@ def test_public_wrapper_doctor_checks_pdfplumber(monkeypatch: pytest.MonkeyPatch
 
     assert deps["state"] == "missing"
     assert deps["missing"] == ["python:pdfplumber"]
+    assert deps["compile_smoke"]["state"] == "skipped"
     assert imported == ["yaml", "PIL", "pdfplumber"]
+
+
+def _stub_toolchain(tmp_path: Path, engine_body: str) -> Path:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    for name in ("uv", "python3", "pdftocairo", "rsvg-convert"):
+        stub = bin_dir / name
+        stub.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        stub.chmod(0o755)
+    engine = bin_dir / "smoke-engine"
+    engine.write_text(engine_body, encoding="utf-8")
+    engine.chmod(0o755)
+    return bin_dir
+
+
+def _doctor_payload(bin_dir: Path) -> tuple[int, dict]:
+    result = subprocess.run(
+        [sys.executable, str(PLUGIN_ROOT / "bin" / "fig-agent"), "doctor", "--json"],
+        cwd=PLUGIN_ROOT,
+        env={
+            "FIGURE_AGENT_PLUGIN_ROOT": str(PLUGIN_ROOT),
+            "FIGURE_AGENT_WORKSPACE": str(PLUGIN_ROOT),
+            "PATH": str(bin_dir),
+            "LATEX_ENGINE": "smoke-engine",
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode, json.loads(result.stdout)
+
+
+def test_doctor_is_not_ok_when_the_configured_engine_cannot_compile(tmp_path: Path) -> None:
+    bin_dir = _stub_toolchain(
+        tmp_path,
+        "#!/bin/sh\necho '! LaTeX Error: File tikz.sty not found.'\nexit 1\n",
+    )
+
+    returncode, payload = _doctor_payload(bin_dir)
+    deps = payload["dependencies"]
+
+    assert returncode == 1
+    assert deps["missing"] == []
+    assert deps["state"] != "ok"
+    assert deps["compile_smoke"]["state"] == "failed"
+    assert deps["compile_smoke"]["engine"] == "smoke-engine"
+    assert "tikz.sty" in deps["compile_smoke"]["stderr_tail"]
+
+
+def test_doctor_reports_compile_smoke_ok_when_the_engine_produces_a_pdf(tmp_path: Path) -> None:
+    bin_dir = _stub_toolchain(tmp_path, "#!/bin/sh\nprintf '%%PDF-1.4\\n' > smoke.pdf\nexit 0\n")
+
+    returncode, payload = _doctor_payload(bin_dir)
+    deps = payload["dependencies"]
+
+    assert returncode == 0
+    assert deps["state"] == "ok"
+    assert deps["compile_smoke"]["state"] == "ok"
 
 
 def test_doctor_reports_workspace_missing_without_bundle_false_positive(
@@ -441,7 +498,6 @@ def test_bundle_diagnostics_reports_unexpected_unpacked_cache_state(tmp_path: Pa
     assert payload["plugin_root_kind"] == "unpacked_zip"
     assert ".venv" in payload["unexpected_cache_state"]
     assert "unexpected-local-backup/" in payload["unexpected_cache_state"]
-
 
 
 def test_fig_agent_rejects_unsafe_fixture_names_before_path_join(tmp_path: Path) -> None:
