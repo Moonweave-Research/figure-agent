@@ -14,6 +14,7 @@ import pytest
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 MCP_SERVER = PLUGIN_ROOT / "mcp" / "figure_agent_server.py"
 FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
+INTERPRETER = sys.executable
 
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "mcp"))
@@ -39,6 +40,10 @@ def _run_mcp_server(
     merged_env = os.environ.copy()
     merged_env.update(env or {})
     merged_env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    # A Claude session launches the server with no venv active, so the plugin's own
+    # `uv run --project` calls must resolve the project environment themselves rather
+    # than inherit pytest's. Strip the activation, but keep the interpreter explicit:
+    # a bare "python3" here resolves against whatever the ambient PATH happens to hold.
     virtual_env = merged_env.pop("VIRTUAL_ENV", None)
     if virtual_env:
         virtual_bin = str(Path(virtual_env) / "bin")
@@ -46,7 +51,7 @@ def _run_mcp_server(
             entry for entry in merged_env.get("PATH", "").split(os.pathsep) if entry != virtual_bin
         )
     return subprocess.run(
-        ["python3", str(MCP_SERVER)],
+        [INTERPRETER, str(MCP_SERVER)],
         input="\n".join(requests) + "\n",
         cwd=cwd,
         env=merged_env,
