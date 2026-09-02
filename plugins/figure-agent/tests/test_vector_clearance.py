@@ -669,6 +669,68 @@ def test_coordinate_redefined_to_a_different_point_is_not_resolved() -> None:
     assert vector_clearance.extract_vector_elements(tex) == []
 
 
+def test_movable_defaults_to_element_a_and_accepts_explicit_b() -> None:
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "default-side",
+                    "element_a": {"source_line": 1},
+                    "element_b": {"source_line": 2},
+                    "min_clearance_cm": 0.2,
+                },
+                {
+                    "id": "declared-side",
+                    "movable": "b",
+                    "element_a": {"source_line": 1},
+                    "element_b": {"source_line": 2},
+                    "min_clearance_cm": 0.2,
+                },
+            ]
+        }
+    )
+
+    assert [check["movable"] for check in checks] == ["a", "b"]
+
+
+def test_parse_rejects_unknown_movable_side() -> None:
+    with pytest.raises(vector_clearance.VectorClearanceError, match="movable must be"):
+        vector_clearance.parse_vector_clearance_checks(
+            {
+                "vector_clearance_checks": [
+                    {
+                        "id": "bad-side",
+                        "movable": "element_a",
+                        "element_a": {"source_line": 1},
+                        "element_b": {"source_line": 2},
+                        "min_clearance_cm": 0.2,
+                    }
+                ]
+            }
+        )
+
+
+def test_violated_issue_carries_the_declared_movable_side() -> None:
+    tex = "\n".join([r"\draw[a] (0,0)--(1,0);", r"\draw[b] (0,0.1)--(1,0.1);"])
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "declared-side",
+                    "movable": "b",
+                    "element_a": {"source_line": 1, "matched_text": "[a]"},
+                    "element_b": {"source_line": 2, "matched_text": "[b]"},
+                    "min_clearance_cm": 0.5,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues[0]["movable"] == "b"
+
+
 # Measured clearance of every declaration that existed before named-coordinate
 # resolution, plus the four fig5 pairs the resolution made bindable. Resolution
 # must not move any of these numbers.
@@ -708,6 +770,7 @@ def test_declared_fixture_clearances_are_pinned(fixture_name: str) -> None:
             "element_b": check["element_b"],
             "relation": "min_clearance_cm",
             "min_clearance_cm": 99.0,
+            "movable": check["movable"],
         }
         for check in vector_clearance.parse_vector_clearance_checks(spec)
     ]

@@ -669,6 +669,9 @@ def test_vector_clearance_review_queue_generates_review_only_line_candidate(
                         "id": "panelE-deep-peak-caliper-min-clearance",
                         "status": "violated",
                         "relation": "min_clearance_cm",
+                        # authored obstacle-first: the caliper tick is the side
+                        # a repair may move
+                        "movable": "b",
                         "element_a": "VE001",
                         "element_b": "VE002",
                         "element_a_kind": "curve",
@@ -1322,6 +1325,8 @@ def test_vector_clearance_circle_obstacle_also_generates_path_reroute_candidate(
                         "id": "panelB-flow-circle-min-clearance",
                         "status": "violated",
                         "relation": "min_clearance_cm",
+                        # the circle is the obstacle; the flow line detours
+                        "movable": "b",
                         "element_a": "VE001",
                         "element_b": "VE002",
                         "element_a_kind": "circle",
@@ -1378,4 +1383,190 @@ def test_vector_clearance_circle_obstacle_also_generates_path_reroute_candidate(
     # the bounded dy nudge variant is still offered alongside the reroute
     assert any(
         item["edit_family"] == "vector_clearance_offset" for item in payload["candidates"]
+    )
+
+
+def _vector_clearance_fixture(
+    workspace: Path,
+    monkeypatch,
+    source: str,
+    issue: dict,
+) -> dict:
+    fixture = _fixture(workspace)
+    (fixture / "candidate_demo.tex").write_text(source, encoding="utf-8")
+    source_hash = file_sha256(fixture / "candidate_demo.tex")
+    build_dir = fixture / "build"
+    build_dir.mkdir(exist_ok=True)
+    (build_dir / "vector_clearance.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.vector-clearance.v1",
+                "source_hashes": {"examples/candidate_demo/candidate_demo.tex": source_hash},
+                "issues": [issue],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_ledger(_name, **_kwargs):
+        return {"defects": [], "ledger_hash": "sha256:" + "0" * 64}
+
+    monkeypatch.setattr(
+        candidate_generator.quality_defect_ledger,
+        "build_quality_defect_ledger",
+        fake_ledger,
+    )
+    return candidate_generator.build_candidate_set("candidate_demo", workspace_root=workspace)
+
+
+def test_vector_clearance_offset_moves_the_declared_movable_vector(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    """`element_a` is the vector under test and `element_b` the body it is
+    measured against, so the default repair moves `element_a`. Moving the body
+    instead is the defect this side selection exists to prevent."""
+    payload = _vector_clearance_fixture(
+        tmp_path / "workspace",
+        monkeypatch,
+        "\\draw[leader] (0,1.30) -- (1,1.30);\n"
+        "\\draw[peak] (0,0) .. controls (0.5,1.23) and (0.7,1.23) .. (1,0);\n",
+        {
+            "id": "panelA-leader-clear-of-peak",
+            "status": "violated",
+            "relation": "min_clearance_cm",
+            "movable": "a",
+            "element_a": "VE001",
+            "element_b": "VE002",
+            "element_a_kind": "line",
+            "element_b_kind": "curve",
+            "element_a_source_line": 1,
+            "element_b_source_line": 2,
+            "element_a_bbox_cm": [0.0, 1.30, 1.0, 1.30],
+            "element_b_bbox_cm": [0.0, 0.0, 1.0, 1.23],
+            "measured_clearance_cm": 0.07,
+            "required_clearance_cm": 0.1,
+            "clearance_delta_cm": -0.03,
+            "non_auto_promotable": True,
+            "promotion_tier": "review_queue",
+        },
+    )
+
+    assert payload["metrics"]["candidate_count"] == 1
+    candidate = payload["candidates"][0]
+    assert candidate["edit_family"] == "vector_clearance_offset"
+    operation = candidate["operations"][0]
+    assert operation["line_start"] == 1
+    # away from the body, not toward it
+    assert candidate["variant"] == {"id": "dy+0.05cm", "dy_cm": pytest.approx(0.05)}
+    assert operation["replacement"] == "\\draw[leader] (0, 1.35) -- (1, 1.35);"
+
+
+def test_vector_clearance_offset_refuses_when_the_movable_side_is_not_a_line(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    """The declared movable side is a curve: refuse rather than nudge the body
+    that happens to be a line."""
+    payload = _vector_clearance_fixture(
+        tmp_path / "workspace",
+        monkeypatch,
+        "\\draw[tail] (0,0) .. controls (0.5,1.23) and (0.7,1.23) .. (1,0);\n"
+        "\\draw[axis] (0,1.30) -- (1,1.30);\n",
+        {
+            "id": "panelD-tail-clear-of-axis",
+            "status": "violated",
+            "relation": "min_clearance_cm",
+            "movable": "a",
+            "element_a_kind": "curve",
+            "element_b_kind": "line",
+            "element_a_source_line": 1,
+            "element_b_source_line": 2,
+            "element_a_bbox_cm": [0.0, 0.0, 1.0, 1.23],
+            "element_b_bbox_cm": [0.0, 1.30, 1.0, 1.30],
+            "measured_clearance_cm": 0.07,
+            "required_clearance_cm": 0.1,
+            "non_auto_promotable": True,
+            "promotion_tier": "review_queue",
+        },
+    )
+
+    assert payload["candidates"] == []
+    assert {(item["code"], item.get("defect_id")) for item in payload["refusals"]} == {
+        ("unsupported_vector_clearance_candidate", "panelD-tail-clear-of-axis")
+    }
+
+
+def test_vector_clearance_must_touch_still_refuses_without_inventing_an_edit(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    payload = _vector_clearance_fixture(
+        tmp_path / "workspace",
+        monkeypatch,
+        "\\draw[rail] (0,1.30) -- (1,1.30);\n"
+        "\\draw[body] (0,0) .. controls (0.5,1.23) and (0.7,1.23) .. (1,0);\n",
+        {
+            "id": "panelA-rail-touches-body",
+            "status": "violated",
+            "relation": "must_touch",
+            "movable": "a",
+            "element_a_kind": "line",
+            "element_b_kind": "curve",
+            "element_a_source_line": 1,
+            "element_b_source_line": 2,
+            "element_a_bbox_cm": [0.0, 1.30, 1.0, 1.30],
+            "element_b_bbox_cm": [0.0, 0.0, 1.0, 1.23],
+            "measured_clearance_cm": 0.07,
+            "tolerance_cm": 0.01,
+            "non_auto_promotable": True,
+            "promotion_tier": "review_queue",
+        },
+    )
+
+    assert payload["candidates"] == []
+    assert {(item["code"], item.get("defect_id")) for item in payload["refusals"]} == {
+        ("unsupported_vector_clearance_candidate", "panelA-rail-touches-body")
+    }
+
+
+def test_path_reroute_detours_the_declared_movable_vector(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    """Obstacle in `element_b` this time: the detour must still be built from
+    the movable side's line, not from whichever side happens to be first."""
+    payload = _vector_clearance_fixture(
+        tmp_path / "workspace",
+        monkeypatch,
+        "\\draw[flow] (0,1.0) -- (4,1.0);\n\\draw (2.0,1.05) circle (0.1);\n",
+        {
+            "id": "panelB-flow-clear-of-node",
+            "status": "violated",
+            "relation": "min_clearance_cm",
+            "movable": "a",
+            "element_a_kind": "line",
+            "element_b_kind": "circle",
+            "element_a_source_line": 1,
+            "element_b_source_line": 2,
+            "element_a_bbox_cm": [0.0, 1.0, 4.0, 1.0],
+            "element_b_bbox_cm": [1.9, 0.95, 2.1, 1.15],
+            "measured_clearance_cm": 0.0,
+            "required_clearance_cm": 0.3,
+            "clearance_delta_cm": -0.3,
+            "non_auto_promotable": True,
+            "promotion_tier": "review_queue",
+        },
+    )
+
+    reroutes = [
+        candidate
+        for candidate in payload["candidates"]
+        if candidate["edit_family"] == "path_reroute"
+    ]
+    assert len(reroutes) == 1
+    operation = reroutes[0]["operations"][0]
+    assert operation["line_start"] == 1
+    assert operation["replacement"] == (
+        "\\draw[flow] (0,1.0) -- (0,0.6) -- (4,0.6) -- (4,1.0);"
     )

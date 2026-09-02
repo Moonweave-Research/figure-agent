@@ -282,11 +282,17 @@ def parse_vector_clearance_checks(spec: dict[str, Any]) -> list[dict[str, Any]]:
                 f"vector_clearance_checks[{index}] must declare exactly one relation"
             )
         relation = relation_keys[0]
+        movable = item.get("movable", "a")
+        if movable not in {"a", "b"}:
+            raise VectorClearanceError(
+                f"vector_clearance_checks[{index}].movable must be 'a' or 'b'"
+            )
         parsed: dict[str, Any] = {
             "id": check_id.strip(),
             "element_a": element_a,
             "element_b": element_b,
             "relation": relation,
+            "movable": movable,
         }
         if relation == "min_clearance_cm":
             value = item[relation]
@@ -561,6 +567,9 @@ def check_vector_clearance(tex_text: str, checks: list[dict[str, Any]]) -> list[
             "id": check["id"],
             "status": "violated",
             "relation": relation,
+            # Which side a repair may move; the other side is the body, axis or
+            # obstacle the declaration measures against.
+            "movable": check.get("movable", "a"),
             "element_a": element_a["id"],
             "element_b": element_b["id"],
             "element_a_kind": element_a["kind"],
