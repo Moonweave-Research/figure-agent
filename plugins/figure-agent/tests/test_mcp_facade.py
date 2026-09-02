@@ -1688,7 +1688,7 @@ def test_cowork_zip_includes_mcp_contract(tmp_path: Path) -> None:
     )
 
     assert package_result.returncode == 0, package_result.stderr
-    zip_path = output_dir / "figure-agent-cowork-0.9.3.zip"
+    zip_path = output_dir / "figure-agent-cowork-0.10.0.zip"
     with zipfile.ZipFile(zip_path) as archive:
         names = set(archive.namelist())
 

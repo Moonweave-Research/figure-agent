@@ -1,7 +1,7 @@
 # Figure-Agent Plugin Development Closeout Status
 
 **Date:** 2026-06-02 KST
-**Status:** current release-candidate truth through v0.9.3 / Issues 95-100
+**Status:** current release-candidate truth through v0.10.0 / Issues 95-100
 
 ## Bottom Line
 

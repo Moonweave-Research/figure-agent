@@ -69,7 +69,7 @@ authority:
 The operational docs live in [`plugins/figure-agent/README.md`](plugins/figure-agent/README.md). It covers:
 
 - A start-to-finish walkthrough for the canonical documented route
-- Current state for plugin version v0.9.3
+- Current state for plugin version v0.10.0
 - The supported and compatibility command surfaces
 - The active operational architecture and human/machine boundaries
 
