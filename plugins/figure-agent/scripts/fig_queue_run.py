@@ -229,7 +229,7 @@ def run_queue(
 
 
 def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="fig_queue_run.py")
+    parser = argparse.ArgumentParser(prog="fig-agent queue-run")
     parser.add_argument("fixtures", nargs="*")
     parser.add_argument("--mode", choices=list(fig_driver.MODES), required=True)
     parser.add_argument("--goal", required=True)
