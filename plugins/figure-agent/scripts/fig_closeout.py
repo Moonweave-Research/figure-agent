@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fixture_identity  # noqa: E402
 import runtime_paths  # noqa: E402
+import status_readiness_policy  # noqa: E402
 from critique_adjudication import (  # noqa: E402
     CritiqueAdjudicationError,
     adjudication_is_stale,
@@ -44,6 +45,11 @@ ACCEPTED_BUT_STALE_REASON = (
     "accepted_but_stale: fixture has an accepted historical state, but current "
     "source, render, critique, or export evidence is stale. Re-run "
     "compile/critique/export and refresh acceptance before closeout."
+)
+ACCEPTED_BUT_UNATTESTED_REASON = (
+    "accepted_but_unattested: the accepted declaration is not bound to the current "
+    "source; the human attestation hash no longer matches. Re-run fig-agent attest "
+    "from a terminal (or re-open the acceptance) before closeout."
 )
 
 
@@ -356,11 +362,16 @@ def _export_step(
                     "golden_acceptance": golden_acceptance,
                 },
             )
-        if status_result.get("acceptance_freshness_state") == "accepted_but_stale":
+        freshness_state = status_result.get("acceptance_freshness_state")
+        if freshness_state in status_readiness_policy.ACCEPTANCE_FRESHNESS_BLOCKING_STATES:
             return _step(
                 step_id="export",
                 state="blocked",
-                reason=ACCEPTED_BUT_STALE_REASON,
+                reason=(
+                    ACCEPTED_BUT_STALE_REASON
+                    if freshness_state == "accepted_but_stale"
+                    else ACCEPTED_BUT_UNATTESTED_REASON
+                ),
                 evidence={
                     "export_state": export_state,
                     "golden_acceptance": golden_acceptance,
@@ -403,6 +414,23 @@ def _export_step(
             if reason == "missing"
             else f"tracked golden export acceptance is invalid: {reason}",
             evidence=evidence,
+        )
+    if export_state == "GOLDEN_UNVERIFIABLE":
+        # git could not say whether exports/ is a committed golden artifact, so
+        # regenerating would be a blind overwrite; do not suggest the command
+        # that run_export now refuses.
+        return _step(
+            step_id="export",
+            state="blocked",
+            reason=(
+                "golden protection could not be verified: git gave no answer for "
+                "exports/. Run closeout inside the fixture's git checkout, or pass "
+                "--force-golden only after confirming the export is not curated."
+            ),
+            evidence={
+                "export_state": export_state,
+                "approval_command": f"/fig_export {name} --force-golden",
+            },
         )
     return _step(
         step_id="export",

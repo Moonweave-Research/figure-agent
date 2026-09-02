@@ -867,3 +867,29 @@ def test_closeout_emits_every_step_readiness_expects(
     assert [step["id"] for step in report["steps"]] == list(
         fig_closeout_mod.REQUIRED_CLOSEOUT_STEP_IDS
     )
+
+
+def test_closeout_blocks_export_when_golden_protection_is_unverifiable(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(fixture, critique)
+    monkeypatch.setattr(
+        fig_closeout_mod,
+        "infer_stage",
+        lambda _example_dir: _status(critique_state="FRESH", export_state="GOLDEN_UNVERIFIABLE"),
+    )
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+    export_step = _steps_by_id(report)["export"]
+
+    # An unanswerable git must not be routed to the plain export command,
+    # which run_export now refuses for this state.
+    assert export_step["state"] == "blocked"
+    assert export_step["command"] is None
+    assert export_step["evidence"]["export_state"] == "GOLDEN_UNVERIFIABLE"
+    assert export_step["evidence"]["approval_command"] == "/fig_export loop_demo --force-golden"
+    assert "golden protection could not be verified" in export_step["reason"]
