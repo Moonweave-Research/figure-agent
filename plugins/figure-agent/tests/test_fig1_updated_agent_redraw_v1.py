@@ -14,13 +14,10 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1"
 CURRENT_HANDOFF = FIXTURE / "FIG1_CURRENT_CANDIDATE_HANDOFF.md"
 REVIEW_LINEAGE = FIXTURE / "review" / "README.md"
-REPAIRED_SOURCE = (
-    FIXTURE
-    / "review"
-    / "failure-first"
-    / "comparable-v3-repair-c5"
-    / "repaired.tex"
-)
+# The comparable-v3-repair-c5 child was promoted byte-for-byte to the fixture
+# root, so the repaired-source contracts below must now guard the canonical
+# source. The preserved child is promotion history, not the working source.
+REPAIRED_SOURCE = FIXTURE / "fig1_updated_agent_redraw_v1.tex"
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "quality"))
 
@@ -77,20 +74,36 @@ def test_redraw_pins_unchanged_visual_and_physics_authorities() -> None:
         assert hashlib.sha256(historical).hexdigest() == source["sha256"]
 
 
-def test_redraw_handoff_names_a_current_candidate_without_canonical_promotion() -> None:
+def test_redraw_handoff_names_the_promoted_root_without_claiming_acceptance() -> None:
     assert CURRENT_HANDOFF.is_file()
     assert not (FIXTURE / "FIG1_CANONICAL_HANDOFF.md").exists()
     handoff = CURRENT_HANDOFF.read_text(encoding="utf-8")
     assert "current-candidate handoff" in handoff
-    assert "candidate_only" in handoff
+    assert "`fig1_updated_agent_redraw_v1.tex` at the fixture root" in handoff
+    assert "promoted_to_canonical_root" in handoff
+    # Promotion moves the source only; no acceptance state may be implied.
+    assert "publication acceptance are pending" in handoff
+    assert "does not make this a paper artifact" in handoff
+
+    pointer = json.loads(
+        (FIXTURE / "review" / "current-candidate.json").read_text(encoding="utf-8")
+    )
+    assert pointer["candidate_root"] == "."
+    assert pointer["source_path"] == "fig1_updated_agent_redraw_v1.tex"
+    assert pointer["promotion_state"] == "promoted_to_canonical_root"
+    assert pointer["human_gate"] == "pending"
+    assert pointer["source_sha256"] == "sha256:" + hashlib.sha256(
+        REPAIRED_SOURCE.read_bytes()
+    ).hexdigest()
 
 
-def test_review_lineage_distinguishes_current_child_from_preserved_history() -> None:
+def test_review_lineage_distinguishes_promoted_root_from_preserved_history() -> None:
     assert REVIEW_LINEAGE.is_file()
     lineage = REVIEW_LINEAGE.read_text(encoding="utf-8")
     assert "review/current-candidate.json" in lineage
     assert "comparable-v3-repair-c5" in lineage
-    assert "candidate_only" in lineage
+    assert "promotion origin" in lineage
+    assert "not_claimed" in lineage
     for historical_path in (
         "comparable-v1",
         "comparable-v3-repair-c1",
@@ -106,15 +119,12 @@ def test_redraw_is_independent_and_keeps_floating_panel_f_topology() -> None:
     assert set(
         line.strip() for line in source.splitlines() if line.strip().startswith(r"\input{")
     ) == {
-        r"\input{snippets/polymer_chain.snippet.tex}",
         r"\input{snippets/panel-f-floating-cantilever.tex}",
     }
     assert "\\include{" not in source
-    assert "floating cantilever" in source
+    assert "floating polymer\\\\cantilever" in source
     assert "grounded voltage-source return" in source
-    assert "sample and cantilever remain floating" in source
-    assert r"\PolymerChain" in source
-    assert r"\PanelFFloatingCantilever" in source
+    assert "sample and cantilever remain electrically floating" in source
 
     result = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
     assert result["summary"]["object_role_count"] == 31

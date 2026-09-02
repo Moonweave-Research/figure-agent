@@ -21,11 +21,12 @@ final_size_contract:
     nature_figure_guide: 183.0
   note: Current aspect ratio exceeds the 170 mm height guidance if scaled to a full double-column width, so print-scale audits use the height-limited 166.8 mm working target unless a later global compaction changes the aspect ratio.
 current_candidate:
-  role: nested_repair_candidate
-  source: review/failure-first/comparable-v3-repair-c5/repaired.tex
-  build_pdf: review/failure-first/comparable-v3-repair-c5/build/repaired.pdf
-  build_png: review/failure-first/comparable-v3-repair-c5/build/repaired.png
+  role: promoted_canonical_root
+  source: fig1_updated_agent_redraw_v1.tex
+  build_pdf: build/fig1_updated_agent_redraw_v1.pdf
+  build_png: build/fig1_updated_agent_redraw_v1.png
   publication_acceptance: not_claimed
+  promoted_from: review/failure-first/comparable-v3-repair-c5/repaired.tex
 semantic_assertions:
   - id: panel-c-mobility-edge-left-of-thermal-escape
     relation: left_of

@@ -5,14 +5,18 @@ second source of paper-artifact authority: `review/current-candidate.json` is
 the only machine selector for the active child, and the external ResearchOS
 artifact registry owns paper-artifact promotion.
 
-## Active working child
+## Active working source
 
-- `failure-first/comparable-v3-repair-c5/` is the current working child only
-  while `review/current-candidate.json` resolves to it.
+- `review/current-candidate.json` now resolves to the fixture-root
+  `fig1_updated_agent_redraw_v1.tex`, promoted byte-for-byte from
+  `failure-first/comparable-v3-repair-c5/repaired.tex`.
 - Edit the source path resolved by that pointer. Do not select a child by its
   directory order, timestamp, or an older development verdict.
-- The child remains `candidate_only`; a fresh render or strict compile does not
-  promote it to a paper artifact.
+- Promotion moved the source only. The figure stays `publication_acceptance:
+  not_claimed` with the human gate pending; a fresh render or strict compile
+  does not promote it to a paper artifact.
+- `failure-first/comparable-v3-repair-c5/` is preserved as the promotion origin
+  and is no longer a candidate; it must not be edited as the working source.
 
 ## Preserved historical lineage
 
