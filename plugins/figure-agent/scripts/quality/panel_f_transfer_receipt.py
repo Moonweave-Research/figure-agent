@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 
 import yaml
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 RECEIPT = ROOT / "styles/snippets/panel-f-floating-cantilever.transfer.yaml"
@@ -93,11 +94,16 @@ def _comparison() -> dict[str, object]:
             text=True,
         )
         metric = compared.stderr.strip()
-        match = re.fullmatch(r"(\d+) \(([0-9.]+)\)", metric)
+        # ImageMagick 7 prints "N (fraction)"; ImageMagick 6 prints only "N".
+        match = re.fullmatch(r"(\d+)(?: \(([0-9.]+)\))?", metric)
         if match is None or compared.returncode not in {0, 1}:
             raise RuntimeError(f"unexpected compare result: {metric}")
         _run([_MAGICK, str(diff), "-strip", str(diff)])
         pixels, fraction = match.groups()
+        if fraction is None:
+            with Image.open(crops[0]) as crop_image:
+                width, height = crop_image.size
+            fraction = str(int(pixels) / (width * height))
         return {
             "status": "passed_with_fixture_local_differences",
             "scope": "same_family_reuse_only",
