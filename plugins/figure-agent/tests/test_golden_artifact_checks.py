@@ -371,6 +371,7 @@ def _make_passing_accepted_fixture(fixture: Path, monkeypatch) -> None:
     _write_minimal_accepted_fixture(fixture)
     monkeypatch.setenv("HOME", str(fixture.parent / "home"))
     human_attestation._load_or_create_key()
+    monkeypatch.setattr(sys, "stdin", type("Tty", (), {"isatty": lambda self: True})())
     human_attestation.write_attestation(fixture)
     _write_passing_theory_guard(fixture)
     _mark_quality_audit_fresh(fixture)
