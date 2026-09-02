@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import check_golden_artifacts as golden_checks  # noqa: E402
 import human_attestation  # noqa: E402
 from check_golden_artifacts import (  # noqa: E402
-    audit_is_fresh,
+    audit_freshness_failure,
     check_example,
     checker_warning_counts,
     count_svg_visible_elements,
@@ -641,23 +641,17 @@ def test_require_accepted_mode_includes_tiff_in_audit_freshness(
     _write_minimal_accepted_fixture(fixture)
     _write_passing_theory_guard(fixture)
     monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
-    old_time = 100.0
-    fresh_time = 200.0
-    for path in (
-        fixture / "spec.yaml",
-        fixture / "briefing.md",
-        fixture / "staleTiffAudit.tex",
-        fixture / "exports" / "staleTiffAudit.pdf",
-        fixture / "exports" / "staleTiffAudit.svg",
-        fixture / "exports" / "staleTiffAudit.png",
-    ):
-        os.utime(path, (old_time, old_time))
-    os.utime(fixture / "QUALITY_AUDIT.md", (old_time + 1, old_time + 1))
-    os.utime(fixture / "exports" / "staleTiffAudit.tif", (fresh_time, fresh_time))
+    golden_checks.stamp_audit_input_hash(fixture, golden_checks.audit_source_paths(fixture))
+    # Re-export only the TIFF, keeping it a valid 600 dpi raster: the audit is
+    # stale because the artifact it describes changed, nothing else.
+    Image.new("RGB", (1200, 800), "ivory").save(
+        fixture / "exports" / "staleTiffAudit.tif",
+        dpi=(600, 600),
+    )
 
     failures = check_example(fixture, require_accepted=True)
 
-    assert "QUALITY_AUDIT.md is stale or missing" in failures
+    assert any("does not match its source set" in failure for failure in failures)
 
 
 def test_require_accepted_gate_rejects_hash_stamped_audit_after_source_change(
@@ -672,7 +666,7 @@ def test_require_accepted_gate_rejects_hash_stamped_audit_after_source_change(
 
     # Sanity: stamped + unchanged passes the freshness gate.
     failures = check_example(fixture, require_accepted=True)
-    assert "QUALITY_AUDIT.md is stale or missing" not in failures
+    assert not any("QUALITY_AUDIT.md" in failure for failure in failures)
 
     # Mutate a source after stamping, then make every artifact mtime-fresh so the
     # legacy mtime check alone would still pass.
@@ -682,7 +676,7 @@ def test_require_accepted_gate_rejects_hash_stamped_audit_after_source_change(
         os.utime(path, (audit_mtime - 5, audit_mtime - 5))
 
     failures = check_example(fixture, require_accepted=True)
-    assert "QUALITY_AUDIT.md is stale or missing" in failures
+    assert any("does not match its source set" in failure for failure in failures)
 
 
 def test_require_accepted_mode_requires_reference_pack_for_reference_image(
@@ -858,26 +852,13 @@ def test_unresolved_visual_clash_count_reads_triage_total() -> None:
     assert unresolved_visual_clash_count(audit) == 9
 
 
-def test_audit_is_fresh_requires_audit_newer_than_sources(tmp_path: Path) -> None:
+def test_audit_freshness_failure_reports_a_missing_audit(tmp_path: Path) -> None:
     fixture = tmp_path / "fixture"
     fixture.mkdir()
-    audit = fixture / "QUALITY_AUDIT.md"
     source = fixture / "fixture.tex"
     source.write_text("source", encoding="utf-8")
-    audit.write_text("audit", encoding="utf-8")
-    old = 100.0
-    new = 200.0
-    source.touch()
-    audit.touch()
-    import os
 
-    os.utime(audit, (old, old))
-    os.utime(source, (new, new))
-
-    assert not audit_is_fresh(fixture, (source,))
-
-    os.utime(audit, (new + 1, new + 1))
-    assert audit_is_fresh(fixture, (source,))
+    assert audit_freshness_failure(fixture, (source,)) == "QUALITY_AUDIT.md is missing"
 
 
 def _write_hash_freshness_fixture(fixture: Path) -> tuple[Path, ...]:
@@ -900,7 +881,7 @@ def _write_hash_freshness_fixture(fixture: Path) -> tuple[Path, ...]:
     return (spec, briefing, tex, pdf, svg, tif, png)
 
 
-def test_audit_is_fresh_with_hash_is_stale_when_source_changes_despite_mtime(
+def test_audit_freshness_failure_with_hash_catches_source_change_despite_mtime(
     tmp_path: Path,
 ) -> None:
     """The hole: a hash-bearing audit must catch content drift even when every
@@ -915,25 +896,29 @@ def test_audit_is_fresh_with_hash_is_stale_when_source_changes_despite_mtime(
     for path in sources:
         os.utime(path, (audit_mtime - 5, audit_mtime - 5))
 
-    assert not audit_is_fresh(fixture, sources)
+    reason = audit_freshness_failure(fixture, sources)
+
+    assert reason is not None
+    assert "does not match its source set" in reason
 
 
-def test_audit_is_fresh_with_hash_survives_relocation(tmp_path: Path) -> None:
+def test_audit_freshness_with_hash_survives_relocation(tmp_path: Path) -> None:
     """Content-based freshness must be invariant to where the fixture lives, so
     a timestamp-preserving copy (git clone / cp -p) stays fresh."""
     fixture = tmp_path / "fixture"
     sources = _write_hash_freshness_fixture(fixture)
     golden_checks.stamp_audit_input_hash(fixture, sources)
-    assert audit_is_fresh(fixture, sources)
+    assert audit_freshness_failure(fixture, sources) is None
 
     relocated = tmp_path / "relocated"
     shutil.copytree(fixture, relocated)
     relocated_sources = tuple(relocated / path.relative_to(fixture) for path in sources)
-    assert audit_is_fresh(relocated, relocated_sources)
+    assert audit_freshness_failure(relocated, relocated_sources) is None
 
 
-def test_audit_is_fresh_without_hash_falls_back_to_mtime(tmp_path: Path) -> None:
-    """Legacy audits (golden fixture) carry no hash and must keep the mtime gate."""
+def test_audit_without_hash_is_stale_and_touch_cannot_refresh_it(tmp_path: Path) -> None:
+    """The mtime fallback made `touch QUALITY_AUDIT.md` a freshness certificate
+    for exactly the audits that carry no hash, which is every hand-written one."""
     fixture = tmp_path / "fixture"
     sources = _write_hash_freshness_fixture(fixture)
     audit = fixture / "QUALITY_AUDIT.md"
@@ -942,10 +927,29 @@ def test_audit_is_fresh_without_hash_falls_back_to_mtime(tmp_path: Path) -> None
     os.utime(audit, (audit_mtime, audit_mtime))
     for path in sources:
         os.utime(path, (audit_mtime - 5, audit_mtime - 5))
-    assert audit_is_fresh(fixture, sources)
 
+    reason = audit_freshness_failure(fixture, sources)
+
+    assert reason is not None
+    assert "audit_input_hash" in reason
+    assert "--stamp-audit-hash" in reason
+
+    # The re-freshening move from the review: mtime alone must buy nothing.
     os.utime(sources[0], (audit_mtime + 5, audit_mtime + 5))
-    assert not audit_is_fresh(fixture, sources)
+    os.utime(audit, (audit_mtime + 10, audit_mtime + 10))
+    assert audit_freshness_failure(fixture, sources) == reason
+
+
+def test_audit_freshness_failure_names_a_missing_source(tmp_path: Path) -> None:
+    fixture = tmp_path / "fixture"
+    sources = _write_hash_freshness_fixture(fixture)
+    golden_checks.stamp_audit_input_hash(fixture, sources)
+    sources[3].unlink()
+
+    reason = audit_freshness_failure(fixture, sources)
+
+    assert reason is not None
+    assert "source set is incomplete" in reason
 
 
 def test_stamp_audit_input_hash_roundtrip_is_fresh(tmp_path: Path) -> None:
@@ -953,7 +957,7 @@ def test_stamp_audit_input_hash_roundtrip_is_fresh(tmp_path: Path) -> None:
     sources = _write_hash_freshness_fixture(fixture)
     (fixture / "QUALITY_AUDIT.md").write_text("# Quality Audit\n\nbody text\n", encoding="utf-8")
     golden_checks.stamp_audit_input_hash(fixture, sources)
-    assert audit_is_fresh(fixture, sources)
+    assert audit_freshness_failure(fixture, sources) is None
     # Stamping preserves the original body so regex readers stay intact.
     assert "body text" in (fixture / "QUALITY_AUDIT.md").read_text(encoding="utf-8")
 

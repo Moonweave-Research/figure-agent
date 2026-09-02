@@ -410,24 +410,36 @@ def audit_input_hash(example_dir: Path, source_paths: tuple[Path, ...]) -> str:
     return input_manifest_hash(source_paths, base_dir=example_dir)
 
 
-def audit_is_fresh(example_dir: Path, source_paths: tuple[Path, ...]) -> bool:
-    """Freshness of QUALITY_AUDIT.md against its source set.
+def audit_freshness_failure(example_dir: Path, source_paths: tuple[Path, ...]) -> str | None:
+    """Why QUALITY_AUDIT.md is not fresh against its source set, or None.
 
-    Content-based when the audit front-matter carries an `audit_input_hash`: the
-    hash is recomputed over the same sources and compared, closing the gap where
-    timestamp-preserving restores (git clone, cp -p, rsync --times) leave a stale
-    audit mtime-fresh. Falls back to the legacy mtime check for audits that carry
-    no hash (e.g. the committed golden fixture)."""
+    Content-based only. The freshness used to fall back to an mtime comparison
+    whenever the front-matter carried no `audit_input_hash`, which is exactly
+    the state of a hand-written audit: `touch QUALITY_AUDIT.md` re-freshened it
+    without a single source being re-examined. An unstamped audit is now stale
+    and the reason names the stamper."""
     audit = example_dir / "QUALITY_AUDIT.md"
     if not audit.exists():
-        return False
+        return "QUALITY_AUDIT.md is missing"
     stored_hash = yaml_frontmatter(audit).get(AUDIT_INPUT_HASH_KEY)
-    if isinstance(stored_hash, str) and stored_hash.strip():
-        if not all(path.exists() for path in source_paths):
-            return False
-        return stored_hash.strip() == audit_input_hash(example_dir, source_paths)
-    audit_mtime = audit.stat().st_mtime
-    return all(path.exists() and path.stat().st_mtime <= audit_mtime for path in source_paths)
+    if not isinstance(stored_hash, str) or not stored_hash.strip():
+        return (
+            f"QUALITY_AUDIT.md carries no {AUDIT_INPUT_HASH_KEY} front-matter key, so its "
+            "freshness cannot be verified; stamp it with "
+            f"./bin/fig-agent helper check_golden_artifacts.py examples/{example_dir.name} "
+            "--stamp-audit-hash"
+        )
+    missing = [str(path) for path in source_paths if not path.exists()]
+    if missing:
+        return f"QUALITY_AUDIT.md source set is incomplete: {', '.join(missing)}"
+    if stored_hash.strip() != audit_input_hash(example_dir, source_paths):
+        return (
+            f"QUALITY_AUDIT.md is stale: {AUDIT_INPUT_HASH_KEY} does not match its source set; "
+            "re-audit and re-stamp with "
+            f"./bin/fig-agent helper check_golden_artifacts.py examples/{example_dir.name} "
+            "--stamp-audit-hash"
+        )
+    return None
 
 
 def stamp_audit_input_hash(example_dir: Path, source_paths: tuple[Path, ...]) -> Path:
@@ -713,8 +725,11 @@ def check_example(
 
         failures.extend(source_inventory_failures(tex, contract.get("source_inventory")))
 
-        if not audit_is_fresh(example_dir, audit_source_paths(example_dir)):
-            failures.append("QUALITY_AUDIT.md is stale or missing")
+        audit_freshness_reason = audit_freshness_failure(
+            example_dir, audit_source_paths(example_dir)
+        )
+        if audit_freshness_reason:
+            failures.append(audit_freshness_reason)
         failures.extend(theory_guard_failures(example_dir / "theory_guard.md"))
         failures.extend(
             publication_compliance_failures(
