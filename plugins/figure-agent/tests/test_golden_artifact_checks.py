@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -17,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import check_golden_artifacts as golden_checks  # noqa: E402
 import human_attestation  # noqa: E402
 from check_golden_artifacts import (  # noqa: E402
-    audit_is_fresh,
+    audit_freshness_failure,
     check_example,
     checker_warning_counts,
     count_svg_visible_elements,
@@ -367,14 +368,54 @@ def _add_quality_audit_disclosure(fixture: Path) -> None:
         audit.read_text(encoding="utf-8") + "disclosure-needed: no\n",
         encoding="utf-8",
     )
+
+
+def _write_checker_reports(
+    fixture: Path,
+    *,
+    collisions: int = 0,
+    candidate_ids: tuple[str, ...] = (),
+    closed_ids: tuple[str, ...] = (),
+) -> None:
+    """The compiled checker evidence the budget gate reads, plus the critique
+    front-matter that closes individual visual-clash candidates."""
+    build = fixture / "build"
+    build.mkdir(exist_ok=True)
+    (build / "collisions.json").write_text(
+        json.dumps({"schema": "figure-agent.text-collisions.v1", "total": collisions}),
+        encoding="utf-8",
+    )
+    (build / "visual_clash.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.visual-clash.v1",
+                "candidates": [{"id": candidate_id} for candidate_id in candidate_ids],
+                "total": len(candidate_ids),
+            }
+        ),
+        encoding="utf-8",
+    )
+    if closed_ids:
+        rows = "".join(
+            f"  - id: M{index:03d}\n"
+            f"    visual_clash_ref: {ref}\n"
+            "    status: accept_simplification\n"
+            for index, ref in enumerate(closed_ids, start=1)
+        )
+        (fixture / "critique.md").write_text(f"---\nmicro_defects:\n{rows}---\n", encoding="utf-8")
+
+
 def _make_passing_accepted_fixture(fixture: Path, monkeypatch) -> None:
     _write_minimal_accepted_fixture(fixture)
     monkeypatch.setenv("HOME", str(fixture.parent / "home"))
     human_attestation._load_or_create_key()
+    monkeypatch.setattr(sys, "stdin", type("Tty", (), {"isatty": lambda self: True})())
     human_attestation.write_attestation(fixture)
     _write_passing_theory_guard(fixture)
     _mark_quality_audit_fresh(fixture)
     monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
+    _write_checker_reports(fixture)
+    golden_checks.stamp_audit_input_hash(fixture, golden_checks.audit_source_paths(fixture))
 
 
 def test_check_example_basic_mode_skips_label_and_inventory_checks(tmp_path: Path) -> None:
@@ -497,10 +538,7 @@ def test_cli_rejects_traversal_or_outside_relative_fixture_path(
     (fixture / "outside.tex").write_text("% empty\n", encoding="utf-8")
     _write_minimal_export_set(fixture / "exports", "outside")
     script = (
-        Path(__file__).resolve().parents[1]
-        / "scripts"
-        / "checks"
-        / "check_golden_artifacts.py"
+        Path(__file__).resolve().parents[1] / "scripts" / "checks" / "check_golden_artifacts.py"
     )
 
     result = subprocess.run(
@@ -642,23 +680,17 @@ def test_require_accepted_mode_includes_tiff_in_audit_freshness(
     _write_minimal_accepted_fixture(fixture)
     _write_passing_theory_guard(fixture)
     monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
-    old_time = 100.0
-    fresh_time = 200.0
-    for path in (
-        fixture / "spec.yaml",
-        fixture / "briefing.md",
-        fixture / "staleTiffAudit.tex",
-        fixture / "exports" / "staleTiffAudit.pdf",
-        fixture / "exports" / "staleTiffAudit.svg",
-        fixture / "exports" / "staleTiffAudit.png",
-    ):
-        os.utime(path, (old_time, old_time))
-    os.utime(fixture / "QUALITY_AUDIT.md", (old_time + 1, old_time + 1))
-    os.utime(fixture / "exports" / "staleTiffAudit.tif", (fresh_time, fresh_time))
+    golden_checks.stamp_audit_input_hash(fixture, golden_checks.audit_source_paths(fixture))
+    # Re-export only the TIFF, keeping it a valid 600 dpi raster: the audit is
+    # stale because the artifact it describes changed, nothing else.
+    Image.new("RGB", (1200, 800), "ivory").save(
+        fixture / "exports" / "staleTiffAudit.tif",
+        dpi=(600, 600),
+    )
 
     failures = check_example(fixture, require_accepted=True)
 
-    assert "QUALITY_AUDIT.md is stale or missing" in failures
+    assert any("does not match its source set" in failure for failure in failures)
 
 
 def test_require_accepted_gate_rejects_hash_stamped_audit_after_source_change(
@@ -673,7 +705,7 @@ def test_require_accepted_gate_rejects_hash_stamped_audit_after_source_change(
 
     # Sanity: stamped + unchanged passes the freshness gate.
     failures = check_example(fixture, require_accepted=True)
-    assert "QUALITY_AUDIT.md is stale or missing" not in failures
+    assert not any("QUALITY_AUDIT.md" in failure for failure in failures)
 
     # Mutate a source after stamping, then make every artifact mtime-fresh so the
     # legacy mtime check alone would still pass.
@@ -683,7 +715,7 @@ def test_require_accepted_gate_rejects_hash_stamped_audit_after_source_change(
         os.utime(path, (audit_mtime - 5, audit_mtime - 5))
 
     failures = check_example(fixture, require_accepted=True)
-    assert "QUALITY_AUDIT.md is stale or missing" in failures
+    assert any("does not match its source set" in failure for failure in failures)
 
 
 def test_require_accepted_mode_requires_reference_pack_for_reference_image(
@@ -828,6 +860,8 @@ def test_check_example_basic_mode_skips_semantic_spec_error(tmp_path: Path, monk
     failures = check_example(fixture, require_accepted=False)
 
     assert not any(failure.startswith("invalid spec.yaml:") for failure in failures)
+
+
 def test_checker_warning_counts_reads_quality_audit() -> None:
     audit = """
     Observed:
@@ -857,26 +891,13 @@ def test_unresolved_visual_clash_count_reads_triage_total() -> None:
     assert unresolved_visual_clash_count(audit) == 9
 
 
-def test_audit_is_fresh_requires_audit_newer_than_sources(tmp_path: Path) -> None:
+def test_audit_freshness_failure_reports_a_missing_audit(tmp_path: Path) -> None:
     fixture = tmp_path / "fixture"
     fixture.mkdir()
-    audit = fixture / "QUALITY_AUDIT.md"
     source = fixture / "fixture.tex"
     source.write_text("source", encoding="utf-8")
-    audit.write_text("audit", encoding="utf-8")
-    old = 100.0
-    new = 200.0
-    source.touch()
-    audit.touch()
-    import os
 
-    os.utime(audit, (old, old))
-    os.utime(source, (new, new))
-
-    assert not audit_is_fresh(fixture, (source,))
-
-    os.utime(audit, (new + 1, new + 1))
-    assert audit_is_fresh(fixture, (source,))
+    assert audit_freshness_failure(fixture, (source,)) == "QUALITY_AUDIT.md is missing"
 
 
 def _write_hash_freshness_fixture(fixture: Path) -> tuple[Path, ...]:
@@ -899,7 +920,7 @@ def _write_hash_freshness_fixture(fixture: Path) -> tuple[Path, ...]:
     return (spec, briefing, tex, pdf, svg, tif, png)
 
 
-def test_audit_is_fresh_with_hash_is_stale_when_source_changes_despite_mtime(
+def test_audit_freshness_failure_with_hash_catches_source_change_despite_mtime(
     tmp_path: Path,
 ) -> None:
     """The hole: a hash-bearing audit must catch content drift even when every
@@ -914,25 +935,29 @@ def test_audit_is_fresh_with_hash_is_stale_when_source_changes_despite_mtime(
     for path in sources:
         os.utime(path, (audit_mtime - 5, audit_mtime - 5))
 
-    assert not audit_is_fresh(fixture, sources)
+    reason = audit_freshness_failure(fixture, sources)
+
+    assert reason is not None
+    assert "does not match its source set" in reason
 
 
-def test_audit_is_fresh_with_hash_survives_relocation(tmp_path: Path) -> None:
+def test_audit_freshness_with_hash_survives_relocation(tmp_path: Path) -> None:
     """Content-based freshness must be invariant to where the fixture lives, so
     a timestamp-preserving copy (git clone / cp -p) stays fresh."""
     fixture = tmp_path / "fixture"
     sources = _write_hash_freshness_fixture(fixture)
     golden_checks.stamp_audit_input_hash(fixture, sources)
-    assert audit_is_fresh(fixture, sources)
+    assert audit_freshness_failure(fixture, sources) is None
 
     relocated = tmp_path / "relocated"
     shutil.copytree(fixture, relocated)
     relocated_sources = tuple(relocated / path.relative_to(fixture) for path in sources)
-    assert audit_is_fresh(relocated, relocated_sources)
+    assert audit_freshness_failure(relocated, relocated_sources) is None
 
 
-def test_audit_is_fresh_without_hash_falls_back_to_mtime(tmp_path: Path) -> None:
-    """Legacy audits (golden fixture) carry no hash and must keep the mtime gate."""
+def test_audit_without_hash_is_stale_and_touch_cannot_refresh_it(tmp_path: Path) -> None:
+    """The mtime fallback made `touch QUALITY_AUDIT.md` a freshness certificate
+    for exactly the audits that carry no hash, which is every hand-written one."""
     fixture = tmp_path / "fixture"
     sources = _write_hash_freshness_fixture(fixture)
     audit = fixture / "QUALITY_AUDIT.md"
@@ -941,10 +966,29 @@ def test_audit_is_fresh_without_hash_falls_back_to_mtime(tmp_path: Path) -> None
     os.utime(audit, (audit_mtime, audit_mtime))
     for path in sources:
         os.utime(path, (audit_mtime - 5, audit_mtime - 5))
-    assert audit_is_fresh(fixture, sources)
 
+    reason = audit_freshness_failure(fixture, sources)
+
+    assert reason is not None
+    assert "audit_input_hash" in reason
+    assert "--stamp-audit-hash" in reason
+
+    # The re-freshening move from the review: mtime alone must buy nothing.
     os.utime(sources[0], (audit_mtime + 5, audit_mtime + 5))
-    assert not audit_is_fresh(fixture, sources)
+    os.utime(audit, (audit_mtime + 10, audit_mtime + 10))
+    assert audit_freshness_failure(fixture, sources) == reason
+
+
+def test_audit_freshness_failure_names_a_missing_source(tmp_path: Path) -> None:
+    fixture = tmp_path / "fixture"
+    sources = _write_hash_freshness_fixture(fixture)
+    golden_checks.stamp_audit_input_hash(fixture, sources)
+    sources[3].unlink()
+
+    reason = audit_freshness_failure(fixture, sources)
+
+    assert reason is not None
+    assert "source set is incomplete" in reason
 
 
 def test_stamp_audit_input_hash_roundtrip_is_fresh(tmp_path: Path) -> None:
@@ -952,7 +996,7 @@ def test_stamp_audit_input_hash_roundtrip_is_fresh(tmp_path: Path) -> None:
     sources = _write_hash_freshness_fixture(fixture)
     (fixture / "QUALITY_AUDIT.md").write_text("# Quality Audit\n\nbody text\n", encoding="utf-8")
     golden_checks.stamp_audit_input_hash(fixture, sources)
-    assert audit_is_fresh(fixture, sources)
+    assert audit_freshness_failure(fixture, sources) is None
     # Stamping preserves the original body so regex readers stay intact.
     assert "body text" in (fixture / "QUALITY_AUDIT.md").read_text(encoding="utf-8")
 
@@ -964,6 +1008,13 @@ def test_require_accepted_mode_rejects_unaccepted_fixture_with_checker_debt(
     _make_passing_accepted_fixture(fixture, monkeypatch)
     spec = fixture / "spec.yaml"
     spec.write_text(spec.read_text(encoding="utf-8").replace("accepted: true", "accepted: false"))
+    candidates = tuple(f"VC{index:03d}" for index in range(1, 53))
+    _write_checker_reports(
+        fixture,
+        collisions=0,
+        candidate_ids=candidates,
+        closed_ids=candidates[:39],
+    )
     (fixture / "QUALITY_AUDIT.md").write_text(
         "# Quality Audit\n\n"
         "**submission-safe:** true\n\n"
@@ -974,7 +1025,7 @@ def test_require_accepted_mode_rejects_unaccepted_fixture_with_checker_debt(
         "submission-safe: true\n",
         encoding="utf-8",
     )
-    _mark_quality_audit_fresh(fixture)
+    golden_checks.stamp_audit_input_hash(fixture, golden_checks.audit_source_paths(fixture))
 
     failures = check_example(
         fixture,
@@ -988,6 +1039,86 @@ def test_require_accepted_mode_rejects_unaccepted_fixture_with_checker_debt(
     assert "fixture is not marked accepted: true" in failures
     assert not any(failure.startswith("collision budget exceeded") for failure in failures)
     assert "unresolved visual clash budget exceeded: 13 > 0" in failures
+    # The audit's numbers agree with the reports, so no mismatch is raised.
+    assert not any("QUALITY_AUDIT.md claims" in failure for failure in failures)
+
+
+def test_require_accepted_mode_closes_on_a_complete_fixture(tmp_path: Path, monkeypatch) -> None:
+    """Positive control for the whole accepted-mode contract: with real
+    attestation, a stamped audit and compiled checker reports, nothing blocks."""
+    fixture = tmp_path / "completeAccepted"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+
+    assert check_example(fixture, require_accepted=True) == []
+
+
+def test_checker_budget_rejects_prose_that_contradicts_the_reports(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """The attack: append `0 unresolved visual clash(es)` to the audit and the
+    gate was satisfied by the wording alone."""
+    fixture = tmp_path / "prosePlease"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+    _write_checker_reports(fixture, collisions=4, candidate_ids=("VC001", "VC002"))
+    (fixture / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "**submission-safe:** true\n\n"
+        "0 collision(s)\n"
+        "0 visual clash candidate(s)\n"
+        "0 unresolved visual clash(es)\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: true\n",
+        encoding="utf-8",
+    )
+    golden_checks.stamp_audit_input_hash(fixture, golden_checks.audit_source_paths(fixture))
+
+    failures = golden_checks.checker_budget_failures(
+        fixture, max_collisions=0, max_visual_clashes=0
+    )
+
+    assert "collision budget exceeded: 4 > 0" in failures
+    assert "unresolved visual clash budget exceeded: 2 > 0" in failures
+    assert "QUALITY_AUDIT.md claims 0 collision(s); build/collisions.json reports 4" in failures
+    assert (
+        "QUALITY_AUDIT.md claims 0 unresolved visual clash(es); "
+        "build/visual_clash.json and critique.md leave 2 open"
+    ) in failures
+
+
+def test_checker_budget_fails_closed_when_the_reports_are_absent(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fixture = tmp_path / "noReports"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+    (fixture / "build" / "collisions.json").unlink()
+    (fixture / "build" / "visual_clash.json").unlink()
+
+    failures = golden_checks.checker_budget_failures(
+        fixture, max_collisions=0, max_visual_clashes=0
+    )
+
+    assert any(failure.startswith("missing build/collisions.json") for failure in failures)
+    assert any(failure.startswith("missing build/visual_clash.json") for failure in failures)
+
+
+def test_checker_budget_counts_only_undispositioned_candidates(tmp_path: Path, monkeypatch) -> None:
+    """A candidate a reviewer closed in critique.md front-matter is resolved;
+    one nobody touched is not."""
+    fixture = tmp_path / "partlyClosed"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+    _write_checker_reports(
+        fixture,
+        candidate_ids=("VC001", "VC002", "VC003"),
+        closed_ids=("VC001", "VC002"),
+    )
+
+    assert golden_checks.visual_clash_evidence(fixture) == (3, 1, None)
+
+    failures = golden_checks.checker_budget_failures(
+        fixture, max_collisions=0, max_visual_clashes=0
+    )
+
+    assert "unresolved visual clash budget exceeded: 1 > 0" in failures
 
 
 def test_check_example_auto_mode_missing_accepted_key_fails(tmp_path: Path) -> None:
@@ -1030,6 +1161,75 @@ def test_theory_guard_malformed_blocker_row_fails(tmp_path: Path) -> None:
     failures = golden_checks.theory_guard_failures(guard)
 
     assert any("malformed theory guard BLOCKER row" in failure for failure in failures)
+
+
+def test_theory_guard_empty_file_fails(tmp_path: Path) -> None:
+    """A 0-byte guard yielded no parseable rows, therefore no failures, and so
+    passed the gate exactly like a guard whose every BLOCKER is verified."""
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text("", encoding="utf-8")
+
+    failures = golden_checks.theory_guard_failures(guard)
+
+    assert failures == [
+        "theory guard declares no BLOCKER row and no "
+        "`theory-guard: not-applicable` front-matter declaration: theory_guard.md"
+    ]
+
+
+def test_theory_guard_prose_without_blocker_rows_fails(tmp_path: Path) -> None:
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text(
+        "# Theory guard\n\nEvery invariant was reviewed and holds.\n",
+        encoding="utf-8",
+    )
+
+    failures = golden_checks.theory_guard_failures(guard)
+
+    assert any("declares no BLOCKER row" in failure for failure in failures)
+
+
+def test_theory_guard_not_applicable_declaration_with_reason_passes(tmp_path: Path) -> None:
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text(
+        "---\n"
+        "theory-guard: not-applicable\n"
+        "theory-guard-reason: layout-only comparison plate, it asserts no physics.\n"
+        "---\n"
+        "# Theory guard\n",
+        encoding="utf-8",
+    )
+
+    assert golden_checks.theory_guard_failures(guard) == []
+
+
+def test_theory_guard_not_applicable_without_reason_fails(tmp_path: Path) -> None:
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text("---\ntheory-guard: not-applicable\n---\n", encoding="utf-8")
+
+    failures = golden_checks.theory_guard_failures(guard)
+
+    assert failures == [
+        "theory guard `theory-guard: not-applicable` requires a non-empty "
+        "`theory-guard-reason`: theory_guard.md"
+    ]
+
+
+def test_theory_guard_waiver_does_not_excuse_a_failing_blocker_row(tmp_path: Path) -> None:
+    """The waiver applies only when there is nothing to evaluate."""
+    guard = tmp_path / "theory_guard.md"
+    guard.write_text(
+        "---\n"
+        "theory-guard: not-applicable\n"
+        "theory-guard-reason: claims nothing.\n"
+        "---\n"
+        "| ID | Severity | Claim | Check Method | Pass/Fail Evidence |\n"
+        "|---|---|---|---|---|\n"
+        "| TG-1 | BLOCKER | invariant | source review | open |\n",
+        encoding="utf-8",
+    )
+
+    assert golden_checks.theory_guard_failures(guard) == ["theory BLOCKER not passing: TG-1"]
 
 
 def test_theory_guard_header_and_separator_rows_are_not_false_positives(tmp_path: Path) -> None:

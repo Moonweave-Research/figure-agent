@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 
@@ -145,6 +146,7 @@ ALL_COMMANDS = (
     CORE_COMMANDS | INTERNAL_COMPATIBILITY_COMMANDS | RETIRED_DEFAULT_COMMANDS
 )
 PUBLIC_COMMANDS = CORE_COMMANDS | INTERNAL_COMPATIBILITY_COMMANDS
+HELP_COMMANDS = frozenset({"-h", "--help", "help"})
 
 
 def _command_surface() -> dict[str, object]:
@@ -362,7 +364,7 @@ def _export(argv: list[str]) -> int:
 
 
 def _adjudicate(argv: list[str]) -> int:
-    if argv and argv[0] in {"scaffold", "sync"}:
+    if argv and (argv[0] in {"scaffold", "sync"} or argv[0] in HELP_COMMANDS):
         sub_args = argv
     else:
         sub_args = ["scaffold", *argv]
@@ -2317,23 +2319,44 @@ def _failure_ablation(argv: list[str]) -> int:
     return 0
 
 
+def _usage_text() -> str:
+    # Derived from CORE_COMMANDS so the advertised surface cannot drift away
+    # from the dispatchable one, as the previous hardcoded 9-name line did.
+    listing = textwrap.fill(
+        " ".join(sorted(CORE_COMMANDS)),
+        width=88,
+        initial_indent="  ",
+        subsequent_indent="  ",
+        break_on_hyphens=False,
+    )
+    return (
+        "usage: fig-agent <command> [args ...]\n"
+        "\ncore commands:\n"
+        f"{listing}\n"
+        "\nInternal-compatibility and retired-default commands are not listed\n"
+        "here; run `fig-agent doctor --commands` for the full surface."
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         _maybe_reexec_with_uv_project()
     args = list(argv if argv is not None else sys.argv[1:])
     if not args:
-        print(
-            "usage: fig-agent "
-            "<doctor|status|context-pack|compile|ground|run|export|adjudicate|closeout> ...",
-            file=sys.stderr,
-        )
+        print(_usage_text(), file=sys.stderr)
         return 2
     command, rest = args[0], args[1:]
+    if command in HELP_COMMANDS:
+        print(_usage_text())
+        return 0
     if command not in ALL_COMMANDS:
         print(f"fig-agent: unknown command {command!r}", file=sys.stderr)
         return 2
     if command in RETIRED_DEFAULT_COMMANDS:
         return _retired_default_command(command)
+    # Delegated parsers that declare no prog derive it from sys.argv[0], which
+    # otherwise advertises a usage line the operator cannot run.
+    sys.argv[0] = f"fig-agent {command}"
     if command == "doctor":
         return _doctor(rest)
     if command == "status":

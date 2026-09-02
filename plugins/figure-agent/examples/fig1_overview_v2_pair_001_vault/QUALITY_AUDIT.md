@@ -1,3 +1,7 @@
+---
+audit_input_hash: sha256:5464d971b096136a5f4fc4cd31ad04cc20410e0b6213a72e9d45579696615d3e
+---
+
 # Quality Audit: fig1_overview_v2_pair_001_vault
 
 **Date:** 2026-05-25

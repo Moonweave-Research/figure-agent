@@ -71,6 +71,47 @@ lives in git history and `docs/figure-agent.md` roadmap gates.
 - `path_reroute` proposes a waypoint detour for a vector blocked by a circle,
   the first composition-level operator; clearance now measures every segment
   of a `--` chain instead of dropping the middle ones.
+- 2026-08-29 gate-audit closure: dormant modules are ratcheted by a
+  reachability walk with a built-in positive control; visual-clash candidates
+  bind to their source node line; a MINOR style finding can reach the
+  single-patch auto-apply route; golden protection asks the fixture's own
+  repository (external workspaces were overwriting committed exports); the
+  golden-acceptance receipt names the authorizing decision record; the
+  closeout step set is pinned.
+- 2026-08-30: a broken fixture's compile contract no longer stops the render
+  test job before pytest runs; the export test declares the candidate source
+  hash it relies on; status prints every publication blocker; the Fig5
+  time-origin label sits clear of the bend-angle axis.
+- 2026-09-02 evidence-authenticity wave (findings of the 6-axis review):
+  `write_attestation` refuses a caller without a terminal and a symlinked
+  output path; a golden acceptance requires a committed decision record,
+  picks the newest one, refuses to reuse an authorization across different
+  exports, and no longer waives a release blocked by the publication gate;
+  git that cannot answer yields `GOLDEN_UNVERIFIABLE`, which `run_export`
+  refuses to overwrite and closeout names instead of routing to
+  `/fig_export`. Every compile writes `build/compile_run.json`; the render
+  manifest, `strict_status.json`, and the spine receipts carry that run id
+  and the render hash, so a receipt cannot outlive the render it describes
+  and the manifest CLI cannot re-declare a stale PDF fresh. An accepted
+  fixture whose attestation hash no longer matches reports
+  `accepted_but_unattested` and loses `golden_ready`. Closeout gates read
+  `build/collisions.json` and `build/visual_clash.json` instead of audit
+  prose, reject an empty theory guard and an unstamped audit, and match a
+  loop record by render and source hash rather than mtime; the release gate
+  aggregation is a tested function. The Claude MCP manifest uses
+  `${CLAUDE_PLUGIN_ROOT}` again (the 2026-08-01 relative form had left the
+  plugin server unreachable for 32 days) and Codex launches from its own
+  manifest; the render CI loop compiles every fixture before failing; the
+  driver lists every publication blocker; the reachability ratchet seeds from
+  explicit script paths, not prose words; readiness blocks on a required
+  closeout step that stopped being emitted; a blocking plan finding scoped
+  to one fixture no longer invalidates every other fixture's paper placement;
+  `check_plan_consistency` no longer crashes on relative paths and flags a
+  superseded fixture that still declares a main-slot binding. CLI usage is
+  generated from the core command set with a working top-level `--help`,
+  every subcommand names itself as `fig-agent <name>`, the authority document
+  lists all 30 MCP tools under a drift test, and the shipped top-level docs
+  are classified.
 
 ### Removed
 

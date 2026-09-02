@@ -7,6 +7,7 @@ asserting build/PDF == exports/PDF after run_export.py succeeds.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -18,8 +19,10 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
+import status_readiness_policy  # noqa: E402
 from export_freshness import (  # noqa: E402
     EXPORT_FRESH,
+    EXPORT_GOLDEN_UNVERIFIABLE,
     EXPORT_MISSING,
     EXPORT_STALE,
     EXPORT_TRACKED_GOLDEN,
@@ -78,7 +81,8 @@ def test_state_fresh_against_declared_current_candidate_render(tmp_path: Path) -
     other = _scaffold_minimal_fixture(tmp_path, "candidate_source", body="candidate")
     candidate = fixture / "review" / "repair-c1"
     (candidate / "build").mkdir(parents=True)
-    (candidate / "repaired.tex").write_text("% candidate\n", encoding="utf-8")
+    candidate_source = candidate / "repaired.tex"
+    candidate_source.write_text("% candidate\n", encoding="utf-8")
     candidate_pdf = candidate / "build" / "repaired.pdf"
     shutil.copy(other / "build" / "candidate_source.pdf", candidate_pdf)
     (fixture / "review" / "current-candidate.json").write_text(
@@ -89,6 +93,8 @@ def test_state_fresh_against_declared_current_candidate_render(tmp_path: Path) -
                 "candidate_id": "repair-c1",
                 "candidate_root": "review/repair-c1",
                 "source_path": "repaired.tex",
+                "source_sha256": "sha256:"
+                + hashlib.sha256(candidate_source.read_bytes()).hexdigest(),
                 "evidence": {"render_pdf": "build/repaired.pdf"},
                 "promotion_state": "candidate_only",
                 "human_gate": "pending",
@@ -262,4 +268,61 @@ def test_run_export_skips_tracked_golden_without_build(
 
     assert rc == 0, (
         "TRACKED_GOLDEN without --force-golden must succeed (golden protection is the success path)"
+    )
+
+
+def test_tracked_golden_short_circuits_content_but_release_still_needs_fresh(
+    tmp_path: Path,
+) -> None:
+    """TRACKED_GOLDEN returns before the content comparison, so a committed but
+    stale export keeps golden status. Document what still holds: workflow_ready
+    accepts it, release_ready does not."""
+    repo = tmp_path / "repo"
+    fixture = repo / "examples" / "goldfig"
+    (fixture / "build").mkdir(parents=True)
+    exports = fixture / "exports"
+    exports.mkdir()
+    for suffix in ("pdf", "svg", "png", "tif"):
+        (exports / f"goldfig.{suffix}").write_bytes(b"committed but stale")
+    (fixture / "build" / "goldfig.pdf").write_bytes(b"a different render entirely")
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-c", "user.email=t@example.com", "-c", "user.name=Test", "commit", "-qm", "g"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+
+    assert compute_export_state(fixture, "goldfig") == EXPORT_TRACKED_GOLDEN
+    assert status_readiness_policy.workflow_ready(
+        stage=4,
+        notes=[],
+        exports_substate=EXPORT_TRACKED_GOLDEN,
+        render_state="FRESH",
+        critique_requires_action=False,
+    )
+    assert not status_readiness_policy.release_ready(
+        golden_ready=True,
+        exports_substate=EXPORT_TRACKED_GOLDEN,
+        final_artifact={"kind": "generated_export", "state": "FRESH"},
+        publication_gate_state="PASS",
+    )
+
+
+def test_golden_unverifiable_is_protective_downstream_of_the_readiness_policy() -> None:
+    """A new export state must not read as passing anywhere it flows: neither
+    membership test in status_readiness_policy admits it."""
+    assert not status_readiness_policy.workflow_ready(
+        stage=4,
+        notes=[],
+        exports_substate=EXPORT_GOLDEN_UNVERIFIABLE,
+        render_state="FRESH",
+        critique_requires_action=False,
+    )
+    assert not status_readiness_policy.release_ready(
+        golden_ready=True,
+        exports_substate=EXPORT_GOLDEN_UNVERIFIABLE,
+        final_artifact={"kind": "generated_export", "state": "FRESH"},
+        publication_gate_state="PASS",
     )

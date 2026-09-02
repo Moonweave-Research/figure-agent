@@ -7,7 +7,25 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import closeout_readiness  # noqa: E402
+import fig_closeout  # noqa: E402
 from test_evidence_index import _fixture  # noqa: E402
+
+
+def _passing_steps(*, skip: str | None = None) -> list[dict]:
+    """Readiness requires the full closeout step set; a fake that omits one is
+    asserting against a gate the production report never produces."""
+    return [
+        {
+            "id": step_id,
+            "state": "passed",
+            "reason": f"{step_id} passed",
+            "command": None,
+            "evidence_path": None,
+            "evidence": {},
+        }
+        for step_id in fig_closeout.REQUIRED_CLOSEOUT_STEP_IDS
+        if step_id != skip
+    ]
 
 
 def _passing_closeout(_name, repo_root, runs_root=None):
@@ -30,7 +48,7 @@ def _passing_closeout(_name, repo_root, runs_root=None):
             "publication_gate_state": "NOT_APPLICABLE",
             "publication_gate_failures": [],
         },
-        "steps": [],
+        "steps": _passing_steps(),
     }
 
 
@@ -70,6 +88,11 @@ def test_closeout_ready_preserves_existing_closeout_blockers(
                     "evidence_path": "spec.yaml",
                     "evidence": {},
                 },
+                *[
+                    step
+                    for step in _passing_steps()
+                    if step["id"] not in {"text_boundary_checks", "loop_rerun"}
+                ],
                 {
                     "id": "loop_rerun",
                     "state": "blocked",
@@ -93,10 +116,15 @@ def test_closeout_ready_preserves_existing_closeout_blockers(
     assert [check["id"] for check in readiness["checks"]] == [
         "candidate_apply",
         "text_boundary_checks",
+        "compile",
+        "critique",
+        "adjudication",
+        "export",
         "golden_acceptance",
         "accepted_state",
         "final_artifact",
         "release",
+        "golden_contract",
         "loop_rerun",
     ]
     assert readiness["next_action"] == "fig-agent text-boundary candidate_demo --write"
@@ -419,3 +447,79 @@ def test_final_artifact_check_blocks_known_bad_states() -> None:
 def test_final_artifact_check_not_required_when_state_absent() -> None:
     check = closeout_readiness._final_artifact_check({})
     assert check["state"] == "not_required"
+
+
+def test_closeout_ready_blocks_when_a_required_closeout_step_stops_being_emitted(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Readiness used to assemble from whatever closeout happened to emit, so a
+    step that stopped being produced left the gate instead of blocking it."""
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    def fake_closeout(_name, repo_root, runs_root=None):
+        payload = _passing_closeout(_name, repo_root, runs_root)
+        payload["steps"] = _passing_steps(skip="golden_contract")
+        return payload
+
+    monkeypatch.setattr(closeout_readiness, "_compute_closeout", fake_closeout)
+
+    readiness = closeout_readiness.build_closeout_readiness(
+        "candidate_demo",
+        workspace_root=workspace,
+    )
+
+    checks = {check["id"]: check for check in readiness["checks"]}
+    assert readiness["status"] == "blocked"
+    assert checks["golden_contract"]["state"] == "blocked"
+    assert checks["golden_contract"]["evidence"]["missing_step"] == "golden_contract"
+
+
+def test_readiness_orders_its_checks_by_the_closeout_step_contract() -> None:
+    ordered = [
+        check["id"]
+        for check in closeout_readiness._ordered_checks(
+            closeout_readiness._check(check_id="candidate_apply", state="not_required", reason=""),
+            [],
+            {},
+        )
+    ]
+
+    assert [step_id for step_id in ordered if step_id in fig_closeout.REQUIRED_CLOSEOUT_STEP_IDS] \
+        == list(fig_closeout.REQUIRED_CLOSEOUT_STEP_IDS)
+
+
+def test_closeout_ready_blocks_accepted_but_unattested(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    def fake_closeout(_name, repo_root, runs_root=None):
+        payload = _passing_closeout(_name, repo_root, runs_root)
+        payload["status"] = {
+            **payload["status"],
+            "acceptance_state": "ACCEPTED",
+            "acceptance_freshness_state": "accepted_but_unattested",
+            "workflow_ready": True,
+            "release_ready": False,
+            "final_ready": False,
+            "publication_gate_state": "PROVENANCE_REQUIRED",
+            "publication_gate_failures": [],
+        }
+        return payload
+
+    monkeypatch.setattr(closeout_readiness, "_compute_closeout", fake_closeout)
+
+    readiness = closeout_readiness.build_closeout_readiness(
+        "candidate_demo",
+        candidate_id="CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    checks = {check["id"]: check for check in readiness["checks"]}
+    assert readiness["status"] == "blocked"
+    assert checks["accepted_state"]["state"] == "blocked"
+    assert checks["accepted_state"]["reason"].startswith("accepted_but_unattested:")

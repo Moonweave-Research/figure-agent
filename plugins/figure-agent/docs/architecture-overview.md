@@ -94,9 +94,12 @@ documented workflow around that entrypoint is:
 7. `/fig_export` writes declared derived formats.
 8. `/fig_closeout` reports remaining machine and human gates.
 
-Compatibility commands remain callable only where their evidence contract is
-tested. They are not separate product authorities or permission to revive
-retired quality search, prompt orchestration, or SVG-polish machinery.
+Compatibility commands remain callable. Only `loop`, `improve`, and `e2e-smoke`
+hold a tested evidence contract in `scripts/compatibility_command_contracts.py`;
+the remaining internal adapters dispatch without one, which is the open R4 item
+in `docs/figure-agent.md`. None of them is a separate product authority or
+permission to revive retired quality search, prompt orchestration, or SVG-polish
+machinery.
 
 ## Agent context loading
 
@@ -146,7 +149,7 @@ ambiguous lineage, stale hashes, or multiple current leaves fail closed.
 - `scripts/checks/check_text_boundary_clash.py`
 - `scripts/checks/check_label_path_proximity.py`
 - `scripts/checks/check_physics_grounding.py`
-- `scripts/checks/check_golden_artifacts.py`
+- `scripts/checks/check_print_size_contract.py`
 
 Strict mode promotes declared blocking findings without weakening detector
 thresholds. A check with no declared coverage is not equivalent to a checked,
@@ -177,6 +180,11 @@ Every transition validates the expected fixture, source, current state, actor,
 and evidence hashes. Recovery preserves prior evidence. A failed repair rolls
 back or publishes a repair-required state; it does not overwrite the canonical
 source or advance by best effort.
+
+Golden protection is a closeout gate, not a compile gate. `scripts/fig_closeout.py`
+calls `scripts/checks/check_golden_artifacts.py` with `require_accepted=True`;
+`scripts/compile.sh` never invokes it. `fig-agent helper check_golden_artifacts.py`
+runs the same check manually.
 
 `/fig_run --execute` may perform only allowlisted deterministic work. It stops
 before external host review, scientific interpretation, source-patch choice,

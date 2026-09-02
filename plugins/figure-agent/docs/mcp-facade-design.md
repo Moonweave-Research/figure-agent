@@ -4,6 +4,10 @@ Status: draft approved for planning
 Date: 2026-06-07
 Target: figure-agent 0.10.x after the 0.9.3 Cowork plugin package
 
+> This is a 2026-06-07 design record, not a tool reference. It names 6 tools;
+> the server now advertises 30. For the current list, read the operator surface
+> inventory in `docs/figure-agent.md`, which a test binds to the live registry.
+
 ## Current State
 
 figure-agent is currently a Claude/Cowork plugin with a stable CLI core:
@@ -167,6 +171,17 @@ import time, but the launch command intentionally uses `uv run --project` so
 tool subprocesses have the same Python dependency set as `fig-agent`.
 Tool subprocesses should invoke `${CLAUDE_PLUGIN_ROOT}/bin/fig-agent` through
 the running Python interpreter rather than nesting another `uv run --project`.
+
+**Two manifests, one server.** The shape above is the Claude manifest,
+`plugins/figure-agent/.mcp.json`, and Claude Code is its only reader. Codex
+launches the same server from `.codex-plugin/mcp.json`, which
+`.codex-plugin/plugin.json` names in its `mcpServers` field, in the relative `.`
+project and `cwd` form that runtime needs. The two hosts must not share one
+file. On 2026-08-01 the Claude manifest was rewritten to relative `.` to
+accommodate Codex; Claude Code launches the plugin from the repository root
+rather than the plugin directory, so the server failed to start for 32 days with
+`can't open file '.../mcp/figure_agent_server.py'`. `${CLAUDE_PLUGIN_ROOT}` is
+required in the Claude manifest.
 
 The server must still resolve the workspace through `FIGURE_AGENT_WORKSPACE`,
 `CLAUDE_PROJECT_DIR`, or a non-plugin-root current working directory.

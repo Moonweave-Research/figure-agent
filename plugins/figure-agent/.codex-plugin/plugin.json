@@ -15,7 +15,7 @@
     "reproducibility"
   ],
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json",
+  "mcpServers": "./.codex-plugin/mcp.json",
   "interface": {
     "displayName": "Figure Agent",
     "shortDescription": "Compile, inspect, and guard scientific schematics",

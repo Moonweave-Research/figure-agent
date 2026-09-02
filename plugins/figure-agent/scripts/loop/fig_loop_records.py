@@ -6,6 +6,27 @@ import json
 from pathlib import Path
 from typing import Any
 
+from quality_manifest import file_sha256
+
+# Manifest fields naming the artifacts the iteration actually read, so a
+# consumer can bind the record to a render instead of trusting its mtime.
+RENDER_PDF_HASH_FIELD = "render_pdf_sha256"
+SOURCE_TEX_HASH_FIELD = "source_tex_sha256"
+
+
+def run_input_hashes(example_dir: Path, name: str) -> dict[str, str | None]:
+    """Content hashes of the render and source a loop iteration ran against.
+
+    A run record used to name only the fixture, so two hand-written JSON files
+    with a fresh mtime were indistinguishable from a real run and the closeout
+    loop_rerun gate could not tell which render the record described."""
+    render_pdf = example_dir / "build" / f"{name}.pdf"
+    source_tex = example_dir / f"{name}.tex"
+    return {
+        RENDER_PDF_HASH_FIELD: file_sha256(render_pdf) if render_pdf.is_file() else None,
+        SOURCE_TEX_HASH_FIELD: file_sha256(source_tex) if source_tex.is_file() else None,
+    }
+
 
 def _json_default(value: Any) -> Any:
     if isinstance(value, Path):
@@ -44,9 +65,7 @@ def json_stdout_summary(run_dir: Path) -> dict[str, Any]:
         "final_artifact_path": (iteration.get("status") or {}).get("final_artifact_path"),
         "journal_grade_assessment": iteration.get("journal_grade_assessment"),
         "top_tier_audit_summary": iteration.get("top_tier_audit_summary"),
-        "editorial_art_direction_summary": iteration.get(
-            "editorial_art_direction_summary"
-        ),
+        "editorial_art_direction_summary": iteration.get("editorial_art_direction_summary"),
         "crop_audit_summary": iteration.get("crop_audit_summary"),
         "aesthetic_lever_summary": iteration.get("aesthetic_lever_summary"),
         "journal_art_direction_playbook_summary": iteration.get(

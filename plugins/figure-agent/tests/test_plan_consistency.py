@@ -313,7 +313,18 @@ def test_real_plan_map_classifies_every_top_level_example_directory() -> None:
         PLUGIN_ROOT / "docs" / "paper_figure_map.yaml",
     )
 
-    assert report["blocking_count"] == 0
+    # Scoped to classification. Blocking findings of other codes are this
+    # checker's job to report, not a reason to disable the coverage check.
+    classification_codes = {
+        "unclassified_spec_less_example",
+        "unmapped_fixture",
+        "missing_mapped_fixture",
+        "stale_non_fixture_artifact",
+        "non_fixture_artifact_has_spec",
+    }
+    assert not [
+        item for item in report["findings"] if item["code"] in classification_codes
+    ]
     exemptions = {
         item["directory"]
         for item in report["findings"]
@@ -411,3 +422,119 @@ def test_fig_agent_plan_check_defaults_are_plugin_root_relative(tmp_path: Path) 
     assert '"schema": "figure-agent.plan-consistency.v2"' in result.stdout
     assert str(PLUGIN_ROOT / "docs" / "paper_figure_map.yaml") in result.stdout
     assert str(PLUGIN_ROOT / "examples") in result.stdout
+
+
+def test_non_main_fixture_may_not_declare_a_main_slot_binding(tmp_path: Path) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    # Declares the slot role the map assigns to fig2, while the map classifies
+    # this fixture as superseded. Nothing in the fixture says it is retired.
+    _write_fixture(examples, "extra", figure_id="fig2", role_id="planned-role")
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map)
+
+    report = check_plan_consistency.build_report(examples, plan_map)
+    blocking = [item for item in report["findings"] if item["severity"] == "blocking"]
+
+    assert report["blocking_count"] == 1
+    assert blocking[0] == {
+        "code": "non_main_fixture_declares_slot_binding",
+        "severity": "blocking",
+        "fixture": "extra",
+        "slot": "fig2",
+        "classification": "regression",
+        "declared_role_id": "planned-role",
+        "slot_role_id": "planned-role",
+        "slot_status": None,
+    }
+
+
+def test_non_main_fixture_without_a_slot_binding_stays_advisory(tmp_path: Path) -> None:
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    _write_fixture(examples, "extra", figure_id="regression", role_id="regression")
+    plan_map = tmp_path / "paper_figure_map.yaml"
+    _write_map(plan_map)
+
+    report = check_plan_consistency.build_report(examples, plan_map)
+
+    assert report["blocking_count"] == 0
+
+
+def test_real_tree_reports_the_two_open_non_main_slot_bindings() -> None:
+    report = check_plan_consistency.build_report(
+        PLUGIN_ROOT / "examples",
+        PLUGIN_ROOT / "docs" / "paper_figure_map.yaml",
+    )
+    declared = {
+        (item["fixture"], item["slot"], item["classification"])
+        for item in report["findings"]
+        if item["code"] == "non_main_fixture_declares_slot_binding"
+    }
+
+    # The fixtures' spec.yaml is the author's to change; the checker's job is
+    # to stop reporting blocking_count 0 while these bindings stand.
+    assert declared == {
+        ("fig3_resistance_mechanism", "fig3", "regression"),
+        ("fig4_trap_energy_diagram", "fig4", "superseded"),
+    }
+
+
+def test_plan_consistency_strict_runs_with_default_relative_arguments(
+    tmp_path: Path,
+) -> None:
+    # A relative --examples-dir used to raise ValueError out of
+    # current_candidate.resolve_current_candidate before any finding was built.
+    result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(PLUGIN_ROOT),
+            "python",
+            str(PLUGIN_ROOT / "scripts" / "checks" / "check_plan_consistency.py"),
+            "--strict",
+        ],
+        cwd=PLUGIN_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert "Traceback" not in result.stderr, result.stderr
+    report = json.loads(result.stdout)
+    assert report["schema"] == "figure-agent.plan-consistency.v2"
+    assert result.returncode == (1 if report["blocking_count"] else 0)
+
+
+def test_resolve_current_candidate_accepts_a_relative_example_dir(
+    tmp_path: Path, monkeypatch
+) -> None:
+    sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
+    import current_candidate
+
+    examples = tmp_path / "examples"
+    _write_fixture(examples, "mapped")
+    candidate_root = examples / "mapped/review/candidate"
+    candidate_root.mkdir(parents=True)
+    (candidate_root / "repaired.tex").write_text("% candidate\n", encoding="utf-8")
+    (examples / "mapped/review/current-candidate.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.current-candidate-pointer.v1",
+                "fixture": "mapped",
+                "candidate_id": "candidate-1",
+                "candidate_root": "review/candidate",
+                "source_path": "repaired.tex",
+                "source_sha256": _sha256_file(candidate_root / "repaired.tex"),
+                "evidence": {"render_pdf": "build/repaired.pdf"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    resolved = current_candidate.resolve_current_candidate(Path("examples/mapped"))
+
+    assert resolved["state"] == "VALID"
+    assert resolved["candidate_root"] == "review/candidate"

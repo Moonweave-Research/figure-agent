@@ -25,7 +25,7 @@ SCHEMA = "figure-agent.module-reachability.v1"
 # these describes a broken walk, not a clean repository.
 REACHABILITY_CONTROLS = (
     "status",
-    "compile_report",
+    "run_export",
     "candidate_apply",
     "experience_log",
     "check_document_status",
@@ -93,7 +93,11 @@ def dormant_modules(plugin_root: Path) -> list[str]:
             body = source.read_text(encoding="utf-8", errors="ignore")
         except OSError:
             continue
-        seeds.update(token for token in set(_NAME_RE.findall(body)) if token in modules)
+        # Markdown is prose: a bare word like "publication" or "critique" is a
+        # sentence, not a call, and seeding from it reports word-stem orphans
+        # as reachable. Only an explicit scripts/<path>.py reference counts.
+        if source.suffix != ".md":
+            seeds.update(token for token in set(_NAME_RE.findall(body)) if token in modules)
         seeds.update(name for name in _SCRIPT_PATH_RE.findall(body) if name in modules)
 
     reached = set(seeds)
@@ -105,7 +109,12 @@ def dormant_modules(plugin_root: Path) -> list[str]:
                     reached.add(dependency)
                     frontier.append(dependency)
 
-    missed = [name for name in REACHABILITY_CONTROLS if name in modules and name not in reached]
+    # A renamed control used to drop out of the positive control silently,
+    # leaving the walk unverified against anything.
+    absent = [name for name in REACHABILITY_CONTROLS if name not in modules]
+    if absent:
+        raise ModuleReachabilityError(f"reachability controls missing: {sorted(absent)}")
+    missed = [name for name in REACHABILITY_CONTROLS if name not in reached]
     if missed:
         raise ModuleReachabilityError(f"reachability controls unreachable: {sorted(missed)}")
     return sorted(set(modules) - reached)

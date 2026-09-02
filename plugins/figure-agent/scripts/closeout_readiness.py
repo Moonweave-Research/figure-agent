@@ -9,12 +9,22 @@ import evidence_index
 import fixture_identity
 import publication_gate
 import runtime_paths
+import status_readiness_policy
 
 SCHEMA = "figure-agent.closeout-readiness.v1"
+# The release-gate checks below are computed here rather than by closeout, and
+# belong after the source/export steps and before the derived rerun/contract
+# steps that depend on them.
+_GATE_CHECKS_AFTER_STEP_ID = "export"
 ACCEPTED_BUT_STALE_REASON = (
     "accepted_but_stale: fixture has an accepted historical state, but current "
     "source, render, critique, or export evidence is stale. Re-run "
     "compile/critique/export and refresh acceptance before closeout."
+)
+ACCEPTED_BUT_UNATTESTED_REASON = (
+    "accepted_but_unattested: the accepted declaration is not bound to the current "
+    "source; the human attestation hash no longer matches. Re-run fig-agent attest "
+    "from a terminal (or re-open the acceptance) before closeout."
 )
 
 
@@ -26,6 +36,12 @@ def _compute_closeout(name: str, *, repo_root: Path, runs_root: Path | None) -> 
     import fig_closeout
 
     return fig_closeout.compute_closeout(name, repo_root=repo_root, runs_root=runs_root)
+
+
+def _required_step_ids() -> tuple[str, ...]:
+    import fig_closeout
+
+    return fig_closeout.REQUIRED_CLOSEOUT_STEP_IDS
 
 
 def _check(
@@ -131,11 +147,15 @@ def _accepted_state_check(status: dict[str, Any]) -> dict[str, Any]:
         "acceptance_freshness_state": freshness_state,
         "workflow_ready": bool(status.get("workflow_ready")),
     }
-    if freshness_state == "accepted_but_stale":
+    if freshness_state in status_readiness_policy.ACCEPTANCE_FRESHNESS_BLOCKING_STATES:
         return _check(
             check_id="accepted_state",
             state="blocked",
-            reason=ACCEPTED_BUT_STALE_REASON,
+            reason=(
+                ACCEPTED_BUT_STALE_REASON
+                if freshness_state == "accepted_but_stale"
+                else ACCEPTED_BUT_UNATTESTED_REASON
+            ),
             evidence=evidence,
         )
     return _check(
@@ -290,24 +310,36 @@ def _release_check(status: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _missing_step_check(step_id: str) -> dict[str, Any]:
+    return _check(
+        check_id=step_id,
+        state="blocked",
+        reason=f"closeout did not emit required step {step_id}",
+        evidence={"missing_step": step_id},
+    )
+
+
 def _ordered_checks(
     candidate_check: dict[str, Any],
     closeout_checks: list[dict[str, Any]],
     status: dict[str, Any],
 ) -> list[dict[str, Any]]:
     closeout_by_id = _checks_by_id(closeout_checks)
-    ordered_ids = ["text_boundary_checks", "compile", "critique", "adjudication", "export"]
+    required_ids = _required_step_ids()
+    split = required_ids.index(_GATE_CHECKS_AFTER_STEP_ID) + 1
     checks = [candidate_check]
-    checks.extend(check for check_id in ordered_ids if (check := closeout_by_id.get(check_id)))
+    checks.extend(
+        closeout_by_id.get(step_id) or _missing_step_check(step_id)
+        for step_id in required_ids[:split]
+    )
     checks.append(_golden_acceptance_check(status=status, closeout_checks=closeout_by_id))
     checks.append(_accepted_state_check(status))
     checks.append(_final_artifact_check(status))
     checks.append(_release_check(status))
-    if loop_rerun := closeout_by_id.get("loop_rerun"):
-        checks.append(loop_rerun)
-    for check in closeout_checks:
-        if check.get("id") not in {*ordered_ids, "loop_rerun"}:
-            checks.append(check)
+    checks.extend(
+        closeout_by_id.get(step_id) or _missing_step_check(step_id)
+        for step_id in required_ids[split:]
+    )
     return checks
 
 

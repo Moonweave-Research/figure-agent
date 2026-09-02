@@ -2555,7 +2555,7 @@ def run_workflow(
 
 
 def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
-    parser = argparse.ArgumentParser(prog="fig_run.py")
+    parser = argparse.ArgumentParser(prog="fig-agent run")
     parser.add_argument("name")
     parser.add_argument("--mode", choices=list(RUN_MODES), required=True)
     parser.add_argument("--goal", required=True)

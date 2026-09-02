@@ -682,7 +682,7 @@ def _validate_fixture_name(name: str, original: str) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog="fig-agent adjudicate", description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     scaffold_parser = subparsers.add_parser(

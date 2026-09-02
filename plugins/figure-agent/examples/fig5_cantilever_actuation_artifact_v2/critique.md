@@ -1,11 +1,11 @@
 ---
 schema: figure-agent.critique.v1.17
 fixture: fig5_cantilever_actuation_artifact_v2
-generated_at: '2026-08-13T01:22:40Z'
+generated_at: '2026-08-30T10:17:45Z'
 generator: Claude host vision critique
 generator_version: sha256:78cf3f9eff794f643906438081641c4f496a370cb3bf78bff39c863383018516
 rubric_version: figure-agent.critique-rubric.v1.17
-critique_input_hash: sha256:50642359dfc182bfbc487fab92311e477439bf51c6219bd41bf3ec7c7e77e51f
+critique_input_hash: sha256:2975827cb3baaf1eefaf2dce96e55e77969551aa26d2298e55231f2cb257b23b
 verdict: ready
 findings: []
 panels: []
@@ -27,7 +27,7 @@ audit_enumeration:
       - component: qualitative response trace
         mount_support: N/A
         rationale: Panel D begins at t = 0, shows the positive plateau, reversed excursion, and slow recovery.
-        connections: A direct source-OFF tick terminates at the plateau event, while a separate rail owns the floating interval before reversed drive and recovery.
+        connections: A direct source-OFF tick terminates at the plateau event, a separate rail owns the floating interval before reversed drive and recovery, and the time-origin label now starts clear of the bend-angle axis while still binding to its origin tick.
     missing_from_reference:
       - element: representative video frame or measured waveform
         status: intentional_omission
@@ -73,12 +73,17 @@ audit_enumeration:
       intended_target: slower relaxation toward the neutral baseline
       matches: true
       proposed_fix: ''
+    - label: 't = 0'
+      nearest_object: origin tick below the Panel D time axis at the trace start
+      intended_target: the actuation-onset origin of the response timebase
+      matches: true
+      proposed_fix: ''
   physical_plausibility:
     - check: cable_gravity
       finding: The manual lead-lift cue is attached directly to the mounted clip rather than reading as a detached secondary circuit; it does not imply an automated stage or unsupported cable routing.
       verdict: convention_acceptable
     - check: floating_components
-      finding: Panel B and Panel C explicitly show the clip floating after source OFF; no ground symbol persists in those states.
+      finding: Panel B and Panel C explicitly show the clip floating after source OFF; no ground symbol persists in those states, and the Panel C clamp stub reads as a terminal post rather than a retained ground.
       verdict: convention_acceptable
     - check: spatial_proximity
       finding: The cantilever and drive electrode remain separated by a clear air gap in Panels A-C.
@@ -141,14 +146,14 @@ quality_axes:
   subregion_integration:
     verdict: pass
     confidence: high
-    rationale: The manual lead-lift cue now sits at the actual clip terminal, while force arrows and response labels remain attached to their intended state transitions.
+    rationale: The manual lead-lift cue sits at the actual clip terminal, force arrows and response labels remain attached to their intended state transitions, and the Panel D time-origin sub-region now separates label from axis.
     evidence: Required visual-clash crops and full-row crops.
     blocking_items: []
     recommended_action: none
   component_fidelity:
     verdict: pass
     confidence: high
-    rationale: The clamp, cantilever, electrode, air gap, charge markers, and response trace are present; rendered-vector evidence now confirms the A-C members retain one width and near-equal centerline length while their bend states remain distinct.
+    rationale: The clamp, cantilever, electrode, air gap, charge markers, and response trace are present; rendered-vector evidence confirms the A-C members retain one width and near-equal centerline length while their bend states remain distinct.
     evidence: Panels A-C crops plus build/silhouette_morphology.json (3 members and 1 comparison group checked, 0 violations).
     blocking_items: []
     recommended_action: none
@@ -162,21 +167,21 @@ quality_axes:
   composition_layout:
     verdict: pass
     confidence: high
-    rationale: The single-row 180 mm contract is balanced; separators remain clear and the D horizontal angle label stays inside its panel.
+    rationale: The single-row 180 mm contract is balanced, separators remain clear, and both the D horizontal angle label and the time-origin label stay inside their panel without touching a structural rule.
     evidence: print_178mm and print_thumbnail crops; strict geometry evidence.
     blocking_items: []
     recommended_action: none
   label_annotation_semantics:
     verdict: pass
     confidence: high
-    rationale: Force, charge, voltage, state, and trace labels point to the intended visual owners without a release-blocking collision; the B lead lift is now physically adjacent to the floating clip, and the D source-OFF label terminates on its plateau event rather than only sharing its x-position.
-    evidence: The current full render and six report-only visual-clash candidates were inspected directly; all candidates remain proximity false positives.
+    rationale: Force, charge, voltage, state, and trace labels point to the intended visual owners without a release-blocking collision; the time-origin label now reads as one token owned by its tick instead of being split by the bend-angle axis.
+    evidence: The current full render and five report-only visual-clash candidates were inspected directly; all five remain proximity false positives on math glyph strokes.
     blocking_items: []
     recommended_action: none
   journal_polish:
     verdict: pass
     confidence: medium
-    rationale: Type, stroke hierarchy, palette, and white space remain legible at the declared print reductions; this remains an exploratory artifact rather than a final data figure.
+    rationale: Type, stroke hierarchy, palette, and white space remain legible at the declared print reductions and no label shares space with a rule; this remains an exploratory artifact rather than a final data figure.
     evidence: print_178mm and print_thumbnail.
     blocking_items: []
     recommended_action: none
@@ -191,7 +196,7 @@ quality_axes:
     verdict: needs_human
     confidence: high
     rationale: The render is internally coherent, but the exact video/data binding and experimental protocol remain outside this story artifact.
-    evidence: briefing Scope explicitly defers representative video frames and exact protocol/data binding.
+    evidence: briefing Scope explicitly defers representative video frames and exact protocol/data binding; every other axis passes or is not applicable.
     blocking_items:
       - human_protocol_validation - confirm the sequence and waveform against the experiment before publication use.
     recommended_action: human_review
@@ -203,7 +208,7 @@ top_tier_audit:
     blocks_high_impact: false
   target_journal_fit:
     verdict: pass
-    finding: The current render follows editorial_restraint through a quiet flat-schematic register and compact single-row Nature-family composition.
+    finding: The current render follows editorial_restraint and whitespace_breathing through a quiet flat-schematic register, a compact single-row Nature-family composition, and labels that keep visible clearance from panel rules and axes.
     concrete_fix: accept_simplification
     blocks_high_impact: false
   novelty_claim_support:
@@ -233,7 +238,7 @@ top_tier_audit:
     blocks_high_impact: false
   reduction_print_readability:
     verdict: pass
-    finding: The current print_178mm and thumbnail crops demonstrate print_scale_authority for titles, state labels, force arrows, and the response trace.
+    finding: The current print_178mm and thumbnail crops demonstrate print_scale_authority for titles, state labels, force arrows, the response trace, and the time-origin label.
     concrete_fix: accept_simplification
     blocks_high_impact: false
   accessibility_color_robustness:
@@ -261,7 +266,7 @@ editorial_art_direction:
     blocks_high_impact: false
   illustration_readiness:
     verdict: pass
-    evidence: The apparatus silhouettes and qualitative trace are clean at print scale.
+    evidence: The apparatus silhouettes and qualitative trace are clean at print scale, and full_q4 shows the time-origin label clear of the bend-angle axis.
     rationale: No source-level illustration blocker remains in this review.
     concrete_fix: accept_simplification
     blocks_high_impact: false
@@ -297,8 +302,8 @@ editorial_art_direction:
     blocks_high_impact: false
   tikz_vs_svg_polish_trigger:
     verdict: pass
-    evidence: The current crop review found no unresolved source_semantics_or_layout defect and confirms the polish_boundary remains at source-authoritative TikZ.
-    rationale: Keep the semantic source authoritative under tikz_until_layout_closes; refresh the generated export after adjudication.
+    evidence: The current render carries no unresolved source_semantics_or_layout defect - the VC004_F and VC005_F crops are math-glyph false positives and the Panel D axis-label collision is closed - so the polish_boundary stays at source-authoritative TikZ.
+    rationale: The remaining work is finish_only at most, so tikz_until_layout_closes is satisfied and the generated export should be refreshed after adjudication rather than polished in SVG.
     concrete_fix: accept_simplification
     blocks_high_impact: false
     recommended_path: continue_tikz
@@ -315,7 +320,7 @@ editorial_art_direction:
 journal_grade_assessment:
   schema: figure-agent.journal-grade-assessment.v1
   scoring_mode: fresh_reaudit
-  assessed_artifact_hash: sha256:3b3639f607ceb2c5a57047c7c8cca30f671125a0cd35e8a5869c89f2c207b591
+  assessed_artifact_hash: sha256:2975827cb3baaf1eefaf2dce96e55e77969551aa26d2298e55231f2cb257b23b
   benchmark_level: solid_manuscript
   confidence: medium
   blockers:
@@ -324,7 +329,7 @@ journal_grade_assessment:
   regressions: []
   score_is_gateable: false
   next_quality_bottleneck: human_policy
-  rationale: The current render closes the editorial_restraint and polish_boundary checks; the exact experimental sequence and waveform still require human evidence binding.
+  rationale: The current render closes editorial_restraint, whitespace_breathing, and polish_boundary - the Panel D time-origin label now holds visible clearance from the bend-angle axis in the full_q4 and print_178mm crops - and the exact experimental sequence and waveform still require human evidence binding.
 journal_art_direction_playbook_audit:
   schema: figure-agent.journal-art-direction-playbook-audit.v1
   playbook_id: nc-main-text
@@ -348,12 +353,12 @@ journal_art_direction_playbook_audit:
       rationale: The current artifact follows typography_authority with readable but quiet navigation type.
     - id: whitespace_breathing
       verdict: pass
-      evidence: OFF, clip-floating, residual-force, Coulomb, and Maxwell labels occupy separate lanes with zero blocking clash or text-boundary findings.
+      evidence: OFF, clip-floating, residual-force, Coulomb, Maxwell, and the Panel D time-origin labels each occupy their own lane; the full_q4 crop shows the origin label starting clear of the bend-angle axis rather than straddling it.
       positive_signal_refs: [calm_first_glance]
       anti_pattern_refs: [mechanical_repeat]
       route: none
       linked_evidence: [quality_axes.composition_layout, quality_axes.label_annotation_semantics]
-      rationale: The densest apparatus regions retain visible breathing room under whitespace_breathing.
+      rationale: The densest apparatus regions and the one previously colliding label now retain visible breathing room under whitespace_breathing.
     - id: muted_palette
       verdict: pass
       evidence: Amber encodes the film, red the trapped-charge and force claim, blue the response, and gray the apparatus across A-D.
@@ -364,7 +369,7 @@ journal_art_direction_playbook_audit:
       rationale: Every non-gray hue has a repeated semantic role under muted_palette.
     - id: polish_boundary
       verdict: pass
-      evidence: All semantic and geometry changes were made in TikZ and recompiled; no SVG-only meaning change exists.
+      evidence: All semantic and geometry changes, including the time-origin label anchor, were made in TikZ and recompiled; no SVG-only meaning change exists.
       positive_signal_refs: [print_scale_authority]
       anti_pattern_refs: [mechanical_repeat]
       route: none
@@ -405,7 +410,7 @@ aesthetic_lever_audit:
     linked_evidence: [quality_axes.label_annotation_semantics, audit_enumeration.label_target_matching]
     allowed_next_adjustment: ''
     forbidden_adjustment_guard: Do not invent an automated switch, retain specimen ground after isolation, or connect the floating clip to the drive electrode.
-    rationale: Electrical labels now follow electrical_state_ownership without positional ambiguity.
+    rationale: Electrical labels follow electrical_state_ownership without positional ambiguity.
   - lever_id: repeated_member_continuity
     dimension: component_fidelity
     verdict: pass
@@ -429,13 +434,13 @@ aesthetic_lever_audit:
     linked_evidence: [quality_axes.scientific_plausibility, top_tier_audit.novelty_claim_support]
     allowed_next_adjustment: ''
     forbidden_adjustment_guard: Do not add numeric force magnitudes or depict the conditional reverse bend as a measured force decomposition.
-    rationale: Arrow geometry now agrees with the stated conditional force inequality.
+    rationale: Arrow geometry agrees with the stated conditional force inequality.
   - lever_id: qualitative_response_morphology
     dimension: cross_panel_grammar
     verdict: pass
     confidence: high
     observed_positive_signals:
-      - The trace holds a positive plateau, binds source OFF to its plateau event with a direct tick, separates the clip-floating rail from reversed drive, descends faster than the initial rise, and recovers slowly.
+      - The trace holds a positive plateau, binds source OFF to its plateau event with a direct tick, separates the clip-floating rail from reversed drive, descends faster than the initial rise, recovers slowly, and keeps a visible t = 0 origin that now reads as one token.
     observed_anti_patterns: []
     route: none
     linked_evidence: [quality_axes.message_storyline, editorial_art_direction.narrative_choreography]
@@ -447,7 +452,7 @@ aesthetic_lever_audit:
     verdict: pass
     confidence: medium
     observed_positive_signals:
-      - Navigation type, force arrows, event labels, and the response trace remain legible at 100, 50, and 33 percent and in the manifest-bound print proxies.
+      - Navigation type, force arrows, event labels, the time-origin label, and the response trace remain legible at 100, 50, and 33 percent and in the manifest-bound print proxies.
     observed_anti_patterns: []
     route: none
     linked_evidence: [quality_axes.journal_polish, top_tier_audit.reduction_print_readability]
@@ -476,7 +481,7 @@ aesthetic_gate_audit:
   - slot: print_scale_finish
     verdict: pass
     route: pass
-    evidence: print_178mm and print_thumbnail remain legible.
+    evidence: print_178mm and print_thumbnail remain legible and show no label sharing space with a rule.
     rationale: Reduced-scale evidence passes.
     linked_evidence: []
 aesthetic_antipattern_audit:
@@ -526,8 +531,8 @@ aesthetic_antipattern_audit:
     verdict: absent
     severity: NIT
     route: none
-    evidence: Print crops show clear panel separators and label lanes.
-    rationale: The row is dense but not cramped.
+    evidence: Print crops show clear panel separators and label lanes, and the Panel D time-origin label now holds visible clearance from the bend-angle axis.
+    rationale: The row is dense but not cramped, and the one zero-clearance label of the previous pass is resolved.
     linked_evidence: []
   - id: low_authority_typography
     verdict: absent
@@ -576,7 +581,7 @@ weakest_panel_coherence:
   subregion_id: none
   weakness_type: none
   route: none
-  evidence: No required crop shows a weakest-panel mismatch.
+  evidence: No required crop shows a weakest-panel mismatch; the Panel D time-origin sub-region flagged in the previous pass is repaired.
   rationale: A-D form a coherent sequence.
   linked_evidence: []
 reference_learning_accountability:
@@ -586,14 +591,14 @@ reference_learning_accountability:
   underlearning: not_applicable
   route: none
   evidence: No reference image is declared.
-  rationale: Briefing-grounded Codex critique only.
+  rationale: Briefing-grounded critique only.
   linked_evidence: []
 micro_defects:
   - id: M001
     crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC001_q.png
     kind: label_path_near_miss
     severity: NIT
-    observation: VC001 isolates the q glyph in the Panel C trapped-charge label; the glyph remains legible and clear of the leader.
+    observation: VC001 isolates the q glyph in the Panel C trapped-charge label; the flagged dark run is the italic descender meeting its tr subscript, and no drawn path enters the crop.
     linked_finding_id: ''
     visual_clash_ref: VC001
     text_boundary_ref: ''
@@ -601,7 +606,7 @@ micro_defects:
     undeclared_geometry_ref: ''
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC001 is a false positive because the leader remains separate from the q glyph box and the current crop stays legible at print scale."
+    accept_simplification_rationale: "VC001 is a false positive because the dark pixels belong to the glyph itself and the leader remains separate from the q glyph box at print scale."
   - id: M002
     crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC002_q.png
     kind: label_path_near_miss
@@ -629,10 +634,10 @@ micro_defects:
     accept_simplification_reason: false_positive
     accept_simplification_rationale: "VC003 is a false positive because the Panel A charge leader remains separate from the q glyph box and the direct crop is clear."
   - id: M004
-    crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC004_crop.png
+    crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC004_F.png
     kind: label_path_near_miss
     severity: NIT
-    observation: VC004 isolates the equality glyph in the Panel D t = 0 label; the glyph remains legible and clear of the y-axis.
+    observation: VC004 isolates the leading absolute-value bar of F_C in the Panel C inequality; the vertical dark run the detector reads as a path is the math delimiter itself.
     linked_finding_id: ''
     visual_clash_ref: VC004
     text_boundary_ref: ''
@@ -640,12 +645,12 @@ micro_defects:
     undeclared_geometry_ref: ''
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC004 is a false positive because the equality glyph is separate from the y-axis and the current crop shows clear white space."
+    accept_simplification_rationale: "VC004 is a false positive because the vertical stroke is the absolute-value delimiter, not a drawn path, and it remains distinct from the surrounding force symbol."
   - id: M005
     crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC005_F.png
     kind: label_path_near_miss
     severity: NIT
-    observation: VC005 isolates the first force-symbol glyph in the Panel C inequality; the full expression remains legible and separated.
+    observation: VC005 isolates the leading absolute-value bar of F_M in the same Panel C inequality; the expression remains legible and separated.
     linked_finding_id: ''
     visual_clash_ref: VC005
     text_boundary_ref: ''
@@ -653,20 +658,7 @@ micro_defects:
     undeclared_geometry_ref: ''
     status: accept_simplification
     accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC005 is a false positive because the first force-symbol glyph is separate from nearby paths and the compact expression remains readable."
-  - id: M006
-    crop: examples/fig5_cantilever_actuation_artifact_v2/build/audit_crops/visual_clash/VC006_F.png
-    kind: label_path_near_miss
-    severity: NIT
-    observation: VC006 isolates the second force-symbol glyph in the same Panel C inequality; the expression remains legible and separated.
-    linked_finding_id: ''
-    visual_clash_ref: VC006
-    text_boundary_ref: ''
-    label_path_ref: ''
-    undeclared_geometry_ref: ''
-    status: accept_simplification
-    accept_simplification_reason: false_positive
-    accept_simplification_rationale: "VC006 is a false positive because the second force-symbol glyph is separate from nearby paths and the compact expression remains readable."
+    accept_simplification_rationale: "VC005 is a false positive because the vertical stroke is the absolute-value delimiter, not a drawn path, and the compact expression stays distinct and readable."
 crop_audit_log:
   - crop_id: VC001_q
     path: build/audit_crops/visual_clash/VC001_q.png
@@ -678,7 +670,7 @@ crop_audit_log:
     unintended_visible_anomaly: none
     anomaly_rationale: No unintended mark is present.
     anomaly_link: ''
-    observed_objects: [q glyph, Panel C charge label]
+    observed_objects: [q glyph, tr subscript, Panel C charge label]
     local_relationship: The math glyph remains clear of the nearby leader.
     candidate_refs: [VC001]
   - crop_id: VC002_q
@@ -691,7 +683,7 @@ crop_audit_log:
     unintended_visible_anomaly: none
     anomaly_rationale: No unintended mark is present.
     anomaly_link: ''
-    observed_objects: [q glyph, Panel B retained-charge label]
+    observed_objects: [q glyph, tr subscript, Panel B retained-charge label]
     local_relationship: Math glyph is separated from the nearby leader.
     candidate_refs: [VC002]
   - crop_id: VC003_q
@@ -704,21 +696,21 @@ crop_audit_log:
     unintended_visible_anomaly: none
     anomaly_rationale: No unintended mark is present.
     anomaly_link: ''
-    observed_objects: [q glyph, Panel A trapped-charge label]
+    observed_objects: [q glyph, tr subscript, Panel A trapped-charge label]
     local_relationship: Glyph remains outside the cantilever stroke.
     candidate_refs: [VC003]
-  - crop_id: VC004_crop
-    path: build/audit_crops/visual_clash/VC004_crop.png
+  - crop_id: VC004_F
+    path: build/audit_crops/visual_clash/VC004_F.png
     source: visual_clash:VC004
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: The equality glyph in t = 0 is legible and clear of the y-axis.
+    rationale: The vertical run beside the F is the absolute-value delimiter of the inequality, not a drawn path.
     unintended_visible_anomaly: none
     anomaly_rationale: No unintended mark is present.
     anomaly_link: ''
-    observed_objects: [equality glyph, t = 0 label, y-axis]
-    local_relationship: The glyph remains separated from the adjacent vertical axis.
+    observed_objects: [absolute-value bar, F glyph, C subscript]
+    local_relationship: The delimiter and the force symbol keep normal math spacing.
     candidate_refs: [VC004]
   - crop_id: VC005_F
     path: build/audit_crops/visual_clash/VC005_F.png
@@ -726,26 +718,13 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: The first force-symbol glyph in the bottom condition is readable.
+    rationale: The second delimiter and force symbol in the bottom condition are readable and separated.
     unintended_visible_anomaly: none
     anomaly_rationale: No unintended mark is present.
     anomaly_link: ''
-    observed_objects: [first force-symbol glyph, force condition]
+    observed_objects: [absolute-value bar, F glyph, M subscript, arrow tip]
     local_relationship: The glyph remains part of a readable equation.
     candidate_refs: [VC005]
-  - crop_id: VC006_F
-    path: build/audit_crops/visual_clash/VC006_F.png
-    source: visual_clash:VC006
-    inspected: true
-    verdict: no_defect
-    linked_micro_defect_id: ''
-    rationale: The second force-symbol glyph in the bottom condition is readable.
-    unintended_visible_anomaly: none
-    anomaly_rationale: No unintended mark is present.
-    anomaly_link: ''
-    observed_objects: [second force-symbol glyph, force condition]
-    local_relationship: The glyph remains part of a readable equation.
-    candidate_refs: [VC006]
   - crop_id: full_q1
     path: build/audit_crops/full_q1.png
     source: full_render
@@ -765,7 +744,7 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: The upper halves of Panels C and D retain clear force-balance and response roles; Panel C now carries the floating state on its state label alone, so the title lane is no longer doubled.
+    rationale: The upper halves of Panels C and D retain clear force-balance and response roles; Panel C carries the floating state on its state label alone, so the title lane is not doubled.
     unintended_visible_anomaly: none
     anomaly_rationale: No stray artifact is visible.
     anomaly_link: ''
@@ -791,12 +770,12 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: Panel C force hierarchy is clear and the Coulomb label now clears the film body by a measured 1.04 mm at the 178 mm working width; the Panel D recovery label sits below the rising tail on its own leader instead of in the terminating time-axis lane.
+    rationale: Panel C force hierarchy is clear and the Coulomb label clears the film body at the 178 mm working width; the Panel D time-origin label now sits entirely right of the bend-angle axis and the recovery label owns the rising tail through its own leader.
     unintended_visible_anomaly: none
     anomaly_rationale: No stray artifact is visible.
     anomaly_link: ''
-    observed_objects: [Panel C force arrows, Panel D response trace, axis labels]
-    local_relationship: The conditional force result precedes a trace that reverses rapidly and then recovers.
+    observed_objects: [Panel C force arrows, Panel D response trace, bend-angle axis, time-origin label, recovery leader]
+    local_relationship: The conditional force result precedes a trace that reverses rapidly and then recovers, with its origin label clear of the axis.
     candidate_refs: []
   - crop_id: print_178mm
     path: build/audit_crops/print_178mm.png
@@ -804,7 +783,7 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: The full row remains legible at the declared working width; the Coulomb-to-film gap and the residual-versus-drive arrow weights were both confirmed at this reduction rather than only at full resolution.
+    rationale: The full row remains legible at the declared working width; the time-origin clearance, the Coulomb-to-film gap, and the residual-versus-drive arrow weights were all confirmed at this reduction rather than only at full resolution.
     unintended_visible_anomaly: none
     anomaly_rationale: No print-scale failure is visible.
     anomaly_link: ''
@@ -817,7 +796,7 @@ crop_audit_log:
     inspected: true
     verdict: no_defect
     linked_micro_defect_id: ''
-    rationale: The four-stage storyline remains readable in the thumbnail audit.
+    rationale: The four-stage storyline remains readable in the thumbnail audit; fine text drops out at this reduction, which is expected for a thumbnail proxy rather than the declared print contract.
     unintended_visible_anomaly: none
     anomaly_rationale: No print-scale failure is visible.
     anomaly_link: ''
@@ -828,28 +807,54 @@ crop_audit_log:
 # Host vision critique
 
 This is a report-only visual critique of the current rendered candidate,
-written by the in-session vision-capable host (Claude for this pass, Codex for
-earlier ones). It does not assert experimental validation, human acceptance, or
-publication-final status.
+written by the in-session vision-capable host. It does not assert experimental
+validation, human acceptance, or publication-final status.
 
-## Changes audited in this pass
+## Defect repaired in this pass
 
-Four author-eye defects were repaired between the previous critique and this
-render; each was re-inspected here rather than assumed fixed.
+The previous critique had gone stale only because the paper-wide aesthetic
+context pack entered the input manifest — the artifact itself was unchanged.
+Re-running the required crop inspection from scratch, rather than carrying the
+previous verdicts forward, surfaced one defect that pass had dismissed.
 
-1. The Panel D `recovery` label sat in the lane where the time axis
-   terminates and read as an axis annotation. It now sits below the rising
-   tail and owns the curve through a leader that touches a declared curve
-   sample point.
-2. Panel C carried both `after floating isolation` and `clip: floating`. The
-   subtitle restated the state label in the densest panel of the row and was
-   removed; the state label remains the contract.
-3. The Panel B residual vector encoded its weaker magnitude with
-   `opacity=0.62`, which disappears in grayscale conversion. It now uses a
-   dedicated style whose length, stroke weight, and head size are each smaller
-   than the drive-on vector.
-4. The Panel C `Coulomb` label was crossed by the film body at its trailing
-   glyph — a defect no declared check covered, since the specimen itself was
-   not a declared path. The label moved clear (measured 1.04 mm ink-to-ink at
-   the 178 mm working width) and the film centerline is now a declared
-   proximity path.
+`VC004` had been recorded as a false positive on the grounds that the equality
+glyph was "separate from the y-axis". At high zoom that was not what the render
+showed. Panel D's bend-angle axis is drawn at `x = 0.62` and spans `y = 1.02` to
+`y = 4.08`, so it continues below the time axis; the time-origin label was
+anchored `north` at `x = 0.74` and is wider than the 0.12 cm offset, so the axis
+stroke landed in the gap between the italic `t` and the `= 0`. The label read as
+two fragments straddling a structural rule, at every scale including 178 mm.
+
+The label is now anchored `north west` at `(0.72,2.30)`, so it begins clear of
+the axis and still binds to the origin tick drawn at `x = 0.74`. Two independent
+signals confirm the repair: the `t = 0` label holds visible clearance in
+`full_q4` and `print_178mm`, and `check_visual_clash.py` no longer emits a
+candidate for the equality glyph at all — the candidate count dropped from six
+to five, and the surviving `VC004`/`VC005` are the `|F` delimiters in Panel C.
+
+## What the re-inspection confirmed unchanged
+
+The four repairs recorded in the previous pass all hold: the `recovery` label
+owns the rising tail through a leader that touches a declared curve sample,
+Panel C carries the floating state on its state label alone, the Panel B
+residual vector encodes its weaker magnitude through length, stroke weight, and
+head size rather than opacity, and the Panel C `Coulomb` label clears the film
+body at the 178 mm working width.
+
+The physics invariants are all honored: the air gap stays visible in A-C,
+source OFF precedes the floating state, no ground symbol survives on the
+specimen after isolation, the Coulomb term reverses with drive polarity while
+the Maxwell baseline does not, and the trace runs rise → plateau → steeper
+reversal → negative extremum → slow recovery with a visible `t = 0` origin and
+no numeric magnitudes.
+
+All five remaining visual-clash candidates are the detector reading a math glyph
+stroke as a path: `VC001`-`VC003` are the descender of the italic `q` meeting
+its `tr` subscript, and `VC004`-`VC005` are the absolute-value delimiters of the
+Panel C inequality. No drawn path approaches any of them.
+
+## Remaining gate
+
+Publication readiness stays `needs_human`. Binding the sequence and waveform to
+the experiment is an author gate outside this artifact, and the `submission-safe`
+decision remains the reviewer's to write.

@@ -242,8 +242,12 @@ def test_authority_defines_comparable_lineage_and_claim_ladder() -> None:
 
 def test_authority_contains_one_ordered_executable_roadmap() -> None:
     authority = _read(PLUGIN_ROOT / AUTHORITY_DOC)
+    # The budget guards the hand-written contract. Section 8 is a surface
+    # inventory generated from the MCP registry and held to it by
+    # tests/test_surface_inventory.py, so it is measured there, not here.
+    contract = authority.partition("## 8. Live operator surface inventory")[0]
 
-    assert len(authority.splitlines()) < 320
+    assert len(contract.rstrip().splitlines()) < 320
     roadmap_positions = [authority.index(f"### R{index} ") for index in range(6)]
     assert roadmap_positions == sorted(roadmap_positions)
     for required in (

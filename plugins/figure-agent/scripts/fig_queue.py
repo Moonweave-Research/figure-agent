@@ -2475,7 +2475,7 @@ def _has_style_benchmark_comparison_columns(rows: Any) -> bool:
 
 
 def main(argv: list[str] | None = None, *, repo_root: Path | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="fig_queue.py")
+    parser = argparse.ArgumentParser(prog="fig-agent queue")
     parser.add_argument("fixtures", nargs="*")
     parser.add_argument("--mode", choices=list(fig_driver.MODES), required=True)
     parser.add_argument("--goal", default="triage fixture queue")

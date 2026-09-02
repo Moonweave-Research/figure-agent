@@ -1,3 +1,7 @@
+---
+audit_input_hash: sha256:1a4f03ad08902f18514b5f447f6b0614bdbc299ae197b8f786a438b3c294d00b
+---
+
 # Quality Audit
 
 fixture: fig5_cantilever_actuation_artifact_v2

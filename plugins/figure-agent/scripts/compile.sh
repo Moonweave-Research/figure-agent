@@ -201,6 +201,36 @@ if [[ -n "$FIXTURE_ROOT" && -f "$FIXTURE_ROOT/claim_authority.yaml" ]]; then
   RENDER_INPUT_ARGS+=(--input "claim_authority=$FIXTURE_ROOT/claim_authority.yaml")
 fi
 
+COMPILE_RUN_RECEIPT="${BUILD_DIR}/compile_run.json"
+COMPILE_RUN_STAMP="$("${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/compile_run.py" begin)"
+COMPILE_RUN_ID="${COMPILE_RUN_STAMP%% *}"
+COMPILE_RUN_STARTED_AT="${COMPILE_RUN_STAMP#* }"
+# Every build receipt written below this line names this run. status treats a
+# receipt whose run id has no matching compile_run.json beside the render as
+# unbound evidence, so a hand-written receipt no longer outlives its compile.
+export FIGURE_AGENT_COMPILE_RUN_ID="$COMPILE_RUN_ID"
+
+write_compile_run_receipt() {
+  local state="$1"
+  local render_args=()
+  if [[ "$state" == "passed" ]]; then
+    render_args=(--render-pdf "$PWD/$PDF_OUT")
+  fi
+  local strict_args=()
+  if [[ ${#STRICT_ARGS[@]} -ne 0 ]]; then
+    strict_args=(--strict-requested)
+  fi
+  "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/compile_run.py" finish \
+    --json-output "$PWD/$COMPILE_RUN_RECEIPT" \
+    --run-id "$COMPILE_RUN_ID" \
+    --started-at "$COMPILE_RUN_STARTED_AT" \
+    --engine "$ENGINE" \
+    --state "$state" \
+    --source-tex "$TEX_INPUT_ABS" \
+    ${render_args[@]+"${render_args[@]}"} \
+    ${strict_args[@]+"${strict_args[@]}"}
+}
+
 clear_review_scale_previews() {
   rm -f "$SCALE_PREVIEW_MANIFEST" "$SCALE_PREVIEW_100" "$SCALE_PREVIEW_50" "$SCALE_PREVIEW_33"
 }
@@ -208,13 +238,13 @@ clear_review_scale_previews() {
 cleanup_failed_build() {
   local status=$?
   if [[ $status -ne 0 ]]; then
-    rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"
+    rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST" "$COMPILE_RUN_RECEIPT"
     clear_review_scale_previews
   fi
 }
 trap cleanup_failed_build ERR
 
-rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"
+rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST" "$COMPILE_RUN_RECEIPT"
 clear_review_scale_previews
 "$ENGINE" -interaction=nonstopmode -jobname="$BASE" -output-directory="$BUILD_DIR" "$COMPILE_FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
@@ -365,7 +395,7 @@ fi
 # global strict flag to this advisory checker made immutable execution-repair
 # replays fail on their intentionally missing briefing files.
 PHYSICS_GROUNDING_STRICT_ARGS=()
-if [[ ${#STRICT_ARGS[@]} -ne 0 && $LIVE_ASSERTION_TARGET -eq 1 && -f "$FIGURE_SPEC" ]] \
+if [[ ${#STRICT_ARGS[@]} -ne 0 && $LIVE_ASSERTION_TARGET -eq 1 && -f "${FIGURE_SPEC:-}" ]] \
   && grep -Eq '^[[:space:]]*semantic_contract_required:[[:space:]]*true[[:space:]]*(#.*)?$' "$FIGURE_SPEC"; then
   PHYSICS_GROUNDING_STRICT_ARGS=("${STRICT_ARGS[@]}")
 fi
@@ -410,15 +440,20 @@ if [[ $LIVE_ASSERTION_TARGET -eq 0 ]]; then
 fi
 "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/strict_status.py" \
   --json-output "${BUILD_DIR}/strict_status.json" \
+  --compile-run-id "$COMPILE_RUN_ID" \
+  --source-tex "$TEX_INPUT_ABS" \
+  --render-pdf "$PWD/$PDF_OUT" \
   "${STRICT_STATUS_ARGS[@]}"
 trap - ERR
 
 if [[ $STRICT_CHECK_FAILURE -ne 0 ]]; then
   echo "ERROR: strict detector gate failed after review evidence generation" >&2
   # Keep the failure durable: no partial render may survive a failed compile.
-  # strict_status.json stays behind as the evidence.
+  # strict_status.json and a failed-state compile_run.json stay behind as the
+  # evidence that this run produced no bindable render.
   rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"
   clear_review_scale_previews
+  write_compile_run_receipt failed
   exit 1
 fi
 
@@ -427,7 +462,15 @@ fi
 if ! "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/review_scale_previews.py" \
   "$PNG_OUT" --json-output "$SCALE_PREVIEW_MANIFEST" >/dev/null; then
   echo "ERROR: review scale preview generation failed" >&2
-  rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"
+  rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST" "$COMPILE_RUN_RECEIPT"
+  clear_review_scale_previews
+  exit 1
+fi
+# The receipt has to exist before the manifest: the manifest writer refuses to
+# run unless the run id it was handed matches the receipt beside the render.
+if ! write_compile_run_receipt passed; then
+  echo "ERROR: compile run receipt generation failed" >&2
+  rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST" "$COMPILE_RUN_RECEIPT"
   clear_review_scale_previews
   exit 1
 fi
@@ -437,7 +480,7 @@ if ! "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/render_input_manifest.py" \
   --json-output "$PWD/$RENDER_INPUT_MANIFEST" \
   "${RENDER_INPUT_ARGS[@]}"; then
   echo "ERROR: render input manifest generation failed" >&2
-  rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"
+  rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST" "$COMPILE_RUN_RECEIPT"
   clear_review_scale_previews
   exit 1
 fi

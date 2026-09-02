@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_closeout as fig_closeout_mod  # noqa: E402
 from fig_closeout import compute_closeout, main  # noqa: E402
+from fig_loop_records import run_input_hashes  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
 
@@ -24,6 +25,10 @@ def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
         encoding="utf-8",
     )
     (fixture / "briefing.md").write_text("briefing", encoding="utf-8")
+    # The loop_rerun gate binds a run record to the render it read, so a
+    # fixture that stands in for a compiled one needs a build PDF.
+    (fixture / "build").mkdir()
+    (fixture / "build" / f"{name}.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
     return fixture
 
 
@@ -93,6 +98,7 @@ def _write_loop_run(repo: Path, name: str = "loop_demo", *, fixture: str | None 
                 "schema": "figure-agent.fig-loop-run.v1",
                 "fixture": fixture or name,
                 "iterations": ["iteration_001.json"],
+                **run_input_hashes(repo / "examples" / name, name),
             }
         )
         + "\n",
@@ -541,7 +547,8 @@ def test_closeout_ignores_loop_record_for_the_wrong_fixture(
     loop_step = _steps_by_id(report)["loop_rerun"]
 
     assert loop_step["state"] == "needs_action"
-    assert loop_step["reason"] == "no post-patch fig_loop run was found"
+    assert loop_step["reason"].startswith("no fig_loop run record matches")
+    assert loop_step["evidence"]["loop_record_state"] == "unmatched"
 
 
 def test_closeout_ignores_loop_record_with_malformed_manifest(
@@ -577,7 +584,8 @@ def test_closeout_ignores_loop_record_with_malformed_manifest(
     loop_step = _steps_by_id(report)["loop_rerun"]
 
     assert loop_step["state"] == "needs_action"
-    assert loop_step["reason"] == "no post-patch fig_loop run was found"
+    assert loop_step["reason"].startswith("no fig_loop run record matches")
+    assert loop_step["evidence"]["loop_record_state"] == "unmatched"
 
 
 def test_closeout_blocks_loop_rerun_until_adjudication_is_complete(
@@ -848,20 +856,40 @@ def test_closeout_runs_the_golden_contract_when_acceptance_is_declared(
 def test_closeout_emits_every_step_readiness_expects(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Readiness assembles from whatever steps closeout happens to emit, so a
-    step that stops being produced disappears from the gate instead of
-    blocking. Pin the set: dropping one has to fail here."""
+    """Readiness assembles its gate from REQUIRED_CLOSEOUT_STEP_IDS, so the two
+    must not drift: a step that stops being emitted has to fail here as well as
+    block there."""
     _make_fixture(tmp_path)
     monkeypatch.setattr(fig_closeout_mod, "infer_stage", lambda _dir: _status())
 
     report = compute_closeout("loop_demo", repo_root=tmp_path)
 
-    assert {step["id"] for step in report["steps"]} == {
-        "text_boundary_checks",
-        "compile",
-        "critique",
-        "adjudication",
-        "export",
-        "golden_contract",
-        "loop_rerun",
-    }
+    assert [step["id"] for step in report["steps"]] == list(
+        fig_closeout_mod.REQUIRED_CLOSEOUT_STEP_IDS
+    )
+
+
+def test_closeout_blocks_export_when_golden_protection_is_unverifiable(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _make_fixture(tmp_path)
+    critique = fixture / "critique.md"
+    critique.write_text("# critique\n", encoding="utf-8")
+    _write_adjudication(fixture, critique)
+    monkeypatch.setattr(
+        fig_closeout_mod,
+        "infer_stage",
+        lambda _example_dir: _status(critique_state="FRESH", export_state="GOLDEN_UNVERIFIABLE"),
+    )
+
+    report = compute_closeout("loop_demo", repo_root=tmp_path)
+    export_step = _steps_by_id(report)["export"]
+
+    # An unanswerable git must not be routed to the plain export command,
+    # which run_export now refuses for this state.
+    assert export_step["state"] == "blocked"
+    assert export_step["command"] is None
+    assert export_step["evidence"]["export_state"] == "GOLDEN_UNVERIFIABLE"
+    assert export_step["evidence"]["approval_command"] == "/fig_export loop_demo --force-golden"
+    assert "golden protection could not be verified" in export_step["reason"]

@@ -240,6 +240,9 @@ def _summary(
     spine_evidence = status.get("spine_evidence")
     if isinstance(spine_evidence, dict):
         summary["spine_evidence"] = spine_evidence
+    publication_blockers = publication_gate_blockers(status)
+    if publication_blockers:
+        summary["publication_gate_blockers"] = publication_blockers
     closed_loop_attempt = status.get("closed_loop_attempt")
     if isinstance(closed_loop_attempt, dict):
         summary["closed_loop_attempt"] = closed_loop_attempt
@@ -639,20 +642,38 @@ def _final_warning_budget(
     )
 
 
+def publication_gate_blockers(status: dict[str, Any]) -> list[dict[str, str]]:
+    """Every publication-gate blocker, in the order the gate reported them."""
+    failures = status.get("publication_gate_failures")
+    if not isinstance(failures, list):
+        return []
+    blockers: list[dict[str, str]] = []
+    for failure in failures:
+        if not isinstance(failure, dict):
+            continue
+        blockers.append(
+            {
+                "code": str(failure.get("code", "unknown_publication_gate_failure")),
+                "actor": str(failure.get("actor", "unknown")),
+                "required_action": str(
+                    failure.get("required_action", "resolve the publication gate manually")
+                ).rstrip("."),
+            }
+        )
+    return blockers
+
+
 def _publication_gate_block_reason(status: dict[str, Any]) -> str:
     state = status.get("publication_gate_state")
-    failures = status.get("publication_gate_failures")
-    if isinstance(failures, list) and failures:
-        first = failures[0]
-        if isinstance(first, dict):
-            code = first.get("code", "unknown_publication_gate_failure")
-            action = str(
-                first.get("required_action", "resolve the publication gate manually")
-            ).rstrip(".")
-            return (
-                f"publication gate is {state}; first blocker {code}: {action}. "
-                "Driver will not set accepted, force golden state, or mutate provenance."
-            )
+    blockers = publication_gate_blockers(status)
+    if blockers:
+        listed = "; ".join(
+            f"{blocker['code']}: {blocker['required_action']}" for blocker in blockers
+        )
+        return (
+            f"publication gate is {state}; {len(blockers)} blocker(s) — {listed}. "
+            "Driver will not set accepted, force golden state, or mutate provenance."
+        )
     return (
         f"publication gate is {state}; resolve human acceptance/provenance manually. "
         "Driver will not set accepted, force golden state, or mutate provenance."
@@ -1223,7 +1244,7 @@ def _select_action(
 
 
 def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
-    parser = argparse.ArgumentParser(prog="fig_driver.py")
+    parser = argparse.ArgumentParser(prog="fig-agent drive")
     parser.add_argument("name")
     parser.add_argument("--mode", choices=list(MODES), required=True)
     parser.add_argument("--goal", required=True)

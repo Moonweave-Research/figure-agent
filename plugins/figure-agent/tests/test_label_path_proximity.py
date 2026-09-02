@@ -159,6 +159,7 @@ def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
 
     assert proximity.label_path_proximity_payload(pdf, [candidate], checked=1) == {
         "schema": "figure-agent.label-path-proximity.v1",
+        "compile_run_id": None,
         "fixture": "demo",
         "render_pdf": "build/demo.pdf",
         "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),

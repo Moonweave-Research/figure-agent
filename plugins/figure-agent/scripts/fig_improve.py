@@ -247,7 +247,7 @@ def run_improvement(
 
 
 def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
-    parser = argparse.ArgumentParser(prog="fig_improve.py")
+    parser = argparse.ArgumentParser(prog="fig-agent improve")
     parser.add_argument("name")
     parser.add_argument("--goal", required=True)
     parser.add_argument("--execute", action="store_true")

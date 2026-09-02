@@ -1,8 +1,10 @@
 """Human attestation for publication release gates.
 
-Threat model: this prevents release PASS by accident or by well-formed text
-alone. A deliberate local actor who reads `~/.figure-agent/attest.key` and forges
-an HMAC is out of scope, matching the repository's executor-allowlist boundary.
+Threat model: this prevents release PASS by accident, by well-formed text alone,
+or by a non-interactive process asking this module to sign for it. A deliberate
+local actor who reads `~/.figure-agent/attest.key` and computes an HMAC without
+this module is out of scope, matching the repository's executor-allowlist
+boundary.
 """
 
 from __future__ import annotations
@@ -22,6 +24,10 @@ import fixture_identity
 import runtime_paths
 
 SCHEMA = "figure-agent.human-attestation.v1"
+
+
+class NonInteractiveAttestation(RuntimeError):
+    """Raised when a caller with no terminal asks for a signed attestation."""
 
 
 def _key_path() -> Path:
@@ -114,6 +120,11 @@ def _valid_signature_shape(signature: str) -> bool:
 
 
 def write_attestation(example_dir: Path) -> dict[str, Any]:
+    # The signature is the whole gate, so the interactive requirement belongs on
+    # the writer, not on the CLI wrapper: once a key exists, any non-interactive
+    # caller of this function could otherwise mint a valid attestation.
+    if not sys.stdin.isatty():
+        raise NonInteractiveAttestation("human attestation requires an interactive terminal")
     fixture = example_dir.name
     fixture_identity.validate_fixture_name(fixture)
     tex_hash = tex_sha256(example_dir)
@@ -126,7 +137,7 @@ def write_attestation(example_dir: Path) -> dict[str, Any]:
         "created_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
         "signature": _signature(fixture, source_hash, _require_key()),
     }
-    output = example_dir / "human_attestation.json"
+    output = _refuse_symlink(example_dir / "human_attestation.json")
     output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
 

@@ -51,12 +51,16 @@ def closeout_recommendation(report: dict[str, Any] | None) -> CloseoutRecommenda
     compact = compact_closeout(report)
     blocking_step_ids = compact["blocking_step_ids"]
     if blocking_step_ids == ["loop_rerun"]:
-        reason = None
+        record_state = None
         for step in compact["steps"]:
             if isinstance(step, dict) and step.get("id") == "loop_rerun":
-                reason = step.get("reason")
+                evidence = step.get("evidence")
+                if isinstance(evidence, dict):
+                    record_state = evidence.get("loop_record_state")
                 break
-        if reason == "no post-patch fig_loop run was found":
+        # Keyed on the structured record state: a reworded reason sentence must
+        # not silently change which closeout the driver suppresses.
+        if record_state == "absent":
             return None
     next_action = str(report.get("next_action") or "")
     if next_action.startswith("/fig_export ") and "--force-golden" not in next_action:

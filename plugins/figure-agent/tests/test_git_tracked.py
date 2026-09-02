@@ -2,14 +2,22 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from export_freshness import EXPORT_TRACKED_GOLDEN, compute_export_state  # noqa: E402
+import git_tracked  # noqa: E402
+from export_freshness import (  # noqa: E402
+    EXPORT_GOLDEN_UNVERIFIABLE,
+    EXPORT_TRACKED_GOLDEN,
+    compute_export_state,
+)
 from git_tracked import is_tracked, repo_root_for  # noqa: E402
 
 
@@ -87,10 +95,7 @@ def test_repo_root_is_none_outside_any_repository(tmp_path: Path) -> None:
     assert repo_root_for(target) is None
 
 
-def test_external_workspace_export_keeps_its_golden_protection(tmp_path: Path) -> None:
-    """Tracking was asked of the plugin's own repository, so a committed
-    golden export in an external workspace read as untracked and could be
-    overwritten without --force-golden."""
+def _committed_external_fixture(tmp_path: Path) -> Path:
     external = tmp_path / "workspace"
     exports = external / "examples" / "extfig" / "exports"
     exports.mkdir(parents=True)
@@ -99,7 +104,100 @@ def test_external_workspace_export_keeps_its_golden_protection(tmp_path: Path) -
         (exports / f"extfig.{suffix}").write_bytes(b"x")
     (external / "examples" / "extfig" / "build" / "extfig.pdf").write_bytes(b"y")
     _init_repo(external, commit=True)
+    return external / "examples" / "extfig"
+
+
+def test_external_workspace_export_keeps_its_golden_protection(tmp_path: Path) -> None:
+    """Tracking was asked of the plugin's own repository, so a committed
+    golden export in an external workspace read as untracked and could be
+    overwritten without --force-golden."""
+    state = compute_export_state(_committed_external_fixture(tmp_path), "extfig")
+
+    assert state == EXPORT_TRACKED_GOLDEN
+
+
+def test_golden_export_is_protected_when_git_is_absent_from_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _committed_external_fixture(tmp_path)
+    empty_bin = tmp_path / "empty_bin"
+    empty_bin.mkdir()
+    monkeypatch.setenv("PATH", str(empty_bin))
+    assert shutil.which("git") is None
+
+    assert compute_export_state(fixture, "extfig") == EXPORT_GOLDEN_UNVERIFIABLE
+
+
+def test_golden_export_is_protected_when_rev_parse_errors(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exit 128 is not exotic: dubious ownership, a held index.lock, and an
+    unreadable repository all produce it, and it used to read as STALE."""
+    fixture = _committed_external_fixture(tmp_path)
+
+    def dubious_ownership(args, **kwargs):  # noqa: ANN001, ANN202
+        return subprocess.CompletedProcess(
+            args,
+            128,
+            "",
+            "fatal: detected dubious ownership in repository at '/somewhere'\n",
+        )
+
+    monkeypatch.setattr(git_tracked.subprocess, "run", dubious_ownership)
+
+    assert compute_export_state(fixture, "extfig") == EXPORT_GOLDEN_UNVERIFIABLE
+
+
+def test_golden_export_is_protected_when_ls_files_errors(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _committed_external_fixture(tmp_path)
+    real_run = git_tracked.subprocess.run
+
+    def fatal_ls_files(args, **kwargs):  # noqa: ANN001, ANN202
+        if "ls-files" in args:
+            return subprocess.CompletedProcess(args, 128, "", "fatal: index file corrupt\n")
+        return real_run(args, **kwargs)
+
+    monkeypatch.setattr(git_tracked.subprocess, "run", fatal_ls_files)
+
+    assert compute_export_state(fixture, "extfig") == EXPORT_GOLDEN_UNVERIFIABLE
+
+
+def test_untracked_export_is_still_untracked_not_unverifiable(tmp_path: Path) -> None:
+    """Positive control for the three tests above: with git healthy and the
+    export uncommitted, the answer must move off GOLDEN_UNVERIFIABLE."""
+    external = tmp_path / "workspace"
+    exports = external / "examples" / "extfig" / "exports"
+    exports.mkdir(parents=True)
+    (external / "examples" / "extfig" / "build").mkdir()
+    for suffix in ("pdf", "svg", "png", "tif"):
+        (exports / f"extfig.{suffix}").write_bytes(b"x")
+    (external / "examples" / "extfig" / "build" / "extfig.pdf").write_bytes(b"y")
+    _init_repo(external, commit=False)
 
     state = compute_export_state(external / "examples" / "extfig", "extfig")
 
-    assert state == EXPORT_TRACKED_GOLDEN
+    assert state != EXPORT_GOLDEN_UNVERIFIABLE
+    assert state != EXPORT_TRACKED_GOLDEN
+    assert git_tracked.tracking_state(exports / "extfig.pdf", external) == git_tracked.UNTRACKED
+
+
+def test_tracking_state_of_a_missing_git_binary_is_not_untracked(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _committed_external_fixture(tmp_path)
+    empty_bin = tmp_path / "empty_bin"
+    empty_bin.mkdir()
+    monkeypatch.setenv("PATH", str(empty_bin))
+
+    target = fixture / "exports" / "extfig.pdf"
+
+    assert git_tracked.tracking_state(target, tmp_path / "workspace") == git_tracked.UNVERIFIABLE
+    # is_tracked keeps its bool contract; callers that must protect an artifact
+    # branch on tracking_state instead.
+    assert git_tracked.is_tracked(target, tmp_path / "workspace") is False

@@ -17,6 +17,8 @@ import fig_driver  # noqa: E402
 import fig_driver_guidance  # noqa: E402
 import render_input_manifest  # noqa: E402
 import status as status_mod  # noqa: E402
+from compile_run_fixtures import issue_compile_run  # noqa: E402
+from fig_loop_records import run_input_hashes  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -73,6 +75,12 @@ def _write_fresh_build_and_exports(fixture: Path, name: str = "driver_demo") -> 
         render_pdf=build / f"{name}.pdf",
         inputs=status_mod._render_input_paths(fixture, name),
         output=render_input_manifest.manifest_path(build / f"{name}.pdf"),
+        compile_run_id=issue_compile_run(
+            build,
+            source_tex=fixture / f"{name}.tex",
+            render_pdf=build / f"{name}.pdf",
+            strict_requested=True,
+        ),
     )
 
 
@@ -125,6 +133,7 @@ def _write_loop_run(
         "run_dir": str(run_dir),
         "final_stop_reason": stop_reason,
         "iterations": ["iteration_001.json"],
+        **run_input_hashes(repo_root / "examples" / name, name),
     }
     iteration = {
         "iteration": 1,
@@ -533,7 +542,10 @@ def test_driver_summary_includes_status_explanation_and_first_blocker_code(
     summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
 
     assert summary["status_explanation"]["first_blocker"]["code"] == "export_missing"
-    assert "first blocker export_missing" in summary["reason"]
+    assert [
+        entry["code"]
+        for entry in summary["status_explanation"]["buckets"]["fixture_freshness"]
+    ] == ["export_missing"]
     assert summary["safe_command"] == "fig-agent export driver_demo"
 
 
@@ -651,7 +663,11 @@ def test_authoring_mode_explains_source_before_export_for_un_authored_fixture(
 
     assert summary["action"] == "create_or_fix_source"
     assert summary["status_explanation"]["first_blocker"]["code"] == "source_not_authored"
-    assert "first blocker export_missing" not in summary["reason"]
+    codes = [
+        entry["code"]
+        for entry in summary["status_explanation"]["buckets"]["fixture_freshness"]
+    ]
+    assert codes.index("source_not_authored") < codes.index("export_missing")
 
 
 def test_driver_summary_surfaces_workspace_warnings(
@@ -1787,7 +1803,9 @@ def test_release_mode_surfaces_acceptance_not_declared_first_blocker(
     assert summary["action"] == "release_blocked"
     assert summary["stop_boundary"] == "accepted_or_final_ready_required"
     assert summary["status_explanation"]["first_blocker"]["code"] == ("acceptance_not_declared")
-    assert "first blocker acceptance_not_declared" in summary["reason"]
+    assert "acceptance_not_declared" in {
+        entry["code"] for entry in summary["status_explanation"]["buckets"]["human_blockers"]
+    }
 
 
 def test_release_mode_does_not_surface_not_accepted_export_as_executable(
@@ -1990,6 +2008,69 @@ def test_release_mode_surfaces_publication_gate_blocker(
     assert ".. Driver" not in summary["reason"]
     assert summary["status"]["publication_gate_state"] == "HUMAN_ACCEPTANCE_REQUIRED"
     assert summary["status"]["publication_gate_failures"][0]["actor"] == "agent"
+
+
+def test_release_mode_reports_every_publication_gate_blocker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """status.py prints every publication blocker; the driver used to name only
+    the first, so the second blocker reached no operator surface."""
+    fixture = _write_basic_fixture(tmp_path)
+    _write_fresh_build_and_exports(fixture)
+
+    synthetic_status = {
+        "stage": 4,
+        "name": "driver_demo",
+        "notes": [],
+        "render_state": "FRESH",
+        "critique_state": "NOT_REQUIRED",
+        "export_state": "FRESH",
+        "acceptance_state": "ACCEPTED",
+        "final_artifact_state": "NONE",
+        "final_artifact_kind": "generated_export",
+        "final_artifact_path": None,
+        "workflow_ready": True,
+        "golden_ready": True,
+        "release_ready": False,
+        "final_ready": False,
+        "publication_gate_state": "PROVENANCE_REQUIRED",
+        "publication_gate_failures": [
+            {
+                "code": "missing_quality_audit",
+                "category": "quality_audit_stale",
+                "actor": "agent",
+                "message": "missing audit: QUALITY_AUDIT.md",
+                "required_action": "create QUALITY_AUDIT.md from the publication audit scaffold",
+            },
+            {
+                "code": "invalid_human_attestation",
+                "category": "publication_provenance",
+                "actor": "human",
+                "message": "human attestation failed: no attestation file",
+                "required_action": (
+                    "run `fig-agent attest driver_demo` from an interactive terminal"
+                ),
+            },
+        ],
+    }
+    monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: synthetic_status)
+
+    summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
+
+    assert summary["action"] == "release_blocked"
+    assert [blocker["code"] for blocker in summary["publication_gate_blockers"]] == [
+        "missing_quality_audit",
+        "invalid_human_attestation",
+    ]
+    assert [blocker["actor"] for blocker in summary["publication_gate_blockers"]] == [
+        "agent",
+        "human",
+    ]
+    assert summary["publication_gate_blockers"][1]["required_action"].startswith(
+        "run `fig-agent attest driver_demo`"
+    )
+    assert "missing_quality_audit" in summary["reason"]
+    assert "invalid_human_attestation" in summary["reason"]
 
 
 def test_release_mode_publication_gate_blocks_even_when_release_ready_is_true(

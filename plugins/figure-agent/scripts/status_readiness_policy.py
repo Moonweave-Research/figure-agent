@@ -10,6 +10,15 @@ from status_next_policy import critique_needs_action
 
 _NON_BLOCKING_WORKFLOW_NOTE_PREFIXES = ("coordinate_hints_", "final_artifact_")
 
+ACCEPTED_CURRENT = "accepted_current"
+ACCEPTED_BUT_STALE = "accepted_but_stale"
+ACCEPTED_BUT_UNATTESTED = "accepted_but_unattested"
+NOT_ACCEPTED = "not_accepted"
+# Acceptance states that must not carry a figure through a downstream gate.
+ACCEPTANCE_FRESHNESS_BLOCKING_STATES = frozenset(
+    {ACCEPTED_BUT_STALE, ACCEPTED_BUT_UNATTESTED}
+)
+
 
 def workflow_ready(
     *,
@@ -31,8 +40,15 @@ def workflow_ready(
     )
 
 
-def golden_ready(*, workflow_ready: bool, accepted: bool | None) -> bool:
-    return workflow_ready and accepted is True
+def golden_ready(
+    *, workflow_ready: bool, accepted: bool | None, attestation_current: bool
+) -> bool:
+    """``accepted: true`` is a static spec field; only the attestation is hash-bound.
+
+    Without the second term a source edit after acceptance leaves golden_ready
+    standing on a human decision about bytes that no longer exist.
+    """
+    return workflow_ready and accepted is True and attestation_current
 
 
 def release_ready(
@@ -61,12 +77,16 @@ def acceptance_state(accepted: bool | None) -> str:
     return "NOT_DECLARED"
 
 
-def acceptance_freshness_state(*, accepted: bool | None, workflow_ready: bool) -> str:
+def acceptance_freshness_state(
+    *, accepted: bool | None, workflow_ready: bool, attestation_current: bool
+) -> str:
     if accepted is True and not workflow_ready:
-        return "accepted_but_stale"
+        return ACCEPTED_BUT_STALE
+    if accepted is True and not attestation_current:
+        return ACCEPTED_BUT_UNATTESTED
     if accepted is True:
-        return "accepted_current"
-    return "not_accepted"
+        return ACCEPTED_CURRENT
+    return NOT_ACCEPTED
 
 
 def build_status_vector(
@@ -78,6 +98,7 @@ def build_status_vector(
     render_state: str,
     critique_state: str,
     final_artifact: Mapping[str, object],
+    attestation_current: bool,
     publication_gate: Mapping[str, object] | None = None,
 ) -> dict:
     publication_gate = publication_gate or {
@@ -91,7 +112,11 @@ def build_status_vector(
         render_state=render_state,
         critique_requires_action=critique_needs_action(critique_state),
     )
-    is_golden_ready = golden_ready(workflow_ready=is_workflow_ready, accepted=accepted)
+    is_golden_ready = golden_ready(
+        workflow_ready=is_workflow_ready,
+        accepted=accepted,
+        attestation_current=attestation_current,
+    )
     is_release_ready = release_ready(
         golden_ready=is_golden_ready,
         exports_substate=exports_substate,
@@ -106,6 +131,7 @@ def build_status_vector(
         "acceptance_freshness_state": acceptance_freshness_state(
             accepted=accepted,
             workflow_ready=is_workflow_ready,
+            attestation_current=attestation_current,
         ),
         "final_artifact_state": final_artifact["state"],
         "final_artifact_kind": final_artifact["kind"],
