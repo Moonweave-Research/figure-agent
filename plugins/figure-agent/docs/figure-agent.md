@@ -3,6 +3,7 @@
 **Status:** Active and authoritative
 **Effective date:** 2026-07-18
 **Committed baseline:** `c6a28e40` (`codex/figure-agent-closed-loop-reset`)
+**Operator surface last reconciled against:** `f1074a4b`
 
 This is the sole product specification and forward execution authority for Figure
 Agent. Other plans, roadmaps, reviews, and generated packets are implementation
@@ -316,3 +317,51 @@ gated, and unsupported edit families fail loudly.
 Dated R4/R5 chronology, schema inventory, and Fig1 measurements live only in
 `docs/evidence/r4-r5-implementation-history.md` and its named validators/tests.
 They are non-authoritative and cannot claim visual, release, or publication acceptance.
+
+## 8. Live operator surface inventory
+
+Two machine surfaces exist. The MCP server (`mcp/server_impl.py`) advertises the
+tools below; the CLI (`bin/fig-agent`) advertises its core tier through
+`fig-agent --help` and its full 88-command surface through
+`fig-agent doctor --commands`. Every MCP tool routes through a CLI command or an
+imported script, so the CLI column names the surface that actually does the work.
+
+`read-only` means the tool returns state or a proposal without writing under the
+fixture; `writes` means it creates or updates artifacts. No tool on this list
+grants release, golden, or publication acceptance.
+
+| MCP tool | Effect | CLI route | Slash command | What it does |
+|---|---|---|---|---|
+| `figure_agent_doctor` | read-only | `fig-agent doctor` | — | Report bundle, workspace, and host dependency state. Dependency state is binary/module presence, not compile capability. |
+| `figure_agent_status` | read-only | `fig-agent status` | `/fig_status` | Return structured figure status and artifact descriptors. |
+| `figure_agent_next` | read-only | `fig-agent next` | — | Return one next action from the state router. |
+| `figure_agent_compile` | writes `build/` | `fig-agent compile` | `/fig_compile` | Run the compile chain and its checkers for one fixture. |
+| `figure_agent_export` | writes `exports/` | `fig-agent export` | `/fig_export` | Run the export policy. Golden override is refused and routed to CLI closeout-accept. |
+| `figure_agent_quality_map` | read-only | `fig-agent quality-map` | — | Return the quality defect ledger. |
+| `figure_agent_context_pack` | read-only | `fig-agent context-pack` | `/fig_context_pack` | Return the authoring context pack. |
+| `figure_agent_propose_patch` | read-only | `fig-agent propose` | — | Return a safe mechanical patch proposal. |
+| `figure_agent_analyze_figure` | read-only | `fig-agent intent` | — | Return the candidate-search intent model. |
+| `figure_agent_propose_improvements` | read-only | `fig-agent candidates` | — | Return deterministic candidate improvements without persisting them. |
+| `figure_agent_materialize_candidate_set` | writes fixture sandbox | `fig-agent candidates --output` | — | Persist a candidate set to the fixture sandbox. |
+| `figure_agent_analyze_panel` | read-only | `fig-agent analyze-panel` | — | Return a panel model with TeX selectors. |
+| `figure_agent_propose_panel_improvements` | read-only | `fig-agent candidates --panel --family` | — | Return candidates for one panel family. |
+| `figure_agent_render_candidates` | writes fixture sandbox | `fig-agent render-candidates` | — | Render, and optionally compile/export/evaluate, candidate manifests in the sandbox. |
+| `figure_agent_rank_candidates` | read-only | none; `rank-candidates` is retired from the CLI | — | Rank rendered candidate manifests without applying them. |
+| `figure_agent_memory_summary` | read-only | `fig-agent memory-index --fixture` | — | Return a quality memory index preview. |
+| `figure_agent_benchmark_list` | read-only | `fig-agent benchmark-list` | — | List quality benchmark suites. |
+| `figure_agent_benchmark_run_preview` | read-only | `fig-agent benchmark-run` | — | Run a lightweight benchmark preview. |
+| `figure_agent_benchmark_compare` | read-only | `fig-agent benchmark-compare` | — | Compare two saved benchmark runs. |
+| `figure_agent_quality_next_experiment` | read-only | `fig-agent quality-next-experiment` | — | Return the next benchmark experiment. |
+| `figure_agent_benchmark_detectors_preview` | read-only | `fig-agent benchmark-detectors` | — | Preview detector report generation without writing files. |
+| `figure_agent_prepare_human_review` | read-only | `fig-agent review-candidate` | — | Return a human review packet for one candidate. |
+| `figure_agent_candidate_apply_readiness` | read-only | `fig-agent apply-candidate-ready` | — | Return apply readiness for one rendered candidate. |
+| `figure_agent_accept_candidate` | writes a verdict record | `fig-agent accept-candidate` | — | Record one named local human accept/reject verdict for a rendered candidate. Development acceptance only; it is not release or publication acceptance. |
+| `figure_agent_evidence_sync_preview` | read-only | `fig-agent evidence-sync` | — | Preview evidence index sync. |
+| `figure_agent_closeout_ready` | read-only | `fig-agent closeout-ready` | — | Return closeout readiness. |
+| `figure_agent_compare_candidate` | read-only | `fig-agent compare-candidate` | — | Return a comparison packet for one rendered candidate. |
+| `figure_agent_apply_candidate` | writes fixture source | `fig-agent apply-candidate` | — | Apply an accepted candidate through the acceptance/drift/lock gate. |
+| `figure_agent_verify_plan` | read-only | `fig-agent verify-plan` | — | Return the latest explicit patch verification result. |
+| `figure_agent_loop_checkpoint` | writes a checkpoint record | `fig-agent loop` | `/fig_loop` | Record a verify-only loop checkpoint. |
+
+`tests/test_surface_inventory.py` fails when this list and the server registry
+disagree, so an added or removed tool cannot ship undocumented.
