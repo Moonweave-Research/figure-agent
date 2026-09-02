@@ -12,6 +12,7 @@ TESTS_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(TESTS_ROOT))
 sys.path.insert(0, str(TESTS_ROOT.parents[0] / "scripts"))
 
+import compile_run  # noqa: E402
 import fig_driver  # noqa: E402
 import render_input_manifest  # noqa: E402
 import status as status_mod  # noqa: E402
@@ -48,11 +49,14 @@ def test_real_fixture_status_contract_matrix(
     monkeypatch.setattr(status_mod, "STYLE_LOCK_PATH", style_lock)
     build_pdf = fixture / "build" / f"{fixture_name}.pdf"
     if build_pdf.is_file():
+        receipt = compile_run.load_receipt(compile_run.receipt_path(build_pdf.parent))
+        assert receipt is not None
         render_input_manifest.write_manifest(
             fixture=fixture_name,
             render_pdf=build_pdf,
             inputs=status_mod._render_input_paths(fixture, fixture_name),
             output=render_input_manifest.manifest_path(build_pdf),
+            compile_run_id=str(receipt["run_id"]),
         )
     monkeypatch.setattr(
         status_mod,

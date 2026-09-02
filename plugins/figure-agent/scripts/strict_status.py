@@ -4,10 +4,17 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
 SCHEMA = "figure-agent.strict-status.v1"
+
+
+def _sha256(path: Path | None) -> str | None:
+    if path is None:
+        return None
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def strict_status_payload(
@@ -15,6 +22,9 @@ def strict_status_payload(
     strict_requested: bool,
     detector_failed: bool,
     live_assertion_target: bool = True,
+    compile_run_id: str | None = None,
+    source_tex_sha256: str | None = None,
+    render_pdf_sha256: str | None = None,
 ) -> dict[str, object]:
     """Return the strict outcome without conflating it with render freshness.
 
@@ -37,6 +47,9 @@ def strict_status_payload(
         "detector_failed": detector_failed,
         "live_assertion_target": live_assertion_target,
         "state": state,
+        "compile_run_id": compile_run_id,
+        "source_tex_sha256": source_tex_sha256,
+        "render_pdf_sha256": render_pdf_sha256,
     }
 
 
@@ -46,12 +59,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--strict-requested", action="store_true")
     parser.add_argument("--detector-failed", action="store_true")
     parser.add_argument("--no-live-assertions", action="store_true")
+    parser.add_argument("--compile-run-id")
+    parser.add_argument("--source-tex", type=Path)
+    parser.add_argument("--render-pdf", type=Path)
     args = parser.parse_args(argv)
 
     payload = strict_status_payload(
         strict_requested=args.strict_requested,
         detector_failed=args.detector_failed,
         live_assertion_target=not args.no_live_assertions,
+        compile_run_id=args.compile_run_id,
+        source_tex_sha256=_sha256(args.source_tex),
+        render_pdf_sha256=_sha256(args.render_pdf),
     )
     args.json_output.parent.mkdir(parents=True, exist_ok=True)
     args.json_output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

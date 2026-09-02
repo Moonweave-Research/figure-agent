@@ -22,6 +22,7 @@ sys.path.insert(0, str(SCRIPTS_DIR / "quality"))
 import check_plan_consistency
 import claim_authority
 import closed_loop_current_state
+import compile_run
 import current_candidate
 import current_render_review_scaffold
 import human_decision_record
@@ -71,6 +72,9 @@ RENDER_NOT_AUTHORED = "NOT_AUTHORED"
 RENDER_MISSING = "MISSING"
 RENDER_STALE = "STALE"
 RENDER_FRESH = "FRESH"
+RENDER_MANIFEST_UNBOUND_NOTE = "render_manifest_unbound"
+UNBOUND_TO_COMPILE_RUN = "unbound_to_compile_run"
+ACCEPTED_RENDER_NOT_STRICT_GATED_NOTE = "accepted_render_not_strict_gated"
 
 _SPEC_PARSE_ERROR_KEY = "__spec_parse_error__"
 SPINE_EVIDENCE_SCHEMA = "figure-agent.spine-evidence-summary.v1"
@@ -334,13 +338,14 @@ def _compute_render_state(
     spec_path: Path,
     tex_path: Path,
     build_pdf: Path,
-) -> str:
+) -> tuple[str, str | None]:
+    """Return the render state and, when it is unbound, the reason it is."""
     if not example_dir.exists() or not example_dir.is_dir() or not spec_path.exists():
-        return RENDER_NOT_SCAFFOLDED
+        return RENDER_NOT_SCAFFOLDED, None
     if not tex_path.exists():
-        return RENDER_NOT_AUTHORED
+        return RENDER_NOT_AUTHORED, None
     if not build_pdf.exists():
-        return RENDER_MISSING
+        return RENDER_MISSING, None
     hash_state = render_input_manifest.freshness(
         manifest=render_input_manifest.manifest_path(build_pdf),
         fixture=example_dir.name,
@@ -348,8 +353,10 @@ def _compute_render_state(
         inputs=_render_input_paths(example_dir, example_dir.name),
     )
     if hash_state == render_input_manifest.FRESH:
-        return RENDER_FRESH
-    return RENDER_STALE
+        return RENDER_FRESH, None
+    if hash_state == render_input_manifest.UNBOUND:
+        return RENDER_STALE, RENDER_MANIFEST_UNBOUND_NOTE
+    return RENDER_STALE, None
 
 
 def _review_scale_previews_summary(build_png: Path, spec: dict[str, Any]) -> dict[str, Any]:
@@ -528,6 +535,22 @@ def _final_artifact_state(example_dir: Path, name: str, spec: dict) -> dict:
     }
 
 
+def _attestation_current(publication_gate: dict | None) -> bool:
+    """False when the signed attestation no longer covers the current source.
+
+    The gate already recomputes the source-set hash and reports the mismatch as
+    a structured failure code; reading that code keeps one hash-binding check
+    in the codebase instead of two that can disagree.
+    """
+    failures = (publication_gate or {}).get("publication_gate_failures")
+    if not isinstance(failures, list):
+        return True
+    return not any(
+        isinstance(failure, dict) and failure.get("code") == "invalid_human_attestation"
+        for failure in failures
+    )
+
+
 def _status_vector(
     stage: int,
     notes: list[str],
@@ -547,6 +570,7 @@ def _status_vector(
         render_state=render_state,
         critique_state=critique_state,
         final_artifact=final_artifact,
+        attestation_current=_attestation_current(publication_gate),
         publication_gate=publication_gate,
     )
 
@@ -818,6 +842,22 @@ def _strict_status_summary(path: Path, example_dir: Path | None = None) -> dict[
         "failed",
     }:
         return {"state": "invalid", "path": display_path}
+    # A strict receipt describes one compile of one source into one PDF. Absent
+    # that binding it is a free-standing claim, which is exactly the forgery:
+    # hand-write "passed" and release_ready follows with nothing compiled.
+    receipt = compile_run.verified_receipt(path.parent)
+    if (
+        receipt is None
+        or payload.get("compile_run_id") != receipt.get("run_id")
+        or payload.get("render_pdf_sha256") != receipt.get("render_pdf_sha256")
+        or payload.get("source_tex_sha256")
+        != compile_run.current_source_sha256(path.parent, receipt)
+    ):
+        return {
+            "state": "invalid",
+            "path": display_path,
+            "reason": UNBOUND_TO_COMPILE_RUN,
+        }
     return {
         "state": state,
         "path": display_path,
@@ -893,6 +933,9 @@ def _silhouette_morphology_summary(
         return {"state": "stale", "path": display_path, "reason": "input_missing"}
     if payload.get("render_pdf_sha256") != render_hash or payload.get("spec_sha256") != spec_hash:
         return {"state": "stale", "path": display_path, "reason": "hash_mismatch"}
+    receipt = compile_run.verified_receipt(path.parent)
+    if receipt is None or payload.get("compile_run_id") != receipt.get("run_id"):
+        return {"state": "stale", "path": display_path, "reason": UNBOUND_TO_COMPILE_RUN}
 
     if declared == 0 or checked != declared or group_checked != group_declared:
         state = "incomplete"
@@ -1001,6 +1044,14 @@ def _declared_check_coverage_summary(
             "path": display_path,
             "declared": declared,
             "reason": "hash_mismatch",
+        }
+    receipt = compile_run.verified_receipt(path.parent)
+    if receipt is None or payload.get("compile_run_id") != receipt.get("run_id"):
+        return {
+            "state": "stale",
+            "path": display_path,
+            "declared": declared,
+            "reason": UNBOUND_TO_COMPILE_RUN,
         }
 
     if declared == 0 or checked != declared:
@@ -1355,6 +1406,10 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         result.setdefault("notes", []).append("strict_evidence_required_for_release")
         result["release_ready"] = False
         result["final_ready"] = False
+    if result.get("accepted") is True and strict_evidence.get("strict_requested") is False:
+        note = ACCEPTED_RENDER_NOT_STRICT_GATED_NOTE
+        if note not in result.setdefault("notes", []):
+            result["notes"].append(note)
     result["geometry_coverage"] = _geometry_coverage_summary(
         build_dir / "undeclared_geometry.json",
         example_dir,
@@ -1660,7 +1715,11 @@ def infer_stage(example_dir: Path) -> dict:
     )
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
-    render_state = _compute_render_state(example_dir, spec_path, tex_path, build_pdf)
+    render_state, render_binding_note = _compute_render_state(
+        example_dir, spec_path, tex_path, build_pdf
+    )
+    if render_binding_note is not None:
+        notes.append(render_binding_note)
     review_scale_summary = _review_scale_previews_summary(build_png, spec)
     if review_scale_summary["required"]:
         preview_state = review_scale_summary["state"]
@@ -2078,6 +2137,8 @@ def _print_single(result: dict) -> None:
         silhouette_state = silhouette.get("state") if isinstance(silhouette, dict) else "?"
         silhouette_checked = silhouette.get("checked") if isinstance(silhouette, dict) else "?"
         silhouette_groups = silhouette.get("group_checked") if isinstance(silhouette, dict) else "?"
+        strict_evidence = result.get("strict_evidence")
+        strict_state = strict_evidence.get("state") if isinstance(strict_evidence, dict) else "?"
         print(
             "  Spine evidence: "
             f"{spine_evidence.get('state', '?')} "
@@ -2086,7 +2147,8 @@ def _print_single(result: dict) -> None:
             f"semantic_assertions={semantic_assertion_state} "
             f"conventions={convention_state}/{convention_total} "
             f"physics={physics_status} "
-            f"silhouette={silhouette_state}/{silhouette_checked}+{silhouette_groups}"
+            f"silhouette={silhouette_state}/{silhouette_checked}+{silhouette_groups} "
+            f"strict={strict_state}"
         )
     final_ready = str(bool(result.get("final_ready"))).lower()
     print(

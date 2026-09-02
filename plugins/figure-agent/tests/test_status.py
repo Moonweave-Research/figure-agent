@@ -15,9 +15,12 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import compile_run  # noqa: E402
+import human_attestation  # noqa: E402
 import quality_memory_index  # noqa: E402
 import render_input_manifest  # noqa: E402
 import status as status_mod  # noqa: E402
+from compile_run_fixtures import issue_compile_run  # noqa: E402
 from critique_schema_vocab import AESTHETIC_ANTIPATTERN_IDS  # noqa: E402
 from current_render_review_scaffold import review_scaffold_summary  # noqa: E402
 from quality_manifest import (  # noqa: E402
@@ -53,9 +56,11 @@ def _write_explicit_candidate_render(fig_dir: Path) -> tuple[Path, Path]:
         "spec": fig_dir / "spec.yaml",
         "style_lock": status_mod.STYLE_LOCK_PATH,
     }
+    run_id = issue_compile_run(build, source_tex=source, render_pdf=render_pdf)
     manifest = {
         "schema": "figure-agent.render-input-manifest.v1",
         "fixture": fig_dir.name,
+        "compile_run_id": run_id,
         "render": {
             "path": "build/repaired.pdf",
             "sha256": _sha256(render_pdf),
@@ -137,18 +142,7 @@ def _write_current_review_scaffold(directory: Path) -> None:
         "agent_observations": [{"id": "OBS-001", "question": "review it"}],
         "human_review": {"state": "pending", "verdict": "not_recorded"},
     }
-    (build_dir / "strict_status.json").write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.strict-status.v1",
-                "strict_requested": True,
-                "detector_failed": False,
-                "state": "passed",
-            }
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    _write_strict_receipt(build_dir, state="passed")
     (build_dir / "visual_clash.json").write_text(
         json.dumps({"candidates": []}) + "\n", encoding="utf-8"
     )
@@ -246,18 +240,7 @@ def test_current_render_review_scaffold_detects_machine_gate_geometry_drift(
     )
     scaffold_path.write_text(json.dumps(scaffold, sort_keys=True) + "\n", encoding="utf-8")
     build = fig_dir / "build"
-    (build / "strict_status.json").write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.strict-status.v1",
-                "strict_requested": True,
-                "detector_failed": False,
-                "state": "passed",
-            }
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    _write_strict_receipt(build, state="passed")
     (build / "visual_clash.json").write_text(
         json.dumps({"candidates": []}) + "\n", encoding="utf-8"
     )
@@ -300,18 +283,7 @@ def test_current_render_review_keeps_bound_strict_pass_after_nonstrict_recompile
     )
     scaffold_path.write_text(json.dumps(scaffold, sort_keys=True) + "\n", encoding="utf-8")
     build = fig_dir / "build"
-    (build / "strict_status.json").write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.strict-status.v1",
-                "strict_requested": False,
-                "detector_failed": False,
-                "state": "not_requested",
-            }
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    _write_strict_receipt(build, state="not_requested")
     (build / "visual_clash.json").write_text(
         json.dumps({"candidates": []}) + "\n", encoding="utf-8"
     )
@@ -380,17 +352,11 @@ def test_status_projects_declared_repair_candidate_evidence(tmp_path: Path) -> N
     os.utime(build / f"{fig_dir.name}.pdf", (old_time, old_time))
     (repair_build / "repaired.pdf").write_bytes(b"candidate-pdf")
     (repair_build / "repaired.png").write_bytes(b"candidate-png")
-    (repair_build / "strict_status.json").write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.strict-status.v1",
-                "strict_requested": True,
-                "detector_failed": False,
-                "state": "passed",
-            }
-        )
-        + "\n",
-        encoding="utf-8",
+    _write_strict_receipt(
+        repair_build,
+        state="passed",
+        source_tex=repair_build.parent / "repaired.tex",
+        render_pdf=repair_build / "repaired.pdf",
     )
     (repair_build / "physics_grounding.json").write_text(
         json.dumps(
@@ -649,14 +615,76 @@ def _make_spec(
     (directory / "briefing.md").write_text("briefing", encoding="utf-8")
 
 
-def _write_render_input_manifest(directory: Path, name: str | None = None) -> None:
+def _write_strict_receipt(
+    build_dir: Path,
+    *,
+    state: str,
+    detector_failed: bool = False,
+    strict_requested: bool | None = None,
+    live_assertion_target: bool | None = None,
+    source_tex: Path | None = None,
+    render_pdf: Path | None = None,
+) -> None:
+    """Write a strict receipt bound to the compile receipt in the same build dir."""
+    receipt = compile_run.load_receipt(compile_run.receipt_path(build_dir))
+    if receipt is None:
+        issue_compile_run(
+            build_dir,
+            source_tex=source_tex or next(build_dir.parent.glob("*.tex")),
+            render_pdf=render_pdf or (build_dir / f"{build_dir.parent.name}.pdf"),
+        )
+        receipt = compile_run.load_receipt(compile_run.receipt_path(build_dir))
+    assert receipt is not None
+    payload: dict[str, object] = {
+        "schema": "figure-agent.strict-status.v1",
+        "strict_requested": (
+            state != "not_requested" if strict_requested is None else strict_requested
+        ),
+        "detector_failed": detector_failed,
+        "state": state,
+        "compile_run_id": receipt["run_id"],
+        "source_tex_sha256": receipt["source_tex_sha256"],
+        "render_pdf_sha256": receipt["render_pdf_sha256"],
+    }
+    if live_assertion_target is not None:
+        payload["live_assertion_target"] = live_assertion_target
+    (build_dir / "strict_status.json").write_text(
+        json.dumps(payload) + "\n", encoding="utf-8"
+    )
+
+
+def _attest_fixture(fig_dir: Path, monkeypatch: pytest.MonkeyPatch, home: Path) -> None:
+    """Sign the fixture's current source set, as an interactive human would."""
+    monkeypatch.setenv("HOME", str(home))
+    human_attestation._load_or_create_key()
+    human_attestation.write_attestation(fig_dir)
+
+
+def _issue_spine_compile_run(example_dir: Path, render_pdf: Path) -> str:
+    """Bind a bare spine fixture to a compile receipt the checkers would inherit."""
+    source = example_dir / "figure.tex"
+    if not source.exists():
+        source.write_text("spine fixture source", encoding="utf-8")
+    return issue_compile_run(render_pdf.parent, source_tex=source, render_pdf=render_pdf)
+
+
+def _write_render_input_manifest(
+    directory: Path, name: str | None = None, *, strict_requested: bool = True
+) -> None:
     name = name or directory.name
     build_pdf = directory / "build" / f"{name}.pdf"
+    run_id = issue_compile_run(
+        build_pdf.parent,
+        source_tex=directory / f"{name}.tex",
+        render_pdf=build_pdf,
+        strict_requested=strict_requested,
+    )
     render_input_manifest.write_manifest(
         fixture=name,
         render_pdf=build_pdf,
         inputs=status_mod._render_input_paths(directory, name),
         output=render_input_manifest.manifest_path(build_pdf),
+        compile_run_id=run_id,
     )
 
 
@@ -1362,6 +1390,160 @@ def test_render_freshness_detects_content_drift_despite_older_mtime(
     assert result["render_state"] == "STALE"
 
 
+def test_render_without_a_manifest_is_stale_not_fresh(tmp_path: Path) -> None:
+    """A PDF that declares nothing about its inputs proves nothing about them."""
+    fig_dir = tmp_path / "unmanifested_render"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "unmanifested_render.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    pdf = build / "unmanifested_render.pdf"
+    pdf.write_bytes(b"%PDF")
+    older = pdf.stat().st_mtime - 100
+    for path in (
+        fig_dir / "unmanifested_render.tex",
+        fig_dir / "briefing.md",
+        fig_dir / "spec.yaml",
+    ):
+        os.utime(path, (older, older))
+
+    assert infer_stage(fig_dir)["render_state"] == "STALE"
+
+
+def test_manifest_without_a_compile_receipt_is_stale_and_says_why(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "unbound_render"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "unbound_render.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "unbound_render.pdf").write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, fig_dir.name)
+    assert infer_stage(fig_dir)["render_state"] == "FRESH"
+
+    compile_run.receipt_path(build).unlink()
+
+    result = infer_stage(fig_dir)
+
+    assert result["render_state"] == "STALE"
+    assert "render_manifest_unbound" in result["notes"]
+
+
+def test_manifest_bound_to_a_foreign_compile_run_is_stale(tmp_path: Path) -> None:
+    """Re-declaring an old PDF fresh now needs the run that actually made it."""
+    fig_dir = tmp_path / "reused_render"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "reused_render.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    pdf = build / "reused_render.pdf"
+    pdf.write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, fig_dir.name)
+    issue_compile_run(
+        build,
+        source_tex=fig_dir / "reused_render.tex",
+        render_pdf=pdf,
+        run_id="some-other-run",
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert result["render_state"] == "STALE"
+    assert "render_manifest_unbound" in result["notes"]
+
+
+def test_strict_receipt_unbound_from_the_compile_run_reads_invalid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A hand-written strict receipt must not outlive the compile it claims."""
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    _write_strict_status(fig_dir, state="passed", detector_failed=False)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+    assert infer_stage(fig_dir)["strict_evidence"]["state"] == "passed"
+
+    receipt_path = compile_run.receipt_path(fig_dir / "build")
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt["run_id"] = "a-run-that-never-happened"
+    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["state"] == "invalid"
+    assert result["strict_evidence"]["reason"] == "unbound_to_compile_run"
+    assert "strict_evidence_invalid" in result["notes"]
+    assert result["workflow_ready"] is False
+    assert result["release_ready"] is False
+
+
+def test_strict_receipt_for_a_replaced_source_reads_invalid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    _write_strict_status(fig_dir, state="passed", detector_failed=False)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    (fig_dir / "goldenfig.tex").write_text("% edited after the strict compile", encoding="utf-8")
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["state"] == "invalid"
+    assert result["strict_evidence"]["reason"] == "unbound_to_compile_run"
+
+
+def test_spine_report_unbound_from_the_compile_run_is_stale(tmp_path: Path) -> None:
+    spec = tmp_path / "spec.yaml"
+    spec.write_text("text_boundary_checks:\n  - id: title-boundary\n", encoding="utf-8")
+    build = tmp_path / "build"
+    build.mkdir()
+    pdf = build / "figure.pdf"
+    pdf.write_bytes(b"render")
+    _issue_spine_compile_run(tmp_path, pdf)
+    (build / "text_boundary_clash.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.text-boundary-clash.v1",
+                "fixture": tmp_path.name,
+                "compile_run_id": "a-run-that-never-happened",
+                "render_pdf": "build/figure.pdf",
+                "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
+                "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+                "source": "spec.yaml:text_boundary_checks",
+                "checked": 1,
+                "candidates": [],
+                "total": 0,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    spine = status_mod._spine_evidence_summary(tmp_path, build)
+
+    assert spine["text_boundary_coverage"]["state"] == "stale"
+    assert spine["text_boundary_coverage"]["reason"] == "unbound_to_compile_run"
+
+
+def test_accepted_render_compiled_without_strict_is_called_out(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An accepted figure whose spine evidence ran report-only must say so."""
+    fig_dir = tmp_path / "goldenfig"
+    _make_status_ready_fixture(fig_dir, accepted=True)
+    _mark_sources_older_than_outputs(fig_dir)
+    _write_strict_status(fig_dir, state="not_requested", detector_failed=False)
+    monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
+
+    result = infer_stage(fig_dir)
+
+    assert result["strict_evidence"]["strict_requested"] is False
+    assert "accepted_render_not_strict_gated" in result["notes"]
+
+
 def test_status_separates_render_freshness_from_strict_and_geometry_evidence(
     tmp_path: Path,
 ) -> None:
@@ -1374,17 +1556,7 @@ def test_status_separates_render_freshness_from_strict_and_geometry_evidence(
     build_dir.mkdir()
     pdf = build_dir / "strictfig.pdf"
     pdf.write_bytes(b"%PDF")
-    (build_dir / "strict_status.json").write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.strict-status.v1",
-                "strict_requested": True,
-                "detector_failed": True,
-                "state": "failed",
-            }
-        ),
-        encoding="utf-8",
-    )
+    _write_strict_receipt(build_dir, state="failed", detector_failed=True)
     (build_dir / "undeclared_geometry.json").write_text(
         json.dumps(
             {
@@ -1610,10 +1782,12 @@ def test_spine_surfaces_hash_bound_silhouette_morphology_evidence(tmp_path: Path
     build.mkdir()
     pdf = build / "figure.pdf"
     pdf.write_bytes(b"render")
+    run_id = _issue_spine_compile_run(tmp_path, pdf)
     (build / "silhouette_morphology.json").write_text(
         json.dumps(
             {
                 "schema": "figure-agent.silhouette-morphology.v1",
+                "compile_run_id": run_id,
                 "render_pdf": pdf.as_posix(),
                 "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
                 "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
@@ -1732,10 +1906,12 @@ def test_empty_silhouette_declaration_is_not_clean_coverage(tmp_path: Path) -> N
     build.mkdir()
     pdf = build / "figure.pdf"
     pdf.write_bytes(b"render")
+    run_id = _issue_spine_compile_run(tmp_path, pdf)
     (build / "silhouette_morphology.json").write_text(
         json.dumps(
             {
                 "schema": "figure-agent.silhouette-morphology.v1",
+                "compile_run_id": run_id,
                 "render_pdf": pdf.as_posix(),
                 "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
                 "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
@@ -1797,6 +1973,7 @@ def test_spine_fails_closed_when_declared_label_coverage_is_missing_or_zero(
     payload = {
         "schema": schema,
         "fixture": tmp_path.name,
+        "compile_run_id": _issue_spine_compile_run(tmp_path, pdf),
         "render_pdf": "build/figure.pdf",
         "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
         "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
@@ -1838,6 +2015,7 @@ def test_spine_accepts_hash_bound_declared_label_coverage(tmp_path: Path) -> Non
     pdf.write_bytes(b"render")
     common = {
         "fixture": tmp_path.name,
+        "compile_run_id": _issue_spine_compile_run(tmp_path, pdf),
         "render_pdf": "build/figure.pdf",
         "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
         "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
@@ -2682,6 +2860,7 @@ def test_declared_external_svg_handoff_blocks_release_as_unsupported(
     _make_status_ready_fixture(fig_dir, accepted=True)
     _write_final_artifact_spec(fig_dir, kind="polished_svg")
     _mark_sources_older_than_outputs(fig_dir)
+    _attest_fixture(fig_dir, monkeypatch, tmp_path / "home")
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
     result = infer_stage(fig_dir)
@@ -3034,6 +3213,7 @@ def test_unknown_final_artifact_kind_blocks_release(
     _make_status_ready_fixture(fig_dir, accepted=True)
     _write_final_artifact_spec(fig_dir, kind="raster_polish")
     _mark_sources_older_than_outputs(fig_dir)
+    _attest_fixture(fig_dir, monkeypatch, tmp_path / "home")
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
     result = infer_stage(fig_dir)
@@ -4189,6 +4369,7 @@ def test_infer_stage_surfaces_publication_provenance_gate_when_audit_is_incomple
         encoding="utf-8",
     )
     _mark_sources_older_than_outputs(fig_dir)
+    _attest_fixture(fig_dir, monkeypatch, tmp_path / "home")
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
     result = infer_stage(fig_dir)
@@ -4207,13 +4388,6 @@ def test_infer_stage_surfaces_publication_provenance_gate_when_audit_is_incomple
             "required_action": (
                 "Human reviewer must decide submission safety and write an explicit value."
             ),
-        },
-        {
-            "code": "invalid_human_attestation",
-            "category": "publication_provenance",
-            "actor": "human",
-            "message": "human attestation failed: missing_human_attestation",
-            "required_action": "run `fig-agent attest goldenfig` from an interactive terminal",
         },
     ]
 
@@ -4268,6 +4442,7 @@ def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
 
     import status as status_mod
 
+    _attest_fixture(fig_dir, monkeypatch, tmp_path / "home")
     monkeypatch.setattr(
         status_mod,
         "compute_export_state",
@@ -4283,18 +4458,7 @@ def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
 
 
 def _write_strict_status(fig_dir: Path, *, state: str, detector_failed: bool) -> None:
-    (fig_dir / "build" / "strict_status.json").write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.strict-status.v1",
-                "strict_requested": state != "not_requested",
-                "detector_failed": detector_failed,
-                "state": state,
-            }
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    _write_strict_receipt(fig_dir / "build", state=state, detector_failed=detector_failed)
 
 
 def test_infer_stage_strict_failure_blocks_all_readiness(
@@ -5206,18 +5370,10 @@ def test_replay_compile_receipt_cannot_pass_as_a_fully_gated_one(
     fig_dir = tmp_path / "goldenfig"
     _make_status_ready_fixture(fig_dir, accepted=True)
     _mark_sources_older_than_outputs(fig_dir)
-    (fig_dir / "build" / "strict_status.json").write_text(
-        json.dumps(
-            {
-                "schema": "figure-agent.strict-status.v1",
-                "strict_requested": True,
-                "detector_failed": False,
-                "live_assertion_target": False,
-                "state": "passed_without_live_assertions",
-            }
-        )
-        + "\n",
-        encoding="utf-8",
+    _write_strict_receipt(
+        fig_dir / "build",
+        state="passed_without_live_assertions",
+        live_assertion_target=False,
     )
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
     monkeypatch.setattr(

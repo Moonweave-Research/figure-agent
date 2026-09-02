@@ -21,6 +21,7 @@ def _vector(
     critique_state: str = "FRESH",
     final_artifact: dict | None = None,
     publication_gate: dict | None = None,
+    attestation_current: bool = True,
 ) -> dict:
     return build_status_vector(
         stage=stage,
@@ -35,6 +36,7 @@ def _vector(
             "kind": "generated_export",
             "path": "exports/demo.svg",
         },
+        attestation_current=attestation_current,
         publication_gate=publication_gate,
     )
 
@@ -108,6 +110,18 @@ def test_publication_gate_pass_allows_release_readiness() -> None:
 
     assert vector["release_ready"] is True
     assert vector["final_ready"] is True
+
+
+def test_accepted_without_a_current_attestation_is_not_golden_ready() -> None:
+    """`accepted: true` is static; only the attestation is bound to the source."""
+    vector = _vector(attestation_current=False)
+
+    assert vector["acceptance_state"] == "ACCEPTED"
+    assert vector["acceptance_freshness_state"] == "accepted_but_unattested"
+    assert vector["workflow_ready"] is True
+    assert vector["golden_ready"] is False
+    assert vector["release_ready"] is False
+    assert vector["final_ready"] is False
 
 
 def test_accepted_stale_vector_preserves_history_but_blocks_current_readiness() -> None:

@@ -17,6 +17,7 @@ import fig_driver  # noqa: E402
 import fig_driver_guidance  # noqa: E402
 import render_input_manifest  # noqa: E402
 import status as status_mod  # noqa: E402
+from compile_run_fixtures import issue_compile_run  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -73,6 +74,12 @@ def _write_fresh_build_and_exports(fixture: Path, name: str = "driver_demo") -> 
         render_pdf=build / f"{name}.pdf",
         inputs=status_mod._render_input_paths(fixture, name),
         output=render_input_manifest.manifest_path(build / f"{name}.pdf"),
+        compile_run_id=issue_compile_run(
+            build,
+            source_tex=fixture / f"{name}.tex",
+            render_pdf=build / f"{name}.pdf",
+            strict_requested=True,
+        ),
     )
 
 
