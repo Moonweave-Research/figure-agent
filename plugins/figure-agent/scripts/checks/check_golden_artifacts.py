@@ -19,6 +19,7 @@ by `--require-accepted` or automatically when `spec.yaml` declares the
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -383,6 +384,8 @@ AUDIT_INPUT_HASH_KEY = "audit_input_hash"
 THEORY_GUARD_DECLARATION_KEY = "theory-guard"
 THEORY_GUARD_NOT_APPLICABLE = "not-applicable"
 THEORY_GUARD_REASON_KEY = "theory-guard-reason"
+# Micro-defect statuses that close a visual-clash candidate.
+CLASH_CLOSED_STATUSES = frozenset({"accept_simplification", "resolved"})
 
 
 def audit_source_paths(example_dir: Path) -> tuple[Path, ...]:
@@ -496,28 +499,125 @@ def unresolved_visual_clash_count(audit_text: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
+def _load_build_report(report_path: Path) -> tuple[dict | None, str | None]:
+    label = f"build/{report_path.name}"
+    if not report_path.is_file():
+        return None, f"missing {label} (compile the fixture before the acceptance gate)"
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        return None, f"malformed {label}: {exc}"
+    if not isinstance(payload, dict):
+        return None, f"malformed {label}: top-level value must be a mapping"
+    return payload, None
+
+
+def collision_evidence(example_dir: Path) -> tuple[int | None, str | None]:
+    report, error = _load_build_report(example_dir / "build" / "collisions.json")
+    if error is not None:
+        return None, error
+    total = report.get("total")
+    if not isinstance(total, int) or isinstance(total, bool) or total < 0:
+        return None, "malformed build/collisions.json: total must be a non-negative integer"
+    return total, None
+
+
+def _dispositioned_visual_clash_refs(critique_path: Path) -> set[str]:
+    """Candidate ids a reviewer has closed in critique.md front-matter.
+
+    An adjudicated candidate carries a micro-defect whose status says so; the
+    same structured field critique_lint already requires every candidate to be
+    accounted by."""
+    if not critique_path.is_file():
+        return set()
+    micro_defects = yaml_frontmatter(critique_path).get("micro_defects")
+    if not isinstance(micro_defects, list):
+        return set()
+    refs = set()
+    for item in micro_defects:
+        if not isinstance(item, dict):
+            continue
+        ref = item.get("visual_clash_ref")
+        if isinstance(ref, str) and ref.strip() and item.get("status") in CLASH_CLOSED_STATUSES:
+            refs.add(ref.strip())
+    return refs
+
+
+def visual_clash_evidence(example_dir: Path) -> tuple[int | None, int | None, str | None]:
+    """(candidate total, unresolved total, error) from the compiled report.
+
+    Unresolved is the candidate set minus the ones a critique micro-defect has
+    closed. Suppressed known-false-positives never enter `candidates`."""
+    report, error = _load_build_report(example_dir / "build" / "visual_clash.json")
+    if error is not None:
+        return None, None, error
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return None, None, "malformed build/visual_clash.json: candidates must be a list"
+    candidate_ids = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict) or not isinstance(candidate.get("id"), str):
+            return None, None, "malformed build/visual_clash.json: each candidate needs an id"
+        candidate_ids.append(candidate["id"])
+    closed = _dispositioned_visual_clash_refs(example_dir / "critique.md")
+    unresolved = [candidate_id for candidate_id in candidate_ids if candidate_id not in closed]
+    return len(candidate_ids), len(unresolved), None
+
+
 def checker_budget_failures(
-    audit_path: Path, *, max_collisions: int, max_visual_clashes: int
+    example_dir: Path, *, max_collisions: int, max_visual_clashes: int
 ) -> list[str]:
+    """Checker budgets decided by the compiled JSON reports.
+
+    The budgets used to be read out of QUALITY_AUDIT.md prose, so appending the
+    sentence `0 unresolved visual clash(es)` satisfied the gate with no evidence
+    behind it. The audit's numbers are now the human's claim: they are checked
+    against the reports and a claim that contradicts them is itself a failure.
+    """
+    audit_path = example_dir / "QUALITY_AUDIT.md"
     if not audit_path.exists():
         return ["missing audit: QUALITY_AUDIT.md"]
     audit_text = audit_path.read_text(encoding="utf-8")
-    collisions, visual_clashes = checker_warning_counts(audit_text)
-    unresolved_visual_clashes = unresolved_visual_clash_count(audit_text)
+    claimed_collisions, claimed_clashes = checker_warning_counts(audit_text)
+    claimed_unresolved = unresolved_visual_clash_count(audit_text)
     failures = []
-    if collisions is None:
+
+    collisions, collision_error = collision_evidence(example_dir)
+    if collision_error is not None:
+        failures.append(collision_error)
+    else:
+        if collisions > max_collisions:
+            failures.append(f"collision budget exceeded: {collisions} > {max_collisions}")
+        if claimed_collisions is not None and claimed_collisions != collisions:
+            failures.append(
+                f"QUALITY_AUDIT.md claims {claimed_collisions} collision(s); "
+                f"build/collisions.json reports {collisions}"
+            )
+    if claimed_collisions is None:
         failures.append("missing collision count in QUALITY_AUDIT.md")
-    elif collisions > max_collisions:
-        failures.append(f"collision budget exceeded: {collisions} > {max_collisions}")
-    if visual_clashes is None:
+
+    clashes, unresolved, clash_error = visual_clash_evidence(example_dir)
+    if clash_error is not None:
+        failures.append(clash_error)
+    else:
+        if unresolved > max_visual_clashes:
+            failures.append(
+                f"unresolved visual clash budget exceeded: {unresolved} > {max_visual_clashes}"
+            )
+        if claimed_clashes is not None and claimed_clashes != clashes:
+            failures.append(
+                f"QUALITY_AUDIT.md claims {claimed_clashes} visual clash candidate(s); "
+                f"build/visual_clash.json reports {clashes}"
+            )
+        if claimed_unresolved is not None and claimed_unresolved != unresolved:
+            failures.append(
+                f"QUALITY_AUDIT.md claims {claimed_unresolved} unresolved visual clash(es); "
+                f"build/visual_clash.json and critique.md leave {unresolved} open"
+            )
+    if claimed_clashes is None:
         failures.append("missing visual clash count in QUALITY_AUDIT.md")
-    if unresolved_visual_clashes is None:
+    if claimed_unresolved is None:
         failures.append("missing unresolved visual clash count in QUALITY_AUDIT.md")
-    elif unresolved_visual_clashes > max_visual_clashes:
-        failures.append(
-            "unresolved visual clash budget exceeded: "
-            f"{unresolved_visual_clashes} > {max_visual_clashes}"
-        )
     return failures
 
 
@@ -740,7 +840,7 @@ def check_example(
         failures.extend(reference_pack_gate_failures(example_dir, spec))
         failures.extend(
             checker_budget_failures(
-                audit,
+                example_dir,
                 max_collisions=max_collisions,
                 max_visual_clashes=max_visual_clashes,
             )

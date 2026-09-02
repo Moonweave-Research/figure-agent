@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -369,6 +370,41 @@ def _add_quality_audit_disclosure(fixture: Path) -> None:
     )
 
 
+def _write_checker_reports(
+    fixture: Path,
+    *,
+    collisions: int = 0,
+    candidate_ids: tuple[str, ...] = (),
+    closed_ids: tuple[str, ...] = (),
+) -> None:
+    """The compiled checker evidence the budget gate reads, plus the critique
+    front-matter that closes individual visual-clash candidates."""
+    build = fixture / "build"
+    build.mkdir(exist_ok=True)
+    (build / "collisions.json").write_text(
+        json.dumps({"schema": "figure-agent.text-collisions.v1", "total": collisions}),
+        encoding="utf-8",
+    )
+    (build / "visual_clash.json").write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.visual-clash.v1",
+                "candidates": [{"id": candidate_id} for candidate_id in candidate_ids],
+                "total": len(candidate_ids),
+            }
+        ),
+        encoding="utf-8",
+    )
+    if closed_ids:
+        rows = "".join(
+            f"  - id: M{index:03d}\n"
+            f"    visual_clash_ref: {ref}\n"
+            "    status: accept_simplification\n"
+            for index, ref in enumerate(closed_ids, start=1)
+        )
+        (fixture / "critique.md").write_text(f"---\nmicro_defects:\n{rows}---\n", encoding="utf-8")
+
+
 def _make_passing_accepted_fixture(fixture: Path, monkeypatch) -> None:
     _write_minimal_accepted_fixture(fixture)
     monkeypatch.setenv("HOME", str(fixture.parent / "home"))
@@ -377,6 +413,8 @@ def _make_passing_accepted_fixture(fixture: Path, monkeypatch) -> None:
     _write_passing_theory_guard(fixture)
     _mark_quality_audit_fresh(fixture)
     monkeypatch.setattr(golden_checks, "extract_pdf_text", lambda _path: "Foo")
+    _write_checker_reports(fixture)
+    golden_checks.stamp_audit_input_hash(fixture, golden_checks.audit_source_paths(fixture))
 
 
 def test_check_example_basic_mode_skips_label_and_inventory_checks(tmp_path: Path) -> None:
@@ -969,6 +1007,13 @@ def test_require_accepted_mode_rejects_unaccepted_fixture_with_checker_debt(
     _make_passing_accepted_fixture(fixture, monkeypatch)
     spec = fixture / "spec.yaml"
     spec.write_text(spec.read_text(encoding="utf-8").replace("accepted: true", "accepted: false"))
+    candidates = tuple(f"VC{index:03d}" for index in range(1, 53))
+    _write_checker_reports(
+        fixture,
+        collisions=0,
+        candidate_ids=candidates,
+        closed_ids=candidates[:39],
+    )
     (fixture / "QUALITY_AUDIT.md").write_text(
         "# Quality Audit\n\n"
         "**submission-safe:** true\n\n"
@@ -979,7 +1024,7 @@ def test_require_accepted_mode_rejects_unaccepted_fixture_with_checker_debt(
         "submission-safe: true\n",
         encoding="utf-8",
     )
-    _mark_quality_audit_fresh(fixture)
+    golden_checks.stamp_audit_input_hash(fixture, golden_checks.audit_source_paths(fixture))
 
     failures = check_example(
         fixture,
@@ -993,6 +1038,86 @@ def test_require_accepted_mode_rejects_unaccepted_fixture_with_checker_debt(
     assert "fixture is not marked accepted: true" in failures
     assert not any(failure.startswith("collision budget exceeded") for failure in failures)
     assert "unresolved visual clash budget exceeded: 13 > 0" in failures
+    # The audit's numbers agree with the reports, so no mismatch is raised.
+    assert not any("QUALITY_AUDIT.md claims" in failure for failure in failures)
+
+
+def test_require_accepted_mode_closes_on_a_complete_fixture(tmp_path: Path, monkeypatch) -> None:
+    """Positive control for the whole accepted-mode contract: with real
+    attestation, a stamped audit and compiled checker reports, nothing blocks."""
+    fixture = tmp_path / "completeAccepted"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+
+    assert check_example(fixture, require_accepted=True) == []
+
+
+def test_checker_budget_rejects_prose_that_contradicts_the_reports(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """The attack: append `0 unresolved visual clash(es)` to the audit and the
+    gate was satisfied by the wording alone."""
+    fixture = tmp_path / "prosePlease"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+    _write_checker_reports(fixture, collisions=4, candidate_ids=("VC001", "VC002"))
+    (fixture / "QUALITY_AUDIT.md").write_text(
+        "# Quality Audit\n\n"
+        "**submission-safe:** true\n\n"
+        "0 collision(s)\n"
+        "0 visual clash candidate(s)\n"
+        "0 unresolved visual clash(es)\n\n"
+        "## Provenance and Publication Compliance\n\n"
+        "submission-safe: true\n",
+        encoding="utf-8",
+    )
+    golden_checks.stamp_audit_input_hash(fixture, golden_checks.audit_source_paths(fixture))
+
+    failures = golden_checks.checker_budget_failures(
+        fixture, max_collisions=0, max_visual_clashes=0
+    )
+
+    assert "collision budget exceeded: 4 > 0" in failures
+    assert "unresolved visual clash budget exceeded: 2 > 0" in failures
+    assert "QUALITY_AUDIT.md claims 0 collision(s); build/collisions.json reports 4" in failures
+    assert (
+        "QUALITY_AUDIT.md claims 0 unresolved visual clash(es); "
+        "build/visual_clash.json and critique.md leave 2 open"
+    ) in failures
+
+
+def test_checker_budget_fails_closed_when_the_reports_are_absent(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fixture = tmp_path / "noReports"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+    (fixture / "build" / "collisions.json").unlink()
+    (fixture / "build" / "visual_clash.json").unlink()
+
+    failures = golden_checks.checker_budget_failures(
+        fixture, max_collisions=0, max_visual_clashes=0
+    )
+
+    assert any(failure.startswith("missing build/collisions.json") for failure in failures)
+    assert any(failure.startswith("missing build/visual_clash.json") for failure in failures)
+
+
+def test_checker_budget_counts_only_undispositioned_candidates(tmp_path: Path, monkeypatch) -> None:
+    """A candidate a reviewer closed in critique.md front-matter is resolved;
+    one nobody touched is not."""
+    fixture = tmp_path / "partlyClosed"
+    _make_passing_accepted_fixture(fixture, monkeypatch)
+    _write_checker_reports(
+        fixture,
+        candidate_ids=("VC001", "VC002", "VC003"),
+        closed_ids=("VC001", "VC002"),
+    )
+
+    assert golden_checks.visual_clash_evidence(fixture) == (3, 1, None)
+
+    failures = golden_checks.checker_budget_failures(
+        fixture, max_collisions=0, max_visual_clashes=0
+    )
+
+    assert "unresolved visual clash budget exceeded: 1 > 0" in failures
 
 
 def test_check_example_auto_mode_missing_accepted_key_fails(tmp_path: Path) -> None:
