@@ -487,3 +487,39 @@ def test_readiness_orders_its_checks_by_the_closeout_step_contract() -> None:
 
     assert [step_id for step_id in ordered if step_id in fig_closeout.REQUIRED_CLOSEOUT_STEP_IDS] \
         == list(fig_closeout.REQUIRED_CLOSEOUT_STEP_IDS)
+
+
+def test_closeout_ready_blocks_accepted_but_unattested(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fixture(workspace)
+
+    def fake_closeout(_name, repo_root, runs_root=None):
+        payload = _passing_closeout(_name, repo_root, runs_root)
+        payload["status"] = {
+            **payload["status"],
+            "acceptance_state": "ACCEPTED",
+            "acceptance_freshness_state": "accepted_but_unattested",
+            "workflow_ready": True,
+            "release_ready": False,
+            "final_ready": False,
+            "publication_gate_state": "PROVENANCE_REQUIRED",
+            "publication_gate_failures": [],
+        }
+        return payload
+
+    monkeypatch.setattr(closeout_readiness, "_compute_closeout", fake_closeout)
+
+    readiness = closeout_readiness.build_closeout_readiness(
+        "candidate_demo",
+        candidate_id="CAND001",
+        candidate_set_path=Path("build/candidates/candidate_set.json"),
+        workspace_root=workspace,
+    )
+
+    checks = {check["id"]: check for check in readiness["checks"]}
+    assert readiness["status"] == "blocked"
+    assert checks["accepted_state"]["state"] == "blocked"
+    assert checks["accepted_state"]["reason"].startswith("accepted_but_unattested:")

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -471,6 +472,7 @@ def text_boundary_clash_payload(
     resolved_spec_path = spec_path or _infer_spec_path(pdf_path)
     return {
         "schema": SCHEMA,
+        "compile_run_id": os.environ.get("FIGURE_AGENT_COMPILE_RUN_ID"),
         "fixture": fixture_name,
         "render_pdf": f"build/{pdf_path.name}",
         "render_pdf_sha256": _sha256_or_none(pdf_path),

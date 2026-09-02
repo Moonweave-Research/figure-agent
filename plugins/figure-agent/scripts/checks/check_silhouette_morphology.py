@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 from typing import Any
 
@@ -386,6 +387,7 @@ def check_pdf(pdf_path: Path, spec_path: Path) -> dict[str, Any]:
     )
     return {
         "schema": SCHEMA,
+        "compile_run_id": os.environ.get("FIGURE_AGENT_COMPILE_RUN_ID"),
         "render_pdf": pdf_path.as_posix(),
         "render_pdf_sha256": _sha256(pdf_path),
         "spec_sha256": _sha256(spec_path),

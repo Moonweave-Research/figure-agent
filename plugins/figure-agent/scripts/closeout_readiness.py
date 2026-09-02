@@ -9,6 +9,7 @@ import evidence_index
 import fixture_identity
 import publication_gate
 import runtime_paths
+import status_readiness_policy
 
 SCHEMA = "figure-agent.closeout-readiness.v1"
 # The release-gate checks below are computed here rather than by closeout, and
@@ -19,6 +20,11 @@ ACCEPTED_BUT_STALE_REASON = (
     "accepted_but_stale: fixture has an accepted historical state, but current "
     "source, render, critique, or export evidence is stale. Re-run "
     "compile/critique/export and refresh acceptance before closeout."
+)
+ACCEPTED_BUT_UNATTESTED_REASON = (
+    "accepted_but_unattested: the accepted declaration is not bound to the current "
+    "source; the human attestation hash no longer matches. Re-run fig-agent attest "
+    "from a terminal (or re-open the acceptance) before closeout."
 )
 
 
@@ -141,11 +147,15 @@ def _accepted_state_check(status: dict[str, Any]) -> dict[str, Any]:
         "acceptance_freshness_state": freshness_state,
         "workflow_ready": bool(status.get("workflow_ready")),
     }
-    if freshness_state == "accepted_but_stale":
+    if freshness_state in status_readiness_policy.ACCEPTANCE_FRESHNESS_BLOCKING_STATES:
         return _check(
             check_id="accepted_state",
             state="blocked",
-            reason=ACCEPTED_BUT_STALE_REASON,
+            reason=(
+                ACCEPTED_BUT_STALE_REASON
+                if freshness_state == "accepted_but_stale"
+                else ACCEPTED_BUT_UNATTESTED_REASON
+            ),
             evidence=evidence,
         )
     return _check(

@@ -613,12 +613,21 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
     blocking = [
         finding for finding in report.get("findings", []) if finding.get("severity") == "blocking"
     ]
-    if blocking:
+    # A finding that names another fixture is that fixture's problem: a stale
+    # binding on a superseded fixture must not stop every other figure's driver.
+    own_blocking = [
+        finding
+        for finding in blocking
+        if finding.get("fixture") in (None, name)
+    ]
+    other_blocking = [finding for finding in blocking if finding not in own_blocking]
+    if own_blocking:
         return {
             "schema": "figure-agent.paper-plan-status.v1",
             "state": "INVALID",
-            "reason": ";".join(str(item.get("code")) for item in blocking),
-            "blocking_findings": blocking,
+            "reason": ";".join(str(item.get("code")) for item in own_blocking),
+            "blocking_findings": own_blocking,
+            "other_fixture_blocking_findings": other_blocking,
             "map_path": "docs/paper_figure_map.yaml",
         }
     plan_map = check_plan_consistency._load_map(map_path)
