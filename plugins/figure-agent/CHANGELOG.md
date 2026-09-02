@@ -4,6 +4,17 @@ All notable changes to figure-agent are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- `fig-agent doctor` compiles a one-node TikZ document with the configured
+  engine before reporting the toolchain ok, and reports `compile_smoke` with
+  the engine's output on failure.
+- The visual-clash report carries `tex_binding` (`bound` | `source_missing` |
+  `not_requested`), and an unreadable explicit `--source` exits instead of
+  writing a report where every binding is silently absent.
+
+## [0.10.0] - 2026-09-02
+
 Accumulated since 0.9.3 (2026-06-07). Summarized by wave; per-commit detail
 lives in git history and `docs/figure-agent.md` roadmap gates.
 
@@ -121,11 +132,6 @@ lives in git history and `docs/figure-agent.md` roadmap gates.
   closed: the fig1-Panel-F-hardcoded `quality_search` engine, the direct-SVG
   and illustration/hybrid backends, and the composition stack minus its three
   read-only analysis surfaces (~32k lines, unreachable from any entry point).
-
-<!-- The version bump (0.9.3 -> 0.10.0) is a coordinated release-contract change
-     across plugin.json, pyproject.toml, README, the issue-100 inventory,
-     closeout status, test_release_contract.EXPECTED_RELEASE_VERSION, and the
-     cowork zip names; do it as one deliberate step at release. -->
 
 ## [0.9.3] - 2026-06-07
 

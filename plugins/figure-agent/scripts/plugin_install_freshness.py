@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import evidence_hash
 from plugin_package_audit import JUNK_DIR_NAMES, JUNK_FILE_NAMES, find_packaging_junk
 
 SCHEMA = "figure-agent.plugin-install-freshness.v1"
@@ -113,18 +114,10 @@ def _iter_payload_files(root: Path) -> list[Path]:
     return result
 
 
-def _file_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return f"sha256:{digest.hexdigest()}"
-
-
 def _payload_manifest(root: Path) -> dict[str, str]:
     root = root.resolve()
     return {
-        path.resolve().relative_to(root).as_posix(): _file_sha256(path)
+        path.resolve().relative_to(root).as_posix(): evidence_hash.sha256_file(path)
         for path in _iter_payload_files(root)
     }
 
@@ -157,7 +150,7 @@ def _iter_example_source_files(root: Path) -> list[Path]:
 def _example_source_manifest(root: Path) -> dict[str, str]:
     root = root.resolve()
     return {
-        path.resolve().relative_to(root).as_posix(): _file_sha256(path)
+        path.resolve().relative_to(root).as_posix(): evidence_hash.sha256_file(path)
         for path in _iter_example_source_files(root)
     }
 

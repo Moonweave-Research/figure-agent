@@ -158,16 +158,29 @@ def test_transfer_receipt_binds_sources_and_records_non_publication_evidence() -
         "uv run python scripts/quality/panel_f_transfer_receipt.py refresh"
     )
     assert TRANSFER_HELPER.is_file()
-
-    rendered = [PLUGIN_ROOT / path for path in comparison["render_bindings"]]
-    if all(path.is_file() for path in rendered):
-        result = subprocess.run(
-            ["uv", "run", "python", str(TRANSFER_HELPER), "verify"],
-            cwd=PLUGIN_ROOT,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        assert result.returncode == 0, result.stderr
     assert receipt["strict_review_evidence"] == "generated_not_passed"
     assert receipt["publication_acceptance"] == "not_claimed"
+
+
+@pytest.mark.local_render_signature
+def test_transfer_receipt_verify_agrees_with_the_renders_it_was_recorded_from() -> None:
+    receipt = yaml.safe_load(TRANSFER_RECEIPT.read_text(encoding="utf-8"))
+    rendered = [PLUGIN_ROOT / path for path in receipt["crop_comparison"]["render_bindings"]]
+    # build/ is gitignored, so this evidence exists only on a machine that just
+    # compiled both fixtures. Say so instead of passing on an unrun check.
+    missing = [str(path.relative_to(PLUGIN_ROOT)) for path in rendered if not path.is_file()]
+    if missing:
+        pytest.skip(
+            "renders the receipt binds are absent; run "
+            f"`uv run python {TRANSFER_HELPER.relative_to(PLUGIN_ROOT)} refresh` first: "
+            + ", ".join(missing)
+        )
+
+    result = subprocess.run(
+        ["uv", "run", "python", str(TRANSFER_HELPER), "verify"],
+        cwd=PLUGIN_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr

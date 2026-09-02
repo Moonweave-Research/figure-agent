@@ -44,7 +44,7 @@ def test_package_cowork_plugin_zip_contract(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    zip_path = output_dir / "figure-agent-cowork-0.9.3.zip"
+    zip_path = output_dir / "figure-agent-cowork-0.10.0.zip"
     assert zip_path.is_file()
 
     with zipfile.ZipFile(zip_path) as archive:
@@ -138,7 +138,7 @@ def test_package_cowork_plugin_includes_installed_smoke_fixtures(tmp_path: Path)
     )
 
     assert result.returncode == 0, result.stderr
-    zip_path = output_dir / "figure-agent-cowork-0.9.3.zip"
+    zip_path = output_dir / "figure-agent-cowork-0.10.0.zip"
     with zipfile.ZipFile(zip_path) as archive:
         names = set(archive.namelist())
 

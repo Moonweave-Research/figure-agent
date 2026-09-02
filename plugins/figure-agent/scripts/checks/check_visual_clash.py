@@ -34,6 +34,7 @@ class VisualIssue:
 
 KNOWN_FALSE_POSITIVES_PATH = Path(__file__).resolve().parents[2] / "_known_false_positives.yaml"
 SCHEMA = "figure-agent.visual-clash.v1"
+TEX_BINDING_STATES = ("bound", "source_missing", "not_requested")
 
 
 def extract_pdf_words_and_page(pdf_path: Path) -> tuple[list[dict], tuple[float, float]]:
@@ -624,6 +625,7 @@ def visual_clash_payload(
     tiers: list[tuple[str, str | None]] | None = None,
     suppressed_total: int = 0,
     source_tex: str | None = None,
+    tex_binding: str = "not_requested",
 ) -> dict:
     """Return the stable machine-readable visual-clash report.
 
@@ -633,6 +635,8 @@ def visual_clash_payload(
     (strict mode). Report-only callers pass no tiers and get the legacy schema
     unchanged, so pinned report-mode snapshots stay byte-stable.
     """
+    if tex_binding not in TEX_BINDING_STATES:
+        raise ValueError(f"unknown tex_binding state: {tex_binding}")
     candidates = []
     blocking_total = 0
     report_only_total = 0
@@ -671,6 +675,9 @@ def visual_clash_payload(
         "render_pdf": _render_pdf_field(pdf_path),
         "candidates": candidates,
         "total": len(candidates),
+        # A null tex_lines used to mean either "no source was offered" or "the
+        # source was offered and unreadable"; a reader could not tell which.
+        "tex_binding": tex_binding,
     }
     if tiers is not None:
         payload["blocking_total"] = blocking_total
@@ -693,6 +700,7 @@ def write_visual_clash_json(
     tiers: list[tuple[str, str | None]] | None = None,
     suppressed_total: int = 0,
     source_tex: str | None = None,
+    tex_binding: str = "not_requested",
 ) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
@@ -704,6 +712,7 @@ def write_visual_clash_json(
                 tiers=tiers,
                 suppressed_total=suppressed_total,
                 source_tex=source_tex,
+                tex_binding=tex_binding,
             ),
             indent=2,
             sort_keys=True,
@@ -765,12 +774,15 @@ def main() -> int:
         parser.error("fixture must be one safe path component")
 
     source_tex = None
+    tex_binding = "not_requested"
     if args.source is not None:
         try:
             source_tex = args.source.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
-            # An unreadable source binds nothing; it must not fail the report.
-            source_tex = None
+        except (OSError, UnicodeDecodeError) as exc:
+            # Swallowing this produced a report indistinguishable from one where
+            # no label happened to bind, so an asked-for binding failed in silence.
+            parser.error(f"--source is unreadable: {args.source} ({exc})")
+        tex_binding = "bound"
     words, page_size = extract_pdf_words_and_page(args.pdf)
     image = render_pdf_first_page(args.pdf, args.dpi)
     issues = detect_visual_clashes(image, words, page_size)
@@ -799,6 +811,7 @@ def main() -> int:
             tiers=tiers,
             suppressed_total=suppressed_count,
             source_tex=source_tex,
+            tex_binding=tex_binding,
         )
 
     print(f"visual clash report: {args.pdf.name} ({len(words)} words)")

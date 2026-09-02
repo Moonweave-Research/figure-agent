@@ -11,6 +11,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import evidence_hash  # noqa: E402
 import fig_closeout as fig_closeout_mod  # noqa: E402
 from fig_closeout import compute_closeout, main  # noqa: E402
 from fig_loop_records import run_input_hashes  # noqa: E402
@@ -653,8 +654,8 @@ def test_closeout_passes_current_tracked_golden_acceptance(
                 "reviewer": "local-user",
                 "reviewed_at": "2026-06-08T00:00:00Z",
                 "accept_golden": True,
-                "source_sha256": fig_closeout_mod._sha256_file(tex_path),
-                "exports": {"pdf": fig_closeout_mod._sha256_file(export_path)},
+                "source_sha256": evidence_hash.sha256_file(tex_path),
+                "exports": {"pdf": evidence_hash.sha256_file(export_path)},
             },
             sort_keys=True,
         )
@@ -698,7 +699,7 @@ def test_closeout_reports_stale_tracked_golden_acceptance_as_accepted_but_stale(
                 "reviewed_at": "2026-06-08T00:00:00Z",
                 "accept_golden": True,
                 "source_sha256": "sha256:" + "0" * 64,
-                "exports": {"pdf": fig_closeout_mod._sha256_file(export_path)},
+                "exports": {"pdf": evidence_hash.sha256_file(export_path)},
             },
             sort_keys=True,
         )

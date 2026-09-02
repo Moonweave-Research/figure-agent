@@ -15,7 +15,6 @@ import sys
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
-from hashlib import sha256
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -34,11 +33,12 @@ SCRIPT_IMPORT_DIRS = (
 for script_dir in reversed(SCRIPT_IMPORT_DIRS):
     sys.path.insert(0, str(script_dir))
 
+import evidence_hash  # noqa: E402
 import runtime_paths  # noqa: E402
 
 PROTOCOL_VERSION = "2025-06-18"
 SERVER_NAME = "figure-agent"
-SERVER_VERSION = "0.9.3"
+SERVER_VERSION = "0.10.0"
 ERROR_CATEGORIES = {
     "compile_failed",
     "dependency_missing",
@@ -306,14 +306,6 @@ def _resource_specs(name: str) -> dict[tuple[str, ...], tuple[Path, str]]:
     }
 
 
-def _sha256_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
-
-
 def _path_metadata(
     *,
     workspace_root: Path,
@@ -349,7 +341,7 @@ def _path_metadata(
         return payload
     if resolved.is_file():
         payload["size_bytes"] = resolved.stat().st_size
-        payload["sha256"] = _sha256_file(resolved)
+        payload["sha256"] = evidence_hash.sha256_file(resolved)
     return payload
 
 
@@ -417,7 +409,7 @@ def _candidate_manifest_metadata(
         return payload
     if resolved.is_file():
         payload["size_bytes"] = resolved.stat().st_size
-        payload["sha256"] = _sha256_file(resolved)
+        payload["sha256"] = evidence_hash.sha256_file(resolved)
     return payload
 
 

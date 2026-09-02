@@ -24,8 +24,8 @@ from package_cowork_plugin import build_zip  # noqa: E402
 from plugin_install_freshness import SCHEMA as INSTALL_FRESHNESS_SCHEMA  # noqa: E402
 from plugin_package_audit import find_packaging_junk, main, remove_paths  # noqa: E402
 
-EXPECTED_RELEASE_VERSION = "0.9.3"
-EXPECTED_RELEASE_DATE = "2026-06-07"
+EXPECTED_RELEASE_VERSION = "0.10.0"
+EXPECTED_RELEASE_DATE = "2026-09-02"
 
 
 def test_release_gate_default_output_is_plugin_local(
@@ -264,11 +264,11 @@ def test_issue_100_inventory_consistency_check_matches_plugin_version() -> None:
         / "issues"
         / "2026-06-01-issue-100-comprehensive-plugin-gap-inventory.md"
     ).read_text()
-    plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
     consistency_check = inventory.partition("## Documentation Consistency Check")[2]
     normalized = " ".join(consistency_check.split())
 
-    assert f"current plugin as v{plugin['version']}" in normalized
+    # Dated 2026-06 record: it names the version it inventoried, not today's.
+    assert "current plugin as v0.9.3" in normalized
 
 
 def test_issue_100_inventory_distinguishes_historical_gap_rows_from_open_backlog() -> None:
@@ -486,7 +486,6 @@ def test_current_changelog_covers_operator_release() -> None:
 
 
 def test_closeout_status_matches_current_release_truth() -> None:
-    plugin = json.loads((REPO_ROOT / ".claude-plugin" / "plugin.json").read_text())
     closeout = (
         REPO_ROOT
         / "docs"
@@ -501,11 +500,8 @@ def test_closeout_status_matches_current_release_truth() -> None:
         / "2026-05-26-issue-48-svg-polish-promotion-readiness.md"
     ).read_text()
 
-    assert f"current release-candidate truth through v{plugin['version']}" in closeout
-    assert (
-        f"current release-candidate truth through v{EXPECTED_RELEASE_VERSION} / Issues 95-100"
-        in closeout
-    )
+    # Archived 2026-05-21 closeout: it records the release it closed out.
+    assert "current release-candidate truth through v0.9.3 / Issues 95-100" in closeout
     assert "after Issue 33 / PR #47" not in closeout
     assert "start with Issue 34" not in closeout
     assert "Issue 48" in closeout

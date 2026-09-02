@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import closeout_readiness
+import evidence_hash
 import fixture_identity
 import git_tracked
 import human_decision_record
@@ -23,18 +24,10 @@ class GoldenAcceptanceError(ValueError):
     """Raised when closeout/golden acceptance is not allowed."""
 
 
-def _sha256_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
-
-
 def _sha256_fixture_file(path: Path, label: str) -> str | None:
     if path.is_symlink():
         raise GoldenAcceptanceError(f"sandbox_symlink_forbidden: {label}")
-    return _sha256_file(path) if path.is_file() else None
+    return evidence_hash.sha256_file(path) if path.is_file() else None
 
 
 def _canonical_hash(payload: dict[str, Any]) -> str:
@@ -94,7 +87,7 @@ def _authorizing_decision_record(name: str, plugin_root: Path) -> dict[str, str]
                     path.as_posix(),
                     {
                         "path": path.relative_to(plugin_root).as_posix(),
-                        "sha256": _sha256_file(path),
+                        "sha256": evidence_hash.sha256_file(path),
                         "packet_timestamp": timestamp,
                         "queue_run_id": str(record.get("queue_run_id") or ""),
                     },
@@ -131,7 +124,7 @@ def _export_hashes(example_dir: Path, name: str) -> dict[str, str]:
         if path.is_symlink():
             raise GoldenAcceptanceError(f"sandbox_symlink_forbidden: exports/{path.name}")
         if path.is_file():
-            hashes["tif" if ext == "tiff" else ext] = _sha256_file(path)
+            hashes["tif" if ext == "tiff" else ext] = evidence_hash.sha256_file(path)
     return hashes
 
 

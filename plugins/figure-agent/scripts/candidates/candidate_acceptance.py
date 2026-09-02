@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import candidate_contracts
+import evidence_hash
 import fixture_identity
 import runtime_paths
 import semantic_candidate_review
@@ -26,14 +27,6 @@ TERMINAL_APPLY_STATUSES = {
 
 class CandidateAcceptanceError(ValueError):
     """Raised when acceptance/readiness would escape the candidate sandbox."""
-
-
-def _sha256_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
 
 
 def normalized_render_manifest_sha256(path: Path) -> str:
@@ -220,7 +213,7 @@ def _source_drift_blocks(
         drift_hash = _drift_hash_for_operation(operation, manifest.get("selectors"))
         if drift_hash is None:
             blocking.append(f"source_drift_hash_missing:{relative}")
-        elif _sha256_file(target) != drift_hash:
+        elif evidence_hash.sha256_file(target) != drift_hash:
             blocking.append(f"source_drift_hash_mismatch:{relative}")
     return blocking
 
@@ -252,7 +245,7 @@ def _current_acceptance_state(
         blocking.append("acceptance_candidate_id_mismatch")
     if acceptance.get("candidate_hash") != manifest.get("candidate_hash"):
         blocking.append("acceptance_candidate_hash_mismatch")
-    if acceptance.get("candidate_manifest_sha256") != _sha256_file(manifest_path):
+    if acceptance.get("candidate_manifest_sha256") != evidence_hash.sha256_file(manifest_path):
         blocking.append("acceptance_manifest_hash_mismatch")
     if acceptance.get("render_manifest_sha256") != normalized_render_manifest_sha256(
         render_manifest_path
@@ -438,7 +431,7 @@ def write_acceptance(
             candidate_set_file,
         ),
         "candidate_manifest_path": _fixture_relative(example_dir, manifest_path),
-        "candidate_manifest_sha256": _sha256_file(manifest_path),
+        "candidate_manifest_sha256": evidence_hash.sha256_file(manifest_path),
         "render_manifest_path": _fixture_relative(example_dir, render_manifest_path),
         "render_manifest_sha256": normalized_render_manifest_sha256(render_manifest_path),
         "decision": decision,

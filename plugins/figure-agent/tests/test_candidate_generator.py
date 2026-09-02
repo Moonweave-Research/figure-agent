@@ -12,30 +12,27 @@ import candidate_generator  # noqa: E402
 import experience_log  # noqa: E402
 import quality_defect_ledger  # noqa: E402
 import runtime_paths  # noqa: E402
+from fixture_scaffold import make_example_fixture  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 from test_evidence_index import _fixture as _sandbox_fixture  # noqa: E402
 
 
 def _fixture(workspace: Path, name: str = "candidate_demo") -> Path:
-    fixture = workspace / "examples" / name
-    fixture.mkdir(parents=True)
-    (fixture / "reference").mkdir()
-    (fixture / "reference" / "panel_a.png").write_bytes(b"fake")
-    (fixture / "briefing.md").write_text("# Brief\n", encoding="utf-8")
-    (fixture / "spec.yaml").write_text(
-        """
+    fixture = make_example_fixture(
+        workspace,
+        name,
+        spec="""
 name: candidate_demo
 panels:
   - id: A
     reference_image: reference/panel_a.png
 """.strip()
         + "\n",
-        encoding="utf-8",
+        briefing="# Brief\n",
+        tex="\\node (label-a) at (0,0) {Old Label};\n",
     )
-    (fixture / f"{name}.tex").write_text(
-        "\\node (label-a) at (0,0) {Old Label};\n",
-        encoding="utf-8",
-    )
+    (fixture / "reference").mkdir()
+    (fixture / "reference" / "panel_a.png").write_bytes(b"fake")
     return fixture
 
 

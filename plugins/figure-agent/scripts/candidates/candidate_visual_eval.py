@@ -2,17 +2,10 @@
 
 from __future__ import annotations
 
-from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-
-def _sha256_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
+import evidence_hash
 
 
 def _read_ppm(path: Path) -> tuple[int, int, list[tuple[int, int, int]]]:
@@ -113,12 +106,12 @@ def compare_image_pair(before_path: Path, after_path: Path) -> dict[str, Any]:
     before = {
         "path": before_path.as_posix(),
         "dimensions": [before_width, before_height],
-        "sha256": _sha256_file(before_path),
+        "sha256": evidence_hash.sha256_file(before_path),
     }
     after = {
         "path": after_path.as_posix(),
         "dimensions": [after_width, after_height],
-        "sha256": _sha256_file(after_path),
+        "sha256": evidence_hash.sha256_file(after_path),
     }
     if (before_width, before_height) != (after_width, after_height):
         canvas_width = max(before_width, after_width)

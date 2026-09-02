@@ -13,10 +13,12 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "scripts" / "quality"))
 
 import agent_next  # noqa: E402
+import evidence_hash  # noqa: E402
 import promotion_wiring  # noqa: E402
 import quality_defect_ledger  # noqa: E402
 import semantic_assertions  # noqa: E402
 import status  # noqa: E402
+from fixture_scaffold import make_example_fixture  # noqa: E402
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -25,15 +27,10 @@ def _write_json(path: Path, payload: dict) -> None:
 
 
 def _fixture(workspace: Path, name: str = "fig_demo") -> Path:
-    fixture = workspace / "examples" / name
-    fixture.mkdir(parents=True)
-    (fixture / f"{name}.tex").write_text(
-        "% Panel A\n\\node at (0,0) {Energy};\n% Panel E\n\\node at (1,1) {ISPD};\n",
-        encoding="utf-8",
-    )
-    (fixture / "briefing.md").write_text("brief\n", encoding="utf-8")
-    (fixture / "spec.yaml").write_text(
-        "name: fig_demo\n"
+    return make_example_fixture(
+        workspace,
+        name,
+        spec="name: fig_demo\n"
         "panels:\n"
         "  - id: A\n"
         "  - id: E\n"
@@ -42,9 +39,9 @@ def _fixture(workspace: Path, name: str = "fig_demo") -> Path:
         "    anchor_style: forceArr\n"
         "    axis: x\n"
         "    direction: decreasing\n",
-        encoding="utf-8",
+        briefing="brief\n",
+        tex="% Panel A\n\\node at (0,0) {Energy};\n% Panel E\n\\node at (1,1) {ISPD};\n",
     )
-    return fixture
 
 
 def _write_crop(fixture: Path, item_id: str = "VC012") -> Path:
@@ -849,7 +846,7 @@ def test_triage_accept_requires_inline_crop_evidence(tmp_path: Path) -> None:
             "fixture": "fig_demo",
             "source_detector": "visual_clash",
             "source_hashes": promotion_wiring._current_source_hashes(fixture, "fig_demo"),
-            "visual_clash_report_sha256": promotion_wiring._hash_file(
+            "visual_clash_report_sha256": evidence_hash.sha256_file(
                 fixture / "build" / "visual_clash.json"
             ),
             "status": "review_required",

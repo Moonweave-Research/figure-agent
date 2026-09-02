@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
 import candidate_contracts
+import evidence_hash
 import fixture_identity
 import runtime_paths
 
@@ -17,14 +17,6 @@ SCHEMA = "figure-agent.evidence-index.v1"
 
 class EvidenceIndexError(ValueError):
     """Raised when evidence indexing would leave fixture boundaries."""
-
-
-def _sha256_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
 
 
 def _load_json(path: Path, label: str) -> dict[str, Any]:
@@ -134,7 +126,7 @@ def _apply_status(
         if target.is_symlink():
             diagnostics.append(f"candidate_apply_symlink:{relative}")
             return "stale"
-        if not target.is_file() or _sha256_file(target) != expected:
+        if not target.is_file() or evidence_hash.sha256_file(target) != expected:
             diagnostics.append(f"candidate_apply_stale:{relative}")
             return "stale"
         validated_files += 1
@@ -200,7 +192,7 @@ def build_evidence_index(
     tex_path = example_dir / f"{name}.tex"
     source = {
         "tex_path": f"{name}.tex",
-        "tex_sha256": _sha256_file(tex_path) if tex_path.is_file() else None,
+        "tex_sha256": evidence_hash.sha256_file(tex_path) if tex_path.is_file() else None,
     }
     diagnostics: list[str] = []
     candidate_payload: dict[str, Any] | None = None

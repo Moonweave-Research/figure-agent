@@ -17,6 +17,7 @@ from fig_loop import FigLoopError, ensure_safe_command, run_loop  # noqa: E402
 from fig_loop_escalation import escalation_summary  # noqa: E402
 from fig_loop_markdown import decision_markdown  # noqa: E402
 from fig_loop_records import json_stdout_summary, write_json  # noqa: E402
+from fixture_scaffold import make_example_fixture  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 from reference_aesthetic_metrics import (  # noqa: E402
     build_reference_aesthetic_metrics,
@@ -25,14 +26,12 @@ from reference_aesthetic_metrics import (  # noqa: E402
 
 
 def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
-    fixture = repo / "examples" / name
-    fixture.mkdir(parents=True)
-    (fixture / "spec.yaml").write_text(
-        f"name: {name}\npanels: []\nstyle_profile: polymer-default\n",
-        encoding="utf-8",
+    return make_example_fixture(
+        repo,
+        name,
+        spec=f"name: {name}\npanels: []\nstyle_profile: polymer-default\n",
+        briefing="briefing",
     )
-    (fixture / "briefing.md").write_text("briefing", encoding="utf-8")
-    return fixture
 
 
 def _publish_current_attempt(repo: Path, fixture: Path, *, actor: str) -> None:

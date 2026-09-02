@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 from pathlib import Path
 from typing import Any
 
+import evidence_hash
 import fixture_identity
 import numpy as np
 import runtime_paths
@@ -47,14 +47,6 @@ def _relative(root: Path, path: Path) -> str:
         return path.resolve().relative_to(root.resolve()).as_posix()
     except ValueError:
         return path.as_posix()
-
-
-def _file_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return f"sha256:{digest.hexdigest()}"
 
 
 def _round(value: float) -> float:
@@ -197,7 +189,7 @@ def build_visual_quality_metrics(
         "policy": "advisory_only",
         "build_artifact": {
             "path": _relative(example_dir, png_path),
-            "sha256": _file_sha256(png_path),
+            "sha256": evidence_hash.sha256_file(png_path),
         },
         "image": _image_metrics(png_path),
         "detectors": detectors,
