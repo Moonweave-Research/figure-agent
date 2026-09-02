@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "scripts" / "quality"))
 
 import agent_next  # noqa: E402
+import evidence_hash  # noqa: E402
 import promotion_wiring  # noqa: E402
 import quality_defect_ledger  # noqa: E402
 import semantic_assertions  # noqa: E402
@@ -849,7 +850,7 @@ def test_triage_accept_requires_inline_crop_evidence(tmp_path: Path) -> None:
             "fixture": "fig_demo",
             "source_detector": "visual_clash",
             "source_hashes": promotion_wiring._current_source_hashes(fixture, "fig_demo"),
-            "visual_clash_report_sha256": promotion_wiring._hash_file(
+            "visual_clash_report_sha256": evidence_hash.sha256_file(
                 fixture / "build" / "visual_clash.json"
             ),
             "status": "review_required",

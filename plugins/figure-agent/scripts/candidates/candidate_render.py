@@ -13,6 +13,7 @@ from typing import Any
 
 import candidate_contracts
 import candidate_visual_eval
+import evidence_hash
 import fixture_identity
 import pdf_geometry
 import runtime_paths
@@ -60,20 +61,12 @@ def _source_commit(workspace_root: Path) -> str:
     return result.stdout.strip() if result.returncode == 0 else "unavailable"
 
 
-def _sha256_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
-
-
 def _styles_signature(plugin_root: Path) -> str:
     styles_dir = plugin_root / "styles"
     if not styles_dir.is_dir():
         return ZERO_HASH
     entries = [
-        f"{path.relative_to(styles_dir).as_posix()}:{_sha256_file(path)}"
+        f"{path.relative_to(styles_dir).as_posix()}:{evidence_hash.sha256_file(path)}"
         for path in sorted(styles_dir.rglob("*"))
         if path.is_file()
     ]
@@ -98,7 +91,9 @@ def _render_cache_key(
     source_tex = out_dir / "source" / "candidate.tex"
     key: dict[str, Any] = {
         "candidate_hash": candidate_hash,
-        "source_tex_hash": _sha256_file(source_tex) if source_tex.is_file() else ZERO_HASH,
+        "source_tex_hash": (
+            evidence_hash.sha256_file(source_tex) if source_tex.is_file() else ZERO_HASH
+        ),
         "styles_hash": _styles_signature(plugin_root),
         "request": {
             "compile": bool(compile_requested),
@@ -112,9 +107,13 @@ def _render_cache_key(
         build_png = example_dir / "build" / f"{fixture_name}.png"
         spec_path = example_dir / "spec.yaml"
         key["crop_inputs"] = {
-            "original_pdf": _sha256_file(build_pdf) if build_pdf.is_file() else ZERO_HASH,
-            "original_png": _sha256_file(build_png) if build_png.is_file() else ZERO_HASH,
-            "spec": _sha256_file(spec_path) if spec_path.is_file() else ZERO_HASH,
+            "original_pdf": (
+                evidence_hash.sha256_file(build_pdf) if build_pdf.is_file() else ZERO_HASH
+            ),
+            "original_png": (
+                evidence_hash.sha256_file(build_png) if build_png.is_file() else ZERO_HASH
+            ),
+            "spec": evidence_hash.sha256_file(spec_path) if spec_path.is_file() else ZERO_HASH,
         }
     return key
 
@@ -429,7 +428,7 @@ def _operations_with_source_hashes(
             if source_hash_cache is not None and source_path in source_hash_cache:
                 copied["source_sha256"] = source_hash_cache[source_path]
             else:
-                digest = _sha256_file(source_path)
+                digest = evidence_hash.sha256_file(source_path)
                 if source_hash_cache is not None:
                     source_hash_cache[source_path] = digest
                 copied["source_sha256"] = digest

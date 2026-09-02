@@ -9,6 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import evidence_hash  # noqa: E402
 import golden_acceptance  # noqa: E402
 from test_evidence_index import _fixture  # noqa: E402
 
@@ -831,6 +832,6 @@ def test_a_newer_authorization_can_accept_the_changed_export(
         (fixture / "build" / "closeout" / "golden_acceptance.json").read_text(encoding="utf-8")
     )
     assert payload["release_authorization"]["packet_timestamp"] == "2099-01-01T00:00:00Z"
-    assert payload["exports"]["pdf"] == golden_acceptance._sha256_file(
+    assert payload["exports"]["pdf"] == evidence_hash.sha256_file(
         fixture / "exports" / "candidate_demo.pdf"
     )

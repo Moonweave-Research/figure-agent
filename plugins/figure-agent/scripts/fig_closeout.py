@@ -5,10 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+import evidence_hash
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -475,7 +475,7 @@ def _valid_loop_iteration(iteration_path: Path, name: str, example_dir: Path) ->
         recorded = manifest.get(field)
         if not isinstance(recorded, str) or not path.is_file():
             return False
-        if recorded != _sha256_file(path):
+        if recorded != evidence_hash.sha256_file(path):
             return False
     return True
 
@@ -516,14 +516,6 @@ def _fixture_relative(example_dir: Path, path: Path) -> str:
         return path.resolve().relative_to(example_dir.resolve()).as_posix()
     except ValueError:
         return path.as_posix()
-
-
-def _sha256_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
 
 
 def _latest_apply_result_path(example_dir: Path) -> Path | None:
@@ -605,7 +597,7 @@ def _current_export_hashes(example_dir: Path, name: str) -> dict[str, str]:
     for ext in ("pdf", "svg", "png", "tif", "tiff"):
         path = exports_dir / f"{name}.{ext}"
         if path.is_file() and not path.is_symlink():
-            hashes["tif" if ext == "tiff" else ext] = _sha256_file(path)
+            hashes["tif" if ext == "tiff" else ext] = evidence_hash.sha256_file(path)
     return hashes
 
 
@@ -621,7 +613,7 @@ def _golden_acceptance_covers_current_state(
     source_path = example_dir / f"{name}.tex"
     if not source_path.is_file():
         return False, "source file is missing"
-    if acceptance.get("source_sha256") != _sha256_file(source_path):
+    if acceptance.get("source_sha256") != evidence_hash.sha256_file(source_path):
         return False, "accepted source hash is stale"
     accepted_exports = acceptance.get("exports")
     if not isinstance(accepted_exports, dict) or not accepted_exports:

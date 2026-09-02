@@ -13,6 +13,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+import evidence_hash
 import fixture_identity
 import runtime_paths
 import yaml
@@ -164,14 +165,6 @@ def _validate_visual_clash_report(payload: dict[str, Any]) -> None:
             raise PromotionWiringError(f"visual_clash_schema:candidate[{index}].bbox_px")
 
 
-def _hash_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
-
-
 def _source_rel(name: str) -> str:
     return f"examples/{name}/{name}.tex"
 
@@ -180,7 +173,7 @@ def _current_source_hashes(example_dir: Path, name: str) -> dict[str, str]:
     source = example_dir / f"{name}.tex"
     if not source.is_file():
         raise PromotionWiringError(f"source_tex_missing:{source}")
-    return {_source_rel(name): _hash_file(source)}
+    return {_source_rel(name): evidence_hash.sha256_file(source)}
 
 
 def _source_lines(example_dir: Path, name: str) -> list[str]:
@@ -233,7 +226,7 @@ def _source_hashes_for_path(source: Path, workspace_root: Path) -> dict[str, str
         relative = source.resolve().relative_to(workspace_root.resolve()).as_posix()
     except ValueError as exc:
         raise PromotionWiringError("source_tex_outside_workspace") from exc
-    return {relative: _hash_file(source)}
+    return {relative: evidence_hash.sha256_file(source)}
 
 
 def _source_lines_for_path(source: Path) -> list[str]:
@@ -425,7 +418,7 @@ def build_promotion_queue(
             {
                 "kind": "image",
                 "path": _rel(artifact_dir, crop),
-                "sha256": _hash_file(crop),
+                "sha256": evidence_hash.sha256_file(crop),
             }
             for crop in crops
         ]
@@ -453,7 +446,7 @@ def build_promotion_queue(
         "attempt_dir": normalized_attempt_dir,
         "source_detector": "visual_clash",
         "source_hashes": _source_hashes_for_path(source_path, paths.workspace_root),
-        "visual_clash_report_sha256": _hash_file(report_path),
+        "visual_clash_report_sha256": evidence_hash.sha256_file(report_path),
         "status": "review_required" if items else "empty",
         "total": len(items),
         "top_items": [str(item["id"]) for item in ranked[:top_n]],
@@ -556,7 +549,7 @@ def triage_promotion_queue(
     current_source_hashes = _current_source_hashes(example_dir, name)
     if queue.get("source_hashes") != current_source_hashes:
         raise PromotionWiringError("promotion_queue_source_hash_mismatch")
-    if queue.get("visual_clash_report_sha256") != _hash_file(report_path):
+    if queue.get("visual_clash_report_sha256") != evidence_hash.sha256_file(report_path):
         raise PromotionWiringError("promotion_queue_visual_clash_hash_mismatch")
     report_ids = {
         str(item["id"]).strip()
@@ -614,7 +607,10 @@ def triage_promotion_queue(
             if not isinstance(crop_path, str) or not isinstance(expected_hash, str):
                 raise PromotionWiringError(f"triage_evidence_schema:{item_id}")
             resolved_crop = example_dir / crop_path
-            if not resolved_crop.is_file() or _hash_file(resolved_crop) != expected_hash:
+            if (
+                not resolved_crop.is_file()
+                or evidence_hash.sha256_file(resolved_crop) != expected_hash
+            ):
                 raise PromotionWiringError(f"triage_evidence_hash_mismatch:{item_id}")
         defect_class = class_map[item_id]
         start, end = line_map[item_id]
@@ -639,8 +635,8 @@ def triage_promotion_queue(
     payload = {
         "schema": TRIAGE_SCHEMA,
         "fixture": name,
-        "promotion_queue_sha256": _hash_file(queue_path),
-        "visual_clash_report_sha256": _hash_file(report_path),
+        "promotion_queue_sha256": evidence_hash.sha256_file(queue_path),
+        "visual_clash_report_sha256": evidence_hash.sha256_file(report_path),
         "source_hashes": current_source_hashes,
         "accepted": accepted,
         "rejected": rejected,
@@ -937,9 +933,9 @@ def triage_promoted_defects(example_dir: Path, name: str) -> list[dict[str, Any]
     report_path = example_dir / "build" / "visual_clash.json"
     queue = load_promotion_queue(queue_path)
     report = load_detector_report(report_path, "visual_clash")
-    if triage.get("promotion_queue_sha256") != _hash_file(queue_path):
+    if triage.get("promotion_queue_sha256") != evidence_hash.sha256_file(queue_path):
         raise PromotionWiringError("promotion_triage_queue_hash_mismatch")
-    if triage.get("visual_clash_report_sha256") != _hash_file(report_path):
+    if triage.get("visual_clash_report_sha256") != evidence_hash.sha256_file(report_path):
         raise PromotionWiringError("promotion_triage_visual_clash_hash_mismatch")
     current_source_hashes = _current_source_hashes(example_dir, name)
     if triage.get("source_hashes") != current_source_hashes:
@@ -983,8 +979,13 @@ def triage_promoted_defects(example_dir: Path, name: str) -> list[dict[str, Any]
             if not isinstance(crop_path, str) or not isinstance(expected_hash, str):
                 raise PromotionWiringError(f"promotion_triage_schema:evidence_inline:{item_id}")
             resolved_crop = example_dir / crop_path
-            if not resolved_crop.is_file() or _hash_file(resolved_crop) != expected_hash:
-                raise PromotionWiringError(f"promotion_triage_evidence_hash_mismatch:{item_id}")
+            if (
+                not resolved_crop.is_file()
+                or evidence_hash.sha256_file(resolved_crop) != expected_hash
+            ):
+                raise PromotionWiringError(
+                    f"promotion_triage_evidence_hash_mismatch:{item_id}"
+                )
         start, end = tex_lines
         selector_hint = item.get("selector_hint")
         if not isinstance(selector_hint, dict) or not isinstance(

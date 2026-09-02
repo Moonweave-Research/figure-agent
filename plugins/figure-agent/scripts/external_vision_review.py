@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import evidence_hash
 import fixture_identity
 import yaml
 
@@ -23,14 +23,6 @@ SUGGESTED_ACTIONS = frozenset({"patch", "human_review", "revise_briefing", "acce
 
 class ExternalVisionReviewError(Exception):
     """Controlled error for malformed external vision review evidence."""
-
-
-def _file_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return f"sha256:{digest.hexdigest()}"
 
 
 def _utc_now() -> str:
@@ -242,7 +234,7 @@ def _reviewed_crop_records(example_dir: Path) -> list[dict[str, str]]:
             {
                 "crop_id": crop_id,
                 "path": crop_path,
-                "hash": _file_sha256(path),
+                "hash": evidence_hash.sha256_file(path),
             }
         )
     return sorted(records, key=lambda item: item["crop_id"])
@@ -268,7 +260,7 @@ def external_vision_review_template(
         "confidence": "medium",
         "reviewed_artifact": {
             "path": _relative_to_example(example_dir, render_path),
-            "hash": _file_sha256(render_path),
+            "hash": evidence_hash.sha256_file(render_path),
         },
         "reviewed_crops": _reviewed_crop_records(example_dir),
         "findings": [],
@@ -328,7 +320,7 @@ def _hash_record_state(example_dir: Path, record: dict[str, Any]) -> tuple[str, 
     path = example_dir / rel_path
     if not path.is_file():
         return rel_path, "missing"
-    if _file_sha256(path) != expected_hash:
+    if evidence_hash.sha256_file(path) != expected_hash:
         return rel_path, "stale"
     return rel_path, None
 

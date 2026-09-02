@@ -10,12 +10,12 @@ import sys
 from collections import Counter
 from collections.abc import Iterator
 from contextlib import contextmanager
-from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
 import candidate_acceptance
 import candidate_contracts
+import evidence_hash
 import experience_log
 import fixture_identity
 import quality_memory_index
@@ -34,14 +34,6 @@ POST_APPLY_COMMAND_TIMEOUT_SECONDS = 180
 
 class CandidateApplyError(ValueError):
     """Raised when candidate apply would escape the fixture boundary."""
-
-
-def _sha256_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
 
 
 def _diagnostic(code: str, message: str, path: str | None = None) -> dict[str, str]:
@@ -231,7 +223,7 @@ def _acceptance_hash_diagnostics(
         diagnostics.append(
             _diagnostic("render_candidate_hash_mismatch", "render candidate hash mismatch")
         )
-    if acceptance.get("candidate_manifest_sha256") != _sha256_file(manifest_path):
+    if acceptance.get("candidate_manifest_sha256") != evidence_hash.sha256_file(manifest_path):
         diagnostics.append(
             _diagnostic(
                 "candidate_manifest_hash_mismatch",
@@ -245,7 +237,7 @@ def _acceptance_hash_diagnostics(
     stored_render_hash = acceptance.get("render_manifest_sha256")
     accepted_render_hashes = {
         candidate_acceptance.normalized_render_manifest_sha256(render_manifest_path),
-        _sha256_file(render_manifest_path),
+        evidence_hash.sha256_file(render_manifest_path),
     }
     if stored_render_hash not in accepted_render_hashes:
         diagnostics.append(
@@ -281,7 +273,7 @@ def _build_changes(
                 _diagnostic("source_drift_hash_missing", "source drift hash missing", relative)
             )
             continue
-        if _sha256_file(target) != drift_hash:
+        if evidence_hash.sha256_file(target) != drift_hash:
             diagnostics.append(
                 _diagnostic("source_drift_hash_mismatch", "source drift hash mismatch", relative)
             )
@@ -1157,13 +1149,13 @@ def apply_candidate(
         changed_files: list[dict[str, str]] = []
         for change in changes:
             target = change["path"]
-            before_hash = _sha256_file(target)
+            before_hash = evidence_hash.sha256_file(target)
             target.write_text(str(change["after"]), encoding="utf-8")
             changed_files.append(
                 {
                     "path": str(change["relative"]),
                     "before_sha256": before_hash,
-                    "after_sha256": _sha256_file(target),
+                    "after_sha256": evidence_hash.sha256_file(target),
                 }
             )
         post_apply_result = _post_apply_checks(name, paths) if post_apply else {}

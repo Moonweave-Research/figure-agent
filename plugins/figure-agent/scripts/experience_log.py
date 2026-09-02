@@ -12,6 +12,7 @@ from typing import Any
 import candidate_contracts
 import convergence_models
 import edit_family_vocab
+import evidence_hash
 import fixture_identity
 import runtime_paths
 
@@ -31,14 +32,6 @@ def _artifact_time(path: Path) -> str:
         .isoformat()
         .replace("+00:00", "Z")
     )
-
-
-def _sha256_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
 
 
 def _load_json(path: Path, label: str) -> dict[str, Any]:
@@ -196,7 +189,7 @@ def _manual_direct_edit_evidence(
         label="semantic_assertions",
     )
     semantic_payload = _load_json(semantic, "semantic_assertions")
-    source_hash = _sha256_file(source)
+    source_hash = evidence_hash.sha256_file(source)
     source_hashes = semantic_payload.get("source_hashes")
     if (
         semantic_payload.get("schema") != "figure-agent.semantic-assertions.v1"
@@ -220,7 +213,7 @@ def _manual_direct_edit_evidence(
     ):
         raise ExperienceLogError("review_scale_previews_invalid")
     render_path = _direct_edit_artifact(build_dir, render.get("path"), label="render_png")
-    if render.get("sha256") != _sha256_file(render_path):
+    if render.get("sha256") != evidence_hash.sha256_file(render_path):
         raise ExperienceLogError("render_png_hash_mismatch")
     preview_paths: dict[str, Path] = {}
     for preview in previews:
@@ -234,7 +227,7 @@ def _manual_direct_edit_evidence(
             preview.get("path"),
             label=f"preview_{label}",
         )
-        if preview.get("sha256") != _sha256_file(preview_path):
+        if preview.get("sha256") != evidence_hash.sha256_file(preview_path):
             raise ExperienceLogError(f"preview_{label}_hash_mismatch")
         preview_paths[str(label)] = preview_path
     if set(preview_paths) != {"100pct", "50pct", "33pct"}:
@@ -244,28 +237,28 @@ def _manual_direct_edit_evidence(
         "source_sha256": source_hash,
         "strict_status": {
             "path": _fixture_relative(example_dir, strict),
-            "sha256": _sha256_file(strict),
+            "sha256": evidence_hash.sha256_file(strict),
         },
         "semantic_assertions": {
             "path": _fixture_relative(example_dir, semantic),
-            "sha256": _sha256_file(semantic),
+            "sha256": evidence_hash.sha256_file(semantic),
         },
         "review_scale_previews": {
             "path": _fixture_relative(example_dir, preview_manifest),
-            "sha256": _sha256_file(preview_manifest),
+            "sha256": evidence_hash.sha256_file(preview_manifest),
         },
         "render_pdf": {
             "path": _fixture_relative(example_dir, pdf),
-            "sha256": _sha256_file(pdf),
+            "sha256": evidence_hash.sha256_file(pdf),
         },
         "render_png": {
             "path": _fixture_relative(example_dir, render_path),
-            "sha256": _sha256_file(render_path),
+            "sha256": evidence_hash.sha256_file(render_path),
         },
         "print_previews": {
             label: {
                 "path": _fixture_relative(example_dir, path),
-                "sha256": _sha256_file(path),
+                "sha256": evidence_hash.sha256_file(path),
             }
             for label, path in sorted(preview_paths.items())
         },
@@ -405,7 +398,7 @@ def _source_before_hash(example_dir: Path, name: str, apply_result: dict[str, An
             if item.get("path") == f"{name}.tex" and isinstance(item.get("before_sha256"), str):
                 return item["before_sha256"]
     source = example_dir / f"{name}.tex"
-    return _sha256_file(source) if source.is_file() else ""
+    return evidence_hash.sha256_file(source) if source.is_file() else ""
 
 
 def _stage_status(payload: dict[str, Any], stage: str) -> str | None:

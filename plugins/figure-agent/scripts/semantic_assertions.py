@@ -26,10 +26,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+import evidence_hash
 import yaml
 
 CHECKS_DIR = Path(__file__).resolve().parent / "checks"
@@ -324,20 +324,12 @@ def _check_alignment_assertion(
     return [issue]
 
 
-def _hash_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
-
-
 def _source_hashes_for_pdf(pdf_path: Path) -> dict[str, str]:
     name = pdf_path.stem
     source = pdf_path.parent.parent / f"{name}.tex"
     if not source.is_file():
         return {}
-    return {f"examples/{name}/{name}.tex": _hash_file(source)}
+    return {f"examples/{name}/{name}.tex": evidence_hash.sha256_file(source)}
 
 
 def semantic_assertions_payload(

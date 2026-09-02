@@ -13,10 +13,10 @@ import json
 import math
 import re
 import sys
-from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+import evidence_hash
 import yaml
 
 SCHEMA = "figure-agent.vector-clearance.v1"
@@ -49,14 +49,6 @@ _BEZIER_RE = re.compile(
 
 class VectorClearanceError(ValueError):
     """Raised when vector clearance declarations or evidence are malformed."""
-
-
-def _hash_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
 
 
 def _cm_to_pt(value: float) -> float:
@@ -576,7 +568,7 @@ def vector_clearance_payload(
     }
     if tex_path is not None:
         payload["source_hashes"] = {
-            f"examples/{fixture_name}/{tex_path.name}": _hash_file(tex_path)
+            f"examples/{fixture_name}/{tex_path.name}": evidence_hash.sha256_file(tex_path)
         }
     return payload
 
