@@ -683,3 +683,60 @@ def test_run_export_skip_critique_allows_hash_stale_regenerate(
     assert rc == 0
     assert regenerated == [(fixture, "ref_fig")]
     assert "regenerated exports/ for ref_fig" in captured.out
+
+
+def test_run_export_refuses_to_regenerate_when_golden_is_unverifiable(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """git being unable to answer used to read as STALE, and STALE regenerates
+    straight over a committed golden export."""
+    repo = _make_reference_fixture(tmp_path)
+    regenerated: list[tuple[Path, str]] = []
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(
+        run_export,
+        "compute_export_state",
+        lambda _example, _name: run_export.EXPORT_GOLDEN_UNVERIFIABLE,
+    )
+    monkeypatch.setattr(
+        run_export,
+        "_regenerate",
+        lambda example, name, plugin_root=None: regenerated.append((example, name)),
+    )
+    monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
+
+    rc = run_export.main()
+
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert regenerated == []
+    assert "refusing to overwrite" in captured.err
+    assert "--force-golden" in captured.err
+
+
+def test_run_export_force_golden_overrides_an_unverifiable_golden(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    repo = _make_reference_fixture(tmp_path)
+    fixture = repo / "examples" / "ref_fig"
+    regenerated: list[tuple[Path, str]] = []
+    monkeypatch.setattr(run_export, "REPO_ROOT", repo)
+    monkeypatch.setattr(
+        run_export,
+        "compute_export_state",
+        lambda _example, _name: run_export.EXPORT_GOLDEN_UNVERIFIABLE,
+    )
+    monkeypatch.setattr(
+        run_export,
+        "_regenerate",
+        lambda example, name, plugin_root=None: regenerated.append((example, name)),
+    )
+    monkeypatch.setattr(
+        sys, "argv", ["run_export.py", "ref_fig", "--force-golden", "--skip-critique"]
+    )
+
+    rc = run_export.main()
+
+    assert rc == 0
+    assert regenerated == [(fixture, "ref_fig")]
+    assert "regenerated exports/ for ref_fig" in capsys.readouterr().out

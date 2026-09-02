@@ -1,10 +1,11 @@
 """Compute exports/ sub-state for a figure-agent fixture.
 
 Sub-states map to the spec's behavior matrix:
-- MISSING        — exports/<name>.pdf does not exist.
-- TRACKED_GOLDEN — exports/<name>.pdf is git-tracked. Skip auto-rebuild.
-- STALE          — exports/<name>.pdf differs from build/<name>.pdf by content hash.
-- FRESH          — exports/<name>.pdf matches build/<name>.pdf by content hash.
+- MISSING             — exports/<name>.pdf does not exist.
+- TRACKED_GOLDEN      — exports/<name>.pdf is git-tracked. Skip auto-rebuild.
+- GOLDEN_UNVERIFIABLE — git could not say whether it is tracked. Skip auto-rebuild.
+- STALE               — exports/<name>.pdf differs from build/<name>.pdf by content hash.
+- FRESH               — exports/<name>.pdf matches build/<name>.pdf by content hash.
 
 Content hash uses the same metadata-strip pipeline as scripts/diff_pdf_content.py
 (qpdf --qdf, then drop /CreationDate, /ModDate, /ID, /Producer, /Trapped).
@@ -20,12 +21,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import git_tracked  # noqa: E402
 from current_candidate import common_render_inputs, resolve_current_candidate  # noqa: E402
 from diff_pdf_content import expand_pdf, strip_metadata  # noqa: E402
-from git_tracked import is_tracked, repo_root_for  # noqa: E402
 
 EXPORT_MISSING = "MISSING"
 EXPORT_TRACKED_GOLDEN = "TRACKED_GOLDEN"
+EXPORT_GOLDEN_UNVERIFIABLE = "GOLDEN_UNVERIFIABLE"
 EXPORT_STALE = "STALE"
 EXPORT_FRESH = "FRESH"
 
@@ -57,7 +59,7 @@ def compute_pdf_content_hash(pdf_path: Path) -> bytes:
 
 
 def compute_export_state(example_dir: Path, name: str) -> str:
-    """Return one of MISSING | TRACKED_GOLDEN | STALE | FRESH."""
+    """Return one of MISSING | TRACKED_GOLDEN | GOLDEN_UNVERIFIABLE | STALE | FRESH."""
     exports_pdf = example_dir / "exports" / f"{name}.pdf"
     build_pdf = _current_build_pdf(example_dir, name)
 
@@ -67,8 +69,17 @@ def compute_export_state(example_dir: Path, name: str) -> str:
     # own repository answers for the wrong tree whenever the fixture lives in
     # an external workspace, where a committed golden export read as untracked
     # and could be overwritten without --force-golden.
-    tracking_root = repo_root_for(exports_pdf) or REPO_ROOT
-    if is_tracked(exports_pdf, tracking_root):
+    #
+    # An unanswerable question must never mean "not golden": with git missing
+    # or erroring, the old code fell through to STALE and run_export.py
+    # regenerated over a committed export.
+    repo_root, git_answered = git_tracked.repo_root_lookup(exports_pdf)
+    if not git_answered:
+        return EXPORT_GOLDEN_UNVERIFIABLE
+    tracking = git_tracked.tracking_state(exports_pdf, repo_root or REPO_ROOT)
+    if tracking == git_tracked.UNVERIFIABLE:
+        return EXPORT_GOLDEN_UNVERIFIABLE
+    if tracking == git_tracked.TRACKED:
         return EXPORT_TRACKED_GOLDEN
 
     # All four artifacts must be present; any missing sibling → STALE
