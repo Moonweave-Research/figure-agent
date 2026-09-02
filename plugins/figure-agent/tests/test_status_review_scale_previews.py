@@ -4,6 +4,7 @@ from pathlib import Path
 
 import render_input_manifest
 import status as status_mod
+from compile_run_fixtures import issue_compile_run
 from PIL import Image
 from review_scale_previews import build_scale_previews
 from status import infer_stage
@@ -30,6 +31,12 @@ def _source_fixture(root: Path) -> Path:
         render_pdf=build / f"{name}.pdf",
         inputs=status_mod._render_input_paths(fixture, name),
         output=render_input_manifest.manifest_path(build / f"{name}.pdf"),
+        compile_run_id=issue_compile_run(
+            build,
+            source_tex=fixture / f"{name}.tex",
+            render_pdf=build / f"{name}.pdf",
+            strict_requested=True,
+        ),
     )
     return fixture
 

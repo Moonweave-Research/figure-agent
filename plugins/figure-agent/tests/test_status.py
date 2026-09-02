@@ -56,10 +56,11 @@ def _write_explicit_candidate_render(fig_dir: Path) -> tuple[Path, Path]:
         "spec": fig_dir / "spec.yaml",
         "style_lock": status_mod.STYLE_LOCK_PATH,
     }
-    issue_compile_run(build, source_tex=source, render_pdf=render_pdf)
+    run_id = issue_compile_run(build, source_tex=source, render_pdf=render_pdf)
     manifest = {
         "schema": "figure-agent.render-input-manifest.v1",
         "fixture": fig_dir.name,
+        "compile_run_id": run_id,
         "render": {
             "path": "build/repaired.pdf",
             "sha256": _sha256(render_pdf),
@@ -672,7 +673,7 @@ def _write_render_input_manifest(
 ) -> None:
     name = name or directory.name
     build_pdf = directory / "build" / f"{name}.pdf"
-    issue_compile_run(
+    run_id = issue_compile_run(
         build_pdf.parent,
         source_tex=directory / f"{name}.tex",
         render_pdf=build_pdf,
@@ -683,6 +684,7 @@ def _write_render_input_manifest(
         render_pdf=build_pdf,
         inputs=status_mod._render_input_paths(directory, name),
         output=render_input_manifest.manifest_path(build_pdf),
+        compile_run_id=run_id,
     )
 
 
@@ -1386,6 +1388,70 @@ def test_render_freshness_detects_content_drift_despite_older_mtime(
     result = infer_stage(fig_dir)
 
     assert result["render_state"] == "STALE"
+
+
+def test_render_without_a_manifest_is_stale_not_fresh(tmp_path: Path) -> None:
+    """A PDF that declares nothing about its inputs proves nothing about them."""
+    fig_dir = tmp_path / "unmanifested_render"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "unmanifested_render.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    pdf = build / "unmanifested_render.pdf"
+    pdf.write_bytes(b"%PDF")
+    older = pdf.stat().st_mtime - 100
+    for path in (
+        fig_dir / "unmanifested_render.tex",
+        fig_dir / "briefing.md",
+        fig_dir / "spec.yaml",
+    ):
+        os.utime(path, (older, older))
+
+    assert infer_stage(fig_dir)["render_state"] == "STALE"
+
+
+def test_manifest_without_a_compile_receipt_is_stale_and_says_why(tmp_path: Path) -> None:
+    fig_dir = tmp_path / "unbound_render"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "unbound_render.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    (build / "unbound_render.pdf").write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, fig_dir.name)
+    assert infer_stage(fig_dir)["render_state"] == "FRESH"
+
+    compile_run.receipt_path(build).unlink()
+
+    result = infer_stage(fig_dir)
+
+    assert result["render_state"] == "STALE"
+    assert "render_manifest_unbound" in result["notes"]
+
+
+def test_manifest_bound_to_a_foreign_compile_run_is_stale(tmp_path: Path) -> None:
+    """Re-declaring an old PDF fresh now needs the run that actually made it."""
+    fig_dir = tmp_path / "reused_render"
+    fig_dir.mkdir()
+    _make_spec(fig_dir)
+    (fig_dir / "reused_render.tex").write_text("% tikz", encoding="utf-8")
+    build = fig_dir / "build"
+    build.mkdir()
+    pdf = build / "reused_render.pdf"
+    pdf.write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, fig_dir.name)
+    issue_compile_run(
+        build,
+        source_tex=fig_dir / "reused_render.tex",
+        render_pdf=pdf,
+        run_id="some-other-run",
+    )
+
+    result = infer_stage(fig_dir)
+
+    assert result["render_state"] == "STALE"
+    assert "render_manifest_unbound" in result["notes"]
 
 
 def test_strict_receipt_unbound_from_the_compile_run_reads_invalid(

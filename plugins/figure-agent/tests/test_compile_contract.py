@@ -366,6 +366,10 @@ compile smoke
     )
     assert render_inputs["schema"] == "figure-agent.render-input-manifest.v1"
     assert set(render_inputs["inputs"]) == {"source_tex", "style_lock"}
+    receipt = json.loads((tmp_path / "build" / "compile_run.json").read_text(encoding="utf-8"))
+    assert receipt["state"] == "passed"
+    assert render_inputs["compile_run_id"] == receipt["run_id"]
+    assert render_inputs["render"]["sha256"] == receipt["render_pdf_sha256"]
     assert not (tmp_path / "smoke.pdf").exists()
     assert not (tmp_path / "smoke.png").exists()
     combined = result.stdout + result.stderr

@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "qualit
 import critique_scaffold  # noqa: E402
 import render_input_manifest  # noqa: E402
 import status as status_mod  # noqa: E402
+from compile_run_fixtures import issue_compile_run  # noqa: E402
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 FIG_AGENT = PLUGIN_ROOT / "bin" / "fig-agent"
@@ -57,6 +58,12 @@ style_profile: polymer-default
         render_pdf=build / f"{name}.pdf",
         inputs=status_mod._render_input_paths(fixture, name),
         output=render_input_manifest.manifest_path(build / f"{name}.pdf"),
+        compile_run_id=issue_compile_run(
+            build,
+            source_tex=fixture / f"{name}.tex",
+            render_pdf=build / f"{name}.pdf",
+            strict_requested=True,
+        ),
     )
     (crops / "manifest.json").write_text(
         json.dumps(

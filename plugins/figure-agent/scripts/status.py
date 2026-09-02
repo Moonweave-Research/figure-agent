@@ -72,6 +72,7 @@ RENDER_NOT_AUTHORED = "NOT_AUTHORED"
 RENDER_MISSING = "MISSING"
 RENDER_STALE = "STALE"
 RENDER_FRESH = "FRESH"
+RENDER_MANIFEST_UNBOUND_NOTE = "render_manifest_unbound"
 UNBOUND_TO_COMPILE_RUN = "unbound_to_compile_run"
 ACCEPTED_RENDER_NOT_STRICT_GATED_NOTE = "accepted_render_not_strict_gated"
 
@@ -337,13 +338,14 @@ def _compute_render_state(
     spec_path: Path,
     tex_path: Path,
     build_pdf: Path,
-) -> str:
+) -> tuple[str, str | None]:
+    """Return the render state and, when it is unbound, the reason it is."""
     if not example_dir.exists() or not example_dir.is_dir() or not spec_path.exists():
-        return RENDER_NOT_SCAFFOLDED
+        return RENDER_NOT_SCAFFOLDED, None
     if not tex_path.exists():
-        return RENDER_NOT_AUTHORED
+        return RENDER_NOT_AUTHORED, None
     if not build_pdf.exists():
-        return RENDER_MISSING
+        return RENDER_MISSING, None
     hash_state = render_input_manifest.freshness(
         manifest=render_input_manifest.manifest_path(build_pdf),
         fixture=example_dir.name,
@@ -351,8 +353,10 @@ def _compute_render_state(
         inputs=_render_input_paths(example_dir, example_dir.name),
     )
     if hash_state == render_input_manifest.FRESH:
-        return RENDER_FRESH
-    return RENDER_STALE
+        return RENDER_FRESH, None
+    if hash_state == render_input_manifest.UNBOUND:
+        return RENDER_STALE, RENDER_MANIFEST_UNBOUND_NOTE
+    return RENDER_STALE, None
 
 
 def _review_scale_previews_summary(build_png: Path, spec: dict[str, Any]) -> dict[str, Any]:
@@ -1711,7 +1715,11 @@ def infer_stage(example_dir: Path) -> dict:
     )
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
-    render_state = _compute_render_state(example_dir, spec_path, tex_path, build_pdf)
+    render_state, render_binding_note = _compute_render_state(
+        example_dir, spec_path, tex_path, build_pdf
+    )
+    if render_binding_note is not None:
+        notes.append(render_binding_note)
     review_scale_summary = _review_scale_previews_summary(build_png, spec)
     if review_scale_summary["required"]:
         preview_state = review_scale_summary["state"]
