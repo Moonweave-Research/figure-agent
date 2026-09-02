@@ -1240,7 +1240,7 @@ evidence refresh.
 ## Documentation Consistency Check
 
 - `README.md` and `.claude-plugin/plugin.json` both identify the current plugin
-  as v0.10.0.
+  as v0.9.3.
 - `README.md` and `skills/figure-agent/SKILL.md` agree that `/fig_run` and
   `/fig_improve` are bounded and have no resume command.
 - `README.md`, `commands/fig_drive.md`, and `svg_polish_*` scripts agree that
