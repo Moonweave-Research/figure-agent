@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "figure-agent": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        ".",
+        "python3",
+        "mcp/figure_agent_server.py"
+      ],
+      "cwd": "."
+    }
+  }
+}

@@ -29,6 +29,7 @@ JUNK_DIR_NAMES = {
 }
 JUNK_FILE_NAMES = {".DS_Store"}
 EMPTY_WRAPPER_DIR_NAMES = {"plugins"}
+CODEX_MCP_CONFIG = ".codex-plugin/mcp.json"
 
 
 def _is_empty_dir(path: Path) -> bool:
@@ -114,22 +115,22 @@ def find_packaging_junk(root: Path, *, preserve_fixture_artifacts: bool = False)
     return sorted(junk, key=lambda item: (len(item.parts), str(item)))
 
 
-def find_mcp_config_issues(root: Path) -> list[str]:
-    """Return MCP config issues that make an installed plugin unsafe/nonportable."""
-    config_path = root / ".mcp.json"
+def _mcp_manifest_issues(
+    config_path: Path, *, label: str, allow_plugin_local_cwd: bool
+) -> list[str]:
     if not config_path.is_file():
         return []
     try:
         data = json.loads(config_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        return [f".mcp.json is not valid JSON: {exc}"]
+        return [f"{label} is not valid JSON: {exc}"]
     servers = data.get("mcpServers")
     if not isinstance(servers, dict):
-        return [".mcp.json missing object mcpServers"]
+        return [f"{label} missing object mcpServers"]
     issues: list[str] = []
     for server_name, config in servers.items():
         if not isinstance(config, dict):
-            issues.append(f"{server_name}: server config must be an object")
+            issues.append(f"{label} {server_name}: server config must be an object")
             continue
         command = config.get("command")
         args = config.get("args", [])
@@ -139,18 +140,44 @@ def find_mcp_config_issues(root: Path) -> list[str]:
                 continue
             if value.startswith("scripts/") or value.startswith("./scripts/"):
                 issues.append(
-                    f"{server_name}: MCP config uses workspace-relative script path {value!r}"
+                    f"{label} {server_name}: MCP config uses workspace-relative script path "
+                    f"{value!r}"
                 )
             if " scripts/" in value or " ./scripts/" in value:
                 issues.append(
-                    f"{server_name}: MCP config embeds workspace-relative script path {value!r}"
+                    f"{label} {server_name}: MCP config embeds workspace-relative script path "
+                    f"{value!r}"
+                )
+            if allow_plugin_local_cwd:
+                continue
+            if value.endswith(".py") and not value.startswith(("/", "${")):
+                issues.append(
+                    f"{label} {server_name}: MCP server script must be plugin-root anchored, "
+                    f"got {value!r}"
                 )
         cwd = config.get("cwd")
-        # Codex resolves a plugin-local ``cwd: .`` inside its installed package;
-        # the same value is unsafe for a Claude-only manifest because it can
-        # instead resolve to the user's project workspace.
-        if isinstance(cwd, str) and cwd in {".", ""} and not _has_codex_manifest(root):
-            issues.append(f"{server_name}: MCP cwd must not depend on user workspace")
+        if isinstance(cwd, str) and cwd in {".", ""} and not allow_plugin_local_cwd:
+            issues.append(f"{label} {server_name}: MCP cwd must not depend on user workspace")
+    return issues
+
+
+def find_mcp_config_issues(root: Path) -> list[str]:
+    """Return MCP config issues that make an installed plugin unsafe/nonportable."""
+    # Claude Code resolves a manifest ``cwd: .`` against the user's project
+    # directory, not the plugin, so the shared manifest never gets that
+    # exemption. Codex resolves it inside its own installed package, so only
+    # its private manifest may use the relative form.
+    issues = _mcp_manifest_issues(
+        root / ".mcp.json", label=".mcp.json", allow_plugin_local_cwd=False
+    )
+    if _has_codex_manifest(root):
+        issues.extend(
+            _mcp_manifest_issues(
+                root / CODEX_MCP_CONFIG,
+                label=CODEX_MCP_CONFIG,
+                allow_plugin_local_cwd=True,
+            )
+        )
     return issues
 
 
