@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import yaml
+
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -41,12 +43,19 @@ def test_full_render_workflow_owns_heavy_system_dependencies() -> None:
 
 
 def test_full_render_workflow_has_timeout_guardrails() -> None:
-    workflow = (REPO_ROOT / ".github" / "workflows" / "full-render.yml").read_text(
-        encoding="utf-8"
+    workflow = yaml.safe_load(
+        (REPO_ROOT / ".github" / "workflows" / "full-render.yml").read_text(encoding="utf-8")
     )
+    job = workflow["jobs"]["full-render"]
+    steps = {step.get("name"): step for step in job["steps"]}
 
-    assert "timeout-minutes: 20" in workflow
-    assert "Install system dependencies\n        timeout-minutes: 12" in workflow
+    # Compiling all 31 fixtures takes about 7 minutes on the runner and the
+    # full suite about 20; a job budget below that cancelled the run before
+    # the render tests reported (run 33600403826). Pin the floor, not the
+    # literal, so raising the budget does not fail this guard.
+    assert job["timeout-minutes"] >= 45
+    assert steps["Install system dependencies"]["timeout-minutes"] >= 10
+    assert steps["Compile fixtures and check visual clash budgets"]["timeout-minutes"] >= 15
 
 
 def test_workflows_use_node24_ready_action_versions() -> None:
