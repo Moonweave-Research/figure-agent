@@ -308,6 +308,86 @@ label_path_proximity_checks:
       - id: recovery_label
         words: [recovery]
 
+# Declared vector-to-vector clearance relations, measured against the authored
+# TikZ coordinates. Each entry protects a physical or reading relation that no
+# render detector recovers on its own; thresholds sit under the clearance the
+# current source already holds so the gate trips on regression, not on the
+# authored geometry.
+vector_clearance_checks:
+  # The +5 kV terminal rail must stay attached to the drive electrode, so the
+  # applied bias belongs to the electrode instead of floating in the air-gap
+  # annotation lane.
+  - id: panelA-bias-rail-touches-drive-electrode
+    element_a:
+      source_line: 88
+      matched_text: '\draw[driveBiasLeader] (3.57,4.34)--(3.57,4.62)'
+      kind: line
+    element_b:
+      source_line: 85
+      matched_text: '\draw[apparatus] (3.42,1.40) rectangle (3.72,4.34)'
+      kind: rect
+    must_touch: true
+  # The air-gap dimension arrow measures the gap; its head must stop short of
+  # the electrode face or the dimension reads as a line drawn on the plate.
+  - id: panelA-gap-dimension-clear-of-drive-electrode
+    element_a:
+      source_line: 110
+      matched_text: '\draw[gapDimension] (2.56,2.02)--(3.33,2.02)'
+      kind: line
+    element_b:
+      source_line: 85
+      matched_text: '\draw[apparatus] (3.42,1.40) rectangle (3.72,4.34)'
+      kind: rect
+    min_clearance_cm: 0.05
+  # The lift-direction cue annotates the motion of the lifted GND lead; if it
+  # reaches the lead it reads as part of the conductor instead of as a cue.
+  - id: panelB-lift-cue-clear-of-lifted-lead
+    element_a:
+      source_line: 147
+      matched_text: '\draw[baselineArrow] (1.56,4.46)--(1.56,4.56)'
+      kind: line
+    element_b:
+      source_line: 145
+      matched_text: '\draw[wire] (1.22,4.66)--(1.46,4.58)'
+      kind: line
+    min_clearance_cm: 0.06
+  # The floating-interval rail annotates the plateau; sitting on the response
+  # trace would turn an event annotation into a second data segment.
+  - id: panelD-floating-rail-clear-of-plateau-trace
+    element_a:
+      source_line: 296
+      matched_text: '\draw[cGray!58!black,line width=0.45pt] (1.66,3.70)--(1.94,3.70)'
+      kind: line
+    element_b:
+      source_line: 274
+      kind: line
+      bbox_cm: [1.34, 3.58, 1.94, 3.58]
+    min_clearance_cm: 0.06
+  # The recovery leader owns the rising tail. On the time axis it would read as
+  # an axis annotation instead, which is the defect the 2026-08-13 repair fixed.
+  - id: panelD-recovery-leader-clear-of-time-axis
+    element_a:
+      source_line: 305
+      matched_text: '\draw[leader] (3.65,2.24)--(3.65,1.62)'
+      kind: line
+    element_b:
+      source_line: 262
+      matched_text: '\draw[axis] (0.62,2.52)--(4.02,2.52)'
+      kind: line
+    min_clearance_cm: 0.15
+  # The dashed extrapolated tail approaches the plot's right edge just below the
+  # time axis; merging with the axis would erase the unmeasured-tail reading.
+  - id: panelD-extrapolated-tail-clear-of-time-axis
+    element_a:
+      source_line: 282
+      matched_text: '(3.84,2.36) .. controls (3.90,2.38) and (3.97,2.41) .. (4.02,2.42)'
+      kind: curve
+    element_b:
+      source_line: 262
+      matched_text: '\draw[axis] (0.62,2.52)--(4.02,2.52)'
+      kind: line
+    min_clearance_cm: 0.05
+
 panels:
   - id: A
     caption: Air-gap actuation charge establishes the retained state on the same cantilever
