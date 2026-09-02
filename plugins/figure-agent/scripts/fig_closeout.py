@@ -28,6 +28,17 @@ from text_boundary_spec_helper import (  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 COMPLETE_STATES = frozenset({"passed", "not_required"})
+# closeout_readiness assembles its gate from these ids. A step that stops being
+# emitted has to block there, not vanish from the checklist.
+REQUIRED_CLOSEOUT_STEP_IDS = (
+    "text_boundary_checks",
+    "compile",
+    "critique",
+    "adjudication",
+    "export",
+    "golden_contract",
+    "loop_rerun",
+)
 FIG_LOOP_SCHEMA = "figure-agent.fig-loop-run.v1"
 ACCEPTED_BUT_STALE_REASON = (
     "accepted_but_stale: fixture has an accepted historical state, but current "
