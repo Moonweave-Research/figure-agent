@@ -124,6 +124,34 @@ def _validate_source_pointer(
     return []
 
 
+def _non_main_slot_binding_findings(
+    fixture_dir: Path,
+    fixture: str,
+    classification: str,
+    figures: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """A non-main fixture must not keep a live binding to a main-figure slot."""
+
+    binding = _load_spec(fixture_dir / "spec.yaml").get("paper_binding")
+    if not isinstance(binding, dict):
+        return []
+    slot = binding.get("figure_id")
+    entry = figures.get(slot) if isinstance(slot, str) else None
+    if not isinstance(entry, dict):
+        return []
+    return [
+        _finding(
+            "non_main_fixture_declares_slot_binding",
+            fixture=fixture,
+            slot=slot,
+            classification=classification,
+            declared_role_id=binding.get("role_id"),
+            slot_role_id=entry.get("role_id"),
+            slot_status=entry.get("slot_status"),
+        )
+    ]
+
+
 def _validate_current_schematic_baseline(
     plan_map: dict[str, Any],
     figures: dict[str, Any],
@@ -368,6 +396,11 @@ def build_report(examples_dir: Path, map_path: Path) -> dict[str, Any]:
                         severity="advisory",
                         fixture=fixture,
                         classification=str(classification),
+                    )
+                )
+                findings.extend(
+                    _non_main_slot_binding_findings(
+                        fixtures[fixture], fixture, str(classification), figures
                     )
                 )
 

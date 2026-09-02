@@ -153,6 +153,9 @@ def resolve_current_candidate(
 ) -> dict[str, Any]:
     """Return the explicit candidate evidence used by status stage inference."""
 
+    # _safe_path resolves every derived path, so a relative example_dir made the
+    # relative_to calls below raise instead of reporting fixture-relative paths.
+    example_dir = example_dir.resolve()
     pointer_path = example_dir / POINTER_RELATIVE_PATH
     base = {"path": POINTER_RELATIVE_PATH.as_posix(), "state": "NOT_DECLARED"}
     if not pointer_path.is_file():
