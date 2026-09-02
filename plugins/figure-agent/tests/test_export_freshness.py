@@ -22,6 +22,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import status_readiness_policy  # noqa: E402
 from export_freshness import (  # noqa: E402
     EXPORT_FRESH,
+    EXPORT_GOLDEN_UNVERIFIABLE,
     EXPORT_MISSING,
     EXPORT_STALE,
     EXPORT_TRACKED_GOLDEN,
@@ -304,6 +305,24 @@ def test_tracked_golden_short_circuits_content_but_release_still_needs_fresh(
     assert not status_readiness_policy.release_ready(
         golden_ready=True,
         exports_substate=EXPORT_TRACKED_GOLDEN,
+        final_artifact={"kind": "generated_export", "state": "FRESH"},
+        publication_gate_state="PASS",
+    )
+
+
+def test_golden_unverifiable_is_protective_downstream_of_the_readiness_policy() -> None:
+    """A new export state must not read as passing anywhere it flows: neither
+    membership test in status_readiness_policy admits it."""
+    assert not status_readiness_policy.workflow_ready(
+        stage=4,
+        notes=[],
+        exports_substate=EXPORT_GOLDEN_UNVERIFIABLE,
+        render_state="FRESH",
+        critique_requires_action=False,
+    )
+    assert not status_readiness_policy.release_ready(
+        golden_ready=True,
+        exports_substate=EXPORT_GOLDEN_UNVERIFIABLE,
         final_artifact={"kind": "generated_export", "state": "FRESH"},
         publication_gate_state="PASS",
     )
