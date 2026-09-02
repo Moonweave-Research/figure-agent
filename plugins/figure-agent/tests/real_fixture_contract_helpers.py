@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 import yaml
+from compile_run_fixtures import issue_compile_run
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OLD_TIME = 1_700_000_000.0
@@ -50,6 +51,12 @@ def materialize_controlled_artifacts(
         spec = load_yaml_mapping(spec_path)
         render_hash = hashlib.sha256(build_pdf.read_bytes()).hexdigest()
         spec_hash = hashlib.sha256(spec_path.read_bytes()).hexdigest()
+        run_id = issue_compile_run(
+            build_pdf.parent,
+            source_tex=fixture / f"{fixture_name}.tex",
+            render_pdf=build_pdf,
+            strict_requested=True,
+        )
         declared_reports = (
             (
                 "text_boundary_checks",
@@ -71,6 +78,7 @@ def materialize_controlled_artifacts(
             payload = {
                 "schema": schema,
                 "fixture": fixture_name,
+                "compile_run_id": run_id,
                 "render_pdf": f"build/{fixture_name}.pdf",
                 "render_pdf_sha256": render_hash,
                 "spec_sha256": spec_hash,
