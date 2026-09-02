@@ -22,6 +22,18 @@ def _provision_key() -> None:
     human_attestation._load_or_create_key()
 
 
+class _Stdin:
+    def __init__(self, tty: bool) -> None:
+        self._tty = tty
+
+    def isatty(self) -> bool:
+        return self._tty
+
+
+def _at_a_terminal(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys, "stdin", _Stdin(True))
+
+
 def test_verify_attestation_rejects_forged_json_without_valid_hmac(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -55,6 +67,7 @@ def test_verify_attestation_rejects_stale_source_set_hash(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    _at_a_terminal(monkeypatch)
     fixture = _fixture(tmp_path / "workspace")
     _provision_key()
     human_attestation.write_attestation(fixture)
@@ -71,6 +84,7 @@ def test_verify_attestation_rejects_stale_briefing_hash(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    _at_a_terminal(monkeypatch)
     fixture = _fixture(tmp_path / "workspace")
     (fixture / "briefing.md").write_text("briefing\n", encoding="utf-8")
     _provision_key()
@@ -90,6 +104,7 @@ def test_verify_attestation_missing_key_does_not_create_home(
 ) -> None:
     home = tmp_path / "home"
     monkeypatch.setenv("HOME", str(home))
+    _at_a_terminal(monkeypatch)
     fixture = _fixture(tmp_path / "workspace")
     _provision_key()
     human_attestation.write_attestation(fixture)
@@ -110,6 +125,7 @@ def test_verify_attestation_missing_key_tolerates_read_only_home(
 ) -> None:
     writable_home = tmp_path / "writable_home"
     monkeypatch.setenv("HOME", str(writable_home))
+    _at_a_terminal(monkeypatch)
     fixture = _fixture(tmp_path / "workspace")
     _provision_key()
     human_attestation.write_attestation(fixture)
@@ -159,6 +175,7 @@ def test_verify_attestation_accepts_valid_hmac_with_tmp_home(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    _at_a_terminal(monkeypatch)
     fixture = _fixture(tmp_path / "workspace")
     _provision_key()
 
@@ -180,6 +197,7 @@ def test_write_attestation_refuses_to_mint_a_key(
 ) -> None:
     home = tmp_path / "home"
     monkeypatch.setenv("HOME", str(home))
+    _at_a_terminal(monkeypatch)
     fixture = _fixture(tmp_path / "workspace")
 
     with pytest.raises(ValueError, match="missing_attestation_key"):
@@ -194,6 +212,7 @@ def test_write_attestation_refuses_symlinked_source(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    _at_a_terminal(monkeypatch)
     fixture = _fixture(tmp_path / "workspace")
     _provision_key()
     real = tmp_path / "elsewhere.tex"
@@ -212,6 +231,7 @@ def test_verify_attestation_rejects_symlinked_source_member(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    _at_a_terminal(monkeypatch)
     fixture = _fixture(tmp_path / "workspace")
     _provision_key()
     human_attestation.write_attestation(fixture)
@@ -232,6 +252,7 @@ def test_verify_attestation_rejects_symlinked_attestation_file(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    _at_a_terminal(monkeypatch)
     fixture = _fixture(tmp_path / "workspace")
     _provision_key()
     human_attestation.write_attestation(fixture)
@@ -253,12 +274,46 @@ def test_create_cli_rejects_non_tty_stdin(
     monkeypatch.setenv("FIGURE_AGENT_WORKSPACE", str(tmp_path / "workspace"))
     _fixture(tmp_path / "workspace")
 
-    class NonTty:
-        def isatty(self) -> bool:
-            return False
-
-    monkeypatch.setattr(sys, "stdin", NonTty())
+    monkeypatch.setattr(sys, "stdin", _Stdin(False))
 
     assert human_attestation.main(["create", "demo_fig"]) == 1
     output = tmp_path / "workspace" / "examples" / "demo_fig" / "human_attestation.json"
     assert not output.exists()
+
+
+def test_write_attestation_refuses_a_non_tty_caller_holding_a_usable_key(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    _at_a_terminal(monkeypatch)
+    fixture = _fixture(tmp_path / "workspace")
+    _provision_key()
+    monkeypatch.setattr(sys, "stdin", _Stdin(False))
+
+    with pytest.raises(human_attestation.NonInteractiveAttestation):
+        human_attestation.write_attestation(fixture)
+
+    assert not (fixture / "human_attestation.json").exists()
+    assert human_attestation.verify_attestation(fixture) == (
+        False,
+        "missing_human_attestation",
+    )
+
+
+def test_write_attestation_refuses_symlinked_output_and_leaves_the_victim(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    _at_a_terminal(monkeypatch)
+    fixture = _fixture(tmp_path / "workspace")
+    _provision_key()
+    victim = tmp_path / "victim.txt"
+    victim.write_text("do not overwrite me\n", encoding="utf-8")
+    (fixture / "human_attestation.json").symlink_to(victim)
+
+    with pytest.raises(ValueError, match="symlink"):
+        human_attestation.write_attestation(fixture)
+
+    assert victim.read_text(encoding="utf-8") == "do not overwrite me\n"
