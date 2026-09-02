@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import time
@@ -148,16 +149,69 @@ def test_compile_writes_explicit_strict_outcome_receipt_before_final_gate() -> N
     assert script.index(receipt_call) < script.index(final_gate)
 
 
-def test_compile_strict_failure_removes_render_outputs() -> None:
-    """A strict-gate failure must not leave a partial render behind."""
-    script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
+@pytest.mark.skipif(
+    shutil.which("lualatex") is None
+    or shutil.which("pdftocairo") is None
+    or shutil.which("pdftotext") is None
+    or shutil.which("pdftoppm") is None,
+    reason="requires lualatex, pdftocairo, pdftotext, and pdftoppm",
+)
+def test_strict_failure_removes_the_render_and_records_a_failed_run(tmp_path: Path) -> None:
+    """Run a strict compile that really fails, rather than reading the script.
 
-    final_gate = 'echo "ERROR: strict detector gate failed after review evidence generation"'
-    cleanup = 'rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"'
-    gate_index = script.index(final_gate)
-    gate_block = script[gate_index : script.index("fi", gate_index)]
-    assert cleanup in gate_block
-    assert "exit 1" in gate_block
+    A source assertion cannot see an unreachable cleanup, an empty `$PDF_OUT`,
+    or an `exit` moved above it, so this drives the failing path for real.
+    """
+    fixture = tmp_path / "examples" / "strict_clash_demo"
+    fixture.mkdir(parents=True)
+    (fixture / "spec.yaml").write_text(
+        "name: strict_clash_demo\npanels: []\nstyle_profile: polymer-default\n",
+        encoding="utf-8",
+    )
+    tex_path = fixture / "strict_clash_demo.tex"
+    tex_path.write_text(
+        r"""\documentclass[border=2pt]{standalone}
+\usepackage{polymer-paper-preamble}
+\begin{document}
+\begin{tikzpicture}
+\node at (0,0) {Overlapping label alpha};
+\node at (0.05,0.02) {Overlapping label beta};
+\end{tikzpicture}
+\end{document}
+""",
+        encoding="utf-8",
+    )
+    build = fixture / "build"
+
+    result = subprocess.run(
+        ["bash", "scripts/compile.sh", str(tex_path)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={
+            **os.environ,
+            "FIGURE_AGENT_STRICT": "1",
+            "FIGURE_AGENT_WORKSPACE": str(tmp_path),
+        },
+    )
+
+    combined = result.stdout + result.stderr
+    assert result.returncode == 1, combined
+    assert "strict detector gate failed" in combined
+    assert not (build / "strict_clash_demo.pdf").exists(), combined
+    assert not (build / "strict_clash_demo.png").exists(), combined
+    assert not (build / "strict_clash_demo_render_inputs.json").exists(), combined
+    assert not list(build.glob("strict_clash_demo_*pct.png")), combined
+
+    receipt = json.loads((build / "compile_run.json").read_text(encoding="utf-8"))
+    assert receipt["schema"] == "figure-agent.compile-run.v1"
+    assert receipt["state"] == "failed"
+    assert receipt["strict_requested"] is True
+    assert receipt["render_pdf_sha256"] is None
+    strict_status = json.loads((build / "strict_status.json").read_text(encoding="utf-8"))
+    assert strict_status["state"] == "failed"
+    assert strict_status["compile_run_id"] == receipt["run_id"]
 
 
 def test_compile_preview_failure_removes_render_outputs() -> None:
@@ -165,7 +219,7 @@ def test_compile_preview_failure_removes_render_outputs() -> None:
     script = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
 
     preview_gate = 'echo "ERROR: review scale preview generation failed"'
-    cleanup = 'rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST"'
+    cleanup = 'rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST" "$COMPILE_RUN_RECEIPT"'
     gate_index = script.index(preview_gate)
     gate_block = script[gate_index : script.index("fi", gate_index)]
     assert cleanup in gate_block
