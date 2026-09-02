@@ -18,6 +18,18 @@ from document_status import (  # noqa: E402
     load_policy,
 )
 
+# Shipped from the plugin root by scripts/package_cowork_plugin.py. Scanning
+# only docs/ left them unclassified, so behavioral instruction reached an
+# installed bundle outside the policy that is supposed to fail closed.
+PACKAGED_ROOT_FILES = (
+    ".mcp.json",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "README.md",
+    "pyproject.toml",
+    "uv.lock",
+)
+
 
 def check(plugin_root: Path = PLUGIN_ROOT) -> dict[str, object]:
     policy = load_policy(plugin_root / "docs" / "document-status.yaml")
@@ -26,6 +38,9 @@ def check(plugin_root: Path = PLUGIN_ROOT) -> dict[str, object]:
         for path in (plugin_root / "docs").rglob("*")
         if path.is_file() and path.suffix.lower() in GOVERNED_DOCUMENT_SUFFIXES
     ]
+    documents.extend(
+        path for name in PACKAGED_ROOT_FILES if (path := plugin_root / name).is_file()
+    )
     statuses = [
         classify_document(path.relative_to(plugin_root), policy=policy)
         for path in documents

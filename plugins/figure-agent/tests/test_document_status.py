@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import yaml
@@ -11,6 +12,8 @@ from document_status import (
 )
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "checks"))
 
 
 def test_document_policy_classifies_every_governed_document() -> None:
@@ -115,3 +118,21 @@ def test_policy_declares_complete_boolean_semantics() -> None:
         semantics = payload["classes"][name]
         assert set(semantics) == {"active", "ship", "agent_executable"}
         assert all(isinstance(value, bool) for value in semantics.values())
+
+
+def test_every_packaged_root_file_is_classified() -> None:
+    import package_cowork_plugin
+    from check_document_status import PACKAGED_ROOT_FILES, check
+
+    shipped = {
+        path.name
+        for path in package_cowork_plugin._included_files()
+        if path.parent == PLUGIN_ROOT
+    }
+
+    assert shipped == set(PACKAGED_ROOT_FILES), (
+        "packaging ships a root file the document policy does not classify"
+    )
+    result = check()
+    assert result["unclassified"] == []
+    assert result["passed"] is True
