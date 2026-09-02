@@ -29,6 +29,15 @@ def _entry(
     }
 
 
+def _failure_field(failure: object, field: str) -> str:
+    # Gate failures arrive as NamedTuples in-process and as dicts from JSON.
+    if isinstance(failure, Mapping):
+        value = failure.get(field)
+    else:
+        value = getattr(failure, field, None)
+    return str(value) if value is not None else ""
+
+
 def _command(name: object, slash: str) -> str:
     return f"{slash} {name}" if isinstance(name, str) and name else slash
 
@@ -79,9 +88,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     fixture_freshness: list[dict[str, Any]] = []
     human_blockers: list[dict[str, Any]] = []
 
-    claim_state = (
-        claim_authority.get("state") if isinstance(claim_authority, Mapping) else None
-    )
+    claim_state = claim_authority.get("state") if isinstance(claim_authority, Mapping) else None
     _append_if(
         fixture_freshness,
         claim_state == "INVALID",
@@ -120,15 +127,12 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
         ),
     ):
         evidence = (
-            spine_evidence.get(evidence_name)
-            if isinstance(spine_evidence, Mapping)
-            else None
+            spine_evidence.get(evidence_name) if isinstance(spine_evidence, Mapping) else None
         )
         evidence_state = evidence.get("state") if isinstance(evidence, Mapping) else None
         _append_if(
             fixture_freshness,
-            evidence_state
-            in {"missing", "stale", "invalid", "incomplete", "needs_action"},
+            evidence_state in {"missing", "stale", "invalid", "incomplete", "needs_action"},
             code=f"{evidence_name}_{evidence_state}",
             category=FIXTURE_FRESHNESS,
             message=message,
@@ -137,9 +141,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
         )
 
     silhouette = (
-        spine_evidence.get("silhouette_morphology")
-        if isinstance(spine_evidence, Mapping)
-        else None
+        spine_evidence.get("silhouette_morphology") if isinstance(spine_evidence, Mapping) else None
     )
     silhouette_state = silhouette.get("state") if isinstance(silhouette, Mapping) else None
     _append_if(
@@ -155,9 +157,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
         manual=silhouette_state == "needs_action",
     )
 
-    paper_plan_state = (
-        paper_plan.get("state") if isinstance(paper_plan, Mapping) else None
-    )
+    paper_plan_state = paper_plan.get("state") if isinstance(paper_plan, Mapping) else None
     _append_if(
         fixture_freshness,
         paper_plan_state == "INVALID",
@@ -169,9 +169,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
         ),
         manual=True,
     )
-    preview_state = (
-        scale_previews.get("state") if isinstance(scale_previews, Mapping) else None
-    )
+    preview_state = scale_previews.get("state") if isinstance(scale_previews, Mapping) else None
     _append_if(
         fixture_freshness,
         preview_state in {"MISSING", "STALE", "INVALID"},
@@ -190,8 +188,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
         code="source_not_scaffolded",
         category=FIXTURE_FRESHNESS,
         message=(
-            "fixture directory or spec.yaml is missing; scaffold the fixture before "
-            "compile/export."
+            "fixture directory or spec.yaml is missing; scaffold the fixture before compile/export."
         ),
     )
     _append_if(
@@ -339,8 +336,7 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
             "cannot teach cross-figure quality priors."
         ),
         next_command=(
-            "fig-agent record-manual-edit <fixture> "
-            "--decision accept|reject --reviewer <name>"
+            "fig-agent record-manual-edit <fixture> --decision accept|reject --reviewer <name>"
         ),
         manual=True,
     )
@@ -397,7 +393,8 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
     )
     _append_if(
         human_blockers,
-        release_decision_applies and release_decision_state != "acceptance_authorized"
+        release_decision_applies
+        and release_decision_state != "acceptance_authorized"
         and release_decision_state != "non_release_requested",
         code="acceptance_not_declared",
         category=HUMAN_BLOCKER,
@@ -407,14 +404,33 @@ def build_status_explanation(status: Mapping[str, Any]) -> dict[str, Any]:
         ),
         manual=True,
     )
-    _append_if(
-        human_blockers,
-        publication_gate in {"HUMAN_ACCEPTANCE_REQUIRED", "PROVENANCE_REQUIRED"},
-        code="publication_gate_required",
-        category=HUMAN_BLOCKER,
-        message=f"publication gate is {publication_gate}; provenance or acceptance is human-only.",
-        manual=True,
-    )
+    if publication_gate in {"HUMAN_ACCEPTANCE_REQUIRED", "PROVENANCE_REQUIRED"}:
+        # One entry keeps the code stable for consumers, but every gate failure
+        # is listed: reporting only the first let an operator believe a fixture
+        # was one decision from release when it needed two.
+        gate_blockers = [
+            {
+                "code": _failure_field(failure, "code"),
+                "actor": _failure_field(failure, "actor"),
+                "required_action": _failure_field(failure, "required_action"),
+            }
+            for failure in (status.get("publication_gate_failures") or [])
+        ]
+        detail = "; ".join(f"{item['code']}: {item['required_action']}" for item in gate_blockers)
+        entry = _entry(
+            code="publication_gate_required",
+            category=HUMAN_BLOCKER,
+            message=(
+                f"publication gate is {publication_gate}; provenance or acceptance is "
+                f"human-only. blockers ({len(gate_blockers)}): {detail}"
+                if gate_blockers
+                else f"publication gate is {publication_gate}; provenance or acceptance is "
+                "human-only."
+            ),
+            manual=True,
+        )
+        entry["blockers"] = gate_blockers
+        human_blockers.append(entry)
 
     blocking_candidates = [
         *fixture_freshness,
