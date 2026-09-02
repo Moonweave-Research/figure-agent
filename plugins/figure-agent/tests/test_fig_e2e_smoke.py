@@ -15,20 +15,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import closed_loop_attempt_state  # noqa: E402
 import closed_loop_current_state  # noqa: E402
 import fig_e2e_smoke as smoke  # noqa: E402
+from fixture_scaffold import make_example_fixture  # noqa: E402
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
-    fixture = repo / "examples" / name
-    fixture.mkdir(parents=True)
-    (fixture / "spec.yaml").write_text(
-        f"name: {name}\npanels: []\nstyle_profile: polymer-default\n",
-        encoding="utf-8",
+    return make_example_fixture(
+        repo,
+        name,
+        spec=f"name: {name}\npanels: []\nstyle_profile: polymer-default\n",
+        briefing="briefing",
+        tex="\\documentclass{standalone}\n",
     )
-    (fixture / "briefing.md").write_text("briefing", encoding="utf-8")
-    (fixture / f"{name}.tex").write_text("\\documentclass{standalone}\n", encoding="utf-8")
-    return fixture
 
 
 def _loop_stdout(
