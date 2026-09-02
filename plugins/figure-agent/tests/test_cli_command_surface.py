@@ -243,3 +243,64 @@ def test_improve_does_not_reactivate_retired_quality_search() -> None:
 
     assert result.returncode == 2
     assert "unrecognized arguments: --aggressive-candidates" in result.stderr
+
+
+def _core_commands() -> set[str]:
+    source = FIG_AGENT.read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    assignment = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Name) and target.id == "CORE_COMMANDS"
+            for target in node.targets
+        )
+    )
+    return {
+        item.value
+        for item in assignment.value.args[0].elts
+        if isinstance(item, ast.Constant) and isinstance(item.value, str)
+    }
+
+
+def _cli(*argv: str) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(PLUGIN_ROOT)
+    env["FIGURE_AGENT_WORKSPACE"] = str(PLUGIN_ROOT)
+    return subprocess.run(
+        ["uv", "run", "--project", str(PLUGIN_ROOT), "python", str(FIG_AGENT), *argv],
+        cwd=PLUGIN_ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+
+def test_top_level_help_lists_every_core_command() -> None:
+    for flag in ("--help", "-h", "help"):
+        result = _cli(flag)
+
+        assert result.returncode == 0, result.stderr
+        missing = sorted(
+            command for command in _core_commands() if command not in result.stdout
+        )
+        assert not missing, f"{flag} usage omits core commands: {missing}"
+        assert "doctor --commands" in result.stdout
+
+    bare = _cli()
+    assert bare.returncode == 2
+    assert "usage: fig-agent" in bare.stderr
+
+
+def test_core_subcommand_help_advertises_the_runnable_program_name() -> None:
+    # Delegated parsers used to print `fig-agent`, `fig_run.py`, or
+    # `critique_adjudication.py scaffold`, none of which an operator can run.
+    for command in sorted(_core_commands()):
+        result = _cli(command, "--help")
+
+        assert result.returncode == 0, f"{command}: {result.stderr}"
+        assert result.stdout.startswith(f"usage: fig-agent {command}"), (
+            f"{command}: {result.stdout.splitlines()[:1]}"
+        )
