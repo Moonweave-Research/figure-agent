@@ -657,6 +657,7 @@ def _attest_fixture(fig_dir: Path, monkeypatch: pytest.MonkeyPatch, home: Path) 
     """Sign the fixture's current source set, as an interactive human would."""
     monkeypatch.setenv("HOME", str(home))
     human_attestation._load_or_create_key()
+    monkeypatch.setattr(sys, "stdin", type("Tty", (), {"isatty": lambda self: True})())
     human_attestation.write_attestation(fig_dir)
 
 
