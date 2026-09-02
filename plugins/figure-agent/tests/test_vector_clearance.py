@@ -567,3 +567,158 @@ def test_declared_fixture_checks_parse_and_bind(fixture_name: str) -> None:
 
     assert checks, f"{fixture_name} declares no vector_clearance_checks"
     assert vector_clearance.check_vector_clearance(tex, checks) == []
+
+
+def test_named_coordinate_endpoints_are_resolved_and_measured() -> None:
+    tex = "\n".join(
+        [
+            r"\coordinate (arrow-tail) at (1.0,2.0);",
+            r"\coordinate[label=left:F] (arrow-head) at (2.0,2.0);",
+            r"\draw[force] (arrow-tail)--(arrow-head);",
+            r"\draw[body] (1.0,2.4)--(2.0,2.4);",
+        ]
+    )
+
+    elements = vector_clearance.extract_vector_elements(tex)
+
+    arrow = next(element for element in elements if "[force]" in element["tex_anchor"])
+    assert arrow["kind"] == "line"
+    assert arrow["points_cm"] == [(1.0, 2.0), (2.0, 2.0)]
+    # the selector still matches what the author wrote, not the resolved point
+    assert arrow["tex_anchor"] == r"\draw[force] (arrow-tail)--(arrow-head);"
+
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "force-clear-of-body",
+                    "element_a": {"source_line": 3, "matched_text": "(arrow-tail)"},
+                    "element_b": {"source_line": 4, "matched_text": "[body]"},
+                    "min_clearance_cm": 0.6,
+                }
+            ]
+        }
+    )
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert [issue["status"] for issue in issues] == ["violated"]
+    assert issues[0]["measured_clearance_cm"] == pytest.approx(0.4, abs=1e-6)
+
+
+def test_literal_path_stays_one_element_when_coordinates_are_defined() -> None:
+    """Resolution substitutes before parsing, so a literal-only path is neither
+    re-parsed nor duplicated when the file also defines named coordinates."""
+    tex = "\n".join(
+        [
+            r"\coordinate (anchor) at (5.0,5.0);",
+            r"\draw[literal] (0,0)--(1,0)--(1,1);",
+        ]
+    )
+
+    elements = vector_clearance.extract_vector_elements(tex)
+
+    assert [element["points_cm"] for element in elements] == [[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]]
+
+
+def test_undefined_coordinate_name_fails_binding_instead_of_crashing() -> None:
+    tex = "\n".join(
+        [
+            r"\draw[leader] (0.5,0.5)--(never-defined);",
+            r"\draw[axis] (0,1)--(2,1);",
+        ]
+    )
+    checks = vector_clearance.parse_vector_clearance_checks(
+        {
+            "vector_clearance_checks": [
+                {
+                    "id": "leader-clear-of-axis",
+                    "element_a": {"source_line": 1, "matched_text": "[leader]"},
+                    "element_b": {"source_line": 2, "matched_text": "[axis]"},
+                    "min_clearance_cm": 0.2,
+                }
+            ]
+        }
+    )
+
+    issues = vector_clearance.check_vector_clearance(tex, checks)
+
+    assert issues == [
+        {
+            "id": "leader-clear-of-axis",
+            "status": "selector_missing",
+            "selector": "element_a",
+            "message": (
+                "vector_clearance 'leader-clear-of-axis' element_a selector matched 0 elements"
+            ),
+        }
+    ]
+
+
+def test_coordinate_redefined_to_a_different_point_is_not_resolved() -> None:
+    """Two definitions of one name would make the measurement a guess, so the
+    name is dropped and the path stays unparsed."""
+    tex = "\n".join(
+        [
+            r"\coordinate (tip) at (1.0,1.0);",
+            r"\coordinate (tip) at (3.0,1.0);",
+            r"\draw[vector] (0.0,1.0)--(tip);",
+        ]
+    )
+
+    assert vector_clearance.collect_named_coordinates(tex) == {}
+    assert vector_clearance.extract_vector_elements(tex) == []
+
+
+# Measured clearance of every declaration that existed before named-coordinate
+# resolution, plus the four fig5 pairs the resolution made bindable. Resolution
+# must not move any of these numbers.
+DECLARED_CLEARANCE_CM = {
+    ("fig1_overview_v5f_art_direction_001_vault", "panelD-debye-must-not-cross-red-marker"): 0.075,
+    ("fig1_overview_v5f_art_direction_001_vault", "panelE-deep-peak-caliper-min-clearance"): (
+        0.582151
+    ),
+    ("fig2_charge_transport_mechanism", "early-fit-continues-measured-early-trace"): 0.0,
+    ("fig2_charge_transport_mechanism", "late-trace-branches-from-early-trace-endpoint"): 0.0,
+    ("fig2_charge_transport_mechanism", "marker-key-swatches-keep-caption-lane"): 1.74,
+    ("fig2_charge_transport_mechanism", "source-lead-break-clears-voltage-source-ring"): 0.6,
+    ("fig5_cantilever_actuation_artifact_v2", "panelA-bias-rail-touches-drive-electrode"): 0.0,
+    ("fig5_cantilever_actuation_artifact_v2", "panelA-gap-dimension-clear-of-drive-electrode"): (
+        0.09
+    ),
+    ("fig5_cantilever_actuation_artifact_v2", "panelB-lift-cue-clear-of-lifted-lead"): 0.10198,
+    ("fig5_cantilever_actuation_artifact_v2", "panelD-extrapolated-tail-clear-of-time-axis"): 0.1,
+    ("fig5_cantilever_actuation_artifact_v2", "panelD-floating-rail-clear-of-plateau-trace"): 0.12,
+    ("fig5_cantilever_actuation_artifact_v2", "panelD-recovery-leader-clear-of-time-axis"): 0.28,
+}
+
+
+@pytest.mark.parametrize("fixture_name", DECLARING_FIXTURES)
+def test_declared_fixture_clearances_are_pinned(fixture_name: str) -> None:
+    """Pin what each declared pair measures. A declaration only reports a number
+    when it is violated, so each pair is re-run against an unreachable
+    threshold; the reported `measured_clearance_cm` is the pinned quantity."""
+    fixture = ROOT / "examples" / fixture_name
+    spec = yaml.safe_load((fixture / "spec.yaml").read_text(encoding="utf-8"))
+    tex = (fixture / f"{fixture_name}.tex").read_text(encoding="utf-8")
+
+    probes = [
+        {
+            "id": check["id"],
+            "element_a": check["element_a"],
+            "element_b": check["element_b"],
+            "relation": "min_clearance_cm",
+            "min_clearance_cm": 99.0,
+        }
+        for check in vector_clearance.parse_vector_clearance_checks(spec)
+    ]
+    issues = vector_clearance.check_vector_clearance(tex, probes)
+
+    expected = {
+        check_id: value
+        for (name, check_id), value in DECLARED_CLEARANCE_CM.items()
+        if name == fixture_name
+    }
+    measured = {issue["id"]: issue["measured_clearance_cm"] for issue in issues}
+    assert set(measured) == set(expected)
+    for check_id, value in expected.items():
+        assert measured[check_id] == pytest.approx(value, abs=1e-5), check_id
