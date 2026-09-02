@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -25,13 +26,18 @@ CROP_GEOMETRY = "1000x1100+3150+1650"
 REPRODUCE = "uv run python scripts/quality/panel_f_transfer_receipt.py refresh"
 
 
+# ImageMagick 7 ships `magick`; the Ubuntu runner ships ImageMagick 6, where the
+# same invocations are spelled `convert`.
+_MAGICK = _MAGICK if shutil.which(_MAGICK) else "convert"
+
+
 def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _pixel_sha256(path: Path) -> str:
     pixels = subprocess.run(
-        ["magick", str(path), "rgba:-"],
+        [_MAGICK, str(path), "rgba:-"],
         cwd=ROOT,
         check=True,
         capture_output=True,
@@ -70,7 +76,7 @@ def _comparison() -> dict[str, object]:
         for render, crop in zip(renders, crops, strict=True):
             _run(
                 [
-                    "magick",
+                    _MAGICK,
                     str(render),
                     "-crop",
                     CROP_GEOMETRY,
@@ -90,7 +96,7 @@ def _comparison() -> dict[str, object]:
         match = re.fullmatch(r"(\d+) \(([0-9.]+)\)", metric)
         if match is None or compared.returncode not in {0, 1}:
             raise RuntimeError(f"unexpected compare result: {metric}")
-        _run(["magick", str(diff), "-strip", str(diff)])
+        _run([_MAGICK, str(diff), "-strip", str(diff)])
         pixels, fraction = match.groups()
         return {
             "status": "passed_with_fixture_local_differences",

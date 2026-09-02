@@ -2499,6 +2499,7 @@ def test_visual_clash_evaluation_v2_rejects_neighbor_text_luma_noise() -> None:
 
 
 @pytest.mark.render
+@pytest.mark.local_render_signature
 def test_execution_scaffold_v1_exposes_boundary_and_density_failures(
     tmp_path: Path,
 ) -> None:
@@ -2604,6 +2605,7 @@ def test_execution_scaffold_v1_exposes_boundary_and_density_failures(
 
 
 @pytest.mark.render
+@pytest.mark.local_render_signature
 def test_execution_repair_v11_contains_labels_without_reducing_text(
     tmp_path: Path,
 ) -> None:
@@ -2741,6 +2743,7 @@ def test_execution_repair_v11_contains_labels_without_reducing_text(
 
 
 @pytest.mark.render
+@pytest.mark.local_render_signature
 def test_execution_repair_v12_resolves_density_with_visual_semantics_pending(
     tmp_path: Path,
 ) -> None:
@@ -2964,6 +2967,7 @@ def test_execution_repair_v12_resolves_density_with_visual_semantics_pending(
 
 
 @pytest.mark.render
+@pytest.mark.local_render_signature
 def test_fig3_resistance_render_receipt_reproduces_current_source_outputs() -> None:
     receipt = _compile_receipt_outputs()
     command = [
