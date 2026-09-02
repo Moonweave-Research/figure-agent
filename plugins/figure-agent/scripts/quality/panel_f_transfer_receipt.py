@@ -28,7 +28,7 @@ REPRODUCE = "uv run python scripts/quality/panel_f_transfer_receipt.py refresh"
 
 # ImageMagick 7 ships `magick`; the Ubuntu runner ships ImageMagick 6, where the
 # same invocations are spelled `convert`.
-_MAGICK = _MAGICK if shutil.which(_MAGICK) else "convert"
+_MAGICK = "magick" if shutil.which("magick") else "convert"
 
 
 def _sha256(path: Path) -> str:
