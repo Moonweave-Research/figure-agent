@@ -87,6 +87,17 @@ REQUIRED_PACKAGE_PATHS = {
 }
 
 
+def failed_steps(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Steps that block the release.
+
+    Decided by an allowlist of states known to be acceptable, not by counting
+    one bad one: a step reporting a state nobody enumerated in PASSING_STATES
+    should stop the release rather than pass by omission. Pure so the
+    allowlist's *consumption* is testable, not only the constant's value.
+    """
+    return [step for step in steps if step.get("state") not in PASSING_STATES]
+
+
 def _step(
     name: str,
     state: str,
@@ -478,10 +489,7 @@ def run_release_gate(
                 )
             )
 
-    # Success is decided by an allowlist of states known to be acceptable, not
-    # by counting one bad one: a step reporting a state nobody enumerated here
-    # should stop the release rather than pass by omission.
-    failed = [step for step in steps if step["state"] not in PASSING_STATES]
+    failed = failed_steps(steps)
     warnings = [step for step in steps if step["state"] == "warning"]
     return {
         "schema": SCHEMA,
