@@ -2,6 +2,7 @@ import subprocess
 from hashlib import sha256
 from pathlib import Path
 
+import pytest
 import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
@@ -107,6 +108,7 @@ def test_both_fixtures_input_and_invoke_the_same_motif_inside_selector() -> None
         assert "at (11.48, 2.50) {trapped charge};" in selected
 
 
+@pytest.mark.local_render_signature
 def test_transfer_receipt_binds_sources_and_records_non_publication_evidence() -> None:
     receipt = yaml.safe_load(TRANSFER_RECEIPT.read_text(encoding="utf-8"))
 
