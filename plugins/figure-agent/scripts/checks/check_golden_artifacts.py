@@ -19,6 +19,7 @@ by `--require-accepted` or automatically when `spec.yaml` declares the
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -380,6 +381,11 @@ def source_inventory_failures(tex_path: Path, patterns: dict | None) -> list[str
 
 
 AUDIT_INPUT_HASH_KEY = "audit_input_hash"
+THEORY_GUARD_DECLARATION_KEY = "theory-guard"
+THEORY_GUARD_NOT_APPLICABLE = "not-applicable"
+THEORY_GUARD_REASON_KEY = "theory-guard-reason"
+# Micro-defect statuses that close a visual-clash candidate.
+CLASH_CLOSED_STATUSES = frozenset({"accept_simplification", "resolved"})
 
 
 def audit_source_paths(example_dir: Path) -> tuple[Path, ...]:
@@ -407,24 +413,36 @@ def audit_input_hash(example_dir: Path, source_paths: tuple[Path, ...]) -> str:
     return input_manifest_hash(source_paths, base_dir=example_dir)
 
 
-def audit_is_fresh(example_dir: Path, source_paths: tuple[Path, ...]) -> bool:
-    """Freshness of QUALITY_AUDIT.md against its source set.
+def audit_freshness_failure(example_dir: Path, source_paths: tuple[Path, ...]) -> str | None:
+    """Why QUALITY_AUDIT.md is not fresh against its source set, or None.
 
-    Content-based when the audit front-matter carries an `audit_input_hash`: the
-    hash is recomputed over the same sources and compared, closing the gap where
-    timestamp-preserving restores (git clone, cp -p, rsync --times) leave a stale
-    audit mtime-fresh. Falls back to the legacy mtime check for audits that carry
-    no hash (e.g. the committed golden fixture)."""
+    Content-based only. The freshness used to fall back to an mtime comparison
+    whenever the front-matter carried no `audit_input_hash`, which is exactly
+    the state of a hand-written audit: `touch QUALITY_AUDIT.md` re-freshened it
+    without a single source being re-examined. An unstamped audit is now stale
+    and the reason names the stamper."""
     audit = example_dir / "QUALITY_AUDIT.md"
     if not audit.exists():
-        return False
+        return "QUALITY_AUDIT.md is missing"
     stored_hash = yaml_frontmatter(audit).get(AUDIT_INPUT_HASH_KEY)
-    if isinstance(stored_hash, str) and stored_hash.strip():
-        if not all(path.exists() for path in source_paths):
-            return False
-        return stored_hash.strip() == audit_input_hash(example_dir, source_paths)
-    audit_mtime = audit.stat().st_mtime
-    return all(path.exists() and path.stat().st_mtime <= audit_mtime for path in source_paths)
+    if not isinstance(stored_hash, str) or not stored_hash.strip():
+        return (
+            f"QUALITY_AUDIT.md carries no {AUDIT_INPUT_HASH_KEY} front-matter key, so its "
+            "freshness cannot be verified; stamp it with "
+            f"./bin/fig-agent helper check_golden_artifacts.py examples/{example_dir.name} "
+            "--stamp-audit-hash"
+        )
+    missing = [str(path) for path in source_paths if not path.exists()]
+    if missing:
+        return f"QUALITY_AUDIT.md source set is incomplete: {', '.join(missing)}"
+    if stored_hash.strip() != audit_input_hash(example_dir, source_paths):
+        return (
+            f"QUALITY_AUDIT.md is stale: {AUDIT_INPUT_HASH_KEY} does not match its source set; "
+            "re-audit and re-stamp with "
+            f"./bin/fig-agent helper check_golden_artifacts.py examples/{example_dir.name} "
+            "--stamp-audit-hash"
+        )
+    return None
 
 
 def stamp_audit_input_hash(example_dir: Path, source_paths: tuple[Path, ...]) -> Path:
@@ -481,29 +499,150 @@ def unresolved_visual_clash_count(audit_text: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
+def _load_build_report(report_path: Path) -> tuple[dict | None, str | None]:
+    label = f"build/{report_path.name}"
+    if not report_path.is_file():
+        return None, f"missing {label} (compile the fixture before the acceptance gate)"
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        return None, f"malformed {label}: {exc}"
+    if not isinstance(payload, dict):
+        return None, f"malformed {label}: top-level value must be a mapping"
+    return payload, None
+
+
+def collision_evidence(example_dir: Path) -> tuple[int | None, str | None]:
+    report, error = _load_build_report(example_dir / "build" / "collisions.json")
+    if error is not None:
+        return None, error
+    total = report.get("total")
+    if not isinstance(total, int) or isinstance(total, bool) or total < 0:
+        return None, "malformed build/collisions.json: total must be a non-negative integer"
+    return total, None
+
+
+def _dispositioned_visual_clash_refs(critique_path: Path) -> set[str]:
+    """Candidate ids a reviewer has closed in critique.md front-matter.
+
+    An adjudicated candidate carries a micro-defect whose status says so; the
+    same structured field critique_lint already requires every candidate to be
+    accounted by."""
+    if not critique_path.is_file():
+        return set()
+    micro_defects = yaml_frontmatter(critique_path).get("micro_defects")
+    if not isinstance(micro_defects, list):
+        return set()
+    refs = set()
+    for item in micro_defects:
+        if not isinstance(item, dict):
+            continue
+        ref = item.get("visual_clash_ref")
+        if isinstance(ref, str) and ref.strip() and item.get("status") in CLASH_CLOSED_STATUSES:
+            refs.add(ref.strip())
+    return refs
+
+
+def visual_clash_evidence(example_dir: Path) -> tuple[int | None, int | None, str | None]:
+    """(candidate total, unresolved total, error) from the compiled report.
+
+    Unresolved is the candidate set minus the ones a critique micro-defect has
+    closed. Suppressed known-false-positives never enter `candidates`."""
+    report, error = _load_build_report(example_dir / "build" / "visual_clash.json")
+    if error is not None:
+        return None, None, error
+    candidates = report.get("candidates")
+    if not isinstance(candidates, list):
+        return None, None, "malformed build/visual_clash.json: candidates must be a list"
+    candidate_ids = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict) or not isinstance(candidate.get("id"), str):
+            return None, None, "malformed build/visual_clash.json: each candidate needs an id"
+        candidate_ids.append(candidate["id"])
+    closed = _dispositioned_visual_clash_refs(example_dir / "critique.md")
+    unresolved = [candidate_id for candidate_id in candidate_ids if candidate_id not in closed]
+    return len(candidate_ids), len(unresolved), None
+
+
 def checker_budget_failures(
-    audit_path: Path, *, max_collisions: int, max_visual_clashes: int
+    example_dir: Path, *, max_collisions: int, max_visual_clashes: int
 ) -> list[str]:
+    """Checker budgets decided by the compiled JSON reports.
+
+    The budgets used to be read out of QUALITY_AUDIT.md prose, so appending the
+    sentence `0 unresolved visual clash(es)` satisfied the gate with no evidence
+    behind it. The audit's numbers are now the human's claim: they are checked
+    against the reports and a claim that contradicts them is itself a failure.
+    """
+    audit_path = example_dir / "QUALITY_AUDIT.md"
     if not audit_path.exists():
         return ["missing audit: QUALITY_AUDIT.md"]
     audit_text = audit_path.read_text(encoding="utf-8")
-    collisions, visual_clashes = checker_warning_counts(audit_text)
-    unresolved_visual_clashes = unresolved_visual_clash_count(audit_text)
+    claimed_collisions, claimed_clashes = checker_warning_counts(audit_text)
+    claimed_unresolved = unresolved_visual_clash_count(audit_text)
     failures = []
-    if collisions is None:
+
+    collisions, collision_error = collision_evidence(example_dir)
+    if collision_error is not None:
+        failures.append(collision_error)
+    else:
+        if collisions > max_collisions:
+            failures.append(f"collision budget exceeded: {collisions} > {max_collisions}")
+        if claimed_collisions is not None and claimed_collisions != collisions:
+            failures.append(
+                f"QUALITY_AUDIT.md claims {claimed_collisions} collision(s); "
+                f"build/collisions.json reports {collisions}"
+            )
+    if claimed_collisions is None:
         failures.append("missing collision count in QUALITY_AUDIT.md")
-    elif collisions > max_collisions:
-        failures.append(f"collision budget exceeded: {collisions} > {max_collisions}")
-    if visual_clashes is None:
+
+    clashes, unresolved, clash_error = visual_clash_evidence(example_dir)
+    if clash_error is not None:
+        failures.append(clash_error)
+    else:
+        if unresolved > max_visual_clashes:
+            failures.append(
+                f"unresolved visual clash budget exceeded: {unresolved} > {max_visual_clashes}"
+            )
+        if claimed_clashes is not None and claimed_clashes != clashes:
+            failures.append(
+                f"QUALITY_AUDIT.md claims {claimed_clashes} visual clash candidate(s); "
+                f"build/visual_clash.json reports {clashes}"
+            )
+        if claimed_unresolved is not None and claimed_unresolved != unresolved:
+            failures.append(
+                f"QUALITY_AUDIT.md claims {claimed_unresolved} unresolved visual clash(es); "
+                f"build/visual_clash.json and critique.md leave {unresolved} open"
+            )
+    if claimed_clashes is None:
         failures.append("missing visual clash count in QUALITY_AUDIT.md")
-    if unresolved_visual_clashes is None:
+    if claimed_unresolved is None:
         failures.append("missing unresolved visual clash count in QUALITY_AUDIT.md")
-    elif unresolved_visual_clashes > max_visual_clashes:
-        failures.append(
-            "unresolved visual clash budget exceeded: "
-            f"{unresolved_visual_clashes} > {max_visual_clashes}"
-        )
     return failures
+
+
+def _theory_guard_waiver_failures(theory_guard_path: Path) -> list[str]:
+    """Failures for a guard that declares no BLOCKER row at all.
+
+    Silence used to read as success: a 0-byte theory_guard.md yielded no
+    parseable rows, therefore no failures, and was indistinguishable from a
+    guard whose every BLOCKER is verified. Declaring the absence is now an
+    explicit, structured act."""
+    front = yaml_frontmatter(theory_guard_path)
+    if front.get(THEORY_GUARD_DECLARATION_KEY) != THEORY_GUARD_NOT_APPLICABLE:
+        return [
+            "theory guard declares no BLOCKER row and no "
+            f"`{THEORY_GUARD_DECLARATION_KEY}: {THEORY_GUARD_NOT_APPLICABLE}` "
+            "front-matter declaration: theory_guard.md"
+        ]
+    reason = front.get(THEORY_GUARD_REASON_KEY)
+    if not isinstance(reason, str) or not reason.strip():
+        return [
+            f"theory guard `{THEORY_GUARD_DECLARATION_KEY}: "
+            f"{THEORY_GUARD_NOT_APPLICABLE}` requires a non-empty "
+            f"`{THEORY_GUARD_REASON_KEY}`: theory_guard.md"
+        ]
+    return []
 
 
 def theory_guard_failures(theory_guard_path: Path) -> list[str]:
@@ -511,6 +650,7 @@ def theory_guard_failures(theory_guard_path: Path) -> list[str]:
         return ["missing theory guard: theory_guard.md"]
 
     failures: list[str] = []
+    blocker_rows = 0
     for line in theory_guard_path.read_text(encoding="utf-8").splitlines():
         if "|" not in line:
             continue
@@ -519,6 +659,7 @@ def theory_guard_failures(theory_guard_path: Path) -> list[str]:
             # A row that declares BLOCKER severity but is missing columns cannot be
             # evaluated for its pass/fail evidence: fail closed rather than skip it.
             if len(cells) >= 2 and cells[1] == "BLOCKER":
+                blocker_rows += 1
                 failures.append(
                     f"malformed theory guard BLOCKER row (missing columns): {line.strip()}"
                 )
@@ -526,12 +667,15 @@ def theory_guard_failures(theory_guard_path: Path) -> list[str]:
         guard_id, severity, _claim, _method, evidence = cells[:5]
         if severity != "BLOCKER" or guard_id == "ID":
             continue
+        blocker_rows += 1
 
         status = evidence.lower().lstrip()
         has_bad_status = status.startswith(("fail", "failed", "unresolved", "unknown", "open"))
         has_pass_status = status.startswith(("pass", "passed", "closed", "resolved", "verified"))
         if has_bad_status or not has_pass_status:
             failures.append(f"theory BLOCKER not passing: {guard_id}")
+    if blocker_rows == 0:
+        failures.extend(_theory_guard_waiver_failures(theory_guard_path))
     return failures
 
 
@@ -681,8 +825,11 @@ def check_example(
 
         failures.extend(source_inventory_failures(tex, contract.get("source_inventory")))
 
-        if not audit_is_fresh(example_dir, audit_source_paths(example_dir)):
-            failures.append("QUALITY_AUDIT.md is stale or missing")
+        audit_freshness_reason = audit_freshness_failure(
+            example_dir, audit_source_paths(example_dir)
+        )
+        if audit_freshness_reason:
+            failures.append(audit_freshness_reason)
         failures.extend(theory_guard_failures(example_dir / "theory_guard.md"))
         failures.extend(
             publication_compliance_failures(
@@ -693,7 +840,7 @@ def check_example(
         failures.extend(reference_pack_gate_failures(example_dir, spec))
         failures.extend(
             checker_budget_failures(
-                audit,
+                example_dir,
                 max_collisions=max_collisions,
                 max_visual_clashes=max_visual_clashes,
             )

@@ -367,9 +367,31 @@ def test_fig_agent_helper_allowlist_includes_release_gate() -> None:
 
 def test_release_gate_blocks_on_a_state_it_does_not_recognise() -> None:
     """Success used to be "no step said failed", so any state nobody
-    enumerated passed by omission."""
+    enumerated passed by omission. Asserting the constant alone could not see
+    that: the aggregation itself has to reject the unrecognised state."""
     assert "quarantined" not in release_gate.PASSING_STATES
     assert release_gate.PASSING_STATES == {"passed", "skipped", "warning"}
+
+    steps = [
+        {"name": "package", "state": "passed"},
+        {"name": "targeted_tests", "state": "skipped"},
+        {"name": "claude_validate_package", "state": "warning"},
+        {"name": "golden_artifacts", "state": "quarantined"},
+    ]
+
+    assert [step["name"] for step in release_gate.failed_steps(steps)] == ["golden_artifacts"]
+
+
+def test_release_gate_success_is_false_when_a_step_state_is_unrecognised() -> None:
+    """The report field a caller reads, not just the helper."""
+    passing = [{"name": "package", "state": "passed"}]
+    quarantined = [{"name": "package", "state": "quarantined"}]
+
+    assert release_gate.failed_steps(passing) == []
+    assert release_gate.failed_steps(quarantined) == quarantined
+    assert [step["name"] for step in release_gate.failed_steps([{"name": "package"}])] == [
+        "package"
+    ]
 
 
 def test_missing_claude_cli_is_a_recorded_warning_not_a_plain_skip(

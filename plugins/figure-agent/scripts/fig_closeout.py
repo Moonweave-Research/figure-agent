@@ -413,7 +413,15 @@ def _export_step(
     )
 
 
-def _valid_loop_iteration(iteration_path: Path, name: str) -> bool:
+def _loop_run_input_paths(example_dir: Path, name: str) -> dict[str, Path]:
+    """Manifest hash field -> the artifact it must describe."""
+    return {
+        "render_pdf_sha256": example_dir / "build" / f"{name}.pdf",
+        "source_tex_sha256": example_dir / f"{name}.tex",
+    }
+
+
+def _valid_loop_iteration(iteration_path: Path, name: str, example_dir: Path) -> bool:
     manifest_path = iteration_path.parent / "run_manifest.json"
     try:
         iteration = json.loads(iteration_path.read_text(encoding="utf-8"))
@@ -425,19 +433,30 @@ def _valid_loop_iteration(iteration_path: Path, name: str) -> bool:
     if not isinstance(manifest, dict):
         return False
     manifest_iterations = manifest.get("iterations")
-    return (
+    if not (
         manifest.get("schema") == FIG_LOOP_SCHEMA
         and manifest.get("fixture") == name
         and isinstance(manifest_iterations, list)
         and "iteration_001.json" in manifest_iterations
-    )
+    ):
+        return False
+    # Shape and mtime said nothing about which render the loop read, so two
+    # hand-written JSON files touched after the inputs satisfied the gate. The
+    # record has to name the render and source it ran against, by content.
+    for field, path in _loop_run_input_paths(example_dir, name).items():
+        recorded = manifest.get(field)
+        if not isinstance(recorded, str) or not path.is_file():
+            return False
+        if recorded != _sha256_file(path):
+            return False
+    return True
 
 
-def _latest_loop_iteration(runs_root: Path, name: str) -> Path | None:
+def _latest_loop_iteration(runs_root: Path, name: str, example_dir: Path) -> Path | None:
     candidates = (
         path
         for path in runs_root.glob(f"*-{name}/iteration_001.json")
-        if _valid_loop_iteration(path, name)
+        if _valid_loop_iteration(path, name, example_dir)
     )
     return max(candidates, key=lambda path: path.stat().st_mtime, default=None)
 
@@ -603,14 +622,29 @@ def _loop_rerun_step(
             reason=f"closeout prerequisites are incomplete: {', '.join(incomplete)}",
             evidence={"blocked_by": incomplete},
         )
-    latest_iteration = _latest_loop_iteration(runs_root, name)
+    latest_iteration = _latest_loop_iteration(runs_root, name, example_dir)
     command = f'/fig_loop {name} --goal "<goal>"'
     if latest_iteration is None:
+        # "Nothing ran yet" and "a record exists but describes something else"
+        # are different situations for a caller, so state which one it is
+        # instead of leaving both behind one reason string.
+        if any(runs_root.glob(f"*-{name}/iteration_001.json")):
+            return _step(
+                step_id="loop_rerun",
+                state="needs_action",
+                reason=(
+                    "no fig_loop run record matches the current render and source; "
+                    "re-run the loop after the last patch"
+                ),
+                command=command,
+                evidence={"loop_record_state": "unmatched"},
+            )
         return _step(
             step_id="loop_rerun",
             state="needs_action",
             reason="no post-patch fig_loop run was found",
             command=command,
+            evidence={"loop_record_state": "absent"},
         )
     inputs = _tracked_closeout_inputs(example_dir, name)
     newest_input = max(inputs, key=lambda path: path.stat().st_mtime, default=None)

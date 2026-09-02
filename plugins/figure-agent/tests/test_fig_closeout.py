@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import fig_closeout as fig_closeout_mod  # noqa: E402
 from fig_closeout import compute_closeout, main  # noqa: E402
+from fig_loop_records import run_input_hashes  # noqa: E402
 from quality_manifest import file_sha256  # noqa: E402
 
 
@@ -24,6 +25,10 @@ def _make_fixture(repo: Path, name: str = "loop_demo") -> Path:
         encoding="utf-8",
     )
     (fixture / "briefing.md").write_text("briefing", encoding="utf-8")
+    # The loop_rerun gate binds a run record to the render it read, so a
+    # fixture that stands in for a compiled one needs a build PDF.
+    (fixture / "build").mkdir()
+    (fixture / "build" / f"{name}.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
     return fixture
 
 
@@ -93,6 +98,7 @@ def _write_loop_run(repo: Path, name: str = "loop_demo", *, fixture: str | None 
                 "schema": "figure-agent.fig-loop-run.v1",
                 "fixture": fixture or name,
                 "iterations": ["iteration_001.json"],
+                **run_input_hashes(repo / "examples" / name, name),
             }
         )
         + "\n",
@@ -541,7 +547,8 @@ def test_closeout_ignores_loop_record_for_the_wrong_fixture(
     loop_step = _steps_by_id(report)["loop_rerun"]
 
     assert loop_step["state"] == "needs_action"
-    assert loop_step["reason"] == "no post-patch fig_loop run was found"
+    assert loop_step["reason"].startswith("no fig_loop run record matches")
+    assert loop_step["evidence"]["loop_record_state"] == "unmatched"
 
 
 def test_closeout_ignores_loop_record_with_malformed_manifest(
@@ -577,7 +584,8 @@ def test_closeout_ignores_loop_record_with_malformed_manifest(
     loop_step = _steps_by_id(report)["loop_rerun"]
 
     assert loop_step["state"] == "needs_action"
-    assert loop_step["reason"] == "no post-patch fig_loop run was found"
+    assert loop_step["reason"].startswith("no fig_loop run record matches")
+    assert loop_step["evidence"]["loop_record_state"] == "unmatched"
 
 
 def test_closeout_blocks_loop_rerun_until_adjudication_is_complete(
