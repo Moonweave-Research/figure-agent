@@ -67,15 +67,24 @@ jobs:
       - name: Compile fixtures and check visual clash budgets
         timeout-minutes: 12
         run: |
+          # The loop runs under `bash -e`: without collecting failures, the
+          # first broken fixture aborts it and every later fixture plus the
+          # clash-budget check go unrun while the job still reports one cause.
+          rc=0
+          failed=()
           for spec in examples/*/spec.yaml; do
             fixture="$(dirname "$spec")"
             name="$(basename "$fixture")"
             tex="$fixture/$name.tex"
             if [[ -f "$tex" ]]; then
-              bash scripts/compile.sh "$tex"
+              bash scripts/compile.sh "$tex" || { rc=1; failed+=("$name"); }
             fi
           done
-          uv run python3 scripts/checks/check_visual_clash_budget.py examples
+          uv run python3 scripts/checks/check_visual_clash_budget.py examples || rc=1
+          if [[ ${#failed[@]} -gt 0 ]]; then
+            echo "compile failures: ${failed[*]}"
+          fi
+          exit $rc
 
       # One unrelated fixture failing its compile contract used to end the job
       # here, so the render-marked tests below never ran on main. Both signals

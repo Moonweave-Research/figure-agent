@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import zipfile
@@ -232,14 +233,41 @@ def _assert_common_envelope(payload: dict) -> None:
         assert isinstance(payload["error"]["message"], str)
 
 
-def test_mcp_json_starts_server_from_its_plugin_root() -> None:
+def _render_plugin_root(value: str) -> str:
+    return value.replace("${CLAUDE_PLUGIN_ROOT}", str(PLUGIN_ROOT))
+
+
+def test_mcp_json_starts_the_server_from_a_foreign_project_directory(tmp_path: Path) -> None:
+    """Claude Code resolves a relative manifest ``cwd`` against the session's
+    project directory, not the plugin. A manifest asserted only by its literal
+    contents can therefore look correct and never start; launch it the way the
+    host does, from a directory that is not the plugin root."""
     config = json.loads((PLUGIN_ROOT / ".mcp.json").read_text(encoding="utf-8"))
     server = config["mcpServers"]["figure-agent"]
 
-    assert server["command"] == "uv"
-    assert server["args"] == ["run", "--project", ".", "python3", "mcp/figure_agent_server.py"]
-    assert server["cwd"] == "."
-    assert "env" not in server
+    command = shutil.which(_render_plugin_root(server["command"]))
+    assert command, f"MCP command is not on PATH: {server['command']!r}"
+    cwd = Path(_render_plugin_root(server.get("cwd", ".")))
+    if not cwd.is_absolute():
+        cwd = (tmp_path / cwd).resolve()
+    argv = [command, *(_render_plugin_root(arg) for arg in server["args"])]
+    env = {"PATH": os.environ.get("PATH", ""), "HOME": os.environ.get("HOME", str(tmp_path))}
+    env.update({key: _render_plugin_root(value) for key, value in server.get("env", {}).items()})
+
+    process = subprocess.run(
+        argv,
+        input=_mcp_request("initialize") + "\n",
+        cwd=cwd,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=180,
+    )
+
+    assert process.returncode == 0, process.stderr
+    payload = json.loads(process.stdout.splitlines()[0])
+    assert payload["result"]["serverInfo"]["name"] == "figure-agent"
 
 
 def test_mcp_tool_subprocesses_do_not_create_plugin_root_uv_venv() -> None:
@@ -1690,26 +1718,45 @@ def test_package_audit_rejects_workspace_relative_mcp_scripts(tmp_path: Path) ->
     assert any("cwd must not depend on user workspace" in issue for issue in issues)
 
 
-def test_package_audit_allows_plugin_local_cwd_for_a_codex_manifest(tmp_path: Path) -> None:
+def _plugin_local_server_config() -> str:
+    return json.dumps(
+        {
+            "mcpServers": {
+                "figure-agent": {
+                    "command": "python3",
+                    "args": ["mcp/figure_agent_server.py"],
+                    "cwd": ".",
+                }
+            }
+        }
+    )
+
+
+def test_package_audit_allows_plugin_local_cwd_in_the_codex_only_manifest(tmp_path: Path) -> None:
     plugin = tmp_path / "plugin"
     (plugin / ".codex-plugin").mkdir(parents=True)
     (plugin / ".codex-plugin" / "plugin.json").write_text("{}", encoding="utf-8")
-    (plugin / ".mcp.json").write_text(
-        json.dumps(
-            {
-                "mcpServers": {
-                    "figure-agent": {
-                        "command": "python3",
-                        "args": ["mcp/figure_agent_server.py"],
-                        "cwd": ".",
-                    }
-                }
-            }
-        ),
-        encoding="utf-8",
+    (plugin / ".codex-plugin" / "mcp.json").write_text(
+        _plugin_local_server_config(), encoding="utf-8"
     )
 
     assert find_mcp_config_issues(plugin) == []
+
+
+def test_package_audit_rejects_plugin_local_cwd_in_the_shared_claude_manifest(
+    tmp_path: Path,
+) -> None:
+    """The Codex runtime gained its own manifest precisely so this exemption
+    could never reach the file Claude Code loads."""
+    plugin = tmp_path / "plugin"
+    (plugin / ".codex-plugin").mkdir(parents=True)
+    (plugin / ".codex-plugin" / "plugin.json").write_text("{}", encoding="utf-8")
+    (plugin / ".mcp.json").write_text(_plugin_local_server_config(), encoding="utf-8")
+
+    issues = find_mcp_config_issues(plugin)
+
+    assert any("cwd must not depend on user workspace" in issue for issue in issues)
+    assert any("must be plugin-root anchored" in issue for issue in issues)
 
 
 def _run_fig_agent_cli(workspace: Path, *args: str) -> subprocess.CompletedProcess[str]:

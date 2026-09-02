@@ -848,20 +848,14 @@ def test_closeout_runs_the_golden_contract_when_acceptance_is_declared(
 def test_closeout_emits_every_step_readiness_expects(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Readiness assembles from whatever steps closeout happens to emit, so a
-    step that stops being produced disappears from the gate instead of
-    blocking. Pin the set: dropping one has to fail here."""
+    """Readiness assembles its gate from REQUIRED_CLOSEOUT_STEP_IDS, so the two
+    must not drift: a step that stops being emitted has to fail here as well as
+    block there."""
     _make_fixture(tmp_path)
     monkeypatch.setattr(fig_closeout_mod, "infer_stage", lambda _dir: _status())
 
     report = compute_closeout("loop_demo", repo_root=tmp_path)
 
-    assert {step["id"] for step in report["steps"]} == {
-        "text_boundary_checks",
-        "compile",
-        "critique",
-        "adjudication",
-        "export",
-        "golden_contract",
-        "loop_rerun",
-    }
+    assert [step["id"] for step in report["steps"]] == list(
+        fig_closeout_mod.REQUIRED_CLOSEOUT_STEP_IDS
+    )
