@@ -180,7 +180,7 @@ declared meaning better.
 
 | Area | What's working |
 |---|---|
-| **Build pipeline** | `/fig_compile` runs Style Lock + lualatex + collision + clash checks. Report-only by default; manuscript runs use `FIGURE_AGENT_STRICT=1` for hard fail. |
+| **Build pipeline** | `/fig_compile` runs Style Lock + lualatex + collision + clash checks. The LuaLaTeX run and `check_print_size_contract.py` are hard gates even in default mode; the remaining detectors are report-only until manuscript runs set `FIGURE_AGENT_STRICT=1`. |
 | **Vision critique** | `/fig_critique` reads build PNG, high-zoom crops, print-scale crops, visual/text clash candidates, optional reference packs, and optional aesthetic intent, then writes structured `critique.md`. A vision-capable host (Codex or Claude) performs the review; no external API. |
 | **Progressive skill context** | `skills/figure-agent/SKILL.md` owns routing and workflow; `skills/figure-agent/references/vision-critique-rubric.md` is loaded completely only for visual interpretation. Project/paper rule catalogs continue to enter through the authoring context pack. |
 | **Single next-action summary** | `/fig_status`, `/fig_drive`, `/fig_loop`, and `/fig_closeout` expose the same compact read-only `next_action_summary`, including `decision_boundary` so agents can tell deterministic gates, human decisions, release decisions, SVG-polish handoffs, and advisory-only aesthetic improvements apart. |
