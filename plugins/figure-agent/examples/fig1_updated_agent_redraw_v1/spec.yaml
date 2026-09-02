@@ -8,6 +8,7 @@ title: Fig 1 — charge trapping in sulfur-rich polymer
 style_profile: polymer-paper
 paper_aesthetic_context: nc-main-text-series
 undeclared_geometry_profile: schematic
+visual_clash_cap: 22
 final_size_contract:
   basis: height_limited_nature_family_main_figure
   natural_size_mm: [150.7, 153.6]
