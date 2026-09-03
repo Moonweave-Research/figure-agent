@@ -556,3 +556,34 @@ def test_main_reports_a_bound_allowlist_declaration_as_passed(
 
     assert status == 0
     assert report["allowlist_binding"] == {"checked": 1, "state": "passed", "failures": []}
+
+
+def test_main_fails_closed_when_one_allowlist_word_is_never_drawn(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _allowlist_main(tmp_path, monkeypatch, "polymer, substrate")
+
+    assert status == 2
+    assert report["allowlist_binding"]["state"] == "failed"
+    assert report["allowlist_binding"]["checked"] == 1
+    assert report["allowlist_binding"]["failures"] == [
+        {
+            "check_id": "row2_box",
+            "kind": "allowlist_word_unmatched",
+            "words": ["substrate"],
+            "nearest_words": ["polymer", "film"],
+            "detail": "substrate (nearest rendered: polymer, film)",
+        }
+    ]
+
+
+def test_main_keeps_a_fully_bound_multi_word_allowlist_report_unchanged(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _allowlist_main(tmp_path, monkeypatch, "polymer, film")
+
+    assert status == 0
+    assert report["allowlist_binding"] == {"checked": 1, "state": "passed", "failures": []}
+    assert report["candidates"] == []

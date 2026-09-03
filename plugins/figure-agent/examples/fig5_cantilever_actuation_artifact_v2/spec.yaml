@@ -203,8 +203,8 @@ label_path_proximity_checks:
     kind: polyline
     role: manual_lead_lift
     points_pdf_cm:
-      - [5.67, 0.65]
-      - [5.91, 0.73]
+      - [6.019, 0.832]
+      - [6.264, 0.913]
     clearance_pt: 3.0
     source_binding:
       source_name: fig5_cantilever_actuation_artifact_v2.tex
@@ -215,8 +215,8 @@ label_path_proximity_checks:
   - id: panel-c-coulomb-arrow
     kind: horizontal_line
     role: conditional_force_arrow
-    y_pdf_cm: 2.38
-    x_range_pdf_cm: [9.21, 9.95]
+    y_pdf_cm: 3.213
+    x_range_pdf_cm: [9.449, 10.304]
     clearance_pt: 3.0
     source_binding:
       source_name: fig5_cantilever_actuation_artifact_v2.tex
@@ -230,16 +230,18 @@ label_path_proximity_checks:
   - id: panel-c-beam-centerline
     kind: polyline
     role: specimen_body
-    # Rendered-PDF samples of the Panel C beam centerline (t = 0, .25, .5,
-    # .75, 1 of the authored curve). The clearance covers the drawn half-width
+    # PDF-cm samples of the drawn Panel C beam centerline (t = 0 .. 1 in
+    # sixths of the authored cubic). The clearance covers the drawn half-width
     # (2.35 mm stroke) plus a visible gap, so the gate trips before a glyph
     # reaches the film ink rather than after it overlaps.
     points_pdf_cm:
-      - [10.89, 1.37]
-      - [10.82, 1.92]
-      - [10.63, 2.59]
-      - [10.38, 3.25]
-      - [10.13, 3.81]
+      - [10.762, 1.453]
+      - [10.728, 1.803]
+      - [10.636, 2.222]
+      - [10.502, 2.674]
+      - [10.341, 3.126]
+      - [10.168, 3.545]
+      - [9.999, 3.895]
     clearance_pt: 5.5
     defect_kind: label_path_near_miss
     source_binding:
@@ -251,8 +253,8 @@ label_path_proximity_checks:
   - id: trace-switch-line
     kind: vertical_line
     role: polarity_switch
-    x_pdf_cm: 15.23
-    y_range_pdf_cm: [1.08, 3.75]
+    x_pdf_cm: 15.810
+    y_range_pdf_cm: [1.931, 4.516]
     clearance_pt: 3.0
     source_binding:
       source_name: fig5_cantilever_actuation_artifact_v2.tex
@@ -263,8 +265,8 @@ label_path_proximity_checks:
   - id: panel-d-bend-angle-axis
     kind: vertical_line
     role: axis_label_lane
-    x_pdf_cm: 13.97
-    y_range_pdf_cm: [1.02, 4.08]
+    x_pdf_cm: 14.466
+    y_range_pdf_cm: [1.422, 4.536]
     clearance_pt: 2.5
     defect_kind: label_path_near_miss
     source_binding:
@@ -278,8 +280,8 @@ label_path_proximity_checks:
   - id: panel-d-time-axis
     kind: horizontal_line
     role: axis_label_lane
-    y_pdf_cm: 2.52
-    x_range_pdf_cm: [13.97, 17.37]
+    y_pdf_cm: 3.010
+    x_range_pdf_cm: [14.466, 17.926]
     clearance_pt: 2.5
     defect_kind: label_path_near_miss
     source_binding:
@@ -292,13 +294,15 @@ label_path_proximity_checks:
     kind: polyline
     role: qualitative_response_curve
     points_pdf_cm:
-      - [15.71, 1.35]
-      - [15.81, 1.17]
-      - [16.19, 1.35]
-      - [16.57, 1.78]
-      - [16.81, 2.04]
-      - [17.00, 2.24]
-      - [17.19, 2.36]
+      - [16.237, 4.200]
+      - [16.362, 4.271]
+      - [16.568, 4.214]
+      - [16.827, 4.042]
+      - [17.112, 3.763]
+      - [17.287, 3.576]
+      - [17.447, 3.414]
+      - [17.597, 3.279]
+      - [17.743, 3.173]
     clearance_pt: 3.0
     defect_kind: label_curve_near_label
     source_binding:

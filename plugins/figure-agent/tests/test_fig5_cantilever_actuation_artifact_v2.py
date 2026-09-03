@@ -504,7 +504,9 @@ def test_fig5_declares_clearance_for_the_y_axis_angle_label() -> None:
 
     assert axis_check["kind"] == "vertical_line"
     assert axis_check["role"] == "axis_label_lane"
-    assert axis_check["x_pdf_cm"] == 13.97
+    # The axis is drawn at PDF x 14.466; 13.97 was the source-cm x that the
+    # declaration carried before it was placed in the space it claims.
+    assert axis_check["x_pdf_cm"] == 14.466
     assert axis_check["clearance_pt"] == 2.5
     assert axis_check["text_phrases"] == [{"id": "angle_label", "words": ["angle"]}]
 

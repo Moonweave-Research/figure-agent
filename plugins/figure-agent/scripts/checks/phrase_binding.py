@@ -3,7 +3,9 @@
 
 Both declared-geometry detectors resolve a phrase the same way, so the
 grouping rule and the unmatched-declaration findings live here.  A declaration
-that binds nothing measures nothing: it is broken, not clean.
+that binds nothing measures nothing: it is broken, not clean.  Binding is
+resolved per declared word, so a list whose other words still bind cannot
+carry a dead one.
 """
 
 from __future__ import annotations
@@ -12,6 +14,7 @@ from typing import Any
 
 PHRASE_UNMATCHED = "phrase_unmatched"
 ALLOWLIST_UNMATCHED = "allowlist_unmatched"
+ALLOWLIST_WORD_UNMATCHED = "allowlist_word_unmatched"
 NEAREST_WORD_LIMIT = 4
 
 
@@ -290,6 +293,15 @@ def allowlist_matches(
     return [word for word in sorted(words, key=_reading_key) if _text(word) in allowlist]
 
 
+def unbound_allowlist_words(
+    words: list[dict[str, Any]],
+    allowlist: set[str],
+) -> list[str]:
+    """Return every allowlist word the render never draws."""
+    rendered = {_text(word) for word in words}
+    return sorted(item for item in allowlist if item not in rendered)
+
+
 def allowlist_unmatched_failure(
     check_id: str,
     allowlist: set[str],
@@ -301,6 +313,23 @@ def allowlist_unmatched_failure(
         "check_id": str(check_id),
         "kind": ALLOWLIST_UNMATCHED,
         "words": sorted(allowlist),
+        "nearest_words": list(nearest_words),
+        "detail": f"{declared} (nearest rendered: {rendered})",
+    }
+
+
+def allowlist_word_unmatched_failure(
+    check_id: str,
+    unbound_words: list[str],
+    nearest_words: list[str],
+) -> dict[str, Any]:
+    """Report the dead words of a list whose remaining words still bind."""
+    declared = ", ".join(unbound_words)
+    rendered = ", ".join(nearest_words) if nearest_words else "none"
+    return {
+        "check_id": str(check_id),
+        "kind": ALLOWLIST_WORD_UNMATCHED,
+        "words": list(unbound_words),
         "nearest_words": list(nearest_words),
         "detail": f"{declared} (nearest rendered: {rendered})",
     }

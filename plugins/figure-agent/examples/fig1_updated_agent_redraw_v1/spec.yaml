@@ -196,13 +196,27 @@ label_path_proximity_checks:
     x_pdf_cm: 7.84
     y_range_pdf_cm: [11.12, 11.86]
     clearance_pt: 1.0
+    source_binding:
+      source_name: fig1_updated_agent_redraw_v1.tex
+      selector: 'figure-agent-path: panel-e-probe-shaft'
     text_allowlist: [ESVM, head]
   - id: panel-e-vs-meter-lead
-    kind: horizontal_line
+    kind: polyline
     role: panel_e_vs_meter_connection
-    y_pdf_cm: 12.98
-    x_range_pdf_cm: [7.46, 8.70]
+    # PDF-cm samples of the drawn ESVM-to-readout cubic (t = 0 .. 1 in sixths);
+    # the control hull's chords stand off the curve by more than the gate allows.
+    points_pdf_cm:
+      - [7.842, 11.118]
+      - [7.945, 11.138]
+      - [8.045, 11.175]
+      - [8.144, 11.224]
+      - [8.243, 11.281]
+      - [8.345, 11.340]
+      - [8.452, 11.398]
     clearance_pt: 1.0
+    source_binding:
+      source_name: fig1_updated_agent_redraw_v1.tex
+      selector: 'figure-agent-path: panel-e-vs-meter-lead'
     text_phrases:
       - id: vs-meter
         words: [Vs, meter]
@@ -212,13 +226,19 @@ label_path_proximity_checks:
     y_pdf_cm: 12.31
     x_range_pdf_cm: [6.85, 7.31]
     clearance_pt: 1.0
+    source_binding:
+      source_name: fig1_updated_agent_redraw_v1.tex
+      selector: 'figure-agent-path: panel-e-sample-transfer'
     text_allowlist: [manual, sample, transfer, film]
   - id: panel-e-grounded-substrate
     kind: horizontal_line
     role: panel_e_grounded_substrate_boundary
-    y_pdf_cm: 13.56
-    x_range_pdf_cm: [6.43, 8.28]
+    y_pdf_cm: 12.308
+    x_range_pdf_cm: [8.272, 8.372]
     clearance_pt: 1.0
+    source_binding:
+      source_name: fig1_updated_agent_redraw_v1.tex
+      selector: 'figure-agent-path: panel-e-grounded-substrate'
     text_allowlist: [grounded, substrate]
   - id: panel-f-observed-bend-arrow
     kind: horizontal_line
@@ -232,12 +252,18 @@ label_path_proximity_checks:
   - id: panel-f-ground-return
     kind: polyline
     role: panel_f_grounded_source_return
+    # The drawn return runs from the HV source's left terminal to the ground
+    # symbol. The previous coordinates started inside the driven electrode and
+    # ran right into blank canvas, so the declaration measured nothing.
     points_pdf_cm:
-      - [13.80, 12.20]
-      - [14.00, 12.20]
-      - [14.20, 12.20]
+      - [13.072, 11.628]
+      - [12.832, 11.628]
+      - [12.832, 11.778]
     clearance_pt: 1.0
-    text_allowlist: [grounded, source, return]
+    source_binding:
+      source_name: fig1_updated_agent_redraw_v1.tex
+      selector: 'figure-agent-path: panel-f-ground-return'
+    text_allowlist: [grounded]
 panels:
   - id: A
     caption: polymer repeat-unit schematic

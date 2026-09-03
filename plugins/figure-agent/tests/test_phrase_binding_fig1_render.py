@@ -15,6 +15,7 @@ sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "checks"))
 
 import check_label_path_proximity as proximity  # noqa: E402
 import phrase_binding  # noqa: E402
+import render_source_map  # noqa: E402
 from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
 
 # Declarations that bound nothing until the matcher stopped depending on the
@@ -128,3 +129,55 @@ def test_fig1_repaired_panel_e_allowlists_measure_the_drawn_element(
         widened = dict(check, clearance_pt=8.0)
         near = proximity.detect_label_path_proximity(words, page_size, [widened])
         assert {candidate["text"] for candidate in near} == reachable, check_id
+
+
+# Every repaired path declaration now names the drawn element it guards. Three of
+# them had drifted off it; the pair that had not drifted proves the gate is not
+# simply passing everything.
+BOUND_PATHS = (
+    "panel-e-grounded-substrate",
+    "panel-e-probe-shaft",
+    "panel-e-sample-transfer",
+    "panel-e-vs-meter-lead",
+    "panel-f-ground-return",
+)
+
+
+@pytest.mark.render
+def test_fig1_bound_paths_measure_the_element_they_name(compiled_fig1: Path) -> None:
+    payload = json.loads((compiled_fig1 / "label_path_proximity.json").read_text(encoding="utf-8"))
+
+    assert payload["live_binding"] == {
+        "checked": len(BOUND_PATHS),
+        "state": "passed",
+        "failures": [],
+    }
+
+
+@pytest.mark.render
+def test_fig1_declared_paths_lie_on_their_bound_element(compiled_fig1: Path) -> None:
+    source = (FIXTURE / "fig1_updated_agent_redraw_v1.tex").read_text(encoding="utf-8")
+    placement = render_source_map.recover_placement(
+        source,
+        render_source_map.pdf_ink_segments(compiled_fig1 / "fig1_updated_agent_redraw_v1.pdf"),
+    )
+    assert placement is not None
+    checks = proximity.load_label_path_proximity_checks(FIXTURE / "spec.yaml")
+    bound = {
+        check["id"]: check for check in checks if check.get("source_binding") is not None
+    }
+
+    assert sorted(bound) == list(BOUND_PATHS)
+    for check_id, check in bound.items():
+        selector = check["source_binding"]["selector"]
+        shapes = render_source_map.bound_element_shapes(
+            source,
+            proximity._selector_line(source, selector),
+            placement,
+        )
+        assert shapes, check_id
+        gap_cm, _ = render_source_map.path_gap_cm(
+            proximity._declared_path_points_cm(check),
+            shapes,
+        )
+        assert gap_cm * 72.0 / 2.54 <= proximity.SOURCE_BINDING_TOLERANCE_PT, check_id

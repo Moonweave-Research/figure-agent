@@ -580,3 +580,34 @@ def test_main_binds_an_allowlist_that_names_a_rendered_word(
 
     assert status == 0
     assert report["allowlist_binding"] == {"checked": 1, "state": "passed", "failures": []}
+
+
+def test_main_fails_closed_when_one_allowlist_word_is_never_drawn(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _allowlist_main(tmp_path, monkeypatch, "ESVM, probe")
+
+    assert status == 2
+    assert report["allowlist_binding"]["state"] == "failed"
+    assert report["allowlist_binding"]["checked"] == 1
+    assert report["allowlist_binding"]["failures"] == [
+        {
+            "check_id": "probe_shaft",
+            "kind": "allowlist_word_unmatched",
+            "words": ["probe"],
+            "nearest_words": ["ESVM", "head", "film"],
+            "detail": "probe (nearest rendered: ESVM, head, film)",
+        }
+    ]
+
+
+def test_main_keeps_a_fully_bound_multi_word_allowlist_report_unchanged(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _allowlist_main(tmp_path, monkeypatch, "ESVM, head")
+
+    assert status == 0
+    assert report["allowlist_binding"] == {"checked": 1, "state": "passed", "failures": []}
+    assert [candidate["text"] for candidate in report["candidates"]] == ["ESVM"]

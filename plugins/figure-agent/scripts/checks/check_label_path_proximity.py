@@ -19,30 +19,38 @@ from typing import Any
 import yaml
 
 if __package__:
+    from . import render_source_map
     from .check_visual_clash import extract_pdf_words_and_page
     from .phrase_binding import (
         NEAREST_WORD_LIMIT,
-        allowlist_matches,
         allowlist_unmatched_failure,
+        allowlist_word_unmatched_failure,
         binding_state,
         group_phrase_words,
         nearest_phrase_words,
         phrase_unmatched_failure,
+        unbound_allowlist_words,
     )
 else:  # Direct script execution keeps the checks directory on sys.path.
+    import render_source_map
     from check_visual_clash import extract_pdf_words_and_page
     from phrase_binding import (
         NEAREST_WORD_LIMIT,
-        allowlist_matches,
         allowlist_unmatched_failure,
+        allowlist_word_unmatched_failure,
         binding_state,
         group_phrase_words,
         nearest_phrase_words,
         phrase_unmatched_failure,
+        unbound_allowlist_words,
     )
 
 SCHEMA = "figure-agent.label-path-proximity.v1"
 CM_TO_PT = 72.0 / 2.54
+# A declared path traces its bound element rather than sitting on the stroke
+# centre, so the limit clears half the thickest fixture stroke and the rounding
+# the spec's centimetre coordinates carry.
+SOURCE_BINDING_TOLERANCE_PT = 2.0
 DEFAULT_MAX_PHRASE_GAP_PT = 6.0
 DEFAULT_MAX_PHRASE_Y_CENTER_DELTA_PT = 6.0
 ALLOWED_DEFECT_KINDS = frozenset(
@@ -226,6 +234,105 @@ def validate_live_bindings(
                     }
                 )
     return failures
+
+
+def _selector_line(source_text: str, selector: str) -> int:
+    return source_text[: source_text.index(selector)].count("\n") + 1
+
+
+def source_binding_geometry_failures(
+    checks: list[dict[str, Any]],
+    *,
+    spec_path: Path,
+    pdf_path: Path,
+) -> list[dict[str, str]]:
+    """Fail closed when a declared path has drifted off the element it binds.
+
+    The selector proves the bound element still exists; it says nothing about
+    where the render puts it, so a declaration whose coordinates had moved off
+    the drawn leader kept measuring the wrong stretch of the figure.  The
+    element is projected into PDF cm through a placement recovered from this
+    fixture and verified against this render: an unverifiable placement or a
+    selector that names no drawn operation is reported, never assumed clean.
+    """
+    fixture_dir = spec_path.parent.resolve()
+    placements: dict[str, render_source_map.Placement | None] = {}
+    sources: dict[str, str] = {}
+    failures: list[dict[str, str]] = []
+    ink: list[tuple[float, float, float, float]] | None = None
+    for check in sorted(checks, key=_check_sort_key):
+        binding = _source_binding(check)
+        if binding is None:
+            continue
+        source_name = binding["source_name"]
+        source_path = (fixture_dir / source_name).resolve()
+        if fixture_dir not in source_path.parents or not source_path.is_file():
+            continue
+        source_text = sources.setdefault(source_name, source_path.read_text(encoding="utf-8"))
+        if source_text.count(binding["selector"]) != 1:
+            continue
+        if source_name not in placements:
+            if ink is None:
+                ink = render_source_map.pdf_ink_segments(pdf_path)
+            placements[source_name] = render_source_map.recover_placement(source_text, ink)
+        placement = placements[source_name]
+        if placement is None:
+            failures.append(
+                {
+                    "check_id": str(check["id"]),
+                    "kind": "source_binding_unplaced",
+                    "detail": f"{source_name} (render and parsed source do not reconcile)",
+                }
+            )
+            continue
+        selector_line = _selector_line(source_text, binding["selector"])
+        shapes = render_source_map.bound_element_shapes(source_text, selector_line, placement)
+        if not shapes:
+            grounded = render_source_map.selector_names_an_operation(source_text, selector_line)
+            failures.append(
+                {
+                    "check_id": str(check["id"]),
+                    "kind": (
+                        "source_binding_unparsed" if grounded else "source_binding_ungrounded"
+                    ),
+                    "detail": (
+                        f"{binding['selector']} ("
+                        + (
+                            "bound operation carries no readable geometry"
+                            if grounded
+                            else "selector names no drawing operation"
+                        )
+                        + ")"
+                    ),
+                }
+            )
+            continue
+        gap_cm, (at_x, at_y) = render_source_map.path_gap_cm(
+            _declared_path_points_cm(check),
+            shapes,
+        )
+        gap_pt = gap_cm * CM_TO_PT
+        if gap_pt <= SOURCE_BINDING_TOLERANCE_PT:
+            continue
+        failures.append(
+            {
+                "check_id": str(check["id"]),
+                "kind": "source_binding_stale",
+                "detail": (
+                    f"{binding['selector']} (declared path {gap_pt:.2f} pt off the bound "
+                    f"element at pdf_cm [{at_x:.3f}, {at_y:.3f}]; "
+                    f"limit {SOURCE_BINDING_TOLERANCE_PT:.2f} pt)"
+                ),
+            }
+        )
+    return failures
+
+
+def _declared_path_points_cm(check: dict[str, Any]) -> list[tuple[float, float]]:
+    segments, _ = _path_segments(check)
+    points = [(segments[0][0] / CM_TO_PT, segments[0][1] / CM_TO_PT)]
+    points.extend((segment[2] / CM_TO_PT, segment[3] / CM_TO_PT) for segment in segments)
+    return points
 
 
 def _phrase_tolerances(check: dict[str, Any]) -> tuple[float, float]:
@@ -640,25 +747,28 @@ def allowlist_binding_failures(
     checks: list[dict[str, Any]],
     words: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Report every declared allowlist that names no rendered word.
+    """Report every declared allowlist word that names no rendered word.
 
     An allowlist selects only the words it names, so one that names nothing the
     render draws selects nothing: the proximity measure never runs and the
-    checker used to print OK.  The declaration is then a dead check, so it
-    fails here instead of passing silently.
+    checker used to print OK.  Resolving the list as a whole hid the same
+    defect one word at a time — a word the render never draws stopped selecting
+    anything while its neighbours kept the list alive — so each declared word
+    has to bind on its own.
     """
     failures: list[dict[str, Any]] = []
     for check in sorted(checks, key=_check_sort_key):
         allowlist = _text_allowlist(check)
-        if allowlist is None or allowlist_matches(words, allowlist):
+        if allowlist is None:
             continue
-        failures.append(
-            allowlist_unmatched_failure(
-                str(check["id"]),
-                allowlist,
-                _nearest_rendered_words(check, words),
-            )
-        )
+        unbound = unbound_allowlist_words(words, allowlist)
+        if not unbound:
+            continue
+        nearest = _nearest_rendered_words(check, words)
+        if len(unbound) == len(allowlist):
+            failures.append(allowlist_unmatched_failure(str(check["id"]), allowlist, nearest))
+            continue
+        failures.append(allowlist_word_unmatched_failure(str(check["id"]), unbound, nearest))
     return failures
 
 
@@ -757,6 +867,13 @@ def main() -> int:
             checks,
             spec_path=spec_path,
             words=words,
+        )
+        binding_failures.extend(
+            source_binding_geometry_failures(
+                checks,
+                spec_path=spec_path,
+                pdf_path=args.pdf,
+            )
         )
         unmatched_phrases = phrase_binding_failures(checks, words)
         phrase_count = declared_phrase_count(checks)
