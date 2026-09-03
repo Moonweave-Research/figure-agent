@@ -168,6 +168,7 @@ def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
         "candidates": [candidate],
         "checked": 1,
         "phrase_binding": {"checked": 0, "state": "not_declared", "failures": []},
+        "allowlist_binding": {"checked": 0, "state": "not_declared", "failures": []},
         "live_binding": {
             "checked": 0,
             "state": "not_declared",
@@ -504,3 +505,78 @@ def test_main_binds_a_subscripted_phrase_out_of_top_edge_order(
 
     assert status == 0
     assert report["phrase_binding"] == {"checked": 1, "state": "passed", "failures": []}
+
+
+_ALLOWLIST_SPEC = (
+    "label_path_proximity_checks:\n"
+    "  - id: probe_shaft\n"
+    "    kind: vertical_line\n"
+    "    role: probe_axis\n"
+    "    x_pdf_cm: 8.6\n"
+    "    y_range_pdf_cm: [10.6, 11.4]\n"
+    "    clearance_pt: 2.0\n"
+    "    text_allowlist: [{allowed}]\n"
+)
+
+
+def _allowlist_main(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    allowed: str,
+) -> tuple[int, dict]:
+    fixture = tmp_path / "demo"
+    build = fixture / "build"
+    build.mkdir(parents=True)
+    pdf = build / "demo.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n")
+    (fixture / "spec.yaml").write_text(_ALLOWLIST_SPEC.format(allowed=allowed), encoding="utf-8")
+    monkeypatch.setattr(
+        proximity,
+        "extract_pdf_words_and_page",
+        lambda _pdf: (
+            [
+                _word("ESVM", 241.874, 310.016, 249.335, 315.435),
+                _word("head", 251.273, 309.764, 264.516, 314.561),
+                _word("film", 190.0, 340.0, 205.0, 348.0),
+            ],
+            (400.0, 400.0),
+        ),
+    )
+    output = build / "label_path_proximity.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["check_label_path_proximity.py", str(pdf), "--json-output", str(output)],
+    )
+    status = proximity.main()
+    return status, json.loads(output.read_text(encoding="utf-8"))
+
+
+def test_main_fails_closed_when_a_declared_allowlist_binds_nothing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _allowlist_main(tmp_path, monkeypatch, "probe")
+
+    assert status == 2
+    assert report["allowlist_binding"]["state"] == "failed"
+    assert report["allowlist_binding"]["checked"] == 1
+    assert report["allowlist_binding"]["failures"] == [
+        {
+            "check_id": "probe_shaft",
+            "kind": "allowlist_unmatched",
+            "words": ["probe"],
+            "nearest_words": ["ESVM", "head", "film"],
+            "detail": "probe (nearest rendered: ESVM, head, film)",
+        }
+    ]
+
+
+def test_main_binds_an_allowlist_that_names_a_rendered_word(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _allowlist_main(tmp_path, monkeypatch, "ESVM")
+
+    assert status == 0
+    assert report["allowlist_binding"] == {"checked": 1, "state": "passed", "failures": []}
