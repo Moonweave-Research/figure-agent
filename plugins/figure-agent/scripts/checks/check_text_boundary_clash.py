@@ -17,6 +17,12 @@ from typing import Any
 
 import yaml
 from check_visual_clash import extract_pdf_words_and_page
+from phrase_binding import (
+    group_phrase_words,
+    nearest_phrase_words,
+    phrase_binding_state,
+    phrase_unmatched_failure,
+)
 
 SCHEMA = "figure-agent.text-boundary-clash.v1"
 CM_TO_PT = 72.0 / 2.54
@@ -151,23 +157,6 @@ def _word_sort_key(word: dict[str, Any]) -> tuple[float, float, float, float, st
     )
 
 
-def _word_center_y(word: dict[str, Any]) -> float:
-    return (float(word["ymin"]) + float(word["ymax"])) / 2.0
-
-
-def _same_phrase_line(
-    left: dict[str, Any],
-    right: dict[str, Any],
-    max_center_delta: float,
-) -> bool:
-    return _ranges_overlap(
-        float(left["ymin"]),
-        float(left["ymax"]),
-        float(right["ymin"]),
-        float(right["ymax"]),
-    ) or abs(_word_center_y(left) - _word_center_y(right)) <= max_center_delta
-
-
 def _check_sort_key(check: dict[str, Any]) -> tuple[str, str]:
     return (str(check.get("id", "")), str(check.get("kind", "")))
 
@@ -261,77 +250,6 @@ def _base_candidate(
         "boundary_pt": boundary_pt,
         "clearance_pt": round(clearance_pt, 6),
     }
-
-
-def _phrase_word(
-    span: list[dict[str, Any]],
-    *,
-    phrase_id: str,
-    phrase_words: list[str],
-) -> dict[str, Any]:
-    return {
-        "text": " ".join(phrase_words),
-        "phrase_id": phrase_id,
-        "words": phrase_words,
-        "text_source": "text_phrases",
-        "xmin": min(float(word["xmin"]) for word in span),
-        "ymin": min(float(word["ymin"]) for word in span),
-        "xmax": max(float(word["xmax"]) for word in span),
-        "ymax": max(float(word["ymax"]) for word in span),
-    }
-
-
-def _group_phrase_words(
-    words: list[dict[str, Any]],
-    phrase: dict[str, Any],
-    *,
-    max_gap: float,
-    max_center_delta: float,
-) -> list[dict[str, Any]]:
-    sorted_words = sorted(words, key=_word_sort_key)
-    phrase_words = phrase["words"]
-    matches: list[dict[str, Any]] = []
-    seen_spans: set[tuple[tuple[float, float, float, float], ...]] = set()
-    for start_index, first_word in enumerate(sorted_words):
-        if str(first_word.get("text", "")).strip() != phrase_words[0]:
-            continue
-        span = [first_word]
-        search_after = start_index + 1
-        for expected_text in phrase_words[1:]:
-            previous = span[-1]
-            next_word = None
-            for candidate_index, candidate in enumerate(
-                sorted_words[search_after:],
-                start=search_after,
-            ):
-                if float(candidate["xmin"]) < float(previous["xmax"]):
-                    continue
-                if float(candidate["xmin"]) - float(previous["xmax"]) > max_gap:
-                    break
-                if str(candidate.get("text", "")).strip() != expected_text:
-                    continue
-                if not _same_phrase_line(previous, candidate, max_center_delta):
-                    continue
-                next_word = candidate
-                search_after = candidate_index + 1
-                break
-            if next_word is None:
-                break
-            span.append(next_word)
-        if len(span) != len(phrase_words):
-            continue
-        span_key = tuple(tuple(_word_bbox(word)) for word in span)
-        if span_key in seen_spans:
-            continue
-        seen_spans.add(span_key)
-        matches.append(
-            _phrase_word(
-                span,
-                phrase_id=str(phrase["id"]),
-                phrase_words=list(phrase_words),
-            )
-        )
-    return matches
 
 
 def _vertical_candidate(check: dict[str, Any], word: dict[str, Any]) -> dict[str, Any] | None:
@@ -444,7 +362,7 @@ def _rect_candidates(
         return candidates
     max_gap, max_center_delta = _phrase_tolerances(check)
     for phrase in phrases:
-        for phrase_word in _group_phrase_words(
+        for phrase_word in group_phrase_words(
             words,
             phrase,
             max_gap=max_gap,
@@ -460,16 +378,59 @@ def _rect_candidates(
     return candidates
 
 
+def phrase_binding_failures(
+    checks: list[dict[str, Any]],
+    words: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Report every declared phrase that binds no rendered text.
+
+    A phrase that matches nothing yields no candidate, which the checker used
+    to print as OK.  The declaration is then a dead check, so it fails here
+    instead of passing silently.
+    """
+    failures: list[dict[str, Any]] = []
+    for check in sorted(checks, key=_check_sort_key):
+        max_gap, max_center_delta = _phrase_tolerances(check)
+        for phrase in _text_phrases(check):
+            if group_phrase_words(
+                words,
+                phrase,
+                max_gap=max_gap,
+                max_center_delta=max_center_delta,
+            ):
+                continue
+            failures.append(
+                phrase_unmatched_failure(
+                    str(check["id"]),
+                    phrase,
+                    nearest_phrase_words(
+                        words,
+                        phrase,
+                        max_gap=max_gap,
+                        max_center_delta=max_center_delta,
+                    ),
+                )
+            )
+    return failures
+
+
+def declared_phrase_count(checks: list[dict[str, Any]]) -> int:
+    return sum(len(_text_phrases(check)) for check in checks)
+
+
 def text_boundary_clash_payload(
     pdf_path: Path,
     candidates: list[dict[str, Any]],
     *,
     checked: int,
+    phrase_binding_checked: int = 0,
+    phrase_binding_failures: list[dict[str, Any]] | None = None,
     spec_path: Path | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
     resolved_spec_path = spec_path or _infer_spec_path(pdf_path)
+    binding_failures = list(phrase_binding_failures or [])
     return {
         "schema": SCHEMA,
         "compile_run_id": os.environ.get("FIGURE_AGENT_COMPILE_RUN_ID"),
@@ -480,6 +441,11 @@ def text_boundary_clash_payload(
         "source": "spec.yaml:text_boundary_checks",
         "candidates": candidates,
         "checked": checked,
+        "phrase_binding": {
+            "checked": phrase_binding_checked,
+            "state": phrase_binding_state(phrase_binding_checked, binding_failures),
+            "failures": binding_failures,
+        },
         "total": len(candidates),
     }
 
@@ -517,6 +483,8 @@ def main() -> int:
         spec_path = args.spec or _infer_spec_path(args.pdf)
         checks = load_text_boundary_checks(spec_path)
         words, page_size_pt = extract_pdf_words_and_page(args.pdf)
+        binding_failures = phrase_binding_failures(checks, words)
+        phrase_count = declared_phrase_count(checks)
         candidates = detect_text_boundary_clashes(words, page_size_pt, checks)
     except TextBoundaryClashError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -526,10 +494,22 @@ def main() -> int:
         args.pdf,
         candidates,
         checked=len(checks),
+        phrase_binding_checked=phrase_count,
+        phrase_binding_failures=binding_failures,
         spec_path=spec_path,
     )
     if args.json_output is not None:
         _write_json(args.json_output, payload)
+
+    if binding_failures:
+        for failure in binding_failures:
+            print(
+                "ERROR text_boundary_phrase: "
+                f"{failure['check_id']}.{failure['phrase_id']} {failure['kind']} "
+                f"({failure['detail']})",
+                file=sys.stderr,
+            )
+        return 2
 
     if not candidates:
         print(f"OK: no text-boundary clashes found in {args.pdf.name} ({len(words)} words)")
@@ -538,7 +518,7 @@ def main() -> int:
     for candidate in candidates:
         print(
             "WARN text_boundary: "
-            f"{candidate['id']} kind={candidate['kind']} text=\"{candidate['text']}\" "
+            f'{candidate["id"]} kind={candidate["kind"]} text="{candidate["text"]}" '
             f"boundary={candidate['boundary_id']}"
         )
     return 1 if args.strict else 0

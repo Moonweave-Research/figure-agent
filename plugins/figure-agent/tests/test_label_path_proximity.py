@@ -167,6 +167,7 @@ def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
         "source": "spec.yaml:label_path_proximity_checks",
         "candidates": [candidate],
         "checked": 1,
+        "phrase_binding": {"checked": 0, "state": "not_declared", "failures": []},
         "live_binding": {
             "checked": 0,
             "state": "not_declared",
@@ -422,3 +423,84 @@ def test_smoke_trap_demo_band_body_checks_do_not_flag_endpoint_labels() -> None:
     ]
 
     assert proximity.detect_label_path_proximity(words, (271.061, 267.747), checks) == []
+
+
+_PHRASE_SPEC = (
+    "label_path_proximity_checks:\n"
+    "  - id: leader\n"
+    "    kind: vertical_line\n"
+    "    role: leader_line\n"
+    "    x_pdf_cm: 5.08\n"
+    "    y_range_pdf_cm: [0.0, 5.08]\n"
+    "    clearance_pt: 2.0\n"
+    "    text_phrases:\n"
+    "      - id: vs_meter\n"
+    "        words: [Vs, {second}]\n"
+)
+
+
+def _phrase_main(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    second_word: str,
+) -> tuple[int, dict]:
+    fixture = tmp_path / "demo"
+    build = fixture / "build"
+    build.mkdir(parents=True)
+    pdf = build / "demo.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n")
+    (fixture / "spec.yaml").write_text(
+        _PHRASE_SPEC.format(second=second_word), encoding="utf-8"
+    )
+    # "meter" renders above "Vs" by a quarter point: the subscripted Vs run
+    # sorts second on the top edge even though it reads first.
+    monkeypatch.setattr(
+        proximity,
+        "extract_pdf_words_and_page",
+        lambda _pdf: (
+            [
+                _word("meter", 251.273, 309.764, 264.516, 314.561),
+                _word("Vs", 241.874, 310.016, 249.335, 315.435),
+            ],
+            (400.0, 400.0),
+        ),
+    )
+    output = build / "label_path_proximity.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["check_label_path_proximity.py", str(pdf), "--json-output", str(output)],
+    )
+    status = proximity.main()
+    return status, json.loads(output.read_text(encoding="utf-8"))
+
+
+def test_main_fails_closed_when_a_declared_phrase_binds_nothing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _phrase_main(tmp_path, monkeypatch, "gauge")
+
+    assert status == 2
+    assert report["phrase_binding"]["state"] == "failed"
+    assert report["phrase_binding"]["checked"] == 1
+    assert report["phrase_binding"]["failures"] == [
+        {
+            "check_id": "leader",
+            "kind": "phrase_unmatched",
+            "phrase_id": "vs_meter",
+            "words": ["Vs", "gauge"],
+            "nearest_words": ["Vs", "meter"],
+            "detail": "Vs gauge (nearest rendered: Vs, meter)",
+        }
+    ]
+
+
+def test_main_binds_a_subscripted_phrase_out_of_top_edge_order(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _phrase_main(tmp_path, monkeypatch, "meter")
+
+    assert status == 0
+    assert report["phrase_binding"] == {"checked": 1, "state": "passed", "failures": []}

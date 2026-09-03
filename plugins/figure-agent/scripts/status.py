@@ -964,6 +964,17 @@ def _silhouette_morphology_summary(
     }
 
 
+def _declared_phrase_count(checks: list[Any]) -> int:
+    total = 0
+    for check in checks:
+        if not isinstance(check, dict):
+            continue
+        phrases = check.get("text_phrases")
+        if isinstance(phrases, list):
+            total += len(phrases)
+    return total
+
+
 def _declared_check_coverage_summary(
     path: Path,
     example_dir: Path,
@@ -1012,6 +1023,30 @@ def _declared_check_coverage_summary(
         or len(candidates) != total
     ):
         return {"state": "invalid", "path": display_path, "declared": declared}
+
+    # A declared phrase that binds no rendered word measures nothing, so the
+    # report must prove every declared phrase resolved.  Absence of the block
+    # on a spec that declares phrases is a stale report, not a clean one.
+    declared_phrases = _declared_phrase_count(checks)
+    phrase_binding = payload.get("phrase_binding")
+    phrase_binding_state = "not_applicable"
+    phrase_binding_checked = 0
+    if declared_phrases or phrase_binding is not None:
+        if not isinstance(phrase_binding, dict):
+            return {"state": "invalid", "path": display_path, "declared": declared}
+        phrase_binding_state = phrase_binding.get("state")
+        phrase_binding_checked = phrase_binding.get("checked")
+        phrase_failures = phrase_binding.get("failures")
+        if (
+            phrase_binding_state not in {"not_declared", "passed", "failed"}
+            or not isinstance(phrase_binding_checked, int)
+            or isinstance(phrase_binding_checked, bool)
+            or not isinstance(phrase_failures, list)
+            or (phrase_binding_state == "failed") != bool(phrase_failures)
+            or phrase_binding_checked != declared_phrases
+            or (phrase_binding_state == "not_declared") != (phrase_binding_checked == 0)
+        ):
+            return {"state": "invalid", "path": display_path, "declared": declared}
 
     live_binding_state = "not_applicable"
     live_binding_checked = 0
@@ -1065,7 +1100,7 @@ def _declared_check_coverage_summary(
 
     if declared == 0 or checked != declared:
         state = "incomplete"
-    elif total or live_binding_state == "failed":
+    elif total or live_binding_state == "failed" or phrase_binding_state == "failed":
         state = "needs_action"
     else:
         state = "passed"
@@ -1077,6 +1112,9 @@ def _declared_check_coverage_summary(
         "declared": declared,
         "violation_count": total,
     }
+    if declared_phrases or phrase_binding is not None:
+        summary["phrase_binding_checked"] = phrase_binding_checked
+        summary["phrase_binding_state"] = phrase_binding_state
     if validate_live_binding:
         summary["live_binding_checked"] = live_binding_checked
         summary["live_binding_state"] = live_binding_state

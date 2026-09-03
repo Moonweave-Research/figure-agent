@@ -190,21 +190,6 @@ label_path_proximity_checks:
     text_phrases:
       - id: thermal-escape
         words: [thermal, escape]
-  - id: panel-d-transient-decay
-    kind: polyline
-    role: panel_d_trap_mediated_decay
-    points_pdf_cm:
-      - [1.10, 14.29]
-      - [1.63, 14.60]
-      - [2.00, 15.10]
-      - [2.66, 15.26]
-      - [3.30, 15.41]
-      - [3.82, 15.44]
-      - [4.30, 15.45]
-    clearance_pt: 1.0
-    text_phrases:
-      - id: trap-mediated-decay
-        words: [trap-mediated, decay]
   - id: panel-e-probe-shaft
     kind: vertical_line
     role: panel_e_probe_axis
