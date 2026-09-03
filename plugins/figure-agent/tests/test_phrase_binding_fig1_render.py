@@ -13,6 +13,7 @@ FIXTURE = PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1"
 
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts" / "checks"))
 
+import check_label_path_proximity as proximity  # noqa: E402
 import phrase_binding  # noqa: E402
 from check_visual_clash import extract_pdf_words_and_page  # noqa: E402
 
@@ -81,3 +82,49 @@ def test_fig1_no_longer_declares_the_off_page_panel_d_decay_path() -> None:
     assert "panel-d-transient-decay" not in {
         item["id"] for item in spec["label_path_proximity_checks"]
     }
+
+
+@pytest.mark.render
+def test_fig1_binds_every_declared_allowlist(compiled_fig1: Path) -> None:
+    for report_name, checked, state in (
+        ("text_boundary_clash.json", 0, "not_declared"),
+        ("label_path_proximity.json", 4, "passed"),
+    ):
+        payload = json.loads((compiled_fig1 / report_name).read_text(encoding="utf-8"))
+        assert payload["allowlist_binding"] == {
+            "checked": checked,
+            "state": state,
+            "failures": [],
+        }, report_name
+
+
+# The two Panel E declarations whose allowlist named words the render never drew.
+# Each pair is the check's repaired allowlist and the words its path reaches once
+# the probe clearance is widened to 8 pt: at the declared 1 pt nothing is near.
+REPAIRED_PANEL_E = (
+    ("panel-e-probe-shaft", ["ESVM", "head"], {"ESVM", "head"}),
+    (
+        "panel-e-sample-transfer",
+        ["manual", "sample", "transfer", "film"],
+        {"film", "manual", "sample"},
+    ),
+)
+
+
+@pytest.mark.render
+def test_fig1_repaired_panel_e_allowlists_measure_the_drawn_element(
+    compiled_fig1: Path,
+) -> None:
+    words, page_size = extract_pdf_words_and_page(
+        compiled_fig1 / "fig1_updated_agent_redraw_v1.pdf"
+    )
+    spec = yaml.safe_load((FIXTURE / "spec.yaml").read_text(encoding="utf-8"))
+
+    for check_id, allowlist, reachable in REPAIRED_PANEL_E:
+        check = next(item for item in spec["label_path_proximity_checks"] if item["id"] == check_id)
+        assert check["text_allowlist"] == allowlist
+        assert proximity.allowlist_binding_failures([check], words) == []
+        assert proximity.detect_label_path_proximity(words, page_size, [check]) == []
+        widened = dict(check, clearance_pt=8.0)
+        near = proximity.detect_label_path_proximity(words, page_size, [widened])
+        assert {candidate["text"] for candidate in near} == reachable, check_id
