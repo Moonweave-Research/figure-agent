@@ -18,20 +18,21 @@ required_objects:
   - panel_c.correspondence
   - panel_d.transient_current
   - panel_d.constant_voltage_condition
-  - panel_d.low_n_power_law
-  - panel_d.high_n_power_law
+  - panel_d.measured_power_law
+  - panel_d.single_relaxation_reference
   - panel_e.corona_charging_state
   - panel_e.manual_transfer
   - panel_e.ispd_probe
   - panel_e.surface_potential_decay
   - panel_e.raw_to_derived_transform
   - panel_e.derived_trap_distribution
+  - panel_f.open_clip_terminal
   - panel_f.mechanical_jig
   - panel_f.cantilever
   - panel_f.electrode
   - panel_f.voltage_source
   - panel_f.ground_reference
-  - panel_f.coulomb_force
+  - panel_f.observed_bend_direction
 forbidden_implications:
   - panel_a.unique_constitutional_repeat
   - panel_a.covalent_crosslink_network
@@ -53,10 +54,10 @@ protected_relations:
   - shallow_and_deep_traps_share_one_energy_orientation
   - real_space_trap_populations_correspond_to_energy_diagram_states
   - transient_current_decays_under_constant_voltage
-  - high_n_power_law_decays_faster_than_low_n_power_law
+  - measured_power_law_has_no_single_relaxation_cutoff
   - corona_charged_sample_is_manually_transferred_to_noncontact_ispd_measurement
   - surface_potential_decay_is_transformed_into_derived_trap_distribution
-  - tau_d_remains_energy_domain_interval_between_shallow_and_deep_peaks
+  - derived_trap_distribution_is_one_continuous_population_without_a_drawn_ratio
   - ispd_probe_remains_separate_from_sample_surface
   - mechanical_jig_holds_cantilever
   - cantilever_separated_from_electrode_by_air_gap
@@ -127,12 +128,12 @@ semantic_legibility:
     - object_id: panel_d.constant_voltage_condition
       declared_role: operating_condition
       forbidden_readings: [measured_curve]
-    - object_id: panel_d.low_n_power_law
-      declared_role: qualitative_low_exponent_decay
-      forbidden_readings: [fitted_numeric_exponent]
-    - object_id: panel_d.high_n_power_law
-      declared_role: qualitative_high_exponent_decay
-      forbidden_readings: [fitted_numeric_exponent]
+    - object_id: panel_d.measured_power_law
+      declared_role: qualitative_measured_power_law_decay
+      forbidden_readings: [fitted_numeric_exponent, second_material_comparison]
+    - object_id: panel_d.single_relaxation_reference
+      declared_role: idealised_single_relaxation_model_reference
+      forbidden_readings: [measured_control, second_material_comparison]
     - object_id: panel_e.corona_charging_state
       declared_role: gridless_two_terminal_charging_state
       forbidden_readings: [kelvin_probe_station, grounded_charging_stage]
@@ -154,6 +155,9 @@ semantic_legibility:
     - object_id: panel_f.mechanical_jig
       declared_role: mechanical_fixture
       forbidden_readings: [electrical_contact]
+    - object_id: panel_f.open_clip_terminal
+      declared_role: unconnected_clip_terminal
+      forbidden_readings: [connected_terminal, ground_reference]
     - object_id: panel_f.cantilever
       declared_role: mechanical_member
       forbidden_readings: [grounded_conductor]
@@ -166,9 +170,9 @@ semantic_legibility:
     - object_id: panel_f.ground_reference
       declared_role: source_return_ground
       forbidden_readings: [sample_ground]
-    - object_id: panel_f.coulomb_force
-      declared_role: directed_force
-      forbidden_readings: [annotation_leader]
+    - object_id: panel_f.observed_bend_direction
+      declared_role: directed_observation
+      forbidden_readings: [annotation_leader, established_mechanism_name]
   visible_connectors:
     - connector_id: panel_a.s8_enters_inverse_vulcanization
       from_object: panel_a.elemental_s8
@@ -220,15 +224,15 @@ semantic_legibility:
       to_object: panel_d.transient_current
       declared_role: operating_condition
       render_style: condition_label
-    - connector_id: panel_d.low_n_trace_is_current_response
+    - connector_id: panel_d.measured_trace_is_current_response
       from_object: panel_d.transient_current
-      to_object: panel_d.low_n_power_law
+      to_object: panel_d.measured_power_law
       declared_role: qualitative_response_trace
       render_style: response_trace
-    - connector_id: panel_d.high_n_trace_is_current_response
+    - connector_id: panel_d.reference_trace_contrasts_current_response
       from_object: panel_d.transient_current
-      to_object: panel_d.high_n_power_law
-      declared_role: qualitative_response_trace
+      to_object: panel_d.single_relaxation_reference
+      declared_role: idealised_model_contrast
       render_style: response_trace
     - connector_id: panel_e.charging_state_transfers_to_measurement_state
       from_object: panel_e.corona_charging_state
@@ -270,10 +274,10 @@ semantic_legibility:
       to_object: panel_f.ground_reference
       declared_role: grounded_source_return
       render_style: electrical_ground_return
-    - connector_id: panel_f.force_acts_on_cantilever
-      from_object: panel_f.coulomb_force
+    - connector_id: panel_f.observed_bend_acts_on_cantilever
+      from_object: panel_f.observed_bend_direction
       to_object: panel_f.cantilever
-      declared_role: force_direction
+      declared_role: observed_direction
       render_style: force_directional
       epistemic_status: derived
   forbidden_connectors:
@@ -294,8 +298,8 @@ semantic_legibility:
       owner: panel_b.s85_sample
     - label_id: panel_e.derive_label
       owner: panel_e.raw_to_derived_transform
-    - label_id: panel_e.tau_d_label
-      owner: panel_e.derived_trap_distribution
+    - label_id: panel_f.hypothesised_charge_label
+      owner: panel_f.cantilever
     - label_id: panel_f.air_gap_label
       owner: panel_f.cantilever
     - label_id: panel_f.applied_voltage_label

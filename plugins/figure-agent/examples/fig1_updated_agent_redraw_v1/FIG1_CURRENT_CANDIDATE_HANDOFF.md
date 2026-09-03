@@ -33,7 +33,7 @@ The reader should move from **what the material is** (A), through **how sulfur c
 
 ### A — Sulfur-rich poly(S-r-DIB)
 
-Show elemental S8 and 1,3-DIB entering thermally driven inverse vulcanization and yielding a **representative bis(thiocumyl) motif** with variable polysulfide rank `S_x`/`S_y`.
+Show elemental S8 and 1,3-DIB entering thermally driven inverse vulcanization and yielding a **representative DIB-linked repeat unit** with variable polysulfide rank `S_x`/`S_y`. The drawn S-C(CH3)2-Ar connectivity stands; the name bis(thiocumyl) appears in no manuscript document and must not be used.
 
 - S8 is a reactant, not a decorative icon; the triangle means heat.
 - Draw the DIB aromatic ring as aromatic and the product as a representative primary-structure motif.
@@ -62,8 +62,8 @@ Use two equal-status subviews: real-space amorphous polymer host at left and an 
 Show a constant-voltage MIM measurement context followed by a qualitative log--log transient-current plot.
 
 - Axes are `\log I` and `\log t`; the condition is `V = V_0`.
-- Both traces are qualitative power-law decays, `I(t) \sim t^{-n}`.
-- The high-`n` trace decays faster than the low-`n` trace. Do not attach fitted numeric exponents, measured points, or an unsupported dielectric-relaxation model.
+- The measured trace is a qualitative power-law decay, `I(t) \sim t^{-n}`, labelled with relaxation-time language rather than trap language.
+- Its comparison partner is an idealised single-relaxation (Debye) model reference, drawn with no straight-line regime and named as a model reference, not a measured control. Do not restore the low-`n`/high-`n` two-material contrast, and do not attach fitted numeric exponents, a fit window, measured points, or environment conditions.
 
 ### E — ISPD trap distribution
 
@@ -72,16 +72,16 @@ This is a staged measurement-to-derivation story, not a generic Kelvin-probe car
 1. Corona charge the sample with the gridless two-terminal high-voltage setup. Do not add an earth-ground symbol or grid to that charging stage.
 2. Manually relocate the same specimen to the non-contact ESVM measurement stage. The transfer is manual; do not depict an automated motion/conveyor system.
 3. Ground the conductive backing/substrate only at the measurement stage, and show the ESVM head plus `V_s` meter acquiring `V_s(t)`.
-4. Use the `derive` lane to map the surface-potential decay to qualitative `g(E_t)` shallow/deep distributions. `\tau_d` belongs between the two energy-domain distribution peaks, not on the `V_s(t)` time axis; give it no invented numeric value or unit.
+4. Use the `derive` lane to map the surface-potential decay to one continuous qualitative `g(E_t)` distribution with shallower and deeper zones shown by shading only. Draw no `\tau_d` span: a relaxation time has no place on an energy axis. `g(E_t)` and the Panel C energy diagram are the same quantity with the axes swapped and must agree.
 
-### F — Floating Coulomb response
+### F — Floating-clip bending response
 
-Show a mechanically clamped polymer cantilever facing a driven electrode across an air gap.
+Show a polymer cantilever held by a floating clip and facing a driven electrode across an air gap.
 
-- The cantilever and sample are electrically floating. The clamp is mechanical, not an electrical contact.
+- The cantilever and sample are electrically floating. The clip's own terminal is drawn open; it is not an electrical contact.
 - The voltage source drives the electrode and its **source return** is grounded. That ground does not extend to the sample, cantilever, jig, or a second hidden contact.
-- Trapped charge remains inside the film/cantilever silhouette.
-- Make Coulomb repulsion (red) point away from the driven electrode. A distinct, subordinate Maxwell-attraction baseline can point toward the electrode, but it must not be confused with the Coulomb-result arrow or occupy its label lane.
+- The hypothesised trapped charge remains inside the film/cantilever silhouette and carries an explicit hypothesis qualifier.
+- The panel asserts the observation only: make the red result arrow point away from the driven electrode and label it as the observed bend, not as a named mechanism. A distinct, subordinate Maxwell-stress baseline can point toward the electrode, but it must not be confused with the result arrow or occupy its label lane.
 - The air-gap bracket belongs to the cantilever--electrode separation, and the voltage label belongs to the compact source, not to the ground symbol.
 - The source-return topology is preserved but its visual clarity remains a named human-review item. Improve the label/layout only if the distinction between source-return ground and floating sample becomes clearer; never solve it by grounding the cantilever.
 

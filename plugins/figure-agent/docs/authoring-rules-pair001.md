@@ -43,6 +43,14 @@ rules:
       locator: "Fig1 Panel E deep review, measurement-to-derivation repair (2026-07-20)"
       quote: "Bind the derive arrow to both the measured V_s(t) plot and the derived g(E_t) region."
     transfer_policy: use_as_constraint
+  - id: pair001.relaxation-time-not-on-an-energy-axis
+    category: physics_semantics
+    rule: "Do not draw tau_d, or any other relaxation-time symbol, on a g(E_t) energy axis: a time plotted on an energy axis is a dimensional error. The fig1 overview no longer draws the tau_d span at all. If a schematic interval between two energies is genuinely needed, name it in energy units and bind its endpoints to declared energies, never to a decay time, and do not add numeric ticks, point markers, a value, or a unit that would turn the schematic interval into unsupported quantitative data."
+    source:
+      kind: iteration_comment
+      locator: "Fig1 alt_260805/DECISION_BRIEF.md row 11; author decision 2026-09-03"
+      quote: "a time plotted on an energy axis is a dimensional error"
+    transfer_policy: use_as_constraint
   - id: pair001.tau-d-energy-domain-exception
     category: physics_semantics
     rule: "For this paper-local overview, preserve tau_d as the qualitative energy-domain interval between the shallow and deep g(E_t) peak positions. Keep its endpoints bound to those two peak positions, but do not add numeric ticks, point markers, a value, or a unit that would turn the schematic interval into unsupported quantitative data. Do not move it onto the V_s(t) time axis merely because tau conventionally denotes time. Treat this as a source-bound exception, not a transferable default for unrelated ISPD figures."
@@ -51,6 +59,9 @@ rules:
       locator: "fig1_overview_v5f_art_direction_001_vault/briefing.md sections 8 and 13.6 E-9"
       quote: "tau_d annotation - energy-domain interval between Gaussian peaks"
     transfer_policy: use_as_constraint
+    lifecycle: superseded
+    superseded_by: pair001.relaxation-time-not-on-an-energy-axis
+    superseded_reason: The author removed the tau_d span on 2026-09-03; a relaxation time on an energy axis is a dimensional error, and the two-peak endpoints it was bound to no longer exist.
   - id: pair001.repeated-state-sequence-single-source-geometry
     category: panel_layout
     rule: "When one specimen is drawn at several successive states, generate every cell frame and every internal mark from a single declaration parameterised by state. Hand-kept coordinate sets drift: the marks move between states and quietly turn 'the same specimen later' into 'three different samples'. Only the state variable (occupancy, cue strength) may differ per cell."

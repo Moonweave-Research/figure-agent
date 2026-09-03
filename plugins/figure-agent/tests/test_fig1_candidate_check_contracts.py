@@ -34,7 +34,7 @@ def test_fig1_candidate_declares_high_risk_boundary_and_path_checks() -> None:
         "panel-e-vs-meter-lead",
         "panel-e-sample-transfer",
         "panel-e-grounded-substrate",
-        "panel-f-coulomb-force",
+        "panel-f-observed-bend-arrow",
         "panel-f-ground-return",
     } <= path_ids
     assert len(boundary_ids) > 0
@@ -47,9 +47,7 @@ def test_fig1_candidate_briefing_and_semantic_assertion_ground_physics() -> None
 
     assert "## Physics invariants" in briefing
     assert spec["semantic_assertions"]
-    assert spec["semantic_assertions"][0]["id"] == (
-        "panel-c-mobility-edge-left-of-thermal-escape"
-    )
+    assert spec["semantic_assertions"][0]["id"] == ("panel-c-mobility-edge-left-of-thermal-escape")
 
 
 def test_fig1_current_candidate_pointer_binds_detector_evidence() -> None:

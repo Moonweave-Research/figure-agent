@@ -92,9 +92,10 @@ def test_redraw_handoff_names_the_promoted_root_without_claiming_acceptance() ->
     assert pointer["source_path"] == "fig1_updated_agent_redraw_v1.tex"
     assert pointer["promotion_state"] == "promoted_to_canonical_root"
     assert pointer["human_gate"] == "pending"
-    assert pointer["source_sha256"] == "sha256:" + hashlib.sha256(
-        REPAIRED_SOURCE.read_bytes()
-    ).hexdigest()
+    assert (
+        pointer["source_sha256"]
+        == "sha256:" + hashlib.sha256(REPAIRED_SOURCE.read_bytes()).hexdigest()
+    )
 
 
 def test_review_lineage_distinguishes_promoted_root_from_preserved_history() -> None:
@@ -127,7 +128,7 @@ def test_redraw_is_independent_and_keeps_floating_panel_f_topology() -> None:
     assert "sample and cantilever remain electrically floating" in source
 
     result = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
-    assert result["summary"]["object_role_count"] == 31
+    assert result["summary"]["object_role_count"] == 32
     assert result["summary"]["visible_connector_count"] == 21
     assert result["summary"]["label_ownership_count"] == 8
     assert result["summary"]["floating_object_count"] == 1
@@ -139,17 +140,17 @@ def test_redraw_semantic_contract_binds_c_d_e_relations() -> None:
 
     protected = set(result["protected_relations"])
     assert "real_space_trap_populations_correspond_to_energy_diagram_states" in protected
-    assert "high_n_power_law_decays_faster_than_low_n_power_law" in protected
+    assert "measured_power_law_has_no_single_relaxation_cutoff" in protected
     assert (
-        "corona_charged_sample_is_manually_transferred_to_noncontact_ispd_measurement"
-        in protected
+        "corona_charged_sample_is_manually_transferred_to_noncontact_ispd_measurement" in protected
     )
     assert "surface_potential_decay_is_transformed_into_derived_trap_distribution" in protected
-    assert "tau_d_remains_energy_domain_interval_between_shallow_and_deep_peaks" in protected
+    assert (
+        "derived_trap_distribution_is_one_continuous_population_without_a_drawn_ratio" in protected
+    )
 
     connectors = {
-        item["connector_id"]: item
-        for item in result["semantic_legibility"]["visible_connectors"]
+        item["connector_id"]: item for item in result["semantic_legibility"]["visible_connectors"]
     }
     assert (
         connectors["panel_c.shallow_population_corresponds_to_energy_state"]["render_style"]
@@ -253,9 +254,9 @@ def test_bound_authoring_prompt_carries_project_cantilever_orientation_rule() ->
     assert "Do not solve clearance by forcing an equal-cell grid" in prompt
     assert "polymer_paper_project.poly-s-dib-bis-thiocumyl-motif" in prompt
     assert "Ar-C(CH3)2-Sx" in prompt
-    assert "Locked invariant [E:tau-d-energy-domain]" in prompt
-    assert "pair001.tau-d-energy-domain-exception" in prompt
-    assert "Do not move it onto the V_s(t) time axis" in prompt
+    assert "Locked invariant [E:no-relaxation-time-on-the-energy-axis]" in prompt
+    assert "pair001.relaxation-time-not-on-an-energy-axis" in prompt
+    assert "a time plotted on an energy axis is a dimensional error" in prompt
     for panel_id in "ABCDEF":
         assert f"Add exactly one canonical marker [% Panel {panel_id}]" in prompt
 
@@ -265,7 +266,8 @@ def test_repaired_panel_a_uses_connected_bis_thiocumyl_chemistry() -> None:
     panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
 
     assert panel_a.count("bis-thiocumyl junction: Ar-C(CH3)2-S_x") == 2
-    assert "representative bis(thiocumyl) motif" in panel_a
+    assert "representative DIB-linked repeat unit" in panel_a
+    assert "{representative bis(thiocumyl) motif}" not in panel_a
     assert "linear repeat unit" not in panel_a
     assert "circle, draw=cAmber" not in panel_a
     assert "chemically continuous bond to left polysulfide" in panel_a
@@ -278,7 +280,7 @@ def test_repaired_panel_a_uses_skeletal_junctions_and_declared_continuations() -
 
     assert "tetrahedral projection; avoid orthogonal cross" in panel_a.lower()
     assert panel_a.count("polymer continuation bond") == 2
-    assert "representative bis(thiocumyl) motif" in panel_a
+    assert "representative DIB-linked repeat unit" in panel_a
     assert "$x,y$: statistical sulfur rank" in panel_a
     assert "bis-thiocumyl connectivity" not in panel_a
     assert "variable sulfur rank and minor microstructures" not in panel_a
@@ -322,9 +324,7 @@ def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     label = source.index(r"{manual sample\\[-0.5pt]transfer}")
     declaration = source.rfind(r"\node", 0, label)
-    transfer_node = source[
-        declaration : label + len(r"{manual sample\\[-0.5pt]transfer}")
-    ]
+    transfer_node = source[declaration : label + len(r"{manual sample\\[-0.5pt]transfer}")]
 
     assert "small label" in transfer_node
     assert r"\fontsize{3.2}" not in transfer_node
@@ -339,9 +339,13 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_f = source.split("% Panel F", 1)[1]
 
-    assert r"{mechanical\\clamp}" in source
-    assert "{mechanical clamp}" not in source
-    assert r"{trapped charge $q_{\mathrm{tr}}$}" in source
+    assert r"{floating clip}" in source
+    assert "mechanical clamp" not in source
+    assert r"{$q_{\mathrm{tr}}$ (hyp.)}" in source
+    # The clip's terminal is drawn open: a short stub ending in an unfilled
+    # circle, which is the floating configuration the panel is about.
+    assert "(1.78,3.26)--(1.60,3.26)" in source
+    assert "(1.545,3.26) circle (0.055)" in source
     assert r"(1.09,0.42)--(1.02,0.82)" not in source
     assert "text=cBlue" not in panel_f
     assert "text=cRed!82!black" in panel_f
@@ -356,27 +360,28 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     assert "cGray!54!black, line width=0.66pt" in panel_f
     assert "cAmber!7, rounded corners=0.45mm" in panel_f
     assert r"(1.325,1.43)--(0.34,1.43)" in panel_f
-    assert r"{\bfseries Coulomb\\[-0.6pt]\mdseries repulsion}" in panel_f
+    assert r"{\bfseries observed:\\[-0.6pt]\mdseries bends away}" in panel_f
+    assert "Coulomb" not in panel_f
+    assert r"{Maxwell stress\\[0.5pt]$\propto E^{2}$}" in panel_f
+    assert "attraction" not in panel_f
+    assert r"{charging phase:\\[-0.45pt]clip grounded}" in panel_f
     assert "Stealth[length=4.8pt,width=3.5pt]" in panel_f
     assert r"(1.38,1.43)--(0.43,1.43)" not in panel_f
 
 
-def test_repaired_panel_e_caliper_label_interrupts_its_path() -> None:
+def test_repaired_panel_e_draws_no_relaxation_time_on_the_energy_axis() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
-    label = source.index(r"{$\tau_d$}")
-    declaration = source.rfind(r"\node", 0, label)
-    caliper_label = source[declaration : label + len(r"{$\tau_d$}")]
-
-    assert "fill=white" in caliper_label
-    assert "inner xsep" in caliper_label
-
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
+
+    # A relaxation time on an energy axis is a dimensional error, so the whole
+    # tau_d caliper -- bracket, caps, peak projections and label -- is gone.
+    assert r"\tau_d" not in source
+    assert "(1.56,0.78)--(1.56,1.31)" not in panel_e
+    assert "(3.02,1.15)--(3.02,1.31)" not in panel_e
+    assert "(1.56,1.35)--(3.02,1.35)" not in panel_e
+    assert "no tau_d span is drawn" in panel_e.lower()
     assert panel_e.count("circle (0.040)") == 1
     assert "circle (0.050)" not in panel_e
-    assert "both peak projections" in panel_e
-    assert "(1.56,0.78)--(1.56,1.31)" in panel_e
-    assert "(3.02,1.15)--(3.02,1.31)" in panel_e
-    assert "(1.56,1.35)--(3.02,1.35)" in panel_e
 
 
 def test_repaired_panel_e_schematic_curves_do_not_imply_sampled_data() -> None:
@@ -422,8 +427,11 @@ def test_repaired_panel_e_uses_colour_for_measurement_marks_not_text() -> None:
         assert colored_text not in panel_e
     assert panel_e.count("text=cGray!88!black") >= 4
     assert "cTeal!78!black, line width=0.66pt" in panel_e
-    assert "cBlue!84!black, line width=0.82pt" in panel_e
-    assert "cRed!84!black, line width=0.82pt" in panel_e
+    # g(E_t) is one population: one neutral outline, colour only in the zones.
+    assert "cBlue!84!black, line width=0.82pt" not in panel_e
+    assert "cRed!84!black, line width=0.82pt" not in panel_e
+    assert panel_e.count("cGray!88!black, line width=0.82pt") == 1
+    assert panel_e.count("exp(-((\\x-2.36)*(\\x-2.36))/0.52)") == 3
 
 
 def test_repaired_panel_e_preserves_a_visible_noncontact_esvm_gap() -> None:
@@ -492,8 +500,8 @@ def test_repaired_declares_compile_visible_physics_grounding() -> None:
     assertion_ids = {item["id"] for item in spec["semantic_assertions"]}
     assert assertion_ids == {
         "panel-c-mobility-edge-left-of-thermal-escape",
-        "panel-f-coulomb-result-left-of-maxwell-baseline",
-        "panel-f-trapped-charge-left-of-driven-electrode",
+        "panel-f-observed-bend-left-of-maxwell-baseline",
+        "panel-f-hypothesised-charge-left-of-driven-electrode",
     }
 
 
@@ -538,7 +546,7 @@ def test_repaired_lower_row_uses_one_aligned_header_band() -> None:
     for panel_id, title in {
         "D": "Transient current",
         "E": "ISPD trap distribution",
-        "F": "Floating Coulomb response",
+        "F": "Floating-clip bending response",
     }.items():
         panel = source.split(f"% Panel {panel_id}", 1)[1]
         assert f"at (0.28,4.42) {{{panel_id.lower()}}};" in panel
@@ -576,36 +584,30 @@ def test_repaired_s8_atom_labels_survive_reduction() -> None:
 
 def test_repaired_panel_a_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
-    separators = source.split("% Panel A", 1)[0].split(
-        "% Open publication canvas", 1
-    )[1]
+    separators = source.split("% Panel A", 1)[0].split("% Open publication canvas", 1)[1]
     panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     widths = [
         float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", separators + panel_a
-        )
+        for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", separators + panel_a)
     ]
 
     # Overview structure now follows the thinner Fig. 2 baseline; separators
     # are intentionally lighter and are checked separately below.
     assert widths
-    assert min(
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_a
+    assert (
+        min(
+            float(value)
+            for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_a)
         )
-    ) >= 0.66
+        >= 0.66
+    )
 
 
 def test_repaired_panel_b_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_b = source.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     widths = [
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_b
-        )
+        float(value) for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_b)
     ]
 
     assert widths
@@ -616,18 +618,13 @@ def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_c = source.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
     widths = [
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_c
-        )
+        float(value) for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_c)
     ]
 
     assert widths
     # Claim-bearing DOS, edge, and correspondence strokes keep the publication
     # floor; low-contrast host texture and tiny marker outlines are intentional
     # supporting marks and must not be judged by a raw minimum-width check.
-    assert "cBlue!84!black, line width=0.82pt" in panel_c
-    assert "cRed!84!black, line width=0.82pt" in panel_c
     assert "cAmber!58!black, line width=0.74pt" in panel_c
     assert "line width=0.66pt" in panel_c
     assert "circle (0.040);\n    \\draw" not in panel_c
@@ -690,21 +687,24 @@ def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
     assert "rotate=90, text=cGray!92!black" in panel_c
     # Keep the DOS legible through its publication-weight outline instead of
     # locking a saturated area fill that makes the schematic read as artwork.
+    # The population is ONE curve, so it carries one neutral outline and the
+    # shallower/deeper zones are tint only.
     for color in ("Blue", "Red"):
-        fill = re.search(
-            rf"\\fill\[c{color}!(\d+), opacity=([0-9.]+)\]", panel_c
-        )
+        fill = re.search(rf"\\fill\[c{color}!(\d+), opacity=([0-9.]+)\]", panel_c)
         assert fill
         assert int(fill.group(1)) <= 20
         assert float(fill.group(2)) <= 0.60
-        assert f"c{color}!84!black, line width=0.82pt" in panel_c
+        assert f"c{color}!84!black, line width=0.82pt" not in panel_c
+    assert panel_c.count("cGray!88!black, line width=0.82pt") == 1
+    assert panel_c.count("exp(-((\\x-2.20)*(\\x-2.20))/0.52)") == 3
     assert "rectangular population wash" in panel_c
     assert "(7.72,2.42) rectangle (11.80,3.34)" not in panel_c
     assert "(7.72,0.98) rectangle (11.80,2.38)" not in panel_c
     assert "{Localized trap landscape};" in panel_c
     assert "{Localized trap model};" not in panel_c
     assert "{Localized shallow and deep traps};" not in panel_c
-    assert "curve widths and amplitudes are schematic" in panel_c
+    assert "One continuous distribution of localized states" in panel_c
+    assert "no shallow-to-deep ratio is drawn or claimed" in panel_c
 
 
 def test_repaired_shared_semantic_lines_survive_nature_scale() -> None:
@@ -714,9 +714,7 @@ def test_repaired_shared_semantic_lines_survive_nature_scale() -> None:
     assert "leader/.style=" in source
     for style_name in ("axis line", "leader"):
         declaration = source.split(f"{style_name}/.style=", 1)[1].splitlines()[0]
-        width = re.search(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", declaration
-        )
+        width = re.search(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", declaration)
         assert width is not None
         assert float(width.group(1)) >= 0.66
 
@@ -725,32 +723,31 @@ def test_repaired_panel_d_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_d = source.split("% Panel D", 1)[1].split("% Panel E", 1)[0]
     widths = [
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_d
-        )
+        float(value) for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_d)
     ]
 
     assert widths
     assert "line width=0.90pt" in panel_d
     assert "line width=0.66pt" in panel_d
     assert "line width=0.25pt" in panel_d  # neutral shared-anchor outline
-    assert "{low $n$}" in panel_d
-    assert "{high $n$}" in panel_d
+    assert "{broad relaxation-time\\\\distribution}" in panel_d
+    assert "{single relaxation\\\\(Debye model)}" in panel_d
+    assert "low $n$" not in panel_d
+    assert "high $n$" not in panel_d
     assert "PI control" not in panel_d
     assert "S-rich" not in panel_d
     assert "circle (0.045)" in panel_d  # neutral shared initial-state anchor
     assert "circle (0.060)" not in panel_d
     for colored_text in ("text=cBrown", "text=cBlue", "text=cRed"):
         assert colored_text not in panel_d
-    assert panel_d.count("text=cGray!92!black") == 2
+    assert panel_d.count("text=cGray!92!black") == 1
     assert "(0.48,2.62) rectangle (1.47,3.44)" in panel_d
     assert "(0.55,2.70) rectangle (1.40,3.36)" not in panel_d
-    for rotation, end_y in ((-13.5, 1.12), (-21.1, 0.66)):
-        slope_angle = math.degrees(math.atan2(end_y - 1.88, 4.02 - 0.86))
-        assert abs(rotation - slope_angle) <= 0.3
-        assert f"rotate={rotation}" in panel_d
-    assert "Debye" not in panel_d
+    # No trace-hugging rotated labels remain; only the axis titles rotate.
+    assert "rotate=-13.5" not in panel_d
+    assert "rotate=-21.1" not in panel_d
+    assert panel_d.count("rotate=90") == 1
+    assert "Debye" in panel_d
     assert r"\shade" not in panel_d
     assert "opacity=" not in panel_d
     assert "measurement-like data points" in panel_d
@@ -766,27 +763,46 @@ def test_repaired_panel_d_uses_the_shared_three_bar_ground_symbol() -> None:
     assert "(4.17,2.46)--(4.27,2.46)" in panel_d
 
 
-def test_repaired_panel_d_high_n_line_is_geometrically_steeper() -> None:
+def test_repaired_panel_d_contrasts_a_power_law_with_a_single_relaxation_model() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_d = source.split("% Panel D", 1)[1].split("% Panel E", 1)[0]
 
+    # The measured trace is the only straight line on these log-log axes.
     assert "(0.86,1.88)--(4.02,1.12)" in panel_d
-    assert "(0.86,1.88)--(4.02,0.66)" in panel_d
-    low_drop = 1.88 - 1.12
-    high_drop = 1.88 - 0.66
-    assert high_drop > low_drop
-    assert "rotate=-13.5" in panel_d
-    assert "rotate=-21.1" in panel_d
+    assert "(0.86,1.88)--(4.02,0.66)" not in panel_d
+
+    # The Debye reference shares the initial state, then leaves the power law
+    # and falls away with no straight-line regime of its own.
+    trace = re.search(
+        r"plot\[smooth\] coordinates\s*\n\s*\{([^}]*)\}", panel_d
+    )
+    assert trace
+    points = [
+        tuple(float(value) for value in pair.strip("()").split(","))
+        for pair in re.findall(r"\([0-9.]+,[0-9.]+\)", trace.group(1))
+    ]
+    assert points[0] == (0.86, 1.88)
+
+    def power_law(x: float) -> float:
+        return 1.88 - (1.88 - 1.12) * (x - 0.86) / (4.02 - 0.86)
+
+    # strictly below the power law after the shared anchor, and monotone down
+    assert all(y < power_law(x) for x, y in points[1:])
+    assert all(b[1] < a[1] for a, b in zip(points, points[1:], strict=False))
+    # the final segment must be far steeper than the first: an exponential
+    # cut-off, not a second power law
+    first = (points[0][1] - points[1][1]) / (points[1][0] - points[0][0])
+    last = (points[-2][1] - points[-1][1]) / (points[-1][0] - points[-2][0])
+    assert last > 5 * first
+    # and it stops visibly above the time axis rather than merging into it
+    assert points[-1][1] > 0.47 + 0.10
 
 
 def test_repaired_panel_e_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
     widths = [
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_e
-        )
+        float(value) for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_e)
     ]
 
     assert widths
@@ -823,17 +839,15 @@ def test_repaired_panel_e_strokes_survive_declared_final_scale() -> None:
     assert "(4.02,1.58)" in panel_e
     assert "(4.02,1.52)" not in panel_e
     assert "ratio ~1.86" not in panel_e
-    assert "qualitatively deep-dominant" in panel_e
+    assert "qualitatively deep-dominant" not in panel_e
+    assert "no shallow-to-deep ratio is drawn" in panel_e
 
 
 def test_repaired_panel_f_and_full_figure_keep_role_appropriate_strokes() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_f = source.split("% Panel F", 1)[1]
     widths = [
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", source
-        )
+        float(value) for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", source)
     ]
 
     assert widths
@@ -842,9 +856,9 @@ def test_repaired_panel_f_and_full_figure_keep_role_appropriate_strokes() -> Non
     assert "line width=0.66pt" in panel_f
     assert "line width=0.42pt" in panel_f  # low-contrast Maxwell baseline
     assert "text=cRed!82!black" in panel_f
-    assert r"{mechanical\\clamp}" in panel_f
+    assert r"{floating clip}" in panel_f
     assert r"{floating polymer\\cantilever}" in panel_f
-    assert r"{trapped charge $q_{\mathrm{tr}}$}" in panel_f
+    assert r"{$q_{\mathrm{tr}}$ (hyp.)}" in panel_f
     assert r"\shade" not in panel_f
 
 
@@ -875,16 +889,10 @@ def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
 
 def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() -> None:
     run_root = (
-        PLUGIN_ROOT
-        / "examples"
-        / "fig1_updated_agent_redraw_v1"
-        / "review"
-        / "r5-prospective-v2"
+        PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1" / "review" / "r5-prospective-v2"
     )
     task = (run_root / "task.md").read_text(encoding="utf-8")
-    contract = yaml.safe_load(
-        (run_root / "comparison_contract.yaml").read_text(encoding="utf-8")
-    )
+    contract = yaml.safe_load((run_root / "comparison_contract.yaml").read_text(encoding="utf-8"))
     normalized_task = " ".join(task.split())
 
     assert "two rows of three" not in task
@@ -912,15 +920,9 @@ def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() 
 
 def test_r5_v3_predeclaration_reuses_control_and_binds_system_deltas() -> None:
     run_root = (
-        PLUGIN_ROOT
-        / "examples"
-        / "fig1_updated_agent_redraw_v1"
-        / "review"
-        / "r5-prospective-v3"
+        PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1" / "review" / "r5-prospective-v3"
     )
-    contract = yaml.safe_load(
-        (run_root / "comparison_contract.yaml").read_text(encoding="utf-8")
-    )
+    contract = yaml.safe_load((run_root / "comparison_contract.yaml").read_text(encoding="utf-8"))
 
     assert contract["control"]["sha256"] == (
         "0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476"
@@ -936,15 +938,9 @@ def test_r5_v3_predeclaration_reuses_control_and_binds_system_deltas() -> None:
 
 def test_r5_v4_predeclaration_opens_repair_for_machine_invalid_b() -> None:
     run_root = (
-        PLUGIN_ROOT
-        / "examples"
-        / "fig1_updated_agent_redraw_v1"
-        / "review"
-        / "r5-prospective-v4"
+        PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1" / "review" / "r5-prospective-v4"
     )
-    contract = yaml.safe_load(
-        (run_root / "comparison_contract.yaml").read_text(encoding="utf-8")
-    )
+    contract = yaml.safe_load((run_root / "comparison_contract.yaml").read_text(encoding="utf-8"))
 
     assert contract["control"]["sha256"] == (
         "0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476"
@@ -998,12 +994,9 @@ def test_r5_v4_predeclaration_opens_repair_for_machine_invalid_b() -> None:
 
 def test_redraw_uses_schematic_undeclared_geometry_profile() -> None:
     spec = yaml.safe_load(
-        (
-            PLUGIN_ROOT
-            / "examples"
-            / "fig1_updated_agent_redraw_v1"
-            / "spec.yaml"
-        ).read_text(encoding="utf-8")
+        (PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1" / "spec.yaml").read_text(
+            encoding="utf-8"
+        )
     )
 
     assert spec["undeclared_geometry_profile"] == "schematic"

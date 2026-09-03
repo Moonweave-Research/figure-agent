@@ -45,11 +45,11 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.trap-landscape-evidence-boundary
     category: physics_semantics
-    rule: "In a trap-energy landscape, energy increases upward; place shallow states closer to the mobility edge and deep states farther below it, terminate thermal-escape arrows at the mobility edge, and span Delta E_t from a selected trap state to that edge. For this paper, the bimodal shallow/deep DOS is paper-local authority, while curve widths and amplitudes remain qualitative unless bound to measured data. Do not place decorative rectangular colour windows behind continuous DOS populations; they can be mistaken for additional bounded energy bands. Use polarity-neutral site markers and do not assign a carrier sign without paper-local evidence."
+    rule: "In a trap-energy landscape, energy increases upward; place shallow states closer to the mobility edge and deep states farther below it, terminate thermal-escape arrows at the mobility edge, and span Delta E_t from a selected trap state to that edge. For this paper the localized-state population is one continuous distribution with a single maximum, superseding the earlier bimodal shallow/deep DOS: shallower and deeper are shading-only zones of that one curve, no second peak is drawn, and no shallow-to-deep amplitude or area ratio is drawn or claimed. Curve widths and amplitudes remain qualitative unless bound to measured data. Do not place decorative rectangular colour windows behind continuous DOS populations; they can be mistaken for additional bounded energy bands. Use polarity-neutral site markers and do not assign a carrier sign without paper-local evidence."
     source:
-      kind: critique_adjudication
-      locator: "Fig1 v5f Panel C authority and evidence-boundary audit (2026-07-20)"
-      quote: "Bimodal Gaussian DOS is paper-local; numerical distribution parameters and carrier sign are not declared here."
+      kind: iteration_comment
+      locator: "Fig1 alt_260805/DECISION_BRIEF.md rows 1-3; author decision 2026-09-03"
+      quote: "one continuous tail of localized states, with shallower/deeper zones"
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.real-space-energy-binding
     category: physics_semantics
@@ -61,11 +61,11 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.transient-power-law-evidence-boundary
     category: physics_semantics
-    rule: "For a symbolic transient-current comparison, plot log I against log t and encode I(t) proportional to t^-n as straight descending lines whose slope is -n; the high-n line must be visibly steeper than the low-n line. Do not add exact n values, sample identities, Debye references, or measurement-like scatter markers unless paper-local data binds them. A schematic fit line without bound coordinates must not masquerade as sampled data."
+    rule: "For a symbolic transient-current comparison, plot log I against log t and encode I(t) proportional to t^-n as a straight descending line whose slope is -n. Contrast it with an idealised single-relaxation (Debye) model reference, superseding the earlier low-n versus high-n two-material contrast and the earlier ban on Debye: draw the reference as a curve with no straight-line regime, label it explicitly as a model reference rather than a measured control, and label the measured trace with relaxation-time language rather than trap language. Do not add exact n values, a fit window, chamber or environment conditions, sample identities, or measurement-like scatter markers unless paper-local data binds them. A schematic fit line without bound coordinates must not masquerade as sampled data."
     source:
-      kind: critique_adjudication
-      locator: "Fig1 Panel D v5f authority plus human Debye-removal and evidence audit (2026-07-20)"
-      quote: "Keep the low-n/high-n power-law contrast, remove Debye, and do not infer unbound quantitative data."
+      kind: iteration_comment
+      locator: "Fig1 alt_260805/DECISION_BRIEF.md rows 4-6; author decision 2026-09-03"
+      quote: "one power law vs an idealised single-relaxation (Debye model) reference"
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.cantilever-vertical-clip-top
     category: instrument_standard

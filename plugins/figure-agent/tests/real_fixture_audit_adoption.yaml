@@ -95,8 +95,8 @@ fixtures:
       - panel-e-probe-shaft
       - panel-e-sample-transfer
       - panel-e-vs-meter-lead
-      - panel-f-coulomb-force
       - panel-f-ground-return
+      - panel-f-observed-bend-arrow
     aesthetic_intent: false
     critique_reference_pack: false
     paper_aesthetic_context: nc-main-text-series

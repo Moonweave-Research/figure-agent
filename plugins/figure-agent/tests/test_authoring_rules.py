@@ -378,7 +378,7 @@ def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:
     assert "does not require apparatus photorealism" in rule["rule"]
 
 
-def test_pair001_preserves_paper_local_tau_d_semantics() -> None:
+def test_pair001_keeps_relaxation_time_off_the_energy_axis() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
     )
@@ -386,13 +386,21 @@ def test_pair001_preserves_paper_local_tau_d_semantics() -> None:
     rule = next(
         rule
         for rule in catalog["rules"]
+        if rule["id"] == "pair001.relaxation-time-not-on-an-energy-axis"
+    )
+    assert "a time plotted on an energy axis is a dimensional error" in rule["rule"]
+    assert "no longer draws the tau_d span" in rule["rule"]
+    assert "do not add numeric ticks, point markers" in rule["rule"]
+
+    # The earlier exception that preserved the span is retired, not deleted, so
+    # the reason the fig1 overview stopped drawing it stays auditable.
+    retired = next(
+        rule
+        for rule in catalog["superseded_rules"]
         if rule["id"] == "pair001.tau-d-energy-domain-exception"
     )
-    assert "energy-domain interval" in rule["rule"]
-    assert "endpoints bound to those two peak positions" in rule["rule"]
-    assert "do not add numeric ticks, point markers" in rule["rule"]
-    assert "Do not move it onto the V_s(t) time axis" in rule["rule"]
-    assert "source-bound exception" in rule["rule"]
+    assert retired["superseded_by"] == "pair001.relaxation-time-not-on-an-energy-axis"
+    assert "2026-09-03" in retired["superseded_reason"]
 
 
 def test_pair001_binds_raw_to_derived_transformations() -> None:
@@ -841,8 +849,11 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     traps = rules["polymer_paper_project.trap-landscape-evidence-boundary"]
     assert traps["category"] == "physics_semantics"
     assert "shallow states closer to the mobility edge" in traps["rule"]
-    assert "bimodal shallow/deep DOS" in traps["rule"]
-    assert "curve widths and amplitudes remain qualitative" in traps["rule"]
+    assert "one continuous distribution with a single maximum" in traps["rule"]
+    assert "superseding the earlier bimodal shallow/deep DOS" in traps["rule"]
+    assert "shading-only zones of that one curve" in traps["rule"]
+    assert "no shallow-to-deep amplitude or area ratio" in traps["rule"]
+    assert "widths and amplitudes remain qualitative" in traps["rule"]
     assert "rectangular colour windows" in traps["rule"]
     assert "bounded energy bands" in traps["rule"]
     assert "carrier sign" in traps["rule"]
@@ -861,8 +872,10 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     assert transient["category"] == "physics_semantics"
     assert "plot log I against log t" in transient["rule"]
     assert "slope is -n" in transient["rule"]
-    assert "high-n line must be visibly steeper" in transient["rule"]
-    assert "Debye references" in transient["rule"]
+    assert "idealised single-relaxation (Debye) model reference" in transient["rule"]
+    assert "superseding the earlier low-n versus high-n" in transient["rule"]
+    assert "model reference rather than a measured control" in transient["rule"]
+    assert "relaxation-time language rather than trap language" in transient["rule"]
     assert "measurement-like scatter markers" in transient["rule"]
 
     ispd = rules[

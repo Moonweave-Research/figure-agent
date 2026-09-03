@@ -8,8 +8,8 @@
 
 This is an additive full-figure candidate, not a modification of the historical
 v5f source. It must explain one narrative: sulfur-rich poly(S-r-DIB) has a
-composition-dependent trap landscape, measured independently by transient
-current and ISPD, with a mechanically visible Coulomb response.
+composition-dependent trap landscape, probed independently by transient
+current and ISPD, with a mechanically visible bending response.
 
 `authority.yaml` pins the historical visual/narrative baseline and the
 human-reviewed Panel F physics correction. The candidate is deliberately
@@ -25,26 +25,38 @@ representations legible at the common reduction used for all panels. Panels
 D--F are compact evidence modules: retain scientific relations, suppress
 instrument decoration, and keep labels outside the depicted apparatus. The
 publication target is Nature Communications. In Panel F, the voltage-source
-return is grounded; the sample and cantilever remain electrically floating.
+return is grounded; the sample and cantilever remain electrically floating, and
+the clip's own terminal is drawn open.
 
 ## §6. Physics invariants
 
 - Panel C preserves a shared energy orientation: energy increases upward and
-  deep trap states sit lower than shallow trap states.
-- Panel D preserves a constant-voltage transient-current comparison; the
-  high-\(n\) power-law response decays faster than the low-\(n\) response.
+  deeper localized states sit lower than shallower ones. The population is one
+  continuous distribution; shallower and deeper are shading-only zones of that
+  single curve, and no shallow-to-deep ratio is drawn.
+- Panel D preserves a constant-voltage transient-current comparison between the
+  measured power law \(I(t)\sim t^{-n}\) and an idealised single-relaxation
+  (Debye) model reference. The Debye trace has no straight-line regime and
+  falls away from the power law; it is a model reference, not a measured
+  control, and the curve carries relaxation-time language, not trap language.
 - Panel E preserves the manual ISPD sequence: gridless two-terminal corona
-  charging, manual sample transfer, grounded measurement substrate, non-contact
-  ESVM acquisition, and derivation of \(g(E_t)\).
+  charging with no control grid, manual sample transfer, grounded measurement
+  substrate, non-contact induction-type ESVM acquisition (never a Kelvin
+  probe), and derivation of \(g(E_t)\). No relaxation-time span is drawn on
+  the \(g(E_t)\) energy axis, and \(g(E_t)\) is the same single continuous
+  distribution as Panel C with the axes swapped.
 - Panel F preserves the floating topology: the grounded voltage-source return
   belongs to the driven-electrode circuit, not to the sample or cantilever, and
-  the Coulomb repulsion result acts away from the driven electrode.
+  the clip terminal is open. The panel asserts only the observation, that the
+  floating cantilever bends away from the driven electrode; the polarity-
+  dependent force is hypothesised, labelled \(q_{tr}\) (hyp.), and named only
+  in the caption.
 
 ## Physics invariants
 
 - Panel C energy increases upward; the mobility edge is above the thermal-escape
   annotation and deeper wells are lower in the energy landscape.
-- Panel F Coulomb force points away from the driven electrode; the grounded
+- Panel F the observed bend is away from the driven electrode; the grounded
   source return does not ground the sample or cantilever.
 
 Machine checks support inspection only. A named human review is required before

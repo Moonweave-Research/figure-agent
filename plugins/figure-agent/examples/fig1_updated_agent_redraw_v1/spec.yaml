@@ -34,13 +34,13 @@ semantic_assertions:
     subject: mobility
     reference: thermal
     tolerance_pt: 2.0
-  - id: panel-f-coulomb-result-left-of-maxwell-baseline
+  - id: panel-f-observed-bend-left-of-maxwell-baseline
     relation: left_of
-    subject: repulsion
-    reference: attraction
-  - id: panel-f-trapped-charge-left-of-driven-electrode
+    subject: bends
+    reference: Maxwell
+  - id: panel-f-hypothesised-charge-left-of-driven-electrode
     relation: left_of
-    subject: trapped
+    subject: (hyp.)
     reference: electrode
 text_boundary_checks:
   - id: panel-a-title-band
@@ -88,10 +88,10 @@ text_boundary_checks:
     bbox_pdf_cm: [1.05, 9.05, 6.10, 9.62]
     clearance_pt: 0.0
     text_phrases:
-      - id: panel_c_shallow_sites
-        words: [shallow, sites]
-      - id: panel_c_deep_sites
-        words: [deep, sites]
+      - id: panel_c_shallower_sites
+        words: [shallower, sites]
+      - id: panel_c_deeper_sites
+        words: [deeper, sites]
   - id: panel-c-energy-labels
     kind: rect
     role: energy_diagram_label_region
@@ -108,12 +108,12 @@ text_boundary_checks:
     bbox_pdf_cm: [0.20, 12.55, 4.35, 15.18]
     clearance_pt: 0.0
     text_phrases:
-      - id: panel_d_low_n
-        words: [low, n]
-      - id: panel_d_high_n
-        words: [high, n]
-      - id: panel_d_log_t
-        words: [log, t]
+      - id: panel_d_broad_relaxation_time
+        words: [broad, relaxation-time]
+      - id: panel_d_single_relaxation
+        words: [single, relaxation]
+      - id: panel_d_debye_model
+        words: ['(Debye', 'model)']
   - id: panel-e-apparatus-labels
     kind: rect
     role: ispd_apparatus_label_region
@@ -132,12 +132,12 @@ text_boundary_checks:
     bbox_pdf_cm: [10.20, 10.35, 14.25, 14.95]
     clearance_pt: 0.0
     text_phrases:
-      - id: panel_f_coulomb_repulsion
-        words: [Coulomb, repulsion]
-      - id: panel_f_maxwell_attraction
-        words: [Maxwell, attraction]
-      - id: panel_f_trapped_charge
-        words: [trapped, charge]
+      - id: panel_f_observed_bend
+        words: [bends, away]
+      - id: panel_f_maxwell_stress
+        words: [Maxwell, stress]
+      - id: panel_f_hypothesised_charge
+        words: [q, tr]
       - id: panel_f_air_gap
         words: [air, gap]
   - id: panel-c-energy-split
@@ -235,15 +235,15 @@ label_path_proximity_checks:
     x_range_pdf_cm: [6.43, 8.28]
     clearance_pt: 1.0
     text_allowlist: [grounded, substrate]
-  - id: panel-f-coulomb-force
+  - id: panel-f-observed-bend-arrow
     kind: horizontal_line
-    role: panel_f_coulomb_force_arrow
-    y_pdf_cm: 14.26
-    x_range_pdf_cm: [10.96, 11.76]
+    role: panel_f_observed_bend_arrow
+    y_pdf_cm: 13.649
+    x_range_pdf_cm: [10.481, 11.466]
     clearance_pt: 1.0
     text_phrases:
-      - id: coulomb-force
-        words: [Coulomb, force]
+      - id: observed-bend
+        words: [bends, away]
   - id: panel-f-ground-return
     kind: polyline
     role: panel_f_grounded_source_return
@@ -258,7 +258,7 @@ panels:
     caption: polymer repeat-unit schematic
     semantic_claims:
       - id: representative-primary-structure
-        claim: elemental S8 and 1,3-DIB undergo thermally driven inverse vulcanization to form a representative bis(thiocumyl) motif with variable polysulfide rank.
+        claim: elemental S8 and 1,3-DIB undergo thermally driven inverse vulcanization to form a representative DIB-linked repeat unit with variable polysulfide rank. The drawn S-C(CH3)2-Ar connectivity is retained; the name bis(thiocumyl) is not used in the manuscript and is not drawn.
     locked_invariants:
       - id: representative-not-unique-repeat
         invariant: the drawn product is a representative primary-structure motif, not a unique constitutional repeat or a declared covalent crosslink network.
@@ -274,10 +274,12 @@ panels:
     caption: localized trap landscape, balanced dual view
     semantic_claims:
       - id: trap-landscape
-        claim: shallow and deep trapping states coexist in a sulfur-rich polymer.
+        claim: a sulfur-rich polymer carries one continuous distribution of localized states; shallower and deeper regions are zones of that single distribution, shown by shading only.
     locked_invariants:
       - id: energy-orientation
         invariant: energy increases upward; deeper wells are lower in the diagram.
+      - id: single-continuous-distribution
+        invariant: the localized-state population is drawn as one continuous curve with one maximum; no second peak, no discrete band, and no shallow-to-deep amplitude or area ratio is drawn or claimed.
   - id: D
     caption: transient-current kinetic evidence
     semantic_claims:
@@ -291,14 +293,18 @@ panels:
     locked_invariants:
       - id: stage-specific-grounding
         invariant: the corona-charging station uses the high-voltage supply's two terminals without a grid or earth-ground symbol, while the measurement station grounds the conductive backing beneath the specimen.
-      - id: tau-d-energy-domain
-        invariant: in this paper-local overview, tau_d denotes the qualitative energy-domain interval between the shallow and deep g(E_t) peak positions; do not relocate it to the V_s(t) time axis or attach a numeric value or unit.
+      - id: no-relaxation-time-on-the-energy-axis
+        invariant: no relaxation-time symbol is drawn on the g(E_t) energy axis; a time plotted on an energy axis is a dimensional error. Author decision 2026-09-03 removed the tau_d span.
+      - id: g-et-agrees-with-panel-c
+        invariant: g(E_t) is the same single continuous distribution drawn in Panel C with the axes swapped; the two must agree in shape and in carrying no drawn shallow-to-deep ratio.
   - id: F
-    caption: floating cantilever Coulomb response
+    caption: floating-clip cantilever bending response
     semantic_claims:
       - id: floating-topology
-        claim: the grounded source return does not ground the sample or cantilever.
+        claim: the grounded source return does not ground the sample or cantilever; the clip's own terminal is drawn open.
+      - id: observed-bend-direction
+        claim: the observation asserted by the panel is that the floating cantilever bends away from the driven electrode. The polarity-dependent force is hypothesised, labelled q_tr (hyp.), and named only in the caption.
     locked_invariants:
-      - id: force-direction
-        invariant: the Coulomb-force arrow points away from the active electrode.
+      - id: observed-bend-direction
+        invariant: the observation arrow points away from the driven electrode and is labelled as an observation, not as a named mechanism.
 publication_acceptance: not_claimed
