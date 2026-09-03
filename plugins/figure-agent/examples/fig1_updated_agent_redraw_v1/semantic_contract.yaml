@@ -155,6 +155,9 @@ semantic_legibility:
     - object_id: panel_f.mechanical_jig
       declared_role: mechanical_fixture
       forbidden_readings: [electrical_contact]
+    - object_id: panel_f.open_clip_terminal
+      declared_role: unconnected_clip_terminal
+      forbidden_readings: [connected_terminal, ground_reference]
     - object_id: panel_f.cantilever
       declared_role: mechanical_member
       forbidden_readings: [grounded_conductor]
@@ -167,9 +170,9 @@ semantic_legibility:
     - object_id: panel_f.ground_reference
       declared_role: source_return_ground
       forbidden_readings: [sample_ground]
-    - object_id: panel_f.coulomb_force
-      declared_role: directed_force
-      forbidden_readings: [annotation_leader]
+    - object_id: panel_f.observed_bend_direction
+      declared_role: directed_observation
+      forbidden_readings: [annotation_leader, established_mechanism_name]
   visible_connectors:
     - connector_id: panel_a.s8_enters_inverse_vulcanization
       from_object: panel_a.elemental_s8
@@ -271,10 +274,10 @@ semantic_legibility:
       to_object: panel_f.ground_reference
       declared_role: grounded_source_return
       render_style: electrical_ground_return
-    - connector_id: panel_f.force_acts_on_cantilever
-      from_object: panel_f.coulomb_force
+    - connector_id: panel_f.observed_bend_acts_on_cantilever
+      from_object: panel_f.observed_bend_direction
       to_object: panel_f.cantilever
-      declared_role: force_direction
+      declared_role: observed_direction
       render_style: force_directional
       epistemic_status: derived
   forbidden_connectors:
@@ -295,8 +298,8 @@ semantic_legibility:
       owner: panel_b.s85_sample
     - label_id: panel_e.derive_label
       owner: panel_e.raw_to_derived_transform
-    - label_id: panel_e.tau_d_label
-      owner: panel_e.derived_trap_distribution
+    - label_id: panel_f.hypothesised_charge_label
+      owner: panel_f.cantilever
     - label_id: panel_f.air_gap_label
       owner: panel_f.cantilever
     - label_id: panel_f.applied_voltage_label

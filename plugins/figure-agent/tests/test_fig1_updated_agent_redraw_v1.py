@@ -128,7 +128,7 @@ def test_redraw_is_independent_and_keeps_floating_panel_f_topology() -> None:
     assert "sample and cantilever remain electrically floating" in source
 
     result = validate_semantic_legibility_contract(_yaml("semantic_contract.yaml"))
-    assert result["summary"]["object_role_count"] == 31
+    assert result["summary"]["object_role_count"] == 32
     assert result["summary"]["visible_connector_count"] == 21
     assert result["summary"]["label_ownership_count"] == 8
     assert result["summary"]["floating_object_count"] == 1
@@ -339,9 +339,13 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_f = source.split("% Panel F", 1)[1]
 
-    assert r"{mechanical\\clamp}" in source
-    assert "{mechanical clamp}" not in source
-    assert r"{trapped charge $q_{\mathrm{tr}}$}" in source
+    assert r"{floating clip}" in source
+    assert "mechanical clamp" not in source
+    assert r"{$q_{\mathrm{tr}}$ (hyp.)}" in source
+    # The clip's terminal is drawn open: a short stub ending in an unfilled
+    # circle, which is the floating configuration the panel is about.
+    assert "(1.78,3.26)--(1.60,3.26)" in source
+    assert "(1.545,3.26) circle (0.055)" in source
     assert r"(1.09,0.42)--(1.02,0.82)" not in source
     assert "text=cBlue" not in panel_f
     assert "text=cRed!82!black" in panel_f
@@ -356,27 +360,28 @@ def test_repaired_panel_f_keeps_annotation_lanes_clear() -> None:
     assert "cGray!54!black, line width=0.66pt" in panel_f
     assert "cAmber!7, rounded corners=0.45mm" in panel_f
     assert r"(1.325,1.43)--(0.34,1.43)" in panel_f
-    assert r"{\bfseries Coulomb\\[-0.6pt]\mdseries repulsion}" in panel_f
+    assert r"{\bfseries observed:\\[-0.6pt]\mdseries bends away}" in panel_f
+    assert "Coulomb" not in panel_f
+    assert r"{Maxwell stress\\[0.5pt]$\propto E^{2}$}" in panel_f
+    assert "attraction" not in panel_f
+    assert r"{charging phase:\\[-0.45pt]clip grounded}" in panel_f
     assert "Stealth[length=4.8pt,width=3.5pt]" in panel_f
     assert r"(1.38,1.43)--(0.43,1.43)" not in panel_f
 
 
-def test_repaired_panel_e_caliper_label_interrupts_its_path() -> None:
+def test_repaired_panel_e_draws_no_relaxation_time_on_the_energy_axis() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
-    label = source.index(r"{$\tau_d$}")
-    declaration = source.rfind(r"\node", 0, label)
-    caliper_label = source[declaration : label + len(r"{$\tau_d$}")]
-
-    assert "fill=white" in caliper_label
-    assert "inner xsep" in caliper_label
-
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
+
+    # A relaxation time on an energy axis is a dimensional error, so the whole
+    # tau_d caliper -- bracket, caps, peak projections and label -- is gone.
+    assert r"\tau_d" not in source
+    assert "(1.56,0.78)--(1.56,1.31)" not in panel_e
+    assert "(3.02,1.15)--(3.02,1.31)" not in panel_e
+    assert "(1.56,1.35)--(3.02,1.35)" not in panel_e
+    assert "no tau_d span is drawn" in panel_e.lower()
     assert panel_e.count("circle (0.040)") == 1
     assert "circle (0.050)" not in panel_e
-    assert "both peak projections" in panel_e
-    assert "(1.56,0.78)--(1.56,1.31)" in panel_e
-    assert "(3.02,1.15)--(3.02,1.31)" in panel_e
-    assert "(1.56,1.35)--(3.02,1.35)" in panel_e
 
 
 def test_repaired_panel_e_schematic_curves_do_not_imply_sampled_data() -> None:
@@ -495,8 +500,8 @@ def test_repaired_declares_compile_visible_physics_grounding() -> None:
     assertion_ids = {item["id"] for item in spec["semantic_assertions"]}
     assert assertion_ids == {
         "panel-c-mobility-edge-left-of-thermal-escape",
-        "panel-f-coulomb-result-left-of-maxwell-baseline",
-        "panel-f-trapped-charge-left-of-driven-electrode",
+        "panel-f-observed-bend-left-of-maxwell-baseline",
+        "panel-f-hypothesised-charge-left-of-driven-electrode",
     }
 
 
@@ -541,7 +546,7 @@ def test_repaired_lower_row_uses_one_aligned_header_band() -> None:
     for panel_id, title in {
         "D": "Transient current",
         "E": "ISPD trap distribution",
-        "F": "Floating Coulomb response",
+        "F": "Floating-clip bending response",
     }.items():
         panel = source.split(f"% Panel {panel_id}", 1)[1]
         assert f"at (0.28,4.42) {{{panel_id.lower()}}};" in panel
@@ -831,17 +836,15 @@ def test_repaired_panel_e_strokes_survive_declared_final_scale() -> None:
     assert "(4.02,1.58)" in panel_e
     assert "(4.02,1.52)" not in panel_e
     assert "ratio ~1.86" not in panel_e
-    assert "qualitatively deep-dominant" in panel_e
+    assert "qualitatively deep-dominant" not in panel_e
+    assert "no shallow-to-deep ratio is drawn" in panel_e
 
 
 def test_repaired_panel_f_and_full_figure_keep_role_appropriate_strokes() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_f = source.split("% Panel F", 1)[1]
     widths = [
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", source
-        )
+        float(value) for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", source)
     ]
 
     assert widths
@@ -850,9 +853,9 @@ def test_repaired_panel_f_and_full_figure_keep_role_appropriate_strokes() -> Non
     assert "line width=0.66pt" in panel_f
     assert "line width=0.42pt" in panel_f  # low-contrast Maxwell baseline
     assert "text=cRed!82!black" in panel_f
-    assert r"{mechanical\\clamp}" in panel_f
+    assert r"{floating clip}" in panel_f
     assert r"{floating polymer\\cantilever}" in panel_f
-    assert r"{trapped charge $q_{\mathrm{tr}}$}" in panel_f
+    assert r"{$q_{\mathrm{tr}}$ (hyp.)}" in panel_f
     assert r"\shade" not in panel_f
 
 

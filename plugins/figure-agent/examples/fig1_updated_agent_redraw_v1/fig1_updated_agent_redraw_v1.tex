@@ -531,47 +531,36 @@
   \draw[axis line] (0.66,0.36)--(4.24,0.36);
   \node[body label, rotate=90] at (0.28,0.82) {$g(E_t)$};
   \node[body label, anchor=north east] at (4.21,0.29) {$E_t$};
-  % Derived DOS: true Gaussian silhouettes, qualitatively deep-dominant.
-  % Drawing coordinates do not declare a fitted peak-height ratio.
-  \fill[cBlue!14]
-    plot[domain=0.96:2.16, samples=36, smooth]
-      (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)})
-    -- (2.16,0.36) -- (0.96,0.36) -- cycle;
-  \draw[cBlue!84!black, line width=0.82pt]
-    plot[domain=0.96:2.16, samples=36, smooth]
-      (\x,{0.36 + 0.42*exp(-((\x-1.56)*(\x-1.56))/0.0648)});
+  % Derived DOS: the same single continuous distribution drawn in Panel C, with
+  % the axes swapped. Shallower and deeper are zones of one population, carried
+  % by the fill tint alone, and the tint boundary sits on the axis of symmetry
+  % so no shallow-to-deep ratio is drawn. Drawing coordinates declare no
+  % fitted peak height, width, or position.
+  \fill[cBlue!16]
+    plot[domain=0.96:2.36, samples=44, smooth]
+      (\x,{0.36 + 0.80*exp(-((\x-2.36)*(\x-2.36))/0.52)})
+    -- (2.36,0.36) -- (0.96,0.36) -- cycle;
   \fill[cRed!14]
-    plot[domain=2.28:3.76, samples=42, smooth]
-      (\x,{0.36 + 0.79*exp(-((\x-3.02)*(\x-3.02))/0.1800)})
-    -- (3.76,0.36) -- (2.28,0.36) -- cycle;
-  \draw[cRed!84!black, line width=0.82pt]
-    plot[domain=2.28:3.76, samples=42, smooth]
-      (\x,{0.36 + 0.79*exp(-((\x-3.02)*(\x-3.02))/0.1800)});
+    plot[domain=2.36:3.76, samples=44, smooth]
+      (\x,{0.36 + 0.80*exp(-((\x-2.36)*(\x-2.36))/0.52)})
+    -- (3.76,0.36) -- (2.36,0.36) -- cycle;
+  % One unbroken outline over both tints keeps the population one curve.
+  \draw[cGray!88!black, line width=0.82pt]
+    plot[domain=0.96:3.76, samples=80, smooth]
+      (\x,{0.36 + 0.80*exp(-((\x-2.36)*(\x-2.36))/0.52)});
   % No point markers are shown on the derived DOS: without source-bound data,
   % such glyphs would falsely imply sampled or fitted peak coordinates.
-  % Paper-local authority defines tau_d as the energy-domain interval between
-  % the shallow and deep Gaussian peak positions. Keep both peak projections
-  % long enough to remain distinct from the bracket caps at print reduction.
-  \draw[cGray!38, dash pattern=on 1.3pt off 1.3pt, line width=0.66pt]
-    (1.56,0.78)--(1.56,1.31)
-    (3.02,1.15)--(3.02,1.31);
-  \draw[cGray!68!black, line width=0.66pt]
-    (1.56,1.35)--(3.02,1.35);
-  \draw[cGray!68!black, line width=0.66pt]
-    (1.56,1.31)--(1.56,1.39) (3.02,1.31)--(3.02,1.39);
-  \node[small label, text=cGray!72!black, fill=white,
-        inner xsep=1.2pt, inner ysep=0.45pt]
-    at (2.29,1.35) {$\tau_d$};
-  \node[small label, text=cGray!88!black, anchor=north] at (1.45,0.31) {shallow};
-  \node[small label, text=cGray!88!black, anchor=north] at (3.12,0.31) {deep};
+  % No tau_d span is drawn: a relaxation time has no place on an energy axis.
+  \node[small label, text=cGray!88!black, anchor=north] at (1.45,0.31) {shallower};
+  \node[small label, text=cGray!88!black, anchor=north] at (3.20,0.31) {deeper};
 \end{scope}
 
 % Panel F
 \begin{scope}[shift={(10.00,0.57)}]
   \node[panel letter, anchor=west] at (0.28,4.42) {f};
-  \node[panel title] at (0.82,4.42) {Floating Coulomb response};
+  \node[panel title] at (0.82,4.42) {Floating-clip bending response};
 
-  % Fixed clamp: dark structural lines, light metal fill.
+  % Floating clip: dark structural lines, light metal fill.
   \fill[cGray!10] (1.78,3.21) rectangle (2.22,3.33);
   \draw[cGray!78!black, line width=0.74pt] (1.78,3.21) rectangle (2.22,3.33);
   \draw[cGray!66!black, line width=0.74pt] (1.67,3.46)--(2.33,3.46);
@@ -580,6 +569,10 @@
       ({1.68+\dx},3.46)--({1.61+\dx},3.54);
   }
   \draw[cGray!76!black, line width=0.74pt] (2.00,3.33)--(2.00,3.46);
+  % The clip's own terminal is drawn open: during the observed state nothing
+  % connects it, which is the floating configuration this panel is about.
+  \draw[cGray!78!black, line width=0.66pt] (1.78,3.26)--(1.60,3.26);
+  \draw[cGray!78!black, fill=white, line width=0.66pt] (1.545,3.26) circle (0.055);
 
   % Bespoke floating polymer cantilever, visibly deflected toward the left.
   \fill[cAmber!7, rounded corners=0.45mm]
@@ -622,7 +615,7 @@
     \draw[cGray!42!black, line width=0.66pt] (3.76,\hy)--(3.54,{\hy-0.06});
   }
   % Keep the bias circuit neutral gray: cBlue/cRed remain reserved for the
-  % shallow/deep scientific categories and the claimed Coulomb result.
+  % shallower/deeper scientific categories and the observed bend result.
   \fill[cGray!5, rounded corners=0.7mm] (3.00,3.34) rectangle (3.50,3.72);
   \draw[cGray!66!black, line width=0.66pt, rounded corners=0.7mm]
     (3.00,3.34) rectangle (3.50,3.72);
@@ -638,8 +631,8 @@
   \draw[cGray!58!black, line width=0.66pt] (2.68,3.24)--(2.84,3.24);
   \draw[cGray!58!black, line width=0.66pt] (2.72,3.18)--(2.80,3.18);
 
-  % Mechanism-first annotations. The named Maxwell baseline and Coulomb result
-  % already carry the force contrast; redundant pale field curves read as
+  % Observation-first annotations. The polarity-independent Maxwell baseline is
+  % named by its field dependence; redundant pale field curves read as
   % undeclared wires and are intentionally omitted.
   \draw[-{Stealth[length=2.8pt,width=2.0pt]}, cGray!58!black,
         dash pattern=on 1.3pt off 1.6pt, line width=0.42pt]
@@ -648,17 +641,25 @@
   % and red-result lane; the compact two-line form fits before the electrode.
   \node[font=\sffamily\fontsize{4.8}{5.6}\selectfont,
         text=cGray!74!black, anchor=north east, align=right,
-        inner sep=0.3pt] at (3.42,1.62)
-    {Maxwell\\[-0.45pt]attraction};
+        inner sep=0.3pt] at (3.42,1.66)
+    {Maxwell stress\\[0.5pt]$\propto E^{2}$};
+  % The charging phase is a separate state of the same apparatus and is named,
+  % not drawn, so the panel keeps one observed configuration.
+  \node[font=\sffamily\fontsize{4.8}{5.6}\selectfont,
+        text=cGray!58!black, anchor=north west, align=left,
+        inner sep=0.3pt] at (2.20,1.10)
+    {charging phase:\\[-0.45pt]clip grounded};
 
   \node[small label, anchor=west, align=left] at (0.14,3.64)
-    {mechanical\\clamp};
-  \draw[leader] (1.02,3.58)--(1.76,3.29);
+    {floating clip};
+  \draw[leader] (1.26,3.58)--(1.72,3.38);
   \node[small label, anchor=west, align=left] at (0.14,2.35)
     {floating polymer\\cantilever};
   \draw[leader] (1.34,2.28)--(1.79,2.38);
+  % The charge carrier of the response is hypothesised, not established, so the
+  % marker is labelled with the symbol and an explicit hypothesis qualifier.
   \node[small label, text=cGray!88!black, anchor=west, align=left]
-    at (0.14,0.30) {trapped charge $q_{\mathrm{tr}}$};
+    at (0.14,0.30) {$q_{\mathrm{tr}}$ (hyp.)};
   % The charge-label leader terminates at the marker perimeter rather than
   % floating near the cantilever or cutting through the charge core.
   \draw[leader, cRed!58!black] (0.88,0.46)--(0.96,0.81);
@@ -667,13 +668,14 @@
 
   % The result arrow begins on the trapped-charge perimeter and points away
   % from the driven electrode. It is intentionally stronger than the Maxwell
-  % baseline so the panel reads as a Coulomb-response claim first.
+  % baseline so the panel reads as the observed bend direction first; the
+  % mechanism behind that direction is left to the caption.
   \draw[-{Stealth[length=4.8pt,width=3.5pt]}, cRed!88!black, line width=0.86pt]
     (1.325,1.43)--(0.34,1.43);
   \node[font=\sffamily\fontsize{5.1}{5.9}\selectfont,
         text=cRed!82!black, anchor=south west, align=left,
         inner sep=0.4pt]
-    at (0.30,1.50) {\bfseries Coulomb\\[-0.6pt]\mdseries repulsion};
+    at (0.30,1.50) {\bfseries observed:\\[-0.6pt]\mdseries bends away};
 
   \draw[cGray!30, line width=0.42pt]
     (0.96,0.67)--(0.96,0.61)

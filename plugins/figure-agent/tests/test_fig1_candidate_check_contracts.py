@@ -34,7 +34,7 @@ def test_fig1_candidate_declares_high_risk_boundary_and_path_checks() -> None:
         "panel-e-vs-meter-lead",
         "panel-e-sample-transfer",
         "panel-e-grounded-substrate",
-        "panel-f-coulomb-force",
+        "panel-f-observed-bend-arrow",
         "panel-f-ground-return",
     } <= path_ids
     assert len(boundary_ids) > 0

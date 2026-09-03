@@ -34,13 +34,13 @@ semantic_assertions:
     subject: mobility
     reference: thermal
     tolerance_pt: 2.0
-  - id: panel-f-coulomb-result-left-of-maxwell-baseline
+  - id: panel-f-observed-bend-left-of-maxwell-baseline
     relation: left_of
-    subject: repulsion
-    reference: attraction
-  - id: panel-f-trapped-charge-left-of-driven-electrode
+    subject: bends
+    reference: Maxwell
+  - id: panel-f-hypothesised-charge-left-of-driven-electrode
     relation: left_of
-    subject: trapped
+    subject: (hyp.)
     reference: electrode
 text_boundary_checks:
   - id: panel-a-title-band
@@ -132,12 +132,12 @@ text_boundary_checks:
     bbox_pdf_cm: [10.20, 10.35, 14.25, 14.95]
     clearance_pt: 0.0
     text_phrases:
-      - id: panel_f_coulomb_repulsion
-        words: [Coulomb, repulsion]
-      - id: panel_f_maxwell_attraction
-        words: [Maxwell, attraction]
-      - id: panel_f_trapped_charge
-        words: [trapped, charge]
+      - id: panel_f_observed_bend
+        words: [bends, away]
+      - id: panel_f_maxwell_stress
+        words: [Maxwell, stress]
+      - id: panel_f_hypothesised_charge
+        words: [q, tr]
       - id: panel_f_air_gap
         words: [air, gap]
   - id: panel-c-energy-split
@@ -235,15 +235,15 @@ label_path_proximity_checks:
     x_range_pdf_cm: [6.43, 8.28]
     clearance_pt: 1.0
     text_allowlist: [grounded, substrate]
-  - id: panel-f-coulomb-force
+  - id: panel-f-observed-bend-arrow
     kind: horizontal_line
-    role: panel_f_coulomb_force_arrow
-    y_pdf_cm: 14.26
-    x_range_pdf_cm: [10.96, 11.76]
+    role: panel_f_observed_bend_arrow
+    y_pdf_cm: 13.649
+    x_range_pdf_cm: [10.481, 11.466]
     clearance_pt: 1.0
     text_phrases:
-      - id: coulomb-force
-        words: [Coulomb, force]
+      - id: observed-bend
+        words: [bends, away]
   - id: panel-f-ground-return
     kind: polyline
     role: panel_f_grounded_source_return
