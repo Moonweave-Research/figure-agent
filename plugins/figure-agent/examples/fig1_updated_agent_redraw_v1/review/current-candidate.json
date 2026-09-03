@@ -4,7 +4,7 @@
   "candidate_id": "comparable-v3-repair-c5",
   "candidate_root": ".",
   "source_path": "fig1_updated_agent_redraw_v1.tex",
-  "source_sha256": "sha256:5038a7bc569d3a9bed8b56f01abd0f8f6c883b8bb37b4d32cf4516cb63467de1",
+  "source_sha256": "sha256:52816561fd56c07dc3928688ac307d2e3f89bb57dc3eb4df65ab3c48581394a6",
   "evidence": {
     "render_pdf": "build/fig1_updated_agent_redraw_v1.pdf",
     "render_png": "build/fig1_updated_agent_redraw_v1.png",
