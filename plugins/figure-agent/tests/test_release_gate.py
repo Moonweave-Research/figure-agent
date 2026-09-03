@@ -304,13 +304,20 @@ def test_release_gate_zip_contains_release_gate_script(tmp_path: Path) -> None:
 
 
 def test_release_gate_reports_missing_required_package_path() -> None:
-    names = {".mcp.json", "bin/fig-agent"}
+    names = {".mcp.json", "scripts/fig-agent"}
 
     step = release_gate._verify_required_paths(names)
 
     assert step["state"] == "failed"
     assert ".claude-plugin/plugin.json" in step["details"]["missing"]
     assert "benchmarks/quality_suites.yaml" in step["details"]["missing"]
+
+
+def test_release_gate_rejects_hosted_top_level_bin() -> None:
+    step = release_gate._verify_excluded_paths({"bin/fig-agent"})
+
+    assert step["state"] == "failed"
+    assert step["details"]["unexpected"] == ["bin/fig-agent"]
 
 
 def test_release_gate_reports_missing_smoke_fixture_package_paths() -> None:

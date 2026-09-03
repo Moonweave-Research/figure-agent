@@ -82,7 +82,9 @@ but they are not co-equal default entry points:
 ## Runtime Entrypoint
 
 Preferred shell form is `fig-agent ...`. If the host does not put plugin
-`bin/` on `PATH`, use `"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent" ...`.
+`bin/` on `PATH`, use `"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent" ...`; hosted
+Cowork bundles use `"${CLAUDE_PLUGIN_ROOT}/scripts/fig-agent" ...` because the
+upload surface rejects top-level `bin/` directories.
 
 Runtime roots are explicit:
 

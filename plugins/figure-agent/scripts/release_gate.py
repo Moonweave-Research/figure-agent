@@ -79,7 +79,7 @@ REQUIRED_PACKAGE_PATHS = {
     ".mcp.json",
     "benchmarks/quality_suites.yaml",
     "mcp/figure_agent_server.py",
-    "bin/fig-agent",
+    "scripts/fig-agent",
     "scripts",
     "styles",
     "commands",
@@ -179,6 +179,7 @@ def _verify_excluded_paths(names: set[str]) -> dict[str, Any]:
         or name.startswith("examples/golden_trap_depth_picture")
         or name.startswith("examples/n3_trial_")
         or name.startswith("examples/fig5_floating_clip_mechanism")
+        or name.startswith("bin/")
     )
     return _step(
         "package_excluded_paths",

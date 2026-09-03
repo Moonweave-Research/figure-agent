@@ -20,7 +20,9 @@ fig-agent status <name> --format json
 Fallback when `fig-agent` is not on `PATH`:
 
 ```
-"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent" status <name> --json
+entry="${CLAUDE_PLUGIN_ROOT}/bin/fig-agent"
+[ -f "$entry" ] || entry="${CLAUDE_PLUGIN_ROOT}/scripts/fig-agent"
+"$entry" status <name> --json
 ```
 
 Cowork path preflight:

@@ -96,6 +96,13 @@ def _included_files() -> list[Path]:
     return sorted(set(files), key=lambda path: path.relative_to(PLUGIN_ROOT).as_posix())
 
 
+def _archive_path(path: Path) -> str:
+    rel = path.relative_to(PLUGIN_ROOT).as_posix()
+    if rel == "bin/fig-agent":
+        return "scripts/fig-agent"
+    return rel
+
+
 def build_zip(output_dir: Path) -> Path:
     version = _version()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -112,11 +119,11 @@ def build_zip(output_dir: Path) -> Path:
         )
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for path in included:
-            rel = path.relative_to(PLUGIN_ROOT).as_posix()
+            rel = _archive_path(path)
             info = zipfile.ZipInfo(rel)
             info.date_time = (2026, 1, 1, 0, 0, 0)
             info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = (0o755 if rel == "bin/fig-agent" else 0o644) << 16
+            info.external_attr = (0o755 if rel == "scripts/fig-agent" else 0o644) << 16
             archive.writestr(info, path.read_bytes())
     return zip_path
 

@@ -211,6 +211,7 @@ def test_runtime_docs_define_cowork_entrypoint_fallback_and_root_split() -> None
 
     for doc_path, doc in docs.items():
         assert '"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent"' in doc, doc_path
+        assert '"${CLAUDE_PLUGIN_ROOT}/scripts/fig-agent"' in doc, doc_path
         assert "FIGURE_AGENT_PLUGIN_ROOT" in doc, doc_path
         assert "FIGURE_AGENT_WORKSPACE" in doc, doc_path
         assert "CLAUDE_PROJECT_DIR" in doc, doc_path
