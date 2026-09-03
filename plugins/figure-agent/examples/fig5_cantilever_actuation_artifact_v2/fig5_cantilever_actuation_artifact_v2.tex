@@ -241,7 +241,11 @@
   \draw[forceAway] (panel-c-force-origin)--(panel-c-coulomb-head);
   % Sit the label where the reversed-bend silhouette has already swung left:
   % at the arrow's own height the film body runs through the trailing glyph.
-  \node[labelStd,text=cRed!84!black,anchor=south west] at (0.08,2.74)
+  % x 0.08 -> 0.03: the trailing glyph stood 5.12 pt from the drawn beam
+  % centerline, inside the 5.5 pt this panel declares (3.33 pt half-stroke plus
+  % a visible gap). The earlier declaration measured a path 4.32 pt off the
+  % centerline, so the shortfall never surfaced.
+  \node[labelStd,text=cRed!84!black,anchor=south west] at (0.03,2.74)
     {Coulomb};
   \node[labelStd,anchor=north] at (2.24,0.82)
     {reverse bend if $|F_{\mathrm{C}}|>|F_{\mathrm{M}}|$};
