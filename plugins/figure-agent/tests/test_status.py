@@ -5485,3 +5485,77 @@ def test_spine_accepts_a_report_that_bound_every_declared_phrase(tmp_path: Path)
 
     assert coverage["state"] == "passed"
     assert coverage["phrase_binding_state"] == "passed"
+
+
+def _allowlist_coverage_spine(tmp_path: Path, allowlist_binding: dict | None) -> dict:
+    spec = tmp_path / "spec.yaml"
+    spec.write_text(
+        "text_boundary_checks:\n  - id: title-boundary\n    text_allowlist: [probe]\n",
+        encoding="utf-8",
+    )
+    build = tmp_path / "build"
+    build.mkdir(exist_ok=True)
+    pdf = build / "figure.pdf"
+    pdf.write_bytes(b"render")
+    payload = {
+        "schema": "figure-agent.text-boundary-clash.v1",
+        "fixture": tmp_path.name,
+        "compile_run_id": _issue_spine_compile_run(tmp_path, pdf),
+        "render_pdf": "build/figure.pdf",
+        "render_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
+        "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+        "source": "spec.yaml:text_boundary_checks",
+        "checked": 1,
+        "candidates": [],
+        "total": 0,
+    }
+    if allowlist_binding is not None:
+        payload["allowlist_binding"] = allowlist_binding
+    (build / "text_boundary_clash.json").write_text(json.dumps(payload), encoding="utf-8")
+    return status_mod._spine_evidence_summary(tmp_path, build)
+
+
+def test_spine_blocks_on_a_declared_allowlist_that_binds_nothing(tmp_path: Path) -> None:
+    spine = _allowlist_coverage_spine(
+        tmp_path,
+        {
+            "checked": 1,
+            "state": "failed",
+            "failures": [
+                {
+                    "check_id": "title-boundary",
+                    "kind": "allowlist_unmatched",
+                    "words": ["probe"],
+                    "nearest_words": ["ESVM", "head"],
+                    "detail": "probe (nearest rendered: ESVM, head)",
+                }
+            ],
+        },
+    )
+
+    coverage = spine["text_boundary_coverage"]
+    assert coverage["state"] == "needs_action"
+    assert coverage["allowlist_binding_state"] == "failed"
+    assert coverage["allowlist_binding_checked"] == 1
+    assert spine["state"] == "needs_action"
+
+
+def test_spine_rejects_a_report_that_never_examined_the_declared_allowlists(
+    tmp_path: Path,
+) -> None:
+    assert _allowlist_coverage_spine(tmp_path, None)["text_boundary_coverage"]["state"] == "invalid"
+    assert (
+        _allowlist_coverage_spine(
+            tmp_path, {"checked": 0, "state": "not_declared", "failures": []}
+        )["text_boundary_coverage"]["state"]
+        == "invalid"
+    )
+
+
+def test_spine_accepts_a_report_that_bound_every_declared_allowlist(tmp_path: Path) -> None:
+    coverage = _allowlist_coverage_spine(
+        tmp_path, {"checked": 1, "state": "passed", "failures": []}
+    )["text_boundary_coverage"]
+
+    assert coverage["state"] == "passed"
+    assert coverage["allowlist_binding_state"] == "passed"

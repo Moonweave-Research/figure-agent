@@ -975,6 +975,14 @@ def _declared_phrase_count(checks: list[Any]) -> int:
     return total
 
 
+def _declared_allowlist_count(checks: list[Any]) -> int:
+    return sum(
+        1
+        for check in checks
+        if isinstance(check, dict) and isinstance(check.get("text_allowlist"), list)
+    )
+
+
 def _declared_check_coverage_summary(
     path: Path,
     example_dir: Path,
@@ -1048,6 +1056,29 @@ def _declared_check_coverage_summary(
         ):
             return {"state": "invalid", "path": display_path, "declared": declared}
 
+    # An allowlist that names no rendered word selects nothing, so the check it
+    # scopes measures nothing.  The same proof is required of it as of a phrase.
+    declared_allowlists = _declared_allowlist_count(checks)
+    allowlist_binding = payload.get("allowlist_binding")
+    allowlist_binding_state = "not_applicable"
+    allowlist_binding_checked = 0
+    if declared_allowlists or allowlist_binding is not None:
+        if not isinstance(allowlist_binding, dict):
+            return {"state": "invalid", "path": display_path, "declared": declared}
+        allowlist_binding_state = allowlist_binding.get("state")
+        allowlist_binding_checked = allowlist_binding.get("checked")
+        allowlist_failures = allowlist_binding.get("failures")
+        if (
+            allowlist_binding_state not in {"not_declared", "passed", "failed"}
+            or not isinstance(allowlist_binding_checked, int)
+            or isinstance(allowlist_binding_checked, bool)
+            or not isinstance(allowlist_failures, list)
+            or (allowlist_binding_state == "failed") != bool(allowlist_failures)
+            or allowlist_binding_checked != declared_allowlists
+            or (allowlist_binding_state == "not_declared") != (allowlist_binding_checked == 0)
+        ):
+            return {"state": "invalid", "path": display_path, "declared": declared}
+
     live_binding_state = "not_applicable"
     live_binding_checked = 0
     if validate_live_binding:
@@ -1100,7 +1131,12 @@ def _declared_check_coverage_summary(
 
     if declared == 0 or checked != declared:
         state = "incomplete"
-    elif total or live_binding_state == "failed" or phrase_binding_state == "failed":
+    elif (
+        total
+        or live_binding_state == "failed"
+        or phrase_binding_state == "failed"
+        or allowlist_binding_state == "failed"
+    ):
         state = "needs_action"
     else:
         state = "passed"
@@ -1115,6 +1151,9 @@ def _declared_check_coverage_summary(
     if declared_phrases or phrase_binding is not None:
         summary["phrase_binding_checked"] = phrase_binding_checked
         summary["phrase_binding_state"] = phrase_binding_state
+    if declared_allowlists or allowlist_binding is not None:
+        summary["allowlist_binding_checked"] = allowlist_binding_checked
+        summary["allowlist_binding_state"] = allowlist_binding_state
     if validate_live_binding:
         summary["live_binding_checked"] = live_binding_checked
         summary["live_binding_state"] = live_binding_state

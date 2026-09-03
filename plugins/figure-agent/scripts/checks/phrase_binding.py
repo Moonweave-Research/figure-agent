@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Bind declared text phrases to rendered PDF words in reading order.
+"""Bind declared text to rendered PDF words: phrases in reading order, allowlists by word.
 
 Both declared-geometry detectors resolve a phrase the same way, so the
-grouping rule and the unmatched-declaration finding live here.  A phrase that
-binds nothing measures nothing: the declaration is broken, not clean.
+grouping rule and the unmatched-declaration findings live here.  A declaration
+that binds nothing measures nothing: it is broken, not clean.
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Any
 
 PHRASE_UNMATCHED = "phrase_unmatched"
+ALLOWLIST_UNMATCHED = "allowlist_unmatched"
 NEAREST_WORD_LIMIT = 4
 
 
@@ -281,7 +282,31 @@ def phrase_unmatched_failure(
     }
 
 
-def phrase_binding_state(checked: int, failures: list[dict[str, Any]]) -> str:
+def allowlist_matches(
+    words: list[dict[str, Any]],
+    allowlist: set[str],
+) -> list[dict[str, Any]]:
+    """Return every rendered word an allowlist names, in reading order."""
+    return [word for word in sorted(words, key=_reading_key) if _text(word) in allowlist]
+
+
+def allowlist_unmatched_failure(
+    check_id: str,
+    allowlist: set[str],
+    nearest_words: list[str],
+) -> dict[str, Any]:
+    declared = ", ".join(sorted(allowlist))
+    rendered = ", ".join(nearest_words) if nearest_words else "none"
+    return {
+        "check_id": str(check_id),
+        "kind": ALLOWLIST_UNMATCHED,
+        "words": sorted(allowlist),
+        "nearest_words": list(nearest_words),
+        "detail": f"{declared} (nearest rendered: {rendered})",
+    }
+
+
+def binding_state(checked: int, failures: list[dict[str, Any]]) -> str:
     if failures:
         return "failed"
     return "passed" if checked else "not_declared"

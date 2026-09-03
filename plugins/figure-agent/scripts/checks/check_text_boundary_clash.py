@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import sys
 from pathlib import Path
@@ -18,9 +19,12 @@ from typing import Any
 import yaml
 from check_visual_clash import extract_pdf_words_and_page
 from phrase_binding import (
+    NEAREST_WORD_LIMIT,
+    allowlist_matches,
+    allowlist_unmatched_failure,
+    binding_state,
     group_phrase_words,
     nearest_phrase_words,
-    phrase_binding_state,
     phrase_unmatched_failure,
 )
 
@@ -418,6 +422,76 @@ def declared_phrase_count(checks: list[dict[str, Any]]) -> int:
     return sum(len(_text_phrases(check)) for check in checks)
 
 
+def _boundary_rect_pt(check: dict[str, Any]) -> tuple[float, float, float, float]:
+    kind = check["kind"]
+    if kind == "vertical_line":
+        if not isinstance(check.get("x_pdf_cm"), int | float):
+            raise TextBoundaryClashError(f"{check['id']}.x_pdf_cm must be a number")
+        y_range = _pdf_cm_range_to_pt(
+            check.get("y_range_pdf_cm"), field=f"{check['id']}.y_range_pdf_cm"
+        )
+        x = _cm_to_pt(check["x_pdf_cm"])
+        return (x, y_range[0], x, y_range[1])
+    if kind == "horizontal_line":
+        if not isinstance(check.get("y_pdf_cm"), int | float):
+            raise TextBoundaryClashError(f"{check['id']}.y_pdf_cm must be a number")
+        x_range = _pdf_cm_range_to_pt(
+            check.get("x_range_pdf_cm"), field=f"{check['id']}.x_range_pdf_cm"
+        )
+        y = _cm_to_pt(check["y_pdf_cm"])
+        return (x_range[0], y, x_range[1], y)
+    rect = _bbox_pdf_cm_to_pt(check.get("bbox_pdf_cm"), field=f"{check['id']}.bbox_pdf_cm")
+    return (rect[0], rect[1], rect[2], rect[3])
+
+
+def _nearest_rendered_words(
+    check: dict[str, Any],
+    words: list[dict[str, Any]],
+    *,
+    limit: int = NEAREST_WORD_LIMIT,
+) -> list[str]:
+    """Name the words the render actually draws nearest the declared boundary."""
+    x1, y1, x2, y2 = _boundary_rect_pt(check)
+    ranked = []
+    for word in words:
+        bbox = _word_bbox(word)
+        dx = max(x1 - bbox[2], bbox[0] - x2, 0.0)
+        dy = max(y1 - bbox[3], bbox[1] - y2, 0.0)
+        ranked.append((math.hypot(dx, dy), _word_sort_key(word), str(word.get("text", "")).strip()))
+    ranked.sort()
+    return [text for _, _, text in ranked[:limit]]
+
+
+def allowlist_binding_failures(
+    checks: list[dict[str, Any]],
+    words: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Report every declared allowlist that names no rendered word.
+
+    An allowlist selects only the words it names, so one that names nothing the
+    render draws selects nothing: containment is never measured for a single
+    word and the checker used to print OK.  The declaration is then a dead
+    check, so it fails here instead of passing silently.
+    """
+    failures: list[dict[str, Any]] = []
+    for check in sorted(checks, key=_check_sort_key):
+        allowlist = _text_allowlist(check)
+        if allowlist is None or allowlist_matches(words, allowlist):
+            continue
+        failures.append(
+            allowlist_unmatched_failure(
+                str(check["id"]),
+                allowlist,
+                _nearest_rendered_words(check, words),
+            )
+        )
+    return failures
+
+
+def declared_allowlist_count(checks: list[dict[str, Any]]) -> int:
+    return sum(1 for check in checks if _text_allowlist(check) is not None)
+
+
 def text_boundary_clash_payload(
     pdf_path: Path,
     candidates: list[dict[str, Any]],
@@ -425,12 +499,15 @@ def text_boundary_clash_payload(
     checked: int,
     phrase_binding_checked: int = 0,
     phrase_binding_failures: list[dict[str, Any]] | None = None,
+    allowlist_binding_checked: int = 0,
+    allowlist_binding_failures: list[dict[str, Any]] | None = None,
     spec_path: Path | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
     resolved_spec_path = spec_path or _infer_spec_path(pdf_path)
     binding_failures = list(phrase_binding_failures or [])
+    unmatched_allowlists = list(allowlist_binding_failures or [])
     return {
         "schema": SCHEMA,
         "compile_run_id": os.environ.get("FIGURE_AGENT_COMPILE_RUN_ID"),
@@ -443,8 +520,13 @@ def text_boundary_clash_payload(
         "checked": checked,
         "phrase_binding": {
             "checked": phrase_binding_checked,
-            "state": phrase_binding_state(phrase_binding_checked, binding_failures),
+            "state": binding_state(phrase_binding_checked, binding_failures),
             "failures": binding_failures,
+        },
+        "allowlist_binding": {
+            "checked": allowlist_binding_checked,
+            "state": binding_state(allowlist_binding_checked, unmatched_allowlists),
+            "failures": unmatched_allowlists,
         },
         "total": len(candidates),
     }
@@ -485,6 +567,8 @@ def main() -> int:
         words, page_size_pt = extract_pdf_words_and_page(args.pdf)
         binding_failures = phrase_binding_failures(checks, words)
         phrase_count = declared_phrase_count(checks)
+        unmatched_allowlists = allowlist_binding_failures(checks, words)
+        allowlist_count = declared_allowlist_count(checks)
         candidates = detect_text_boundary_clashes(words, page_size_pt, checks)
     except TextBoundaryClashError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -496,6 +580,8 @@ def main() -> int:
         checked=len(checks),
         phrase_binding_checked=phrase_count,
         phrase_binding_failures=binding_failures,
+        allowlist_binding_checked=allowlist_count,
+        allowlist_binding_failures=unmatched_allowlists,
         spec_path=spec_path,
     )
     if args.json_output is not None:
@@ -509,6 +595,16 @@ def main() -> int:
                 f"({failure['detail']})",
                 file=sys.stderr,
             )
+
+    if unmatched_allowlists:
+        for failure in unmatched_allowlists:
+            print(
+                "ERROR text_boundary_allowlist: "
+                f"{failure['check_id']} {failure['kind']} ({failure['detail']})",
+                file=sys.stderr,
+            )
+
+    if binding_failures or unmatched_allowlists:
         return 2
 
     if not candidates:

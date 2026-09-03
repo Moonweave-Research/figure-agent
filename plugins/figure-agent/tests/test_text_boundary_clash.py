@@ -315,6 +315,7 @@ def test_payload_uses_stable_json_contract(tmp_path: Path) -> None:
         "candidates": [candidate],
         "checked": 1,
         "phrase_binding": {"checked": 0, "state": "not_declared", "failures": []},
+        "allowlist_binding": {"checked": 0, "state": "not_declared", "failures": []},
         "total": 1,
     }
 
@@ -481,3 +482,77 @@ def test_main_reports_a_bound_phrase_declaration_as_passed(
 
     assert status == 0
     assert report["phrase_binding"] == {"checked": 1, "state": "passed", "failures": []}
+
+
+_ALLOWLIST_SPEC = (
+    "text_boundary_checks:\n"
+    "  - id: row2_box\n"
+    "    kind: rect\n"
+    "    role: row_box\n"
+    "    mode: contain_text\n"
+    "    bbox_pdf_cm: [0.0, 0.0, 5.08, 5.08]\n"
+    "    clearance_pt: 0.0\n"
+    "    text_allowlist: [{allowed}]\n"
+)
+
+
+def _allowlist_main(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    allowed: str,
+) -> tuple[int, dict]:
+    fixture = tmp_path / "demo"
+    build = fixture / "build"
+    build.mkdir(parents=True)
+    pdf = build / "demo.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n")
+    (fixture / "spec.yaml").write_text(_ALLOWLIST_SPEC.format(allowed=allowed), encoding="utf-8")
+    monkeypatch.setattr(
+        boundary,
+        "extract_pdf_words_and_page",
+        lambda _pdf: (
+            [
+                _word("polymer", 20.0, 20.0, 50.0, 30.0),
+                _word("film", 54.0, 20.0, 70.0, 30.0),
+            ],
+            (200.0, 200.0),
+        ),
+    )
+    output = build / "text_boundary_clash.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["check_text_boundary_clash.py", str(pdf), "--json-output", str(output)],
+    )
+    status = boundary.main()
+    return status, json.loads(output.read_text(encoding="utf-8"))
+
+
+def test_main_fails_closed_when_a_declared_allowlist_binds_nothing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _allowlist_main(tmp_path, monkeypatch, "substrate")
+
+    assert status == 2
+    assert report["allowlist_binding"]["state"] == "failed"
+    assert report["allowlist_binding"]["checked"] == 1
+    assert report["allowlist_binding"]["failures"] == [
+        {
+            "check_id": "row2_box",
+            "kind": "allowlist_unmatched",
+            "words": ["substrate"],
+            "nearest_words": ["polymer", "film"],
+            "detail": "substrate (nearest rendered: polymer, film)",
+        }
+    ]
+
+
+def test_main_reports_a_bound_allowlist_declaration_as_passed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _allowlist_main(tmp_path, monkeypatch, "polymer")
+
+    assert status == 0
+    assert report["allowlist_binding"] == {"checked": 1, "state": "passed", "failures": []}

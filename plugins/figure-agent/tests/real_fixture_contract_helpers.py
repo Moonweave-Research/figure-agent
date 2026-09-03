@@ -92,6 +92,11 @@ def materialize_controlled_artifacts(
                     ),
                     "failures": [],
                 },
+                "allowlist_binding": {
+                    "checked": _declared_allowlist_count(checks),
+                    "state": ("passed" if _declared_allowlist_count(checks) else "not_declared"),
+                    "failures": [],
+                },
                 "total": 0,
             }
             if field == "label_path_proximity_checks":
@@ -120,6 +125,14 @@ def _declared_phrase_count(checks: list[Any]) -> int:
         if isinstance(check, dict) and isinstance(check.get("text_phrases"), list):
             total += len(check["text_phrases"])
     return total
+
+
+def _declared_allowlist_count(checks: list[Any]) -> int:
+    return sum(
+        1
+        for check in checks
+        if isinstance(check, dict) and isinstance(check.get("text_allowlist"), list)
+    )
 
 
 def set_tree_mtime(root: Path, timestamp: float) -> None:

@@ -193,10 +193,10 @@ label_path_proximity_checks:
   - id: panel-e-probe-shaft
     kind: vertical_line
     role: panel_e_probe_axis
-    x_pdf_cm: 7.36
-    y_range_pdf_cm: [12.78, 13.11]
+    x_pdf_cm: 7.84
+    y_range_pdf_cm: [11.12, 11.86]
     clearance_pt: 1.0
-    text_allowlist: [probe]
+    text_allowlist: [ESVM, head]
   - id: panel-e-vs-meter-lead
     kind: horizontal_line
     role: panel_e_vs_meter_connection
@@ -209,10 +209,10 @@ label_path_proximity_checks:
   - id: panel-e-sample-transfer
     kind: horizontal_line
     role: panel_e_manual_sample_transfer
-    y_pdf_cm: 12.88
-    x_range_pdf_cm: [6.70, 7.48]
+    y_pdf_cm: 12.31
+    x_range_pdf_cm: [6.85, 7.31]
     clearance_pt: 1.0
-    text_allowlist: [motion, stage]
+    text_allowlist: [manual, sample, transfer, film]
   - id: panel-e-grounded-substrate
     kind: horizontal_line
     role: panel_e_grounded_substrate_boundary

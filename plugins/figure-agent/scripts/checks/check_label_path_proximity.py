@@ -21,17 +21,23 @@ import yaml
 if __package__:
     from .check_visual_clash import extract_pdf_words_and_page
     from .phrase_binding import (
+        NEAREST_WORD_LIMIT,
+        allowlist_matches,
+        allowlist_unmatched_failure,
+        binding_state,
         group_phrase_words,
         nearest_phrase_words,
-        phrase_binding_state,
         phrase_unmatched_failure,
     )
 else:  # Direct script execution keeps the checks directory on sys.path.
     from check_visual_clash import extract_pdf_words_and_page
     from phrase_binding import (
+        NEAREST_WORD_LIMIT,
+        allowlist_matches,
+        allowlist_unmatched_failure,
+        binding_state,
         group_phrase_words,
         nearest_phrase_words,
-        phrase_binding_state,
         phrase_unmatched_failure,
     )
 
@@ -277,9 +283,7 @@ def load_label_path_proximity_checks(spec_path: Path | None) -> list[dict[str, A
     checks: list[dict[str, Any]] = []
     for index, raw_check in enumerate(raw_checks):
         if not isinstance(raw_check, dict):
-            raise LabelPathProximityError(
-                f"label_path_proximity_checks[{index}] must be a mapping"
-            )
+            raise LabelPathProximityError(f"label_path_proximity_checks[{index}] must be a mapping")
         check = dict(raw_check)
         check_id = check.get("id")
         check_kind = check.get("kind")
@@ -327,9 +331,7 @@ def authoring_context(checks: list[dict[str, Any]]) -> dict[str, Any]:
                 f"PDF-cm vertical line x={number(check['x_pdf_cm'])}, "
                 f"y=[{number(y0)}, {number(y1)}]"
             )
-        points = ", ".join(
-            f"({number(x)}, {number(y)})" for x, y in check["points_pdf_cm"]
-        )
+        points = ", ".join(f"({number(x)}, {number(y)})" for x, y in check["points_pdf_cm"])
         return f"PDF-cm polyline [{points}]"
 
     directives: list[str] = []
@@ -338,9 +340,7 @@ def authoring_context(checks: list[dict[str, Any]]) -> dict[str, Any]:
         clearance = _non_negative_number(
             check.get("clearance_pt"), field=f"{check['id']}.clearance_pt"
         )
-        path = (
-            f"declared path [{check['id']}] ({check['role']}; {geometry(check)})"
-        )
+        path = f"declared path [{check['id']}] ({check['role']}; {geometry(check)})"
         phrases = _text_phrases(check)
         allowlist = _text_allowlist(check)
         for phrase in phrases:
@@ -351,13 +351,10 @@ def authoring_context(checks: list[dict[str, Any]]) -> dict[str, Any]:
         if allowlist is not None:
             for label in sorted(allowlist):
                 directives.append(
-                    f"Keep text label [{label}] at least {clearance:g} pt clear of "
-                    f"{path}."
+                    f"Keep text label [{label}] at least {clearance:g} pt clear of {path}."
                 )
         if not phrases and allowlist is None:
-            directives.append(
-                f"Keep all rendered text at least {clearance:g} pt clear of {path}."
-            )
+            directives.append(f"Keep all rendered text at least {clearance:g} pt clear of {path}.")
     return {
         "schema": SCHEMA,
         "checks": checks,
@@ -506,10 +503,7 @@ def _path_segments(check: dict[str, Any]) -> tuple[list[tuple[float, float, floa
         check.get("points_pdf_cm"),
         field=f"{check['id']}.points_pdf_cm",
     )
-    segments = [
-        (left[0], left[1], right[0], right[1])
-        for left, right in zip(points, points[1:])
-    ]
+    segments = [(left[0], left[1], right[0], right[1]) for left, right in zip(points, points[1:])]
     return segments, {"kind": "polyline", "points": points}
 
 
@@ -533,10 +527,7 @@ def _candidate_for_word(
 ) -> dict[str, Any] | None:
     clearance = float(check.get("clearance_pt", 0.0))
     bbox = tuple(_word_bbox(word))
-    distance = min(
-        _segment_rect_distance(ax, ay, bx, by, bbox)
-        for ax, ay, bx, by in segments
-    )
+    distance = min(_segment_rect_distance(ax, ay, bx, by, bbox) for ax, ay, bx, by in segments)
     if distance > clearance:
         return None
     candidate = {
@@ -623,6 +614,58 @@ def declared_phrase_count(checks: list[dict[str, Any]]) -> int:
     return sum(len(_text_phrases(check)) for check in checks)
 
 
+def _nearest_rendered_words(
+    check: dict[str, Any],
+    words: list[dict[str, Any]],
+    *,
+    limit: int = NEAREST_WORD_LIMIT,
+) -> list[str]:
+    """Name the words the render actually draws nearest the declared path."""
+    segments, _ = _path_segments(check)
+    ranked = sorted(
+        (
+            min(
+                _segment_rect_distance(ax, ay, bx, by, tuple(_word_bbox(word)))
+                for ax, ay, bx, by in segments
+            ),
+            _word_sort_key(word),
+            str(word.get("text", "")).strip(),
+        )
+        for word in words
+    )
+    return [text for _, _, text in ranked[:limit]]
+
+
+def allowlist_binding_failures(
+    checks: list[dict[str, Any]],
+    words: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Report every declared allowlist that names no rendered word.
+
+    An allowlist selects only the words it names, so one that names nothing the
+    render draws selects nothing: the proximity measure never runs and the
+    checker used to print OK.  The declaration is then a dead check, so it
+    fails here instead of passing silently.
+    """
+    failures: list[dict[str, Any]] = []
+    for check in sorted(checks, key=_check_sort_key):
+        allowlist = _text_allowlist(check)
+        if allowlist is None or allowlist_matches(words, allowlist):
+            continue
+        failures.append(
+            allowlist_unmatched_failure(
+                str(check["id"]),
+                allowlist,
+                _nearest_rendered_words(check, words),
+            )
+        )
+    return failures
+
+
+def declared_allowlist_count(checks: list[dict[str, Any]]) -> int:
+    return sum(1 for check in checks if _text_allowlist(check) is not None)
+
+
 def label_path_proximity_payload(
     pdf_path: Path,
     candidates: list[dict[str, Any]],
@@ -632,12 +675,15 @@ def label_path_proximity_payload(
     live_binding_failures: list[dict[str, str]] | None = None,
     phrase_binding_checked: int = 0,
     phrase_binding_failures: list[dict[str, Any]] | None = None,
+    allowlist_binding_checked: int = 0,
+    allowlist_binding_failures: list[dict[str, Any]] | None = None,
     spec_path: Path | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
     binding_failures = list(live_binding_failures or [])
     unmatched_phrases = list(phrase_binding_failures or [])
+    unmatched_allowlists = list(allowlist_binding_failures or [])
     resolved_spec_path = spec_path or _infer_spec_path(pdf_path)
     return {
         "schema": SCHEMA,
@@ -651,8 +697,13 @@ def label_path_proximity_payload(
         "checked": checked,
         "phrase_binding": {
             "checked": phrase_binding_checked,
-            "state": phrase_binding_state(phrase_binding_checked, unmatched_phrases),
+            "state": binding_state(phrase_binding_checked, unmatched_phrases),
             "failures": unmatched_phrases,
+        },
+        "allowlist_binding": {
+            "checked": allowlist_binding_checked,
+            "state": binding_state(allowlist_binding_checked, unmatched_allowlists),
+            "failures": unmatched_allowlists,
         },
         "live_binding": {
             "checked": live_binding_checked,
@@ -709,6 +760,8 @@ def main() -> int:
         )
         unmatched_phrases = phrase_binding_failures(checks, words)
         phrase_count = declared_phrase_count(checks)
+        unmatched_allowlists = allowlist_binding_failures(checks, words)
+        allowlist_count = declared_allowlist_count(checks)
         candidates = detect_label_path_proximity(words, page_size_pt, checks)
     except LabelPathProximityError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -723,6 +776,8 @@ def main() -> int:
         live_binding_failures=binding_failures,
         phrase_binding_checked=phrase_count,
         phrase_binding_failures=unmatched_phrases,
+        allowlist_binding_checked=allowlist_count,
+        allowlist_binding_failures=unmatched_allowlists,
         spec_path=spec_path,
     )
     if args.json_output is not None:
@@ -737,6 +792,14 @@ def main() -> int:
                 file=sys.stderr,
             )
 
+    if unmatched_allowlists:
+        for failure in unmatched_allowlists:
+            print(
+                "ERROR label_path_allowlist: "
+                f"{failure['check_id']} {failure['kind']} ({failure['detail']})",
+                file=sys.stderr,
+            )
+
     if binding_failures:
         for failure in binding_failures:
             print(
@@ -745,20 +808,19 @@ def main() -> int:
                 file=sys.stderr,
             )
 
-    if binding_failures or unmatched_phrases:
+    if binding_failures or unmatched_phrases or unmatched_allowlists:
         return 2
 
     if not candidates:
         print(
-            f"OK: no label-path proximity candidates found in {args.pdf.name} "
-            f"({len(words)} words)"
+            f"OK: no label-path proximity candidates found in {args.pdf.name} ({len(words)} words)"
         )
         return 0
 
     for candidate in candidates:
         print(
             "WARN label_path_proximity: "
-            f"{candidate['id']} kind={candidate['kind']} text=\"{candidate['text']}\" "
+            f'{candidate["id"]} kind={candidate["kind"]} text="{candidate["text"]}" '
             f"path={candidate['path_id']} distance_pt={candidate['distance_pt']}"
         )
     return 1 if args.strict else 0
