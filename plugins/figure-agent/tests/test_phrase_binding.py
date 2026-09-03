@@ -199,7 +199,39 @@ def test_phrase_unmatched_failure_carries_declaration_and_render_evidence() -> N
     }
 
 
-def test_phrase_binding_state_distinguishes_absent_from_clean() -> None:
-    assert phrase_binding.phrase_binding_state(0, []) == "not_declared"
-    assert phrase_binding.phrase_binding_state(3, []) == "passed"
-    assert phrase_binding.phrase_binding_state(3, [{"kind": "phrase_unmatched"}]) == "failed"
+def test_binding_state_distinguishes_absent_from_clean() -> None:
+    assert phrase_binding.binding_state(0, []) == "not_declared"
+    assert phrase_binding.binding_state(3, []) == "passed"
+    assert phrase_binding.binding_state(3, [{"kind": "phrase_unmatched"}]) == "failed"
+
+
+def test_allowlist_matches_returns_every_named_word_in_reading_order() -> None:
+    words = [
+        _word("head", 251.273, 309.764, 264.516, 314.561),
+        _word("ESVM", 241.874, 310.016, 249.335, 315.435),
+        _word("film", 190.0, 340.0, 205.0, 348.0),
+    ]
+
+    matched = phrase_binding.allowlist_matches(words, {"ESVM", "head"})
+
+    assert [word["text"] for word in matched] == ["head", "ESVM"]
+    assert phrase_binding.allowlist_matches(words, {"probe"}) == []
+
+
+def test_allowlist_unmatched_failure_names_the_declared_and_the_rendered_words() -> None:
+    failure = phrase_binding.allowlist_unmatched_failure(
+        "panel-e-probe-shaft",
+        {"probe", "shaft"},
+        ["ESVM", "head"],
+    )
+
+    assert failure == {
+        "check_id": "panel-e-probe-shaft",
+        "kind": "allowlist_unmatched",
+        "words": ["probe", "shaft"],
+        "nearest_words": ["ESVM", "head"],
+        "detail": "probe, shaft (nearest rendered: ESVM, head)",
+    }
+    assert phrase_binding.allowlist_unmatched_failure("x", {"probe"}, [])["detail"] == (
+        "probe (nearest rendered: none)"
+    )
