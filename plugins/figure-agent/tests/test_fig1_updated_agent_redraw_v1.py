@@ -140,17 +140,17 @@ def test_redraw_semantic_contract_binds_c_d_e_relations() -> None:
 
     protected = set(result["protected_relations"])
     assert "real_space_trap_populations_correspond_to_energy_diagram_states" in protected
-    assert "high_n_power_law_decays_faster_than_low_n_power_law" in protected
+    assert "measured_power_law_has_no_single_relaxation_cutoff" in protected
     assert (
-        "corona_charged_sample_is_manually_transferred_to_noncontact_ispd_measurement"
-        in protected
+        "corona_charged_sample_is_manually_transferred_to_noncontact_ispd_measurement" in protected
     )
     assert "surface_potential_decay_is_transformed_into_derived_trap_distribution" in protected
-    assert "tau_d_remains_energy_domain_interval_between_shallow_and_deep_peaks" in protected
+    assert (
+        "derived_trap_distribution_is_one_continuous_population_without_a_drawn_ratio" in protected
+    )
 
     connectors = {
-        item["connector_id"]: item
-        for item in result["semantic_legibility"]["visible_connectors"]
+        item["connector_id"]: item for item in result["semantic_legibility"]["visible_connectors"]
     }
     assert (
         connectors["panel_c.shallow_population_corresponds_to_energy_state"]["render_style"]
@@ -254,9 +254,9 @@ def test_bound_authoring_prompt_carries_project_cantilever_orientation_rule() ->
     assert "Do not solve clearance by forcing an equal-cell grid" in prompt
     assert "polymer_paper_project.poly-s-dib-bis-thiocumyl-motif" in prompt
     assert "Ar-C(CH3)2-Sx" in prompt
-    assert "Locked invariant [E:tau-d-energy-domain]" in prompt
-    assert "pair001.tau-d-energy-domain-exception" in prompt
-    assert "Do not move it onto the V_s(t) time axis" in prompt
+    assert "Locked invariant [E:no-relaxation-time-on-the-energy-axis]" in prompt
+    assert "pair001.relaxation-time-not-on-an-energy-axis" in prompt
+    assert "a time plotted on an energy axis is a dimensional error" in prompt
     for panel_id in "ABCDEF":
         assert f"Add exactly one canonical marker [% Panel {panel_id}]" in prompt
 
@@ -718,32 +718,31 @@ def test_repaired_panel_d_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_d = source.split("% Panel D", 1)[1].split("% Panel E", 1)[0]
     widths = [
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_d
-        )
+        float(value) for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_d)
     ]
 
     assert widths
     assert "line width=0.90pt" in panel_d
     assert "line width=0.66pt" in panel_d
     assert "line width=0.25pt" in panel_d  # neutral shared-anchor outline
-    assert "{low $n$}" in panel_d
-    assert "{high $n$}" in panel_d
+    assert "{broad relaxation-time\\\\distribution}" in panel_d
+    assert "{single relaxation\\\\(Debye model)}" in panel_d
+    assert "low $n$" not in panel_d
+    assert "high $n$" not in panel_d
     assert "PI control" not in panel_d
     assert "S-rich" not in panel_d
     assert "circle (0.045)" in panel_d  # neutral shared initial-state anchor
     assert "circle (0.060)" not in panel_d
     for colored_text in ("text=cBrown", "text=cBlue", "text=cRed"):
         assert colored_text not in panel_d
-    assert panel_d.count("text=cGray!92!black") == 2
+    assert panel_d.count("text=cGray!92!black") == 1
     assert "(0.48,2.62) rectangle (1.47,3.44)" in panel_d
     assert "(0.55,2.70) rectangle (1.40,3.36)" not in panel_d
-    for rotation, end_y in ((-13.5, 1.12), (-21.1, 0.66)):
-        slope_angle = math.degrees(math.atan2(end_y - 1.88, 4.02 - 0.86))
-        assert abs(rotation - slope_angle) <= 0.3
-        assert f"rotate={rotation}" in panel_d
-    assert "Debye" not in panel_d
+    # No trace-hugging rotated labels remain; only the axis titles rotate.
+    assert "rotate=-13.5" not in panel_d
+    assert "rotate=-21.1" not in panel_d
+    assert panel_d.count("rotate=90") == 1
+    assert "Debye" in panel_d
     assert r"\shade" not in panel_d
     assert "opacity=" not in panel_d
     assert "measurement-like data points" in panel_d
@@ -759,27 +758,43 @@ def test_repaired_panel_d_uses_the_shared_three_bar_ground_symbol() -> None:
     assert "(4.17,2.46)--(4.27,2.46)" in panel_d
 
 
-def test_repaired_panel_d_high_n_line_is_geometrically_steeper() -> None:
+def test_repaired_panel_d_contrasts_a_power_law_with_a_single_relaxation_model() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_d = source.split("% Panel D", 1)[1].split("% Panel E", 1)[0]
 
+    # The measured trace is the only straight line on these log-log axes.
     assert "(0.86,1.88)--(4.02,1.12)" in panel_d
-    assert "(0.86,1.88)--(4.02,0.66)" in panel_d
-    low_drop = 1.88 - 1.12
-    high_drop = 1.88 - 0.66
-    assert high_drop > low_drop
-    assert "rotate=-13.5" in panel_d
-    assert "rotate=-21.1" in panel_d
+    assert "(0.86,1.88)--(4.02,0.66)" not in panel_d
+
+    # The Debye reference shares the initial state, then leaves the power law
+    # and falls away with no straight-line regime of its own.
+    trace = re.search(
+        r"plot\[smooth\] coordinates\s*\n\s*\{([^}]*)\}", panel_d
+    )
+    assert trace
+    points = [
+        tuple(float(value) for value in pair.strip("()").split(","))
+        for pair in re.findall(r"\([0-9.]+,[0-9.]+\)", trace.group(1))
+    ]
+    assert points[0] == (0.86, 1.88)
+    power_law = lambda x: 1.88 - (1.88 - 1.12) * (x - 0.86) / (4.02 - 0.86)
+    # strictly below the power law after the shared anchor, and monotone down
+    assert all(y < power_law(x) for x, y in points[1:])
+    assert all(b[1] < a[1] for a, b in zip(points, points[1:], strict=False))
+    # the final segment must be far steeper than the first: an exponential
+    # cut-off, not a second power law
+    first = (points[0][1] - points[1][1]) / (points[1][0] - points[0][0])
+    last = (points[-2][1] - points[-1][1]) / (points[-1][0] - points[-2][0])
+    assert last > 5 * first
+    # and it stops visibly above the time axis rather than merging into it
+    assert points[-1][1] > 0.47 + 0.10
 
 
 def test_repaired_panel_e_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_e = source.split("% Panel E", 1)[1].split("% Panel F", 1)[0]
     widths = [
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_e
-        )
+        float(value) for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_e)
     ]
 
     assert widths

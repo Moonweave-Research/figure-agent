@@ -108,12 +108,12 @@ text_boundary_checks:
     bbox_pdf_cm: [0.20, 12.55, 4.35, 15.18]
     clearance_pt: 0.0
     text_phrases:
-      - id: panel_d_low_n
-        words: [low, n]
-      - id: panel_d_high_n
-        words: [high, n]
-      - id: panel_d_log_t
-        words: [log, t]
+      - id: panel_d_broad_relaxation_time
+        words: [broad, relaxation-time]
+      - id: panel_d_single_relaxation
+        words: [single, relaxation]
+      - id: panel_d_debye_model
+        words: ['(Debye', 'model)']
   - id: panel-e-apparatus-labels
     kind: rect
     role: ispd_apparatus_label_region
@@ -293,14 +293,18 @@ panels:
     locked_invariants:
       - id: stage-specific-grounding
         invariant: the corona-charging station uses the high-voltage supply's two terminals without a grid or earth-ground symbol, while the measurement station grounds the conductive backing beneath the specimen.
-      - id: tau-d-energy-domain
-        invariant: in this paper-local overview, tau_d denotes the qualitative energy-domain interval between the shallow and deep g(E_t) peak positions; do not relocate it to the V_s(t) time axis or attach a numeric value or unit.
+      - id: no-relaxation-time-on-the-energy-axis
+        invariant: no relaxation-time symbol is drawn on the g(E_t) energy axis; a time plotted on an energy axis is a dimensional error. Author decision 2026-09-03 removed the tau_d span.
+      - id: g-et-agrees-with-panel-c
+        invariant: g(E_t) is the same single continuous distribution drawn in Panel C with the axes swapped; the two must agree in shape and in carrying no drawn shallow-to-deep ratio.
   - id: F
-    caption: floating cantilever Coulomb response
+    caption: floating-clip cantilever bending response
     semantic_claims:
       - id: floating-topology
-        claim: the grounded source return does not ground the sample or cantilever.
+        claim: the grounded source return does not ground the sample or cantilever; the clip's own terminal is drawn open.
+      - id: observed-bend-direction
+        claim: the observation asserted by the panel is that the floating cantilever bends away from the driven electrode. The polarity-dependent force is hypothesised, labelled q_tr (hyp.), and named only in the caption.
     locked_invariants:
-      - id: force-direction
-        invariant: the Coulomb-force arrow points away from the active electrode.
+      - id: observed-bend-direction
+        invariant: the observation arrow points away from the driven electrode and is labelled as an observation, not as a named mechanism.
 publication_acceptance: not_claimed

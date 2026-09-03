@@ -61,11 +61,11 @@ rules:
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.transient-power-law-evidence-boundary
     category: physics_semantics
-    rule: "For a symbolic transient-current comparison, plot log I against log t and encode I(t) proportional to t^-n as straight descending lines whose slope is -n; the high-n line must be visibly steeper than the low-n line. Do not add exact n values, sample identities, Debye references, or measurement-like scatter markers unless paper-local data binds them. A schematic fit line without bound coordinates must not masquerade as sampled data."
+    rule: "For a symbolic transient-current comparison, plot log I against log t and encode I(t) proportional to t^-n as a straight descending line whose slope is -n. Contrast it with an idealised single-relaxation (Debye) model reference, superseding the earlier low-n versus high-n two-material contrast and the earlier ban on Debye: draw the reference as a curve with no straight-line regime, label it explicitly as a model reference rather than a measured control, and label the measured trace with relaxation-time language rather than trap language. Do not add exact n values, a fit window, chamber or environment conditions, sample identities, or measurement-like scatter markers unless paper-local data binds them. A schematic fit line without bound coordinates must not masquerade as sampled data."
     source:
-      kind: critique_adjudication
-      locator: "Fig1 Panel D v5f authority plus human Debye-removal and evidence audit (2026-07-20)"
-      quote: "Keep the low-n/high-n power-law contrast, remove Debye, and do not infer unbound quantitative data."
+      kind: iteration_comment
+      locator: "Fig1 alt_260805/DECISION_BRIEF.md rows 4-6; author decision 2026-09-03"
+      quote: "one power law vs an idealised single-relaxation (Debye model) reference"
     transfer_policy: use_as_constraint
   - id: polymer_paper_project.cantilever-vertical-clip-top
     category: instrument_standard

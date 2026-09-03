@@ -400,16 +400,27 @@
   \foreach \y in {0.84,1.26,1.68} {\draw[cGray!65, line width=0.66pt] (0.66,\y)--(0.75,\y);}
   \foreach \x in {1.46,2.38,3.30} {\draw[cGray!65, line width=0.66pt] (\x,0.47)--(\x,0.56);}
 
-  \draw[cBlue!82!black, line width=0.90pt] (0.86,1.88)--(4.02,1.12);
-  \draw[cRed!82!black, line width=0.90pt] (0.86,1.88)--(4.02,0.66);
+  % The measured response is the straight power law; the comparison partner is
+  % an idealised single-relaxation (Debye) model, not a second material. The
+  % dashed trace is exp(-t/tau) replotted on these log-log axes, so it tracks
+  % the power law briefly and then falls away without a straight-line regime.
+  \draw[cAmber!88!black, line width=0.90pt] (0.86,1.88)--(4.02,1.12);
+  \draw[cGray!70!black, line width=0.66pt, dash pattern=on 1.8pt off 1.5pt]
+    plot[smooth] coordinates
+    {(0.86,1.88) (1.30,1.76) (1.75,1.62) (2.20,1.47)
+     (2.60,1.29) (2.85,1.08) (3.00,0.86) (3.10,0.62)};
   % The shared neutral anchor marks the common initial state without inventing
-  % measurement-like data points; only the symbolic slope contrast is claimed.
+  % measurement-like data points; only the symbolic decay contrast is claimed.
   \fill[cGray!72!black] (0.86,1.88) circle (0.045);
   \draw[cGray!88!black, line width=0.25pt] (0.86,1.88) circle (0.045);
-  \node[small label,
-        text=cGray!92!black, rotate=-13.5] at (3.28,1.50) {low $n$};
-  \node[small label,
-        text=cGray!92!black, rotate=-21.1] at (2.78,0.91) {high $n$};
+  % Relaxation-time language, not trap language: n is an operational decay
+  % exponent, not a direct measurement of trap depth or density.
+  \node[small label, text=cGray!92!black, anchor=south east, align=right]
+    at (4.22,1.64) {broad relaxation-time\\distribution};
+  \draw[leader, cAmber!72!black] (3.34,1.60)--(3.42,1.32);
+  \node[small label, text=cGray!82!black, anchor=north west, align=left]
+    at (0.90,1.10) {single relaxation\\(Debye model)};
+  \draw[leader, cGray!62!black] (2.36,1.03)--(2.78,1.12);
 \end{scope}
 
 % Panel E
