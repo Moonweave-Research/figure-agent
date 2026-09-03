@@ -131,26 +131,31 @@ def test_fig1_repaired_panel_e_allowlists_measure_the_drawn_element(
         assert {candidate["text"] for candidate in near} == reachable, check_id
 
 
-# Every Panel E path declaration now names the drawn element it guards. The two
-# repaired ones had drifted more than half a centimetre off it; the pair that had
-# not drifted proves the gate is not simply passing everything.
-PANEL_E_BOUND = (
+# Every repaired path declaration now names the drawn element it guards. Three of
+# them had drifted off it; the pair that had not drifted proves the gate is not
+# simply passing everything.
+BOUND_PATHS = (
     "panel-e-grounded-substrate",
     "panel-e-probe-shaft",
     "panel-e-sample-transfer",
     "panel-e-vs-meter-lead",
+    "panel-f-ground-return",
 )
 
 
 @pytest.mark.render
-def test_fig1_panel_e_paths_bind_the_element_they_measure(compiled_fig1: Path) -> None:
+def test_fig1_bound_paths_measure_the_element_they_name(compiled_fig1: Path) -> None:
     payload = json.loads((compiled_fig1 / "label_path_proximity.json").read_text(encoding="utf-8"))
 
-    assert payload["live_binding"] == {"checked": 4, "state": "passed", "failures": []}
+    assert payload["live_binding"] == {
+        "checked": len(BOUND_PATHS),
+        "state": "passed",
+        "failures": [],
+    }
 
 
 @pytest.mark.render
-def test_fig1_panel_e_declared_paths_lie_on_their_bound_element(compiled_fig1: Path) -> None:
+def test_fig1_declared_paths_lie_on_their_bound_element(compiled_fig1: Path) -> None:
     source = (FIXTURE / "fig1_updated_agent_redraw_v1.tex").read_text(encoding="utf-8")
     placement = render_source_map.recover_placement(
         source,
@@ -162,7 +167,7 @@ def test_fig1_panel_e_declared_paths_lie_on_their_bound_element(compiled_fig1: P
         check["id"]: check for check in checks if check.get("source_binding") is not None
     }
 
-    assert sorted(bound) == list(PANEL_E_BOUND)
+    assert sorted(bound) == list(BOUND_PATHS)
     for check_id, check in bound.items():
         selector = check["source_binding"]["selector"]
         shapes = render_source_map.bound_element_shapes(
