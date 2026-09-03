@@ -88,10 +88,10 @@ text_boundary_checks:
     bbox_pdf_cm: [1.05, 9.05, 6.10, 9.62]
     clearance_pt: 0.0
     text_phrases:
-      - id: panel_c_shallow_sites
-        words: [shallow, sites]
-      - id: panel_c_deep_sites
-        words: [deep, sites]
+      - id: panel_c_shallower_sites
+        words: [shallower, sites]
+      - id: panel_c_deeper_sites
+        words: [deeper, sites]
   - id: panel-c-energy-labels
     kind: rect
     role: energy_diagram_label_region
@@ -274,10 +274,12 @@ panels:
     caption: localized trap landscape, balanced dual view
     semantic_claims:
       - id: trap-landscape
-        claim: shallow and deep trapping states coexist in a sulfur-rich polymer.
+        claim: a sulfur-rich polymer carries one continuous distribution of localized states; shallower and deeper regions are zones of that single distribution, shown by shading only.
     locked_invariants:
       - id: energy-orientation
         invariant: energy increases upward; deeper wells are lower in the diagram.
+      - id: single-continuous-distribution
+        invariant: the localized-state population is drawn as one continuous curve with one maximum; no second peak, no discrete band, and no shallow-to-deep amplitude or area ratio is drawn or claimed.
   - id: D
     caption: transient-current kinetic evidence
     semantic_claims:

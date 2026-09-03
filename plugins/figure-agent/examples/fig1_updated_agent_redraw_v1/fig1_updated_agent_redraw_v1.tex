@@ -268,13 +268,16 @@
   \draw[cRed!95!black, line width=0.28pt] (2.72,3.64) circle (0.075);
   \fill[cRed!80] (5.42,1.64) circle (0.075);
   \draw[cRed!95!black, line width=0.28pt] (5.42,1.64) circle (0.075);
-  \node[small label, text=cGray!88!black, anchor=west] at (1.02,0.78) {shallow sites};
+  % "shallower"/"deeper" are relative depths within one population; "deep
+  % sites" would imply a chemically assigned second species.
+  \node[small label, text=cGray!88!black, anchor=west] at (1.02,0.78) {shallower sites};
   \draw[leader, cBlue!78!black] (2.02,0.86)--(1.57,1.54);
-  \node[small label, text=cGray!88!black, anchor=east] at (6.02,0.78) {deep sites};
+  \node[small label, text=cGray!88!black, anchor=east] at (6.02,0.78) {deeper sites};
   \draw[leader, cRed!82!black] (5.12,0.86)--(5.40,1.54);
   \node[small label, text=cGray!82!black, anchor=north east] at (6.03,4.12) {poly(S-\emph{r}-DIB) film};
 
-  % Energy-space view: continuous shallow/deep trap DOS below the mobility edge.
+  % Energy-space view: one continuous localized-state distribution below the
+  % mobility edge, read by zone rather than by discrete level.
   \draw[cGray!18, line width=0.42pt] (6.72,0.52)--(6.72,4.88);
   % Cross-representation correspondence: these are the same trap populations,
   % not transport trajectories or separate phases.
@@ -296,25 +299,24 @@
   \draw[cGray!88!black, line width=0.80pt] (7.72,0.86)--(12.98,0.86);
   \node[body label, anchor=west] at (13.10,0.86) {$E_V$};
 
-  % Sample true sideways Gaussians; hand-shaped lens/cusp silhouettes are not DOS.
-  % The paper-local bimodal populations are authoritative, but the visible
-  % curve widths and amplitudes are schematic rather than fitted parameters.
+  % One continuous distribution of localized states spanning the gap. The
+  % shallower and deeper regions are carried by the fill tint alone: one curve,
+  % one maximum, and the tint boundary sits on the axis of symmetry so the two
+  % zones have equal area and no shallow-to-deep ratio is drawn or claimed.
   % No rectangular population wash is used: it would imply a bounded energy
   % band in addition to the continuous DOS actually being communicated.
-  \fill[cBlue!20, opacity=0.58]
-    plot[domain=2.48:3.28, samples=36, smooth]
-      ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x)
-    -- (7.82,3.28) -- (7.82,2.48) -- cycle;
-  \draw[cBlue!84!black, line width=0.82pt]
-    plot[domain=2.48:3.28, samples=36, smooth]
-      ({7.82 + 1.20*exp(-((\x-2.88)*(\x-2.88))/0.045)},\x);
-  \fill[cRed!20, opacity=0.58]
-    plot[domain=1.02:2.34, samples=42, smooth]
-      ({7.82 + 1.50*exp(-((\x-1.68)*(\x-1.68))/0.135)},\x)
-    -- (7.82,2.34) -- (7.82,1.02) -- cycle;
-  \draw[cRed!84!black, line width=0.82pt]
-    plot[domain=1.02:2.34, samples=42, smooth]
-      ({7.82 + 1.50*exp(-((\x-1.68)*(\x-1.68))/0.135)},\x);
+  \fill[cBlue!16, opacity=0.55]
+    plot[domain=2.20:3.62, samples=44, smooth]
+      ({7.82 + 1.45*exp(-((\x-2.20)*(\x-2.20))/0.52)},\x)
+    -- (7.82,3.62) -- (7.82,2.20) -- cycle;
+  \fill[cRed!14, opacity=0.55]
+    plot[domain=0.96:2.20, samples=44, smooth]
+      ({7.82 + 1.45*exp(-((\x-2.20)*(\x-2.20))/0.52)},\x)
+    -- (7.82,2.20) -- (7.82,0.96) -- cycle;
+  % A single unbroken outline over both tints keeps the population one curve.
+  \draw[cGray!88!black, line width=0.82pt]
+    plot[domain=0.96:3.62, samples=80, smooth]
+      ({7.82 + 1.45*exp(-((\x-2.20)*(\x-2.20))/0.52)},\x);
 
   \foreach \y in {2.72,3.04} {
     \draw[cBlue!82!black, line width=0.74pt] (9.18,\y)--(10.15,\y);
@@ -324,10 +326,10 @@
     \draw[cRed!82!black, line width=0.74pt] (9.42,\y)--(10.38,\y);
     \fill[cRed!80] (9.88,\y) circle (0.070);
   }
-  \node[body label, font=\sffamily\bfseries\fontsize{6.0}{7.2}\selectfont,
-        text=cGray!92!black, anchor=west] at (10.62,2.90) {shallow};
-  \node[body label, font=\sffamily\bfseries\fontsize{6.0}{7.2}\selectfont,
-        text=cGray!92!black, anchor=west] at (10.62,1.68) {deep};
+  % Zone names, not population names: they annotate two regions of the one
+  % distribution above, so they carry no weight beyond the body text level.
+  \node[body label, text=cGray!92!black, anchor=west] at (10.62,2.90) {shallower};
+  \node[body label, text=cGray!92!black, anchor=west] at (10.62,1.68) {deeper};
 
   \draw[-{Stealth[length=2.8pt,width=2.1pt]}, cBlue!78!black,
         line width=0.66pt, dashed]

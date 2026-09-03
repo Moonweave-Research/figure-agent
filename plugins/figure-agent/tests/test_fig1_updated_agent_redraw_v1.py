@@ -422,8 +422,11 @@ def test_repaired_panel_e_uses_colour_for_measurement_marks_not_text() -> None:
         assert colored_text not in panel_e
     assert panel_e.count("text=cGray!88!black") >= 4
     assert "cTeal!78!black, line width=0.66pt" in panel_e
-    assert "cBlue!84!black, line width=0.82pt" in panel_e
-    assert "cRed!84!black, line width=0.82pt" in panel_e
+    # g(E_t) is one population: one neutral outline, colour only in the zones.
+    assert "cBlue!84!black, line width=0.82pt" not in panel_e
+    assert "cRed!84!black, line width=0.82pt" not in panel_e
+    assert panel_e.count("cGray!88!black, line width=0.82pt") == 1
+    assert panel_e.count("exp(-((\\x-2.36)*(\\x-2.36))/0.52)") == 3
 
 
 def test_repaired_panel_e_preserves_a_visible_noncontact_esvm_gap() -> None:
@@ -610,18 +613,13 @@ def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_c = source.split("% Panel C", 1)[1].split("% Panel D", 1)[0]
     widths = [
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_c
-        )
+        float(value) for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_c)
     ]
 
     assert widths
     # Claim-bearing DOS, edge, and correspondence strokes keep the publication
     # floor; low-contrast host texture and tiny marker outlines are intentional
     # supporting marks and must not be judged by a raw minimum-width check.
-    assert "cBlue!84!black, line width=0.82pt" in panel_c
-    assert "cRed!84!black, line width=0.82pt" in panel_c
     assert "cAmber!58!black, line width=0.74pt" in panel_c
     assert "line width=0.66pt" in panel_c
     assert "circle (0.040);\n    \\draw" not in panel_c
@@ -684,21 +682,24 @@ def test_repaired_panel_c_strokes_survive_declared_final_scale() -> None:
     assert "rotate=90, text=cGray!92!black" in panel_c
     # Keep the DOS legible through its publication-weight outline instead of
     # locking a saturated area fill that makes the schematic read as artwork.
+    # The population is ONE curve, so it carries one neutral outline and the
+    # shallower/deeper zones are tint only.
     for color in ("Blue", "Red"):
-        fill = re.search(
-            rf"\\fill\[c{color}!(\d+), opacity=([0-9.]+)\]", panel_c
-        )
+        fill = re.search(rf"\\fill\[c{color}!(\d+), opacity=([0-9.]+)\]", panel_c)
         assert fill
         assert int(fill.group(1)) <= 20
         assert float(fill.group(2)) <= 0.60
-        assert f"c{color}!84!black, line width=0.82pt" in panel_c
+        assert f"c{color}!84!black, line width=0.82pt" not in panel_c
+    assert panel_c.count("cGray!88!black, line width=0.82pt") == 1
+    assert panel_c.count("exp(-((\\x-2.20)*(\\x-2.20))/0.52)") == 3
     assert "rectangular population wash" in panel_c
     assert "(7.72,2.42) rectangle (11.80,3.34)" not in panel_c
     assert "(7.72,0.98) rectangle (11.80,2.38)" not in panel_c
     assert "{Localized trap landscape};" in panel_c
     assert "{Localized trap model};" not in panel_c
     assert "{Localized shallow and deep traps};" not in panel_c
-    assert "curve widths and amplitudes are schematic" in panel_c
+    assert "One continuous distribution of localized states" in panel_c
+    assert "no shallow-to-deep ratio is drawn or claimed" in panel_c
 
 
 def test_repaired_shared_semantic_lines_survive_nature_scale() -> None:

@@ -378,7 +378,7 @@ def test_pair001_requires_semantic_depth_cues_for_repeated_markers() -> None:
     assert "does not require apparatus photorealism" in rule["rule"]
 
 
-def test_pair001_preserves_paper_local_tau_d_semantics() -> None:
+def test_pair001_keeps_relaxation_time_off_the_energy_axis() -> None:
     catalog = authoring_rules.load_rule_catalog(
         PLUGIN_ROOT / "docs" / "authoring-rules-pair001.md"
     )
@@ -841,8 +841,11 @@ def test_project_catalog_carries_current_poly_s_dib_microstructure_rule() -> Non
     traps = rules["polymer_paper_project.trap-landscape-evidence-boundary"]
     assert traps["category"] == "physics_semantics"
     assert "shallow states closer to the mobility edge" in traps["rule"]
-    assert "bimodal shallow/deep DOS" in traps["rule"]
-    assert "curve widths and amplitudes remain qualitative" in traps["rule"]
+    assert "one continuous distribution with a single maximum" in traps["rule"]
+    assert "superseding the earlier bimodal shallow/deep DOS" in traps["rule"]
+    assert "shading-only zones of that one curve" in traps["rule"]
+    assert "no shallow-to-deep amplitude or area ratio" in traps["rule"]
+    assert "widths and amplitudes remain qualitative" in traps["rule"]
     assert "rectangular colour windows" in traps["rule"]
     assert "bounded energy bands" in traps["rule"]
     assert "carrier sign" in traps["rule"]
