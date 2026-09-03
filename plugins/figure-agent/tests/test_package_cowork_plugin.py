@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import os
 import subprocess
 import sys
 import zipfile
@@ -62,12 +64,13 @@ def test_package_cowork_plugin_zip_contract(tmp_path: Path) -> None:
         "scripts/status.py",
         "scripts/checks/check_silhouette_morphology.py",
         "styles/polymer-paper-preamble.sty",
-        "bin/fig-agent",
+        "scripts/fig-agent",
         "docs/figure-agent.md",
         "docs/architecture-overview.md",
         "docs/document-status.yaml",
     }
     assert required <= names
+    assert not any(name.startswith("bin/") for name in names)
     assert not any(name.startswith("examples/fig1_overview_v2") for name in names)
     assert not any(name.startswith("docs/trials/") for name in names)
     assert not any(name.startswith("docs/historical/") for name in names)
@@ -86,6 +89,48 @@ def test_package_cowork_plugin_zip_contract(tmp_path: Path) -> None:
     assert not any("/build/" in name or name.startswith("build/") for name in names)
     assert not any("/exports/" in name or name.startswith("exports/") for name in names)
     assert not any(".venv/" in name for name in names)
+
+
+def test_packaged_cowork_mcp_runs_without_top_level_bin(tmp_path: Path) -> None:
+    zip_path = package_cowork_plugin.build_zip(tmp_path / "dist")
+    unpacked = tmp_path / "unpacked"
+    with zipfile.ZipFile(zip_path) as archive:
+        archive.extractall(unpacked)
+
+    workspace = tmp_path / "workspace"
+    (workspace / "examples").mkdir(parents=True)
+    env = os.environ.copy()
+    env["FIGURE_AGENT_PLUGIN_ROOT"] = str(unpacked)
+    env["FIGURE_AGENT_WORKSPACE"] = str(workspace)
+    requests = [
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/call",
+            "params": {
+                "name": "figure_agent_status",
+                "arguments": {"name": "missing_demo"},
+            },
+        }
+    ]
+
+    result = subprocess.run(
+        [sys.executable, str(unpacked / "mcp" / "figure_agent_server.py")],
+        input="\n".join(json.dumps(request) for request in requests) + "\n",
+        cwd=workspace,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stderr
+    response = json.loads(result.stdout)
+    payload = json.loads(response["result"]["content"][0]["text"])
+    assert payload["schema"] == "figure-agent.mcp.status.v1"
+    assert payload["success"] is True
+    assert payload["status"]["name"] == "missing_demo"
 
 
 def test_package_cowork_plugin_rejects_personal_absolute_paths(

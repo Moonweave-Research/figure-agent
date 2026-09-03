@@ -51,6 +51,16 @@ def _marketplace_payload() -> dict[str, object]:
     }
 
 
+def _restore_codex_cli_layout(plugin_root: Path) -> None:
+    hosted_entrypoint = plugin_root / "scripts" / "fig-agent"
+    cli_entrypoint = plugin_root / "bin" / "fig-agent"
+    if not hosted_entrypoint.is_file():
+        raise CodexMarketplaceBuildError("hosted_cli_entrypoint_missing")
+    cli_entrypoint.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(hosted_entrypoint, cli_entrypoint)
+    cli_entrypoint.chmod(0o755)
+
+
 def build_marketplace(output: Path) -> dict[str, object]:
     """Export the release package as a marketplace without repository baggage."""
     output = output.expanduser()
@@ -63,6 +73,7 @@ def build_marketplace(output: Path) -> dict[str, object]:
         plugin_destination.mkdir(parents=True)
         with zipfile.ZipFile(zip_path) as archive:
             _safe_extract(archive, plugin_destination)
+        _restore_codex_cli_layout(plugin_destination)
     marketplace_path = output / ".agents" / "plugins" / "marketplace.json"
     marketplace_path.parent.mkdir(parents=True)
     marketplace_path.write_text(

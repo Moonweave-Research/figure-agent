@@ -13,8 +13,6 @@ globals().update(
 
 
 def _run_fig_agent(args, *, workspace_root, timeout_seconds=120):
-    plugin_root = _server._plugin_root()
-    _compat_command = [str(plugin_root / "bin" / "fig-agent")]
     return _server._run_fig_agent(
         args,
         workspace_root=workspace_root,

@@ -7,7 +7,9 @@ description: Compile a deterministic, read-only authoring context pack for one f
 Compile a deterministic, read-only authoring context pack for one fixture.
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent" context-pack <name> [--json | --format json]
+entry="${CLAUDE_PLUGIN_ROOT}/bin/fig-agent"
+[ -f "$entry" ] || entry="${CLAUDE_PLUGIN_ROOT}/scripts/fig-agent"
+"$entry" context-pack <name> [--json | --format json]
 ```
 
 `--json` and `--format json` are accepted. The command reads `spec.yaml`,

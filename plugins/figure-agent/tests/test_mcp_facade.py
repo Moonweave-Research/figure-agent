@@ -276,12 +276,13 @@ def test_mcp_json_starts_the_server_from_a_foreign_project_directory(tmp_path: P
 
 
 def test_mcp_tool_subprocesses_do_not_create_plugin_root_uv_venv() -> None:
-    source = MCP_SERVER.read_text(encoding="utf-8")
+    source = MCP_SERVER.with_name("server_impl.py").read_text(encoding="utf-8")
     run_fig_agent_source = source.partition("def _run_fig_agent(")[2].partition("def _bounded(")[0]
 
     assert '"uv",' not in run_fig_agent_source
     assert '"--project",' not in run_fig_agent_source
-    assert 'str(plugin_root / "bin" / "fig-agent")' in run_fig_agent_source
+    assert 'plugin_root / "bin" / "fig-agent"' in run_fig_agent_source
+    assert 'plugin_root / "scripts" / "fig-agent"' in run_fig_agent_source
 
 
 def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None:

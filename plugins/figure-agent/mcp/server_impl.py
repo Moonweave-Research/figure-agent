@@ -560,9 +560,12 @@ def _run_fig_agent(
     timeout_seconds: int = 120,
 ) -> subprocess.CompletedProcess[str]:
     plugin_root = _plugin_root()
+    cli_path = plugin_root / "bin" / "fig-agent"
+    if not cli_path.is_file():
+        cli_path = plugin_root / "scripts" / "fig-agent"
     command = [
         sys.executable,
-        str(plugin_root / "bin" / "fig-agent"),
+        str(cli_path),
         *args,
     ]
     return subprocess.run(

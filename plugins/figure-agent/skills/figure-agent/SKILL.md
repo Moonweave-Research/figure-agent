@@ -76,7 +76,8 @@ stage, or count them as the source change required to make a review succeed.
 ## Runtime Entrypoint
 
 Use `fig-agent ...` for shell commands. If `fig-agent` is not on `PATH`, use
-`"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent" ...`.
+`"${CLAUDE_PLUGIN_ROOT}/bin/fig-agent" ...` in a CLI install or
+`"${CLAUDE_PLUGIN_ROOT}/scripts/fig-agent" ...` in a hosted Cowork bundle.
 
 The installed plugin bundle and user figure workspace are separate. Bundled
 tools/styles come from `FIGURE_AGENT_PLUGIN_ROOT` or `CLAUDE_PLUGIN_ROOT`;
