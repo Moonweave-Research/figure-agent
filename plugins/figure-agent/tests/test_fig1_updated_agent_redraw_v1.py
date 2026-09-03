@@ -782,7 +782,10 @@ def test_repaired_panel_d_contrasts_a_power_law_with_a_single_relaxation_model()
         for pair in re.findall(r"\([0-9.]+,[0-9.]+\)", trace.group(1))
     ]
     assert points[0] == (0.86, 1.88)
-    power_law = lambda x: 1.88 - (1.88 - 1.12) * (x - 0.86) / (4.02 - 0.86)
+
+    def power_law(x: float) -> float:
+        return 1.88 - (1.88 - 1.12) * (x - 0.86) / (4.02 - 0.86)
+
     # strictly below the power law after the shared anchor, and monotone down
     assert all(y < power_law(x) for x, y in points[1:])
     assert all(b[1] < a[1] for a, b in zip(points, points[1:], strict=False))
