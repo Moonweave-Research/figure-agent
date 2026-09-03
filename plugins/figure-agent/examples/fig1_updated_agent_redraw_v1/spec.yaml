@@ -258,7 +258,7 @@ panels:
     caption: polymer repeat-unit schematic
     semantic_claims:
       - id: representative-primary-structure
-        claim: elemental S8 and 1,3-DIB undergo thermally driven inverse vulcanization to form a representative bis(thiocumyl) motif with variable polysulfide rank.
+        claim: elemental S8 and 1,3-DIB undergo thermally driven inverse vulcanization to form a representative DIB-linked repeat unit with variable polysulfide rank. The drawn S-C(CH3)2-Ar connectivity is retained; the name bis(thiocumyl) is not used in the manuscript and is not drawn.
     locked_invariants:
       - id: representative-not-unique-repeat
         invariant: the drawn product is a representative primary-structure motif, not a unique constitutional repeat or a declared covalent crosslink network.
