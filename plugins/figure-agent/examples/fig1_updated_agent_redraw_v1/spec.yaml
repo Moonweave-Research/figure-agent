@@ -203,10 +203,15 @@ label_path_proximity_checks:
   - id: panel-e-vs-meter-lead
     kind: polyline
     role: panel_e_vs_meter_connection
+    # PDF-cm samples of the drawn ESVM-to-readout cubic (t = 0 .. 1 in sixths);
+    # the control hull's chords stand off the curve by more than the gate allows.
     points_pdf_cm:
       - [7.842, 11.118]
-      - [8.052, 11.138]
-      - [8.232, 11.288]
+      - [7.945, 11.138]
+      - [8.045, 11.175]
+      - [8.144, 11.224]
+      - [8.243, 11.281]
+      - [8.345, 11.340]
       - [8.452, 11.398]
     clearance_pt: 1.0
     source_binding:
@@ -247,11 +252,17 @@ label_path_proximity_checks:
   - id: panel-f-ground-return
     kind: polyline
     role: panel_f_grounded_source_return
+    # The drawn return runs from the HV source's left terminal to the ground
+    # symbol. The previous coordinates started inside the driven electrode and
+    # ran right into blank canvas, so the declaration measured nothing.
     points_pdf_cm:
-      - [13.80, 12.20]
-      - [14.00, 12.20]
-      - [14.20, 12.20]
+      - [13.072, 11.628]
+      - [12.832, 11.628]
+      - [12.832, 11.778]
     clearance_pt: 1.0
+    source_binding:
+      source_name: fig1_updated_agent_redraw_v1.tex
+      selector: 'figure-agent-path: panel-f-ground-return'
     text_allowlist: [grounded]
 panels:
   - id: A
