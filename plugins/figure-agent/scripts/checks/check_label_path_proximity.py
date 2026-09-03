@@ -22,23 +22,25 @@ if __package__:
     from .check_visual_clash import extract_pdf_words_and_page
     from .phrase_binding import (
         NEAREST_WORD_LIMIT,
-        allowlist_matches,
         allowlist_unmatched_failure,
+        allowlist_word_unmatched_failure,
         binding_state,
         group_phrase_words,
         nearest_phrase_words,
         phrase_unmatched_failure,
+        unbound_allowlist_words,
     )
 else:  # Direct script execution keeps the checks directory on sys.path.
     from check_visual_clash import extract_pdf_words_and_page
     from phrase_binding import (
         NEAREST_WORD_LIMIT,
-        allowlist_matches,
         allowlist_unmatched_failure,
+        allowlist_word_unmatched_failure,
         binding_state,
         group_phrase_words,
         nearest_phrase_words,
         phrase_unmatched_failure,
+        unbound_allowlist_words,
     )
 
 SCHEMA = "figure-agent.label-path-proximity.v1"
@@ -640,25 +642,28 @@ def allowlist_binding_failures(
     checks: list[dict[str, Any]],
     words: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Report every declared allowlist that names no rendered word.
+    """Report every declared allowlist word that names no rendered word.
 
     An allowlist selects only the words it names, so one that names nothing the
     render draws selects nothing: the proximity measure never runs and the
-    checker used to print OK.  The declaration is then a dead check, so it
-    fails here instead of passing silently.
+    checker used to print OK.  Resolving the list as a whole hid the same
+    defect one word at a time — a word the render never draws stopped selecting
+    anything while its neighbours kept the list alive — so each declared word
+    has to bind on its own.
     """
     failures: list[dict[str, Any]] = []
     for check in sorted(checks, key=_check_sort_key):
         allowlist = _text_allowlist(check)
-        if allowlist is None or allowlist_matches(words, allowlist):
+        if allowlist is None:
             continue
-        failures.append(
-            allowlist_unmatched_failure(
-                str(check["id"]),
-                allowlist,
-                _nearest_rendered_words(check, words),
-            )
-        )
+        unbound = unbound_allowlist_words(words, allowlist)
+        if not unbound:
+            continue
+        nearest = _nearest_rendered_words(check, words)
+        if len(unbound) == len(allowlist):
+            failures.append(allowlist_unmatched_failure(str(check["id"]), allowlist, nearest))
+            continue
+        failures.append(allowlist_word_unmatched_failure(str(check["id"]), unbound, nearest))
     return failures
 
 

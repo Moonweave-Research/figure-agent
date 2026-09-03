@@ -235,3 +235,32 @@ def test_allowlist_unmatched_failure_names_the_declared_and_the_rendered_words()
     assert phrase_binding.allowlist_unmatched_failure("x", {"probe"}, [])["detail"] == (
         "probe (nearest rendered: none)"
     )
+
+
+def test_unbound_allowlist_words_names_only_the_words_the_render_never_draws() -> None:
+    words = [
+        _word("ESVM", 241.874, 310.016, 249.335, 315.435),
+        _word("head", 251.273, 309.764, 264.516, 314.561),
+    ]
+
+    assert phrase_binding.unbound_allowlist_words(words, {"ESVM", "head"}) == []
+    assert phrase_binding.unbound_allowlist_words(words, {"ESVM", "probe", "shaft"}) == [
+        "probe",
+        "shaft",
+    ]
+
+
+def test_allowlist_word_unmatched_failure_names_only_the_dead_words() -> None:
+    failure = phrase_binding.allowlist_word_unmatched_failure(
+        "panel-f-ground-return",
+        ["return", "source"],
+        ["grounded", "clip"],
+    )
+
+    assert failure == {
+        "check_id": "panel-f-ground-return",
+        "kind": "allowlist_word_unmatched",
+        "words": ["return", "source"],
+        "nearest_words": ["grounded", "clip"],
+        "detail": "return, source (nearest rendered: grounded, clip)",
+    }
