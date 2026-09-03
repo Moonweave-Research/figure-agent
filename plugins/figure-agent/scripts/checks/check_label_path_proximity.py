@@ -20,8 +20,20 @@ import yaml
 
 if __package__:
     from .check_visual_clash import extract_pdf_words_and_page
+    from .phrase_binding import (
+        group_phrase_words,
+        nearest_phrase_words,
+        phrase_binding_state,
+        phrase_unmatched_failure,
+    )
 else:  # Direct script execution keeps the checks directory on sys.path.
     from check_visual_clash import extract_pdf_words_and_page
+    from phrase_binding import (
+        group_phrase_words,
+        nearest_phrase_words,
+        phrase_binding_state,
+        phrase_unmatched_failure,
+    )
 
 SCHEMA = "figure-agent.label-path-proximity.v1"
 CM_TO_PT = 72.0 / 2.54
@@ -194,7 +206,7 @@ def validate_live_bindings(
             )
         max_gap, max_center_delta = _phrase_tolerances(check)
         for phrase in _text_phrases(check):
-            if not _group_phrase_words(
+            if not group_phrase_words(
                 words,
                 phrase,
                 max_gap=max_gap,
@@ -239,98 +251,6 @@ def _word_sort_key(word: dict[str, Any]) -> tuple[float, float, float, float, st
         float(word["xmax"]),
         str(word.get("text", "")),
     )
-
-
-def _word_center_y(word: dict[str, Any]) -> float:
-    return (float(word["ymin"]) + float(word["ymax"])) / 2.0
-
-
-def _ranges_overlap(a_min: float, a_max: float, b_min: float, b_max: float) -> bool:
-    return max(a_min, b_min) <= min(a_max, b_max)
-
-
-def _same_phrase_line(
-    left: dict[str, Any],
-    right: dict[str, Any],
-    max_center_delta: float,
-) -> bool:
-    return _ranges_overlap(
-        float(left["ymin"]),
-        float(left["ymax"]),
-        float(right["ymin"]),
-        float(right["ymax"]),
-    ) or abs(_word_center_y(left) - _word_center_y(right)) <= max_center_delta
-
-
-def _phrase_word(
-    span: list[dict[str, Any]],
-    *,
-    phrase_id: str,
-    phrase_words: list[str],
-) -> dict[str, Any]:
-    return {
-        "text": " ".join(phrase_words),
-        "phrase_id": phrase_id,
-        "words": phrase_words,
-        "text_source": "text_phrases",
-        "xmin": min(float(word["xmin"]) for word in span),
-        "ymin": min(float(word["ymin"]) for word in span),
-        "xmax": max(float(word["xmax"]) for word in span),
-        "ymax": max(float(word["ymax"]) for word in span),
-    }
-
-
-def _group_phrase_words(
-    words: list[dict[str, Any]],
-    phrase: dict[str, Any],
-    *,
-    max_gap: float,
-    max_center_delta: float,
-) -> list[dict[str, Any]]:
-    sorted_words = sorted(words, key=_word_sort_key)
-    phrase_words = phrase["words"]
-    matches: list[dict[str, Any]] = []
-    seen_spans: set[tuple[tuple[float, float, float, float], ...]] = set()
-    for start_index, first_word in enumerate(sorted_words):
-        if str(first_word.get("text", "")).strip() != phrase_words[0]:
-            continue
-        span = [first_word]
-        search_after = start_index + 1
-        for expected_text in phrase_words[1:]:
-            previous = span[-1]
-            next_word = None
-            for candidate_index, candidate in enumerate(
-                sorted_words[search_after:],
-                start=search_after,
-            ):
-                if float(candidate["xmin"]) < float(previous["xmax"]):
-                    continue
-                if float(candidate["xmin"]) - float(previous["xmax"]) > max_gap:
-                    break
-                if str(candidate.get("text", "")).strip() != expected_text:
-                    continue
-                if not _same_phrase_line(previous, candidate, max_center_delta):
-                    continue
-                next_word = candidate
-                search_after = candidate_index + 1
-                break
-            if next_word is None:
-                break
-            span.append(next_word)
-        if len(span) != len(phrase_words):
-            continue
-        span_key = tuple(tuple(_word_bbox(word)) for word in span)
-        if span_key in seen_spans:
-            continue
-        seen_spans.add(span_key)
-        matches.append(
-            _phrase_word(
-                span,
-                phrase_id=str(phrase["id"]),
-                phrase_words=list(phrase_words),
-            )
-        )
-    return matches
 
 
 def _check_sort_key(check: dict[str, Any]) -> tuple[str, str]:
@@ -457,7 +377,7 @@ def _selected_words(check: dict[str, Any], words: list[dict[str, Any]]) -> list[
         max_gap, max_center_delta = _phrase_tolerances(check)
         for phrase in phrases:
             selected.extend(
-                _group_phrase_words(
+                group_phrase_words(
                     words,
                     phrase,
                     max_gap=max_gap,
@@ -663,6 +583,46 @@ def detect_label_path_proximity(
     return candidates
 
 
+def phrase_binding_failures(
+    checks: list[dict[str, Any]],
+    words: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Report every declared phrase that binds no rendered text.
+
+    A phrase that matches nothing selects no words, so the proximity measure
+    never runs and the checker used to print OK.  The declaration is then a
+    dead check, so it fails here instead of passing silently.
+    """
+    failures: list[dict[str, Any]] = []
+    for check in sorted(checks, key=_check_sort_key):
+        max_gap, max_center_delta = _phrase_tolerances(check)
+        for phrase in _text_phrases(check):
+            if group_phrase_words(
+                words,
+                phrase,
+                max_gap=max_gap,
+                max_center_delta=max_center_delta,
+            ):
+                continue
+            failures.append(
+                phrase_unmatched_failure(
+                    str(check["id"]),
+                    phrase,
+                    nearest_phrase_words(
+                        words,
+                        phrase,
+                        max_gap=max_gap,
+                        max_center_delta=max_center_delta,
+                    ),
+                )
+            )
+    return failures
+
+
+def declared_phrase_count(checks: list[dict[str, Any]]) -> int:
+    return sum(len(_text_phrases(check)) for check in checks)
+
+
 def label_path_proximity_payload(
     pdf_path: Path,
     candidates: list[dict[str, Any]],
@@ -670,11 +630,14 @@ def label_path_proximity_payload(
     checked: int,
     live_binding_checked: int = 0,
     live_binding_failures: list[dict[str, str]] | None = None,
+    phrase_binding_checked: int = 0,
+    phrase_binding_failures: list[dict[str, Any]] | None = None,
     spec_path: Path | None = None,
 ) -> dict[str, Any]:
     fixture_dir = pdf_path.parent.parent
     fixture_name = fixture_dir.name or Path.cwd().name
     binding_failures = list(live_binding_failures or [])
+    unmatched_phrases = list(phrase_binding_failures or [])
     resolved_spec_path = spec_path or _infer_spec_path(pdf_path)
     return {
         "schema": SCHEMA,
@@ -686,6 +649,11 @@ def label_path_proximity_payload(
         "source": "spec.yaml:label_path_proximity_checks",
         "candidates": candidates,
         "checked": checked,
+        "phrase_binding": {
+            "checked": phrase_binding_checked,
+            "state": phrase_binding_state(phrase_binding_checked, unmatched_phrases),
+            "failures": unmatched_phrases,
+        },
         "live_binding": {
             "checked": live_binding_checked,
             "state": (
@@ -739,6 +707,8 @@ def main() -> int:
             spec_path=spec_path,
             words=words,
         )
+        unmatched_phrases = phrase_binding_failures(checks, words)
+        phrase_count = declared_phrase_count(checks)
         candidates = detect_label_path_proximity(words, page_size_pt, checks)
     except LabelPathProximityError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -751,10 +721,21 @@ def main() -> int:
         checked=len(checks),
         live_binding_checked=live_binding_checked,
         live_binding_failures=binding_failures,
+        phrase_binding_checked=phrase_count,
+        phrase_binding_failures=unmatched_phrases,
         spec_path=spec_path,
     )
     if args.json_output is not None:
         _write_json(args.json_output, payload)
+
+    if unmatched_phrases:
+        for failure in unmatched_phrases:
+            print(
+                "ERROR label_path_phrase: "
+                f"{failure['check_id']}.{failure['phrase_id']} {failure['kind']} "
+                f"({failure['detail']})",
+                file=sys.stderr,
+            )
 
     if binding_failures:
         for failure in binding_failures:
@@ -763,6 +744,8 @@ def main() -> int:
                 f"{failure['check_id']} {failure['kind']} ({failure['detail']})",
                 file=sys.stderr,
             )
+
+    if binding_failures or unmatched_phrases:
         return 2
 
     if not candidates:
