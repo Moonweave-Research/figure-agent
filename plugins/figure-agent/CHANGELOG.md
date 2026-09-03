@@ -12,6 +12,15 @@ All notable changes to figure-agent are documented here.
 - The visual-clash report carries `tex_binding` (`bound` | `source_missing` |
   `not_requested`), and an unreadable explicit `--source` exits instead of
   writing a report where every binding is silently absent.
+- `text_allowlist` binds per word: a list whose other words still resolve now
+  reports `allowlist_word_unmatched` for the words the render never draws,
+  instead of passing because one neighbour matched.
+- A `label_path_proximity_checks` declaration with a `source_binding` is
+  measured against the element its selector names: `source_binding_stale` when
+  the declared path no longer lies on it, `source_binding_unparsed` when the
+  bound operation carries no readable geometry, `source_binding_ungrounded`
+  when the selector names no operation, and `source_binding_unplaced` when the
+  render and the parsed source cannot be reconciled.
 
 ## [0.10.0] - 2026-09-02
 
