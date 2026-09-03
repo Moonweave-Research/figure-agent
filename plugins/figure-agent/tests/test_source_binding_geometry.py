@@ -45,8 +45,17 @@ SPEC = """label_path_proximity_checks:
 """
 
 
-def _tex(lead: str, *, marker: str = "  % figure-agent-path: bound-lead") -> str:
-    return "\n".join([r"\begin{tikzpicture}", CALIBRATION, marker, lead, r"\end{tikzpicture}", ""])
+def _tex(
+    lead: str,
+    *,
+    marker: str = "  % figure-agent-path: bound-lead",
+    prelude: str = "",
+) -> str:
+    body = [r"\begin{tikzpicture}", CALIBRATION]
+    if prelude:
+        body.append(prelude)
+    body += [marker, lead, r"\end{tikzpicture}", ""]
+    return "\n".join(body)
 
 
 def _run(
@@ -191,3 +200,83 @@ def test_recover_placement_reads_the_scale_and_offset_off_the_render() -> None:
     assert placement.offset_y_cm == pytest.approx(12.0)
     assert placement.verified_segments == placement.source_segments
     assert placement.project(2.0, 3.0) == pytest.approx((4.4, 6.0))
+
+
+def test_main_measures_a_path_written_with_a_named_coordinate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _run(
+        tmp_path,
+        monkeypatch,
+        tex=_tex(
+            r"  \draw (lead-start)--(3.00,3.00);",
+            prelude=r"  \coordinate (lead-start) at (2.00,3.00);",
+        ),
+        declared_y=7.0,
+    )
+
+    assert status == 0
+    assert report["live_binding"] == {"checked": 1, "state": "passed", "failures": []}
+
+
+def test_main_leaves_a_named_coordinate_from_another_scope_unresolved(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _run(
+        tmp_path,
+        monkeypatch,
+        tex=_tex(
+            r"  \draw (far-start)--(3.00,3.00);",
+            prelude="\n".join(
+                [
+                    r"  \begin{scope}[shift={(1.00,0.00)}]",
+                    r"    \coordinate (far-start) at (2.00,3.00);",
+                    r"  \end{scope}",
+                ]
+            ),
+        ),
+        rendered_tex=_tex(r"  \draw (2.00,3.00)--(3.00,3.00);"),
+        declared_y=7.0,
+    )
+
+    assert status == 2
+    assert report["live_binding"]["failures"][0]["kind"] == "source_binding_unparsed"
+
+
+def test_main_measures_the_second_leg_of_a_dash_chain(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _run(
+        tmp_path,
+        monkeypatch,
+        tex=_tex(r"  \draw (1.00,3.00)--(2.00,3.00)--(3.00,3.00);"),
+        declared_y=7.0,
+    )
+
+    assert status == 0
+    assert report["live_binding"] == {"checked": 1, "state": "passed", "failures": []}
+
+
+def test_main_measures_the_second_cubic_of_a_bezier_chain(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    status, report = _run(
+        tmp_path,
+        monkeypatch,
+        tex=_tex(
+            "\n".join(
+                [
+                    r"  \draw (1.00,3.00) .. controls (1.20,2.60) and (1.60,2.60) .. (2.00,3.00)",
+                    r"    .. controls (2.30,3.00) and (2.70,3.00) .. (3.00,3.00);",
+                ]
+            )
+        ),
+        declared_y=7.0,
+    )
+
+    assert status == 0
+    assert report["live_binding"] == {"checked": 1, "state": "passed", "failures": []}

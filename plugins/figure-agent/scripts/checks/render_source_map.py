@@ -13,13 +13,19 @@ against a guessed placement.
 from __future__ import annotations
 
 import math
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import pdfplumber
-from check_undeclared_geometry import _iter_tikz_operations, _parse_tikz_geometry
+import vector_clearance
+from check_undeclared_geometry import (
+    _iter_tikz_operations,
+    _parse_tikz_geometry,
+    _scope_shift_cm,
+)
 
 CM_TO_PT = 72.0 / 2.54
 PT_TO_CM = 2.54 / 72.0
@@ -32,6 +38,7 @@ MIN_SEGMENT_LENGTH_CM = 0.05
 DIRECTION_TOLERANCE = 0.9999
 SCALE_LOG_BUCKET = 0.002
 OFFSET_BUCKET_CM = 0.01
+BEZIER_FLATTEN_STEPS = 16
 MIN_VERIFIED_SEGMENTS = 8
 MIN_VERIFIED_RATIO = 0.5
 # A path marker comment sits on the element's own line or the line above it.
@@ -73,8 +80,33 @@ def _segment_from_line(line: dict[str, Any]) -> tuple[float, float, float, float
     )
 
 
-def source_shapes(geometry: dict[str, Any]) -> list[tuple[str, tuple[float, ...]]]:
-    """Return one parsed source operation as area or segment shapes, in source cm."""
+def _flatten_cubic(points: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    """Sample a cubic Bezier so distance is measured to the curve, not its chords."""
+    (x0, y0), (x1, y1), (x2, y2), (x3, y3) = points
+    sampled = []
+    for step in range(BEZIER_FLATTEN_STEPS + 1):
+        t = step / BEZIER_FLATTEN_STEPS
+        u = 1.0 - t
+        sampled.append(
+            (
+                u * u * u * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3,
+                u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3,
+            )
+        )
+    return sampled
+
+
+def source_shapes(
+    geometry: dict[str, Any],
+    *,
+    flatten_curves: bool = False,
+) -> list[tuple[str, tuple[float, ...]]]:
+    """Return one parsed source operation as area or segment shapes, in source cm.
+
+    Curves keep their control hull for placement voting, because that is the
+    shape the PDF stores; a declared path is measured against the flattened
+    curve instead, so a chord of the hull is not mistaken for drift.
+    """
     kind = geometry["kind"]
     if kind == "rect":
         x0, y0, x1, y1 = (value * PT_TO_CM for value in geometry["bbox_pt"])
@@ -101,16 +133,139 @@ def source_shapes(geometry: dict[str, Any]) -> list[tuple[str, tuple[float, ...]
         ]
     if kind == "curve":
         points = [(x * PT_TO_CM, y * PT_TO_CM) for x, y in geometry.get("control_hull_pt", [])]
+        if flatten_curves and len(points) == 4:
+            points = _flatten_cubic(points)
         return [
             ("segment", (a[0], a[1], b[0], b[1])) for a, b in zip(points, points[1:], strict=False)
         ]
     return []
 
 
+def resolved_source(tex_text: str) -> str:
+    """Substitute `\\coordinate` names with their literal points, scope for scope.
+
+    The geometry parser reads literal points only, so a path the author wrote
+    as `(name)--(other)` had no readable geometry and its declaration could not
+    be measured. The resolver that vector_clearance already uses supplies the
+    points; a name is substituted only where the reference sits under the same
+    scope shift as its definition, because the same local token means a
+    different place under a different shift. Substitution never adds or removes
+    a newline, so source line numbers survive it.
+    """
+    coordinates = vector_clearance.collect_named_coordinates(tex_text)
+    if not coordinates:
+        return tex_text
+    definition_shift: dict[str, tuple[float, float]] = {}
+    declaration_spans: list[tuple[int, int]] = []
+    for match in vector_clearance._COORDINATE_DEF_RE.finditer(tex_text):
+        definition_shift[str(match.group("name"))] = _scope_shift_cm(tex_text, match.start())
+        declaration_spans.append(match.span())
+
+    def _replace(match: re.Match[str]) -> str:
+        name = str(match.group("name"))
+        if name not in coordinates:
+            return match.group(0)
+        if any(start <= match.start() < end for start, end in declaration_spans):
+            return match.group(0)
+        if _scope_shift_cm(tex_text, match.start()) != definition_shift.get(name):
+            return match.group(0)
+        return coordinates[name]
+
+    return vector_clearance._COORDINATE_REF_RE.sub(_replace, tex_text)
+
+
+_POINT_PATTERN = r"\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)"
+_POINT_RE = re.compile(_POINT_PATTERN)
+_CONTROLS_RE = re.compile(
+    rf"\.\.\s*controls\s*{_POINT_PATTERN}\s*and\s*{_POINT_PATTERN}\s*\.\.\s*{_POINT_PATTERN}",
+    re.DOTALL,
+)
+_LINK_RE = re.compile(rf"--\s*{_POINT_PATTERN}", re.DOTALL)
+_CHAINED_KINDS = frozenset({"curve", "line_segment", "horizontal_line", "vertical_line"})
+
+
+def _anchor_point(text: str, before: int) -> tuple[float, float] | None:
+    """Return the last literal point written before this position in the path."""
+    preceding = list(_POINT_RE.finditer(text, 0, before))
+    if not preceding:
+        return None
+    last = preceding[-1]
+    return (float(last.group(1)), float(last.group(2)))
+
+
+def _operation_cubics(text: str) -> list[list[tuple[float, float]]]:
+    """Return every cubic in a path, including the ones a chain scan drops.
+
+    A `A .. controls .. B .. controls .. C` chain consumes its shared endpoint,
+    so a non-overlapping scan for whole cubics sees only every other segment and
+    the rest of the drawn curve is invisible to any check bound to it. Each
+    `controls` clause is instead anchored to the last point written before it,
+    which is that segment's start whether it opens the path or continues one.
+    """
+    cubics: list[list[tuple[float, float]]] = []
+    for match in _CONTROLS_RE.finditer(text):
+        start = _anchor_point(text, match.start())
+        if start is None:
+            continue
+        values = [float(value) for value in match.groups()]
+        cubics.append(
+            [start, (values[0], values[1]), (values[2], values[3]), (values[4], values[5])]
+        )
+    return cubics
+
+
+def _operation_segments(text: str) -> list[tuple[float, float, float, float]]:
+    """Return every `--` leg of a path, including the ones a chain scan drops.
+
+    `A--B--C` consumes B as the first leg's endpoint, so a non-overlapping scan
+    for whole legs never sees `B--C`: half of a rerouted wire was invisible to
+    the check bound to it. Each `--` is anchored to the point written before it.
+    """
+    legs: list[tuple[float, float, float, float]] = []
+    for match in _LINK_RE.finditer(text):
+        start = _anchor_point(text, match.start())
+        if start is None:
+            continue
+        legs.append((start[0], start[1], float(match.group(1)), float(match.group(2))))
+    return legs
+
+
+def source_geometry(tex_text: str) -> list[dict[str, Any]]:
+    """Return the fixture's drawn operations with named points and chains resolved."""
+    resolved = resolved_source(tex_text)
+    geometry = [
+        item for item in _parse_tikz_geometry(resolved) if item["kind"] not in _CHAINED_KINDS
+    ]
+    for operation in _iter_tikz_operations(resolved):
+        shift_x, shift_y = operation.get("scope_shift_cm", (0.0, 0.0))
+        source_line = int(operation["source_line"])
+        text = str(operation["text"])
+        for cubic in _operation_cubics(text):
+            geometry.append(
+                {
+                    "kind": "curve",
+                    "source_line": source_line,
+                    "control_hull_pt": [
+                        [(x + shift_x) * CM_TO_PT, (y + shift_y) * CM_TO_PT] for x, y in cubic
+                    ],
+                }
+            )
+        for ax, ay, bx, by in _operation_segments(text):
+            geometry.append(
+                {
+                    "kind": "line_segment",
+                    "source_line": source_line,
+                    "start_pt": [(ax + shift_x) * CM_TO_PT, (ay + shift_y) * CM_TO_PT],
+                    "end_pt": [(bx + shift_x) * CM_TO_PT, (by + shift_y) * CM_TO_PT],
+                }
+            )
+    return geometry
+
+
 def source_segments(tex_text: str) -> list[tuple[float, float, float, float]]:
     """Return every parsed source operation as straight segments, in source cm."""
     segments: list[tuple[float, float, float, float]] = []
-    for geometry in _parse_tikz_geometry(tex_text):
+    for geometry in source_geometry(tex_text):
         for shape, values in source_shapes(geometry):
             if shape == "segment":
                 segments.append(values)  # type: ignore[arg-type]
@@ -331,7 +486,7 @@ def bound_element_shapes(
     """
     candidates = [
         geometry
-        for geometry in _parse_tikz_geometry(tex_text)
+        for geometry in source_geometry(tex_text)
         if selector_line <= geometry["source_line"] <= selector_line + SELECTOR_LINE_SPAN
     ]
     if not candidates:
@@ -341,7 +496,7 @@ def bound_element_shapes(
     for geometry in candidates:
         if geometry["source_line"] != first_line:
             continue
-        for shape, values in source_shapes(geometry):
+        for shape, values in source_shapes(geometry, flatten_curves=True):
             if shape == "area":
                 x0, y0, x1, y1 = values
                 a = placement.project(x0, y1)

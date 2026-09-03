@@ -20,7 +20,10 @@ All notable changes to figure-agent are documented here.
   the declared path no longer lies on it, `source_binding_unparsed` when the
   bound operation carries no readable geometry, `source_binding_ungrounded`
   when the selector names no operation, and `source_binding_unplaced` when the
-  render and the parsed source cannot be reconciled.
+  render and the parsed source cannot be reconciled. The bound element is read
+  with `\coordinate` names resolved scope for scope and with every leg of a
+  `--` or Bezier chain restored, so a path authored by name or as a chain is
+  measured whole instead of reported unreadable or half seen.
 
 ## [0.10.0] - 2026-09-02
 
