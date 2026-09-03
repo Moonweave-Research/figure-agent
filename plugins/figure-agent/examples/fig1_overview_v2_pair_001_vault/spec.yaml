@@ -87,7 +87,6 @@ text_boundary_layout:
         - V/A
         - meter
         - Coulomb
-        - Maxwell
         - repulsion
   column_rules:
     - id: row2_de
@@ -125,7 +124,6 @@ text_boundary_checks:
       - V/A
       - meter
       - Coulomb
-      - Maxwell
       - repulsion
   - id: row2_de_column_rule
     kind: vertical_line

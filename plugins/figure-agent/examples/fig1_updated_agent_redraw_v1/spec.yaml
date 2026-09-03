@@ -237,7 +237,7 @@ label_path_proximity_checks:
       - [14.00, 12.20]
       - [14.20, 12.20]
     clearance_pt: 1.0
-    text_allowlist: [grounded, source, return]
+    text_allowlist: [grounded]
 panels:
   - id: A
     caption: polymer repeat-unit schematic
