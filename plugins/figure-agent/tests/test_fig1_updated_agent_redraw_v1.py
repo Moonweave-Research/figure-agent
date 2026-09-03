@@ -92,9 +92,10 @@ def test_redraw_handoff_names_the_promoted_root_without_claiming_acceptance() ->
     assert pointer["source_path"] == "fig1_updated_agent_redraw_v1.tex"
     assert pointer["promotion_state"] == "promoted_to_canonical_root"
     assert pointer["human_gate"] == "pending"
-    assert pointer["source_sha256"] == "sha256:" + hashlib.sha256(
-        REPAIRED_SOURCE.read_bytes()
-    ).hexdigest()
+    assert (
+        pointer["source_sha256"]
+        == "sha256:" + hashlib.sha256(REPAIRED_SOURCE.read_bytes()).hexdigest()
+    )
 
 
 def test_review_lineage_distinguishes_promoted_root_from_preserved_history() -> None:
@@ -322,9 +323,7 @@ def test_repaired_ispd_manual_transfer_survives_print_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     label = source.index(r"{manual sample\\[-0.5pt]transfer}")
     declaration = source.rfind(r"\node", 0, label)
-    transfer_node = source[
-        declaration : label + len(r"{manual sample\\[-0.5pt]transfer}")
-    ]
+    transfer_node = source[declaration : label + len(r"{manual sample\\[-0.5pt]transfer}")]
 
     assert "small label" in transfer_node
     assert r"\fontsize{3.2}" not in transfer_node
@@ -576,36 +575,30 @@ def test_repaired_s8_atom_labels_survive_reduction() -> None:
 
 def test_repaired_panel_a_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
-    separators = source.split("% Panel A", 1)[0].split(
-        "% Open publication canvas", 1
-    )[1]
+    separators = source.split("% Panel A", 1)[0].split("% Open publication canvas", 1)[1]
     panel_a = source.split("% Panel A", 1)[1].split("% Panel B", 1)[0]
     widths = [
         float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", separators + panel_a
-        )
+        for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", separators + panel_a)
     ]
 
     # Overview structure now follows the thinner Fig. 2 baseline; separators
     # are intentionally lighter and are checked separately below.
     assert widths
-    assert min(
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_a
+    assert (
+        min(
+            float(value)
+            for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_a)
         )
-    ) >= 0.66
+        >= 0.66
+    )
 
 
 def test_repaired_panel_b_strokes_survive_declared_final_scale() -> None:
     source = REPAIRED_SOURCE.read_text(encoding="utf-8")
     panel_b = source.split("% Panel B", 1)[1].split("% Panel C", 1)[0]
     widths = [
-        float(value)
-        for value in re.findall(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_b
-        )
+        float(value) for value in re.findall(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", panel_b)
     ]
 
     assert widths
@@ -714,9 +707,7 @@ def test_repaired_shared_semantic_lines_survive_nature_scale() -> None:
     assert "leader/.style=" in source
     for style_name in ("axis line", "leader"):
         declaration = source.split(f"{style_name}/.style=", 1)[1].splitlines()[0]
-        width = re.search(
-            r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", declaration
-        )
+        width = re.search(r"line width\s*=\s*([0-9]+(?:\.[0-9]+)?)pt", declaration)
         assert width is not None
         assert float(width.group(1)) >= 0.66
 
@@ -875,16 +866,10 @@ def test_fig1_visual_clash_registry_has_no_stale_hero_suppression() -> None:
 
 def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() -> None:
     run_root = (
-        PLUGIN_ROOT
-        / "examples"
-        / "fig1_updated_agent_redraw_v1"
-        / "review"
-        / "r5-prospective-v2"
+        PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1" / "review" / "r5-prospective-v2"
     )
     task = (run_root / "task.md").read_text(encoding="utf-8")
-    contract = yaml.safe_load(
-        (run_root / "comparison_contract.yaml").read_text(encoding="utf-8")
-    )
+    contract = yaml.safe_load((run_root / "comparison_contract.yaml").read_text(encoding="utf-8"))
     normalized_task = " ".join(task.split())
 
     assert "two rows of three" not in task
@@ -912,15 +897,9 @@ def test_r5_v2_predeclaration_frees_composition_but_binds_vertical_cantilever() 
 
 def test_r5_v3_predeclaration_reuses_control_and_binds_system_deltas() -> None:
     run_root = (
-        PLUGIN_ROOT
-        / "examples"
-        / "fig1_updated_agent_redraw_v1"
-        / "review"
-        / "r5-prospective-v3"
+        PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1" / "review" / "r5-prospective-v3"
     )
-    contract = yaml.safe_load(
-        (run_root / "comparison_contract.yaml").read_text(encoding="utf-8")
-    )
+    contract = yaml.safe_load((run_root / "comparison_contract.yaml").read_text(encoding="utf-8"))
 
     assert contract["control"]["sha256"] == (
         "0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476"
@@ -936,15 +915,9 @@ def test_r5_v3_predeclaration_reuses_control_and_binds_system_deltas() -> None:
 
 def test_r5_v4_predeclaration_opens_repair_for_machine_invalid_b() -> None:
     run_root = (
-        PLUGIN_ROOT
-        / "examples"
-        / "fig1_updated_agent_redraw_v1"
-        / "review"
-        / "r5-prospective-v4"
+        PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1" / "review" / "r5-prospective-v4"
     )
-    contract = yaml.safe_load(
-        (run_root / "comparison_contract.yaml").read_text(encoding="utf-8")
-    )
+    contract = yaml.safe_load((run_root / "comparison_contract.yaml").read_text(encoding="utf-8"))
 
     assert contract["control"]["sha256"] == (
         "0ac43684c00067070fbf9e86aaf6537e48509945006d21af47b5f3fd2d071476"
@@ -998,12 +971,9 @@ def test_r5_v4_predeclaration_opens_repair_for_machine_invalid_b() -> None:
 
 def test_redraw_uses_schematic_undeclared_geometry_profile() -> None:
     spec = yaml.safe_load(
-        (
-            PLUGIN_ROOT
-            / "examples"
-            / "fig1_updated_agent_redraw_v1"
-            / "spec.yaml"
-        ).read_text(encoding="utf-8")
+        (PLUGIN_ROOT / "examples" / "fig1_updated_agent_redraw_v1" / "spec.yaml").read_text(
+            encoding="utf-8"
+        )
     )
 
     assert spec["undeclared_geometry_profile"] == "schematic"
