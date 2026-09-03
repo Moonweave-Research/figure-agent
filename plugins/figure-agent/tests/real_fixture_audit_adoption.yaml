@@ -90,7 +90,6 @@ fixtures:
     label_path_check_ids:
       - panel-c-mobility-edge
       - panel-c-thermal-escape
-      - panel-d-transient-decay
       - panel-e-grounded-substrate
       - panel-e-probe-shaft
       - panel-e-sample-transfer

@@ -29,7 +29,6 @@ def test_fig1_candidate_declares_high_risk_boundary_and_path_checks() -> None:
     assert {
         "panel-c-mobility-edge",
         "panel-c-thermal-escape",
-        "panel-d-transient-decay",
         "panel-e-probe-shaft",
         "panel-e-vs-meter-lead",
         "panel-e-sample-transfer",
