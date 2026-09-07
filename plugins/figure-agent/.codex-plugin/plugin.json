@@ -1,6 +1,6 @@
 {
   "name": "figure-agent",
-  "version": "0.10.0+codex.local-20260902",
+  "version": "0.10.1",
   "description": "Paper-figure quality kernel for semantic TikZ compile, visual QA, reproducible exports, and fail-closed readiness checks.",
   "author": {
     "name": "Moon Choe",

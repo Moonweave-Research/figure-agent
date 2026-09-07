@@ -4,6 +4,30 @@ All notable changes to figure-agent are documented here.
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-09-07
+
+### Fixed
+
+- Require critique for reference-free authored figures and bind review/export to
+  current PDF/PNG, compile receipts, included sources, assets and toolchain hashes.
+- Reject duplicate or malformed YAML and nonfinite geometry; report invalid
+  candidate inputs through status without crashing.
+- Measure transformed PDF text for print font limits. Add complete panel/seam
+  inspection, physical print previews, grayscale and required host viewing receipts.
+- Recover advisory mutation locks after owner exit and stop timeout process groups
+  while returning JSON-safe captured output.
+
+### Added
+
+- Hash-bound custom preambles for Cowork-authored figures, and editable TeX source
+  bundles alongside the default PDF submission artifact and outlined SVG display.
+
+### Compatibility
+
+- Render-input manifests now use v2; old renders must be recompiled.
+- Restart plugin sessions after updating to adopt the shared advisory-lock protocol.
+- Codex, Claude Code and Cowork packages share release version 0.10.1.
+
 ### Changed
 
 - `fig-agent doctor` compiles a one-node TikZ document with the configured
