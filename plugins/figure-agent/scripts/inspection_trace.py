@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -66,9 +67,7 @@ def validate_inspection_trace(data: dict[str, Any], *, fixture_dir: Path) -> dic
     if not isinstance(artifacts, list):
         raise InspectionTraceError("inspection_trace.inspected_artifacts must be a list")
     if not artifacts:
-        raise InspectionTraceError(
-            "inspection_trace.inspected_artifacts must be a non-empty list"
-        )
+        raise InspectionTraceError("inspection_trace.inspected_artifacts must be a non-empty list")
 
     seen_ids: set[str] = set()
     for index, raw_item in enumerate(artifacts):
@@ -100,6 +99,54 @@ def validate_inspection_trace(data: dict[str, Any], *, fixture_dir: Path) -> dic
     return trace
 
 
+def _require_complete_inspection(trace: dict[str, Any], fixture_dir: Path) -> None:
+    inspected = {
+        item["id"]: item for item in trace["inspected_artifacts"] if item["verdict"] == "inspected"
+    }
+    if not inspected:
+        raise InspectionTraceError("inspection trace contains no inspected artifacts")
+    manifest_path = fixture_dir / "build" / "audit_crops" / "manifest.json"
+    if not manifest_path.is_file():
+        return
+    try:
+        manifest = json.loads(manifest_path.read_text())
+        if (
+            manifest.get("schema") != "figure-agent.audit-crop-manifest.v1"
+            or manifest.get("fixture") != fixture_dir.name
+        ):
+            raise ValueError("invalid audit crop manifest identity")
+        render = _resolve_artifact_path(fixture_dir, manifest["render_path"], label="audit render")
+        if file_sha256(render) != manifest["render_sha256"]:
+            raise ValueError("audit render hash drift")
+        required = manifest["required_crop_ids"]
+        crops = {item["id"]: item for item in manifest["crops"]}
+        if not required or set(required) != set(crops):
+            raise ValueError("incomplete required crop set")
+        for artifact_id in required:
+            item = inspected.get(artifact_id)
+            crop = crops[artifact_id]
+            if item is None or any(item.get(key) != crop.get(key) for key in ("path", "sha256")):
+                raise ValueError(f"required crop not inspected: {artifact_id}")
+        from post_repair_visual_review import _validate_execution_receipt
+
+        request = {
+            "request_sha256": file_sha256(manifest_path),
+            "before_render": {
+                "path": manifest["render_path"],
+                "sha256": manifest["render_sha256"],
+            },
+            "inspection_artifacts": [
+                {"path": crops[key]["path"], "sha256": crops[key]["sha256"]} for key in required
+            ],
+        }
+        if not _validate_execution_receipt(
+            trace.get("execution"), request=request, workspace_root=fixture_dir
+        ):
+            raise ValueError("host execution receipt required for crop inspection")
+    except (KeyError, TypeError, ValueError) as exc:
+        raise InspectionTraceError(f"inspection coverage incomplete: {exc}") from exc
+
+
 def load_inspection_trace(path: Path, *, fixture_dir: Path | None = None) -> dict[str, Any]:
     """Load and validate an inspection_trace.yaml file."""
     if not path.is_file():
@@ -121,6 +168,8 @@ def load_optional_inspection_trace(
     """Load an optional inspection trace sidecar for a fixture."""
     path = fixture_dir / filename
     if not path.exists():
+        if (fixture_dir / "build" / "audit_crops" / "manifest.json").is_file():
+            raise InspectionTraceError(f"{filename} required for generated audit crops")
         return {
             "schema": "figure-agent.inspection-trace-summary.v1",
             "state": "not_applicable",
@@ -128,6 +177,7 @@ def load_optional_inspection_trace(
             "trace": None,
         }
     trace = load_inspection_trace(path, fixture_dir=fixture_dir)
+    _require_complete_inspection(trace, fixture_dir)
     return {
         "schema": "figure-agent.inspection-trace-summary.v1",
         "state": "pass",
@@ -147,16 +197,12 @@ def _resolve_example_dir_for_cli(value: Path) -> Path:
                 "invalid fixture path: expected examples/<fixture-name>"
             ) from exc
         if len(relative.parts) != 1 or ".." in relative.parts:
-            raise InspectionTraceError(
-                "invalid fixture path: expected examples/<fixture-name>"
-            )
+            raise InspectionTraceError("invalid fixture path: expected examples/<fixture-name>")
         _validate_fixture_name_for_cli(relative.parts[0], str(value))
         return Path("examples") / relative.parts[0]
     if value.parts and value.parts[0] == "examples":
         if len(value.parts) != 2 or ".." in value.parts:
-            raise InspectionTraceError(
-                "invalid fixture path: expected examples/<fixture-name>"
-            )
+            raise InspectionTraceError("invalid fixture path: expected examples/<fixture-name>")
         _validate_fixture_name_for_cli(value.parts[1], str(value))
         return Path("examples") / value.parts[1]
     if len(value.parts) == 1:

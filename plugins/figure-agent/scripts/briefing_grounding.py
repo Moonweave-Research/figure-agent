@@ -50,8 +50,7 @@ _MIN_INTENT_CHARS: Final = 40
 
 def _has_audit_signal(example_dir: Path) -> bool:
     return any(
-        (example_dir / relative_path).is_file()
-        for relative_path in AUDIT_SIGNAL_RELATIVE_PATHS
+        (example_dir / relative_path).is_file() for relative_path in AUDIT_SIGNAL_RELATIVE_PATHS
     )
 
 
@@ -80,9 +79,7 @@ def explicit_briefing_rule_text(sections: dict[int | str, tuple[str, str]]) -> s
         (f"§{section_number}", sections.get(section_number, ("", "")))
         for section_number in RULE_SECTION_NUMBERS
     ]
-    candidates.extend(
-        (title, sections.get(title, ("", ""))) for title in RULE_SECTION_TITLES
-    )
+    candidates.extend((title, sections.get(title, ("", ""))) for title in RULE_SECTION_TITLES)
     seen_titles: set[str] = set()
     for section_label, (title, body) in candidates:
         rule_body = body.strip()
@@ -107,4 +104,6 @@ def has_reference_free_grounding_context(example_dir: Path) -> bool:
             break
     if not intent:
         intent = sections.get(1, ("", ""))[1].strip()
+    if not intent:
+        intent = sections.get("preamble", ("", ""))[1].strip()
     return len(intent) >= _MIN_INTENT_CHARS and bool(explicit_briefing_rule_text(sections))

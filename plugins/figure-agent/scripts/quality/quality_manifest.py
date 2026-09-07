@@ -69,6 +69,9 @@ def input_manifest_hash(paths: tuple[Path, ...], *, base_dir: Path) -> str:
 
 
 def _source_paths(example_dir: Path, name: str, style_lock_path: Path) -> tuple[Path, ...]:
+    from style_contract import resolve_style
+
+    style_lock_path, _ = resolve_style(example_dir, style_lock_path)
     candidates = [
         example_dir / f"{name}.tex",
         example_dir / "briefing.md",

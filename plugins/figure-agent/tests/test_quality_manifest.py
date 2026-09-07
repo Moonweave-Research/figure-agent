@@ -49,7 +49,9 @@ def test_critique_hash_is_stable_across_source_and_installed_plugin_roots(
     example_dir = workspace_root / "examples" / "demo"
     example_dir.mkdir(parents=True)
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     source_style = workspace_root / "styles" / "polymer-paper-preamble.sty"
     installed_root = tmp_path / "installed-plugin"
     installed_style = installed_root / "styles" / "polymer-paper-preamble.sty"
@@ -100,7 +102,9 @@ def _write_basic_critique_fixture(tmp_path: Path) -> tuple[Path, Path]:
     style_lock = tmp_path / "polymer-paper-preamble.sty"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     return example_dir, style_lock
 
 
@@ -265,7 +269,9 @@ def test_critique_manifest_includes_audit_crop_manifest_when_present(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
     manifest_path.parent.mkdir(parents=True)
     manifest_path.write_text('{"schema":"figure-agent.audit-crop-manifest.v1"}\n')
@@ -292,7 +298,9 @@ def test_critique_manifest_includes_text_boundary_report_when_present(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     report_path = example_dir / "build" / "text_boundary_clash.json"
     report_path.parent.mkdir(parents=True)
     report_path.write_text(
@@ -325,7 +333,9 @@ def test_critique_manifest_includes_label_path_proximity_report_when_present(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     report_path = example_dir / "build" / "label_path_proximity.json"
     report_path.parent.mkdir(parents=True)
     report_path.write_text(
@@ -358,7 +368,9 @@ def test_critique_manifest_includes_undeclared_geometry_report_when_present(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     report_path = example_dir / "build" / "undeclared_geometry.json"
     report_path.parent.mkdir(parents=True)
     report_path.write_text(
@@ -394,7 +406,9 @@ def test_critique_manifest_includes_critique_reference_pack_when_present(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     pack_path = example_dir / "critique_reference_pack.yaml"
     pack_path.write_text(
         "schema: figure-agent.critique-reference-pack.v1\nfixture: demo\n",
@@ -426,7 +440,9 @@ def test_critique_manifest_includes_reference_aesthetic_metrics_when_present(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     metrics_path = example_dir / "build" / "reference_aesthetic_metrics.json"
     metrics_path.write_text(
         '{"schema":"figure-agent.reference-aesthetic-metrics.v1"}\n',
@@ -458,7 +474,9 @@ def test_critique_manifest_includes_aesthetic_intent_when_present(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     intent_path = example_dir / "aesthetic_intent.yaml"
     intent_path.write_text(
         "schema: figure-agent.aesthetic-intent.v1\nfixture: demo\n",
@@ -490,7 +508,9 @@ def test_critique_manifest_includes_declared_paper_aesthetic_context(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     (example_dir / "spec.yaml").write_text(
         "name: demo\npaper_aesthetic_context: paper-demo\n",
         encoding="utf-8",
@@ -547,7 +567,9 @@ def test_critique_manifest_omits_paper_aesthetic_context_without_opt_in(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     pack_dir = example_dir.parent / "_paper_aesthetic_contexts"
     pack_dir.mkdir()
     pack_path = pack_dir / "paper-demo.yaml"
@@ -571,7 +593,9 @@ def test_critique_manifest_includes_declared_journal_art_direction_playbook(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     (example_dir / "spec.yaml").write_text(
         "name: demo\njournal_art_direction_playbook: nc-main-text\n",
         encoding="utf-8",
@@ -606,7 +630,9 @@ def test_critique_manifest_omits_journal_playbook_without_opt_in(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     pack_dir = example_dir.parent / "_journal_art_direction_playbooks"
     pack_dir.mkdir()
     pack_path = pack_dir / "nc-main-text.yaml"
@@ -630,7 +656,9 @@ def test_critique_manifest_does_not_crash_on_invalid_paper_context_id(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     spec_path = example_dir / "spec.yaml"
     spec_path.write_text(
         "name: demo\npaper_aesthetic_context: ../escape\n",
@@ -655,7 +683,9 @@ def test_critique_manifest_ignores_generated_export_svg_without_polish_opt_in(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     export_svg = example_dir / "exports" / "demo.svg"
     export_svg.parent.mkdir()
     export_svg.write_text("<svg>generated export</svg>\n", encoding="utf-8")
@@ -672,6 +702,8 @@ def test_critique_manifest_ignores_generated_export_svg_without_polish_opt_in(
 
     assert export_svg not in paths
     assert before == after
+
+
 def test_critique_manifest_ignores_external_vision_review_without_opt_in(
     tmp_path: Path,
 ) -> None:
@@ -680,7 +712,9 @@ def test_critique_manifest_ignores_external_vision_review_without_opt_in(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     review_path = example_dir / "external_vision_review.yaml"
     review_path.write_text("schema: figure-agent.external-vision-review.v1\n", encoding="utf-8")
 
@@ -702,7 +736,9 @@ def test_critique_manifest_includes_external_vision_review_when_opted_in(
     style_lock = tmp_path / "style-lock.yml"
     style_lock.write_text("style\n", encoding="utf-8")
     for name in ("demo.tex", "briefing.md", "spec.yaml"):
-        (example_dir / name).write_text(f"{name}\n", encoding="utf-8")
+        (example_dir / name).write_text(
+            "name: demo\n" if name == "spec.yaml" else f"{name}\n", encoding="utf-8"
+        )
     review_path = example_dir / "external_vision_review.yaml"
     review_path.write_text("schema: figure-agent.external-vision-review.v1\n", encoding="utf-8")
 

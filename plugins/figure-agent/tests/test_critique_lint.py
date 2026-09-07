@@ -958,7 +958,6 @@ def _write_critique(
     return critique
 
 
-
 def _write_external_vision_review_fixture(
     fig_dir: Path,
     *,
@@ -1227,6 +1226,9 @@ def _write_crop_manifest(fig_dir: Path, *, crop_ids: tuple[str, ...]) -> Path:
         + "\n",
         encoding="utf-8",
     )
+    from inspection_trace_fixtures import issue_inspection_trace
+
+    issue_inspection_trace(fig_dir)
     return manifest
 
 
@@ -2075,9 +2077,9 @@ def test_lint_critique_rejects_typo_schema(tmp_path: Path) -> None:
     critique_path = fig_dir / "critique.md"
     critique_path.write_text(
         critique_path.read_text(encoding="utf-8").replace(
-                "schema: figure-agent.critique.v1.10",
-                "schema: figureagent.critique.v1.10",
-            ),
+            "schema: figure-agent.critique.v1.10",
+            "schema: figureagent.critique.v1.10",
+        ),
         encoding="utf-8",
     )
 

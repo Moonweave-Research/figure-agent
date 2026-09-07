@@ -365,3 +365,46 @@ grants release, golden, or publication acceptance.
 
 `tests/test_surface_inventory.py` fails when this list and the server registry
 disagree, so an added or removed tool cannot ship undocumented.
+# Review hardening contract (2026-09-07)
+
+Authored fixtures always require critique before ordinary export. A reference-free
+fixture with insufficient briefing context stays `BRIEFING_REQUIRED`; introductory
+briefing prose can supply intent. `--skip-critique` remains an explicit draft export
+override and does not grant publication acceptance.
+
+The v2 render-input manifest binds PDF and PNG to the compile receipt, authored
+inputs recorded by TeX `-recorder`, and observed external toolchain inputs. Source,
+included TeX, image, font, or raster hash drift invalidates freshness regardless of
+mtime. A v1 manifest requires recompilation. Critique and root/candidate export consume this
+same binding; neither can declare current source bytes fresh without a build.
+
+Specs reject duplicate keys, invalid panel containers/items, duplicate panel IDs,
+boolean numeric values, and nonfinite geometry. Print-font validation measures PDF
+text state after the transform, including rotated text and sub/superscripts. No
+implicit subscript waiver applies to a declared minimum font size.
+
+A custom preamble is supported through `style_lock: {preamble, sha256,
+source_color_definitions}` in spec.yaml. The preamble must be an existing
+fixture-relative `.sty`; `sha256` binds its content. The optional declaration list
+contains exact `\definecolor{name}{RGB|rgb|HTML}{value}` statements permitted in the
+source. Undeclared color changes and font overrides remain lint blockers. This lets
+Cowork M1 retain its Arial source without pretending to use the polymer preamble.
+
+Whole-panel crops do not depend on references. Whole views, grid crops and overlapping
+seams are required inspection entries. Screen proxies have screen names; physical
+print images carry placement mm, 300 DPI, scale and upsampling metadata, with a
+grayscale companion. DPI metadata does not control a viewer's display magnification.
+Generated audit crops require complete `inspection_trace.yaml` coverage and the
+existing host execution receipt format, bound to the manifest and actual transcript.
+This establishes evidence lineage, not proof that a model understood every pixel.
+
+MCP and candidate apply share a stable-inode OS advisory lock. The lock file can
+remain after a process exits; kernel ownership determines whether it is active.
+Restart old plugin processes before using the new locking protocol. Timeouts kill
+the subprocess group and decode captured bytes safely for JSON responses.
+
+PDF is the default submission artifact; outlined SVG is a display derivative.
+Exports include `<name>_editable_source.zip` with TeX, preamble, recorded
+local dependencies, source hashes and build receipts. System font/toolchain hashes
+remain evidence; fonts are not redistributed. Fresh renders are preserved while the
+source bundle is refreshed. Export never implies human acceptance.

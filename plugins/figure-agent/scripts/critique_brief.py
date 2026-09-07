@@ -62,7 +62,7 @@ from semantic_contracts import SemanticContractError, semantic_claim_questions
 from subregion_active_set import active_subregion_ids, iteration_patch_ids, parse_active_target_rows
 
 MISSING_INVARIANTS = (
-    "(none provided — critic should infer plausible physics constraints from §1+§2)"
+    "(none provided — scientific constraints remain unverified; obtain author grounding)"
 )
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STYLE_LOCK_PATH = runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
@@ -110,7 +110,7 @@ def _require_file(path: Path, hint: str | None = None) -> None:
 
 
 def _author_intent(sections: dict[int, tuple[str, str]]) -> str:
-    topic = sections.get(1, ("", ""))[1].strip()
+    topic = sections.get(1, sections.get("preamble", ("", "")))[1].strip()
     composition = sections.get(3, ("", ""))[1].strip()
     semantic_constraints = sections.get(7, ("", ""))[1].strip()
     parts = [part for part in [topic, composition, semantic_constraints] if part]
@@ -122,12 +122,18 @@ def _example_relative_path(example_dir: Path, path: Path) -> str:
 
 
 def _require_fresh_png(png_path: Path, source_paths: tuple[Path, ...]) -> None:
-    png_mtime = png_path.stat().st_mtime
-    stale_sources = [path for path in source_paths if path.stat().st_mtime > png_mtime]
-    if stale_sources:
-        names = ", ".join(path.name for path in stale_sources)
+    import render_input_manifest
+
+    example_dir = png_path.parent.parent
+    state = render_input_manifest.raster_freshness(
+        fixture=example_dir.name,
+        render_pdf=png_path.with_suffix(".pdf"),
+        inputs=render_input_manifest.input_paths(example_dir, png_path.stem, STYLE_LOCK_PATH),
+        png=png_path,
+    )
+    if state != render_input_manifest.FRESH:
         raise CritiqueBriefError(
-            f"stale render {png_path}; newer source file(s): {names}; run /fig_compile first"
+            f"stale or unbound render {png_path} ({state}); run /fig_compile first"
         )
 
 
@@ -400,24 +406,14 @@ def _panel_reference_sections(
     panel_crop_paths: list[Path] = []
     for index, panel in enumerate(spec.get("panels", [])):
         ref_path = _panel_reference_path(example_dir, panel)
-        if ref_path is None:
-            if panel.get("bbox_pdf_cm") is not None:
-                panel_id = _panel_id(panel, index)
-                warnings.append(
-                    f"WARN: Panel `{panel_id}` declares bbox_pdf_cm but no reference_image; "
-                    "skipping per-panel comparison."
-                )
-            continue
         panel_id = _panel_id(panel, index)
-        if not ref_path.is_file():
-            reference = panel.get("reference_image")
-            warnings.append(
-                f"WARN: Panel `{panel_id}` declares reference_image `{reference}` "
-                "but that file is missing; skipping per-panel comparison."
-            )
-            continue
+        if ref_path is not None and not ref_path.is_file():
+            warnings.append(f"WARN: Panel `{panel_id}` reference missing; inspect author intent.")
+            ref_path = None
         bbox = panel.get("bbox_pdf_cm")
         if bbox is None:
+            if ref_path is None:
+                continue
             warnings.append(
                 f"WARN: Panel `{panel_id}` declares reference_image but no bbox_pdf_cm; "
                 "skipping per-panel comparison."
@@ -436,10 +432,15 @@ def _panel_reference_sections(
                 [
                     f"### Panel `{panel_id}`",
                     f"- Build crop: `{_example_relative_path(example_dir, crop_path)}`",
-                    f"- Panel reference: `{_example_relative_path(example_dir, ref_path)}`",
+                    (
+                        f"- Panel reference: `{_example_relative_path(example_dir, ref_path)}`"
+                        if ref_path
+                        else "- No panel reference: inspect against briefing and physics."
+                    ),
                     f"- bbox_pdf_cm: {_format_bbox(bbox)}",
                     "- Critique instruction: Compare this panel's build crop to its reference. "
-                    "Note structural/topological deviations; style lock is handled elsewhere.",
+                    "Inspect complete topology and label ownership against the briefing "
+                    "when no reference exists.",
                 ]
             )
         )
@@ -497,9 +498,11 @@ def _print_scale_audit_section(example_dir: Path, crops: list[dict]) -> str:
         "`journal_polish` or `publication_readiness` to `pass`.",
         "Use them to check label readability, arrow-tip recognizability, line-weight "
         "survival, and dense-region legibility at manuscript scale.",
-        "These are proxy evidence images: `scale_basis=fixed_width_proxy` means "
+        "For screen proxies, `scale_basis=fixed_width_proxy` means "
         "the image is a deterministic reduced-width readability check, not a "
         "DPI-derived physical print simulation.",
+        "`scale_basis=physical_contract` records placement millimeters and DPI. "
+        "A viewer may rescale it; use its physical metadata for print inspection.",
         "If reduction hides text, fuses arrow tips, or makes a dense region "
         "ambiguous, record it as `micro_defects.kind: print_scale_unreadable`.",
         "",
@@ -510,7 +513,9 @@ def _print_scale_audit_section(example_dir: Path, crops: list[dict]) -> str:
         lines.append(
             f"- `{_example_relative_path(example_dir, item_path)}` "
             f"scale={item['scale_label']} size_px={item['size_px']} "
-            f"basis={item['scale_basis']} target_width_px={item['target_width_px']} "
+            f"basis={item['scale_basis']} "
+            f"target_width_px={item.get('target_width_px', item['size_px'][0])} "
+            f"size_mm={item.get('size_mm', 'not_physical')} dpi={item.get('dpi', 'not_physical')} "
             f"from `{_example_relative_path(example_dir, source_path)}`"
         )
     return "\n" + "\n".join(lines) + "\n"
@@ -1567,6 +1572,18 @@ zoom/reference review.
 
 **Render to inspect:** `{render_path}`
 {render_read_note}{image_context_sections}
+
+## Inspection execution evidence
+Inspect every `required_crop_ids` entry in `build/audit_crops/manifest.json`, including
+whole panels and seam crops. Save `inspection_trace.yaml` with verdict `inspected`
+and the current path/hash for every required entry. Skipped/unavailable entries do
+not complete coverage. Its `execution` uses `figure-agent.host-review-execution-receipt.v1`:
+`request_sha256` is the crop manifest file hash; `actor` identifies the actual host
+and model/tool; `transcript` binds the real tool transcript path/hash. The execution
+artifact list is the manifest render path/hash followed by each required crop path/hash,
+in manifest order. Seal `receipt_sha256` with the canonical JSON hash used by
+`post_repair_visual_review`. Do not invent tool calls or inspection receipts.
+This checks recorded evidence integrity; it does not certify perception or scientific correctness.
 {zoom_audit_section}
 {print_scale_audit_section}
 {visual_clash_section}

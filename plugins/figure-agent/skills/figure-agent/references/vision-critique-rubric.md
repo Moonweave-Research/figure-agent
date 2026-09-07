@@ -15,6 +15,15 @@ it does not replace `docs/figure-agent.md` as product authority.
 
 ### L4.5 Vision Critique (host-orchestrated)
 
+The audit manifest is the inspection inventory. Inspect every required whole-panel,
+quadrant, seam, and physical-print image, even when a panel has no reference image.
+`screen_overview` and `screen_thumbnail` are pixel-width proxies; only
+`physical_print_300dpi` and its grayscale companion carry a millimeter/DPI contract.
+Read `critique_brief.py`'s inspection execution evidence section and preserve the real
+host tool transcript in `inspection_trace.yaml`. Missing coverage, skipped-only logs,
+or an absent execution receipt cannot satisfy generated-crop inspection. A valid
+receipt proves binding to recorded artifacts, not visual or scientific correctness.
+
 ```
 /fig_critique <name>         vision-capable host (Codex or Claude) reads
                              build/<name>.png + briefing,

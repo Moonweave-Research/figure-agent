@@ -85,6 +85,12 @@ def _response_pack(
     critique = pack / inbound.CRITIQUE_FILE
     source = Path(__file__).resolve().parents[1] / "examples" / FIXTURE / "critique.md"
     shutil.copyfile(source, critique)
+    # This synthetic response is for the current crop inventory, not the archived IDs.
+    critique.write_text(
+        critique.read_text()
+        .replace("print_178mm", "screen_overview")
+        .replace("print_thumbnail", "screen_thumbnail")
+    )
     if include_seam_audit:
         critique_text = critique.read_text(encoding="utf-8")
         _, frontmatter_text, markdown = critique_text.split("---", 2)

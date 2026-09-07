@@ -69,9 +69,7 @@ def _fixture(
         "rubric_version": expected_critique_rubric_version(example),
     }
     critique.write_text(
-        "---\n"
-        + yaml.safe_dump(critique_metadata, sort_keys=False)
-        + "---\n",
+        "---\n" + yaml.safe_dump(critique_metadata, sort_keys=False) + "---\n",
         encoding="utf-8",
     )
     report = attempt / "collisions.json"
@@ -339,57 +337,57 @@ def _fixture(
     )
     binding = attempt / "critique_repair_binding.json"
     binding_payload = {
-                "schema": "figure-agent.adjudicated-repair-binding.v1",
-                "fixture": "demo",
-                "critique": {
-                    "path": critique.relative_to(workspace).as_posix(),
-                    "sha256": _sha256(critique),
-                    "finding_id": "C001",
-                },
-                "adjudication": {
-                    "path": adjudication.relative_to(workspace).as_posix(),
-                    "sha256": _sha256(adjudication),
-                    "decision": "apply",
-                },
-                "machine_finding": {
-                    "report_path": report.relative_to(workspace).as_posix(),
-                    "report_sha256": _sha256(report),
-                    "finding_id": "TC001",
-                },
-                "selector_registry": {
-                    "path": registry.relative_to(workspace).as_posix(),
-                    "sha256": _sha256(registry),
-                },
-                "source": {
-                    "path": baseline_source.relative_to(workspace).as_posix(),
-                    "sha256": _sha256(baseline_source),
-                },
-                "spec": {
-                    "path": spec.relative_to(workspace).as_posix(),
-                    "sha256": _sha256(spec),
-                },
-                "current_render": {
-                    "path": before_render.relative_to(workspace).as_posix(),
-                    "sha256": _sha256(before_render),
-                },
-                "current_pdf": {
-                    "path": before_pdf.relative_to(workspace).as_posix(),
-                    "sha256": _sha256(before_pdf),
-                },
-                "crop_manifest": {
-                    "path": baseline_manifest.relative_to(workspace).as_posix(),
-                    "sha256": _sha256(baseline_manifest),
-                },
-                "attribution_state": "exact",
-                "target_contract": {
-                    "path": target_contract.relative_to(workspace).as_posix(),
-                    "sha256": _sha256(target_contract),
-                },
-                "semantic_attribution": {
-                    "path": semantic_attribution.relative_to(workspace).as_posix(),
-                    "sha256": _sha256(semantic_attribution),
-                },
-                "publication_acceptance": "not_claimed",
+        "schema": "figure-agent.adjudicated-repair-binding.v1",
+        "fixture": "demo",
+        "critique": {
+            "path": critique.relative_to(workspace).as_posix(),
+            "sha256": _sha256(critique),
+            "finding_id": "C001",
+        },
+        "adjudication": {
+            "path": adjudication.relative_to(workspace).as_posix(),
+            "sha256": _sha256(adjudication),
+            "decision": "apply",
+        },
+        "machine_finding": {
+            "report_path": report.relative_to(workspace).as_posix(),
+            "report_sha256": _sha256(report),
+            "finding_id": "TC001",
+        },
+        "selector_registry": {
+            "path": registry.relative_to(workspace).as_posix(),
+            "sha256": _sha256(registry),
+        },
+        "source": {
+            "path": baseline_source.relative_to(workspace).as_posix(),
+            "sha256": _sha256(baseline_source),
+        },
+        "spec": {
+            "path": spec.relative_to(workspace).as_posix(),
+            "sha256": _sha256(spec),
+        },
+        "current_render": {
+            "path": before_render.relative_to(workspace).as_posix(),
+            "sha256": _sha256(before_render),
+        },
+        "current_pdf": {
+            "path": before_pdf.relative_to(workspace).as_posix(),
+            "sha256": _sha256(before_pdf),
+        },
+        "crop_manifest": {
+            "path": baseline_manifest.relative_to(workspace).as_posix(),
+            "sha256": _sha256(baseline_manifest),
+        },
+        "attribution_state": "exact",
+        "target_contract": {
+            "path": target_contract.relative_to(workspace).as_posix(),
+            "sha256": _sha256(target_contract),
+        },
+        "semantic_attribution": {
+            "path": semantic_attribution.relative_to(workspace).as_posix(),
+            "sha256": _sha256(semantic_attribution),
+        },
+        "publication_acceptance": "not_claimed",
     }
     binding.write_text(
         json.dumps(binding_payload),
@@ -423,8 +421,8 @@ def _fixture(
         "output_path": source.relative_to(workspace).as_posix(),
         "publication_acceptance": "not_claimed",
     }
-    packet_payload["packet_sha256"] = (
-        authoring_repair_packet.canonical_packet_sha256(packet_payload)
+    packet_payload["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
+        packet_payload
     )
     packet.write_text(json.dumps(packet_payload), encoding="utf-8")
     receipt = attempt / "materialization_receipt.json"
@@ -461,7 +459,7 @@ def _fixture(
                     "png": {
                         "path": render.relative_to(workspace).as_posix(),
                         "sha256": _sha256(render),
-                    }
+                    },
                 },
                 "human_review": "pending",
                 "publication_acceptance": "not_claimed",
@@ -505,9 +503,7 @@ def _request(workspace: Path, paths: dict[str, Path]) -> dict[str, object]:
     )
 
 
-def _refresh_critique_authority(
-    workspace: Path, paths: dict[str, Path]
-) -> None:
+def _refresh_critique_authority(workspace: Path, paths: dict[str, Path]) -> None:
     example = workspace / "examples" / "demo"
     spec_path = example / "spec.yaml"
     parsed_spec = parse_spec(spec_path.read_text(encoding="utf-8"))
@@ -521,9 +517,7 @@ def _refresh_critique_authority(
                     example,
                     "demo",
                     parsed_spec,
-                    style_lock_path=(
-                        PLUGIN_ROOT / "styles" / "polymer-paper-preamble.sty"
-                    ),
+                    style_lock_path=(PLUGIN_ROOT / "styles" / "polymer-paper-preamble.sty"),
                     base_dir=PLUGIN_ROOT,
                 ),
                 "generator_version": critique_generator_version(
@@ -549,18 +543,14 @@ def _refresh_critique_authority(
     paths["binding"].write_text(json.dumps(binding), encoding="utf-8")
     packet = json.loads(paths["packet"].read_text(encoding="utf-8"))
     packet["adjudicated_repair_binding"]["sha256"] = _sha256(paths["binding"])
-    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
-        packet
-    )
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(packet)
     paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
     receipt = json.loads(paths["receipt"].read_text(encoding="utf-8"))
     receipt["packet_sha256"] = packet["packet_sha256"]
     paths["receipt"].write_text(json.dumps(receipt), encoding="utf-8")
 
 
-def _response(
-    request: dict[str, object], workspace: Path
-) -> dict[str, object]:
+def _response(request: dict[str, object], workspace: Path) -> dict[str, object]:
     transcript = workspace / "review" / "host-vision-transcript.json"
     transcript.parent.mkdir(parents=True, exist_ok=True)
     if not transcript.exists():
@@ -582,10 +572,8 @@ def _response(
             *request["inspection_artifacts"],
         ],
     }
-    execution_receipt["receipt_sha256"] = (
-        post_repair_visual_review._canonical_hash(
-            execution_receipt, omitted="receipt_sha256"
-        )
+    execution_receipt["receipt_sha256"] = post_repair_visual_review._canonical_hash(
+        execution_receipt, omitted="receipt_sha256"
     )
     return {
         "schema": "figure-agent.post-repair-visual-review-response.v1",
@@ -634,21 +622,15 @@ def _machine_repaired_state(
             "render": paths["render"],
         },
     )
-    state_path = closed_loop_attempt_state.publish_state(
-        state, workspace_root=workspace
-    )
+    state_path = closed_loop_attempt_state.publish_state(state, workspace_root=workspace)
     transitions = [
         (
             "critique_unadjudicated",
             "workflow_agent",
             {
                 "critique": evidence_file("critique"),
-                "host_review_execution_receipt": evidence_file(
-                    "host_review_execution_receipt"
-                ),
-                "initial_visual_review_response": evidence_file(
-                    "initial_visual_review_response"
-                ),
+                "host_review_execution_receipt": evidence_file("host_review_execution_receipt"),
+                "initial_visual_review_response": evidence_file("initial_visual_review_response"),
                 "host_review_transcript": evidence_file("host_review_transcript"),
             },
         ),
@@ -690,9 +672,7 @@ def _machine_repaired_state(
             workspace_root=workspace,
             previous_state_path=state_path,
         )
-        state_path = closed_loop_attempt_state.publish_state(
-            state, workspace_root=workspace
-        )
+        state_path = closed_loop_attempt_state.publish_state(state, workspace_root=workspace)
     return state, state_path
 
 
@@ -868,9 +848,7 @@ def test_fig_run_closed_loop_rejects_incompatible_before_after_render_dimensions
     tmp_path: Path,
 ) -> None:
     workspace, paths = _fixture(tmp_path)
-    _, state_path = _machine_repaired_state(
-        workspace, paths, render_size=(900, 600)
-    )
+    _, state_path = _machine_repaired_state(workspace, paths, render_size=(900, 600))
 
     with pytest.raises(ValueError, match="target_coordinate_space_incompatible"):
         fig_run.run_workflow(
@@ -892,9 +870,7 @@ def test_fig_run_closed_loop_detects_render_mutate_generate_restore_race(
     _, state_path = _machine_repaired_state(workspace, paths)
     original_build_crops = critique_zoom_crops.build_zoom_crop_pack
 
-    def mutate_generate_restore(
-        *args: object, **kwargs: object
-    ) -> list[dict[str, object]]:
+    def mutate_generate_restore(*args: object, **kwargs: object) -> list[dict[str, object]]:
         original_bytes = paths["render"].read_bytes()
         Image.new("RGB", (800, 600), "black").save(paths["render"])
         try:
@@ -902,9 +878,7 @@ def test_fig_run_closed_loop_detects_render_mutate_generate_restore_race(
         finally:
             paths["render"].write_bytes(original_bytes)
 
-    monkeypatch.setattr(
-        critique_zoom_crops, "build_zoom_crop_pack", mutate_generate_restore
-    )
+    monkeypatch.setattr(critique_zoom_crops, "build_zoom_crop_pack", mutate_generate_restore)
 
     with pytest.raises(ValueError, match="render.*drift|render.*changed"):
         fig_run.run_workflow(
@@ -928,20 +902,14 @@ def test_fig_run_closed_loop_resumes_hash_identical_request_after_state_failure(
     original_publish = closed_loop_attempt_state.publish_state
     failed = False
 
-    def fail_next_state_once(
-        state: dict[str, object], *, workspace_root: Path
-    ) -> Path:
+    def fail_next_state_once(state: dict[str, object], *, workspace_root: Path) -> Path:
         nonlocal failed
         if state.get("state") == "post_review_requested" and not failed:
             failed = True
-            raise closed_loop_attempt_state.ClosedLoopAttemptStateError(
-                "injected_state_failure"
-            )
+            raise closed_loop_attempt_state.ClosedLoopAttemptStateError("injected_state_failure")
         return original_publish(state, workspace_root=workspace_root)
 
-    monkeypatch.setattr(
-        closed_loop_attempt_state, "publish_state", fail_next_state_once
-    )
+    monkeypatch.setattr(closed_loop_attempt_state, "publish_state", fail_next_state_once)
     with pytest.raises(ValueError, match="injected_state_failure"):
         fig_run.run_workflow(
             "demo",
@@ -978,9 +946,7 @@ def test_fig_run_closed_loop_recovery_rejects_crop_pack_drift(
     original_write_once = post_repair_visual_review._write_once
 
     def fail_request_once(*args: object, **kwargs: object) -> None:
-        raise post_repair_visual_review.PostRepairVisualReviewError(
-            "injected_request_failure"
-        )
+        raise post_repair_visual_review.PostRepairVisualReviewError("injected_request_failure")
 
     monkeypatch.setattr(post_repair_visual_review, "_write_once", fail_request_once)
     with pytest.raises(ValueError, match="injected_request_failure"):
@@ -1065,16 +1031,14 @@ def test_fig_run_closed_loop_execute_publishes_request_state_and_host_handoff(
     crop_manifest = json.loads(
         (workspace / request["crop_manifest"]["path"]).read_text(encoding="utf-8")
     )
-    post_repair_visual_review._validate_request_freshness(
-        request, workspace_root=workspace
-    )
+    post_repair_visual_review._validate_request_freshness(request, workspace_root=workspace)
     assert payload["final_stop_reason"] == "host_boundary"
     assert payload["boundary_handoff"]["required_actor"] == "host_llm"
     assert payload["boundary_handoff"]["request_sha256"] == request["request_sha256"]
     assert payload["closed_loop"]["created"] is True
     assert request["crop_roles"] == {
         "neighbor_crop": "full_q2",
-        "print_scale": "print_thumbnail",
+        "print_scale": "screen_thumbnail",
         "target_crop": "full_q1",
     }
     assert request["publication_acceptance"] == "not_claimed"
@@ -1200,9 +1164,9 @@ def test_fig_run_closed_loop_post_review_rerun_is_idempotent(tmp_path: Path) -> 
     assert second["executed_count"] == 0
     assert second["closed_loop"]["created"] is False
     assert second["closed_loop"]["request_path"] == first["closed_loop"]["request_path"]
-    assert second["boundary_handoff"]["request_sha256"] == first[
-        "boundary_handoff"
-    ]["request_sha256"]
+    assert (
+        second["boundary_handoff"]["request_sha256"] == first["boundary_handoff"]["request_sha256"]
+    )
     assert after == before
 
 
@@ -1229,7 +1193,7 @@ def test_fig_run_closed_loop_rerun_rejects_hash_valid_crop_role_relabeling(
         crop_roles={
             "target_crop": "full_q2",
             "neighbor_crop": "full_q1",
-            "print_scale": "print_thumbnail",
+            "print_scale": "screen_thumbnail",
         },
         workspace_root=workspace,
     )
@@ -1237,9 +1201,7 @@ def test_fig_run_closed_loop_rerun_rejects_hash_valid_crop_role_relabeling(
     next_state_path = workspace / first["closed_loop"]["next_state_path"]
     next_state = json.loads(next_state_path.read_text(encoding="utf-8"))
     next_state["evidence"][0]["sha256"] = _sha256(request_path)
-    next_state["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(
-        next_state
-    )
+    next_state["state_sha256"] = closed_loop_attempt_state.canonical_state_sha256(next_state)
     next_state_path.write_text(json.dumps(next_state), encoding="utf-8")
 
     with pytest.raises(ValueError, match="crop_role_mismatch"):
@@ -1324,10 +1286,8 @@ def _write_closed_loop_response(
         "path": transcript.relative_to(workspace).as_posix(),
         "sha256": _sha256(transcript),
     }
-    response["execution_receipt"]["receipt_sha256"] = (
-        post_repair_visual_review._canonical_hash(
-            response["execution_receipt"], omitted="receipt_sha256"
-        )
+    response["execution_receipt"]["receipt_sha256"] = post_repair_visual_review._canonical_hash(
+        response["execution_receipt"], omitted="receipt_sha256"
     )
     if verdict_key is not None:
         response["verdicts"][verdict_key] = verdict
@@ -1362,9 +1322,7 @@ def _visually_re_reviewed_attempt(
                 "schema": "figure-agent.closed-loop-development-verdict.v1",
                 "fixture": "demo",
                 "attempt_id": reviewed_state["attempt_id"],
-                "reviewed_state_path": reviewed_state_path.relative_to(
-                    workspace
-                ).as_posix(),
+                "reviewed_state_path": reviewed_state_path.relative_to(workspace).as_posix(),
                 "decision_kind": "accept_development_baseline",
                 "human_decision": (
                     "accept this exact visually re-reviewed artifact as a development baseline"
@@ -1656,8 +1614,8 @@ def test_fig_run_negative_development_verdict_recovers_exact_terminal_state(
     assert recovered["final_stop_reason"] == f"{expected_state}_recovered"
     assert recovered["executed_count"] == 0
     assert recovered["closed_loop"]["created"] is False
-    assert recovered["closed_loop"]["next_state_path"] == (
-        created["closed_loop"]["next_state_path"]
+    assert (
+        recovered["closed_loop"]["next_state_path"] == (created["closed_loop"]["next_state_path"])
     )
     assert len(list(state_path.parent.glob(f"state-*-{expected_state}.json"))) == 1
 
@@ -1781,10 +1739,13 @@ def test_development_verdict_cannot_switch_terminal_branch_after_publication(
         )
 
     accepted = json.loads(accepted_path.read_text(encoding="utf-8"))
-    assert closed_loop_attempt_state.validate_state(
-        accepted,
-        workspace_root=workspace,
-    ) == accepted
+    assert (
+        closed_loop_attempt_state.validate_state(
+            accepted,
+            workspace_root=workspace,
+        )
+        == accepted
+    )
     assert verdict_path.read_bytes() == original_verdict
     assert not any(state_path.parent.glob("state-*-rejected.json"))
 
@@ -1816,8 +1777,8 @@ def test_fig_run_development_verdict_recovers_exact_published_state(
     assert recovered["final_stop_reason"] == "development_accepted_recovered"
     assert recovered["executed_count"] == 0
     assert recovered["closed_loop"]["created"] is False
-    assert recovered["closed_loop"]["next_state_path"] == (
-        created["closed_loop"]["next_state_path"]
+    assert (
+        recovered["closed_loop"]["next_state_path"] == (created["closed_loop"]["next_state_path"])
     )
     assert recovered["boundary_handoff"]["evidence_refs"][-1] == (
         "closed_loop_state:" + created["closed_loop"]["next_state_path"]
@@ -1883,9 +1844,7 @@ def test_shared_attempt_transition_lock_blocks_development_acceptance(
     tmp_path: Path,
 ) -> None:
     workspace, state_path, verdict_path = _visually_re_reviewed_attempt(tmp_path)
-    lock_path = (
-        state_path.parent / closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK
-    )
+    lock_path = state_path.parent / closed_loop_attempt_state.ATTEMPT_TRANSITION_LOCK
 
     with repair_transaction.recoverable_exclusive_lock(
         lock_path,
@@ -2210,9 +2169,7 @@ def test_fig_run_closed_loop_inbound_plan_only_is_truthful_and_write_free(
         if path.is_file()
     }
     assert payload["final_stop_reason"] == "plan_only"
-    assert payload["closed_loop"]["decision"] == (
-        "visually_rechecked_human_review_pending"
-    )
+    assert payload["closed_loop"]["decision"] == ("visually_rechecked_human_review_pending")
     assert payload["closed_loop"]["next_state"] == "visually_re_reviewed"
     assert payload["closed_loop"]["publication_acceptance"] == "not_claimed"
     assert after == before
@@ -2303,9 +2260,7 @@ def test_default_fig_run_response_only_execute_advances_without_host_or_shell(
         repo_root=workspace,
     )
 
-    next_state = json.loads(
-        (workspace / payload["closed_loop"]["next_state_path"]).read_text()
-    )
+    next_state = json.loads((workspace / payload["closed_loop"]["next_state_path"]).read_text())
     assert payload["final_stop_reason"] == "human_review_boundary"
     assert payload["closed_loop"]["input_state_sha256"] == state["state_sha256"]
     assert next_state["state"] == "visually_re_reviewed"
@@ -2450,9 +2405,7 @@ def test_fig_run_closed_loop_inbound_clean_publishes_human_review_state(
         "post_repair_visual_review_receipt",
         "post_repair_visual_review_response",
     ]
-    assert next_state["evidence"][0]["path"] == response_path.relative_to(
-        workspace
-    ).as_posix()
+    assert next_state["evidence"][0]["path"] == response_path.relative_to(workspace).as_posix()
     assert receipt["decision"] == "visually_rechecked_human_review_pending"
     assert receipt["response"] == {
         "path": response_path.relative_to(workspace).as_posix(),
@@ -2498,9 +2451,7 @@ def test_fig_run_closed_loop_inbound_rerun_from_request_state_is_no_write(
         if path.is_file()
     }
     assert second["closed_loop"]["created"] is False
-    assert second["closed_loop"]["next_state_path"] == first["closed_loop"][
-        "next_state_path"
-    ]
+    assert second["closed_loop"]["next_state_path"] == first["closed_loop"]["next_state_path"]
     assert after == before
 
 
@@ -2535,18 +2486,14 @@ def test_fig_run_closed_loop_inbound_defect_publishes_repair_required(
         repo_root=workspace,
     )
 
-    next_state = json.loads(
-        (workspace / payload["closed_loop"]["next_state_path"]).read_text()
-    )
+    next_state = json.loads((workspace / payload["closed_loop"]["next_state_path"]).read_text())
     assert payload["final_stop_reason"] == "repair_required"
     assert payload["boundary_handoff"]["closeout_checks"] == [
         "start a new attempt from the bound repair failure record"
     ]
     assert next_state["state"] == "repair_required"
     assert next_state["terminal"] is True
-    assert [record["role"] for record in next_state["evidence"]] == [
-        "repair_failure_record"
-    ]
+    assert [record["role"] for record in next_state["evidence"]] == ["repair_failure_record"]
 
 
 @pytest.mark.parametrize(
@@ -2668,8 +2615,7 @@ def test_fig_run_closed_loop_response_requires_current_request_state_or_explicit
 
     assert result == 2
     assert (
-        "closed-loop-response requires current post_review_requested state "
-        "or --closed-loop-state"
+        "closed-loop-response requires current post_review_requested state or --closed-loop-state"
     ) in capsys.readouterr().err
 
 
@@ -2682,20 +2628,14 @@ def test_fig_run_closed_loop_inbound_recovers_identical_receipt_after_state_fail
     original_publish = closed_loop_attempt_state.publish_state
     failed = False
 
-    def fail_visual_state_once(
-        state: dict[str, object], *, workspace_root: Path
-    ) -> Path:
+    def fail_visual_state_once(state: dict[str, object], *, workspace_root: Path) -> Path:
         nonlocal failed
         if state.get("state") == "visually_re_reviewed" and not failed:
             failed = True
-            raise closed_loop_attempt_state.ClosedLoopAttemptStateError(
-                "simulated_state_failure"
-            )
+            raise closed_loop_attempt_state.ClosedLoopAttemptStateError("simulated_state_failure")
         return original_publish(state, workspace_root=workspace_root)
 
-    monkeypatch.setattr(
-        closed_loop_attempt_state, "publish_state", fail_visual_state_once
-    )
+    monkeypatch.setattr(closed_loop_attempt_state, "publish_state", fail_visual_state_once)
     with pytest.raises(ValueError, match="simulated_state_failure"):
         fig_run.run_workflow(
             "demo",
@@ -2731,13 +2671,9 @@ def test_fig_run_closed_loop_inbound_partial_recovery_rejects_response_drift(
     response_path = _write_closed_loop_response(workspace, state_path, request)
     original_publish = closed_loop_attempt_state.publish_state
 
-    def fail_visual_state(
-        state: dict[str, object], *, workspace_root: Path
-    ) -> Path:
+    def fail_visual_state(state: dict[str, object], *, workspace_root: Path) -> Path:
         if state.get("state") == "visually_re_reviewed":
-            raise closed_loop_attempt_state.ClosedLoopAttemptStateError(
-                "simulated_state_failure"
-            )
+            raise closed_loop_attempt_state.ClosedLoopAttemptStateError("simulated_state_failure")
         return original_publish(state, workspace_root=workspace_root)
 
     monkeypatch.setattr(closed_loop_attempt_state, "publish_state", fail_visual_state)
@@ -2784,9 +2720,7 @@ def test_fig_run_closed_loop_inbound_revalidates_transcript_after_receipt_write(
         transcript.write_text("changed-after-receipt\n", encoding="utf-8")
         return created
 
-    monkeypatch.setattr(
-        inbound_module, "_existing_or_publish_receipt", publish_then_mutate
-    )
+    monkeypatch.setattr(inbound_module, "_existing_or_publish_receipt", publish_then_mutate)
 
     with pytest.raises(ValueError, match="transcript hash drift"):
         fig_run.run_workflow(
@@ -2807,9 +2741,7 @@ def test_fig_run_closed_loop_inbound_rejects_request_drift_before_output(
     tmp_path: Path,
 ) -> None:
     workspace, paths = _fixture(tmp_path)
-    _, state_path, request, request_path = _published_post_review_request(
-        workspace, paths
-    )
+    _, state_path, request, request_path = _published_post_review_request(workspace, paths)
     response_path = _write_closed_loop_response(workspace, state_path, request)
     request_path.write_bytes(request_path.read_bytes() + b"\n")
 
@@ -2885,9 +2817,7 @@ def test_review_request_rejects_unbound_current_v4_packet(tmp_path: Path) -> Non
         "mode": authoring_repair_packet.LEGACY_AUTHORITY_MODE,
         "required_record": None,
     }
-    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
-        packet
-    )
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(packet)
     paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
 
     with pytest.raises(
@@ -2903,9 +2833,7 @@ def test_review_request_rejects_bound_v4_packet_with_binding_hash_drift(
     workspace, paths = _fixture(tmp_path)
     packet = json.loads(paths["packet"].read_text(encoding="utf-8"))
     packet["adjudicated_repair_binding"]["sha256"] = "sha256:" + "f" * 64
-    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
-        packet
-    )
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(packet)
     paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
 
     with pytest.raises(
@@ -2926,9 +2854,7 @@ def test_review_request_rejects_rehashed_noncanonical_binding_substitution(
         "path": alternate_binding.relative_to(workspace).as_posix(),
         "sha256": _sha256(alternate_binding),
     }
-    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
-        packet
-    )
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(packet)
     paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
 
     with pytest.raises(
@@ -2950,9 +2876,7 @@ def test_review_finalize_rejects_fully_rehashed_binding_substitution(
         "path": alternate_binding.relative_to(workspace).as_posix(),
         "sha256": _sha256(alternate_binding),
     }
-    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
-        packet
-    )
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(packet)
     paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
     receipt = json.loads(paths["receipt"].read_text(encoding="utf-8"))
     receipt["packet_sha256"] = packet["packet_sha256"]
@@ -2990,9 +2914,7 @@ def test_review_request_rejects_stored_v3_without_explicit_legacy_boundary(
     packet = json.loads(paths["packet"].read_text(encoding="utf-8"))
     packet["schema"] = authoring_repair_packet.LEGACY_SCHEMA
     packet.pop("authority_contract")
-    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(
-        packet
-    )
+    packet["packet_sha256"] = authoring_repair_packet.canonical_packet_sha256(packet)
     paths["packet"].write_text(json.dumps(packet), encoding="utf-8")
 
     with pytest.raises(
@@ -3169,9 +3091,7 @@ def test_review_request_rejects_forged_strict_pass_receipt(tmp_path: Path) -> No
     strict_status["detector_failed"] = True
     paths["strict_status"].write_text(json.dumps(strict_status), encoding="utf-8")
     receipt = json.loads(paths["receipt"].read_text())
-    receipt["external_compile"]["strict_status"]["sha256"] = _sha256(
-        paths["strict_status"]
-    )
+    receipt["external_compile"]["strict_status"]["sha256"] = _sha256(paths["strict_status"])
     paths["receipt"].write_text(json.dumps(receipt), encoding="utf-8")
 
     with pytest.raises(
@@ -3375,18 +3295,14 @@ def test_review_request_accepts_unmodified_real_crop_producer_manifest(
         crop_roles={
             "target_crop": "full_q1",
             "neighbor_crop": "full_q2",
-            "print_scale": "print_thumbnail",
+            "print_scale": "screen_thumbnail",
         },
         workspace_root=workspace,
     )
 
-    assert [
-        item["crop_id"]
-        for item in request["inspection_artifacts"]
-        if "crop_id" in item
-    ] == [
+    assert [item["crop_id"] for item in request["inspection_artifacts"] if "crop_id" in item] == [
         "full_q2",
-        "print_thumbnail",
+        "screen_thumbnail",
         "full_q1",
     ]
 

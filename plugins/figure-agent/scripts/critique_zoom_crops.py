@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from PIL import Image
+from PIL import Image, ImageOps
 from quality_manifest import file_sha256
 
 CROP_MANIFEST_SCHEMA = "figure-agent.audit-crop-manifest.v1"
@@ -17,8 +17,8 @@ LABEL_PATH_CROP_MIN_WIDTH_PX = 600
 CM_TO_PT = 72.0 / 2.54
 
 PRINT_SCALE_TARGETS = (
-    ("print_178mm", "178mm_equivalent", 1000),
-    ("print_thumbnail", "thumbnail", 360),
+    ("screen_overview", "screen_overview", 1000),
+    ("screen_thumbnail", "thumbnail", 360),
 )
 
 
@@ -85,6 +85,7 @@ def _write_quadrants(
     id_prefix: str,
     source_label: str,
     example_dir: Path,
+    include_context_views: bool = True,
 ) -> list[dict[str, Any]]:
     crops: list[dict[str, Any]] = []
     with Image.open(source_path) as image:
@@ -102,6 +103,28 @@ def _write_quadrants(
                     "path": _relative_to_example(example_dir, output_path),
                     "source_path": _relative_to_example(example_dir, source_path),
                     "bbox_px": box,
+                }
+            )
+        if not include_context_views:
+            return crops
+        boxes = {
+            "whole": [0, 0, width, height],
+            "seam_vertical": [width // 4, 0, max(width // 4 + 1, 3 * width // 4), height],
+            "seam_horizontal": [0, height // 4, width, max(height // 4 + 1, 3 * height // 4)],
+        }
+        for role, box in boxes.items():
+            crop_id = f"{id_prefix}_{role}"
+            output_path = output_dir / f"{crop_id}.png"
+            image.crop(tuple(box)).save(output_path)
+            crops.append(
+                {
+                    "id": crop_id,
+                    "kind": "zoom_crop",
+                    "source": source_label,
+                    "path": _relative_to_example(example_dir, output_path),
+                    "source_path": _relative_to_example(example_dir, source_path),
+                    "bbox_px": box,
+                    "inspection_role": role,
                 }
             )
     return crops
@@ -570,6 +593,7 @@ def _write_print_scale_images(
     source_path: Path,
     output_dir: Path,
     example_dir: Path,
+    spec: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     audits: list[dict[str, Any]] = []
     with Image.open(source_path) as image:
@@ -593,6 +617,36 @@ def _write_print_scale_images(
                     "size_px": list(output_size),
                 }
             )
+        contract = (spec or {}).get("final_size_contract")
+        if isinstance(contract, dict):
+            from check_print_size_contract import _contract_values
+
+            nw, nh, tw, mh, _ = _contract_values(contract)
+            scale = min(tw / nw, mh / nh)
+            size_mm = [nw * scale, nh * scale]
+            dpi = 300
+            output_size = tuple(max(1, round(value / 25.4 * dpi)) for value in size_mm)
+            for audit_id, output_image in (
+                ("physical_print_300dpi", image),
+                ("physical_print_grayscale_300dpi", ImageOps.grayscale(image)),
+            ):
+                output_path = output_dir / f"{audit_id}.png"
+                output_image.resize(output_size, resampling).save(output_path, dpi=(dpi, dpi))
+                audits.append(
+                    {
+                        "id": audit_id,
+                        "kind": "print_scale",
+                        "scale_label": audit_id,
+                        "scale_basis": "physical_contract",
+                        "size_mm": size_mm,
+                        "dpi": dpi,
+                        "placement_scale": scale,
+                        "size_px": list(output_size),
+                        "upscaled": output_size[0] > width or output_size[1] > height,
+                        "path": _relative_to_example(example_dir, output_path),
+                        "source_path": _relative_to_example(example_dir, source_path),
+                    }
+                )
     return audits
 
 
@@ -603,9 +657,7 @@ def _write_crop_manifest(
     crops: list[dict[str, Any]],
     manifest_path: Path | None = None,
 ) -> None:
-    output_path = manifest_path or (
-        example_dir / "build" / "audit_crops" / "manifest.json"
-    )
+    output_path = manifest_path or (example_dir / "build" / "audit_crops" / "manifest.json")
     manifest_crops: list[dict[str, Any]] = []
     for crop in crops:
         item = dict(crop)
@@ -641,6 +693,7 @@ def build_zoom_crop_pack(
     output_dir: Path | None = None,
     manifest_path: Path | None = None,
     include_detector_crops: bool = True,
+    include_context_views: bool = True,
 ) -> list[dict[str, Any]]:
     output_dir = _validated_output_path(
         example_dir,
@@ -661,6 +714,7 @@ def build_zoom_crop_pack(
     crops = _write_quadrants(
         source_path=render_path,
         output_dir=output_dir,
+        include_context_views=include_context_views,
         id_prefix="full",
         source_label="full_render",
         example_dir=example_dir,
@@ -670,6 +724,7 @@ def build_zoom_crop_pack(
             source_path=render_path,
             output_dir=output_dir,
             example_dir=example_dir,
+            spec=spec,
         )
     )
     if include_detector_crops:
@@ -698,6 +753,7 @@ def build_zoom_crop_pack(
             _write_quadrants(
                 source_path=panel_crop_path,
                 output_dir=output_dir,
+                include_context_views=include_context_views,
                 id_prefix=f"panel_{panel_id}",
                 source_label=f"panel:{panel_id}",
                 example_dir=example_dir,

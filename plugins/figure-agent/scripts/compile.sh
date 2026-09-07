@@ -9,7 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKFLOW_DIR="$(dirname "$SCRIPT_DIR")"
 UV_RUN=(uv run --project "$WORKFLOW_DIR")
-SCRIPT_IMPORT_PATH="${WORKFLOW_DIR}/scripts:${WORKFLOW_DIR}/scripts/checks"
+SCRIPT_IMPORT_PATH="${WORKFLOW_DIR}/scripts:${WORKFLOW_DIR}/scripts/checks:${WORKFLOW_DIR}/scripts/quality:${WORKFLOW_DIR}/scripts/candidates:${WORKFLOW_DIR}/scripts/loop:${WORKFLOW_DIR}/scripts/driver:${WORKFLOW_DIR}/scripts/svg_polish"
 if [[ -n "${PYTHONPATH:-}" ]]; then
   export PYTHONPATH="${SCRIPT_IMPORT_PATH}:${PYTHONPATH}"
 else
@@ -189,7 +189,7 @@ SCALE_PREVIEW_33="${BUILD_DIR}/${BASE}_33pct.png"
 RENDER_INPUT_MANIFEST="${BUILD_DIR}/${BASE}_render_inputs.json"
 RENDER_INPUT_ARGS=(
   --input "source_tex=$TEX_INPUT_ABS"
-  --input "style_lock=$WORKFLOW_DIR/styles/polymer-paper-preamble.sty"
+  --input "style_lock=$("${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/style_contract.py" "$PWD" "$WORKFLOW_DIR/styles/polymer-paper-preamble.sty")"
 )
 if [[ -n "$FIXTURE_ROOT" && -f "$FIXTURE_ROOT/briefing.md" ]]; then
   RENDER_INPUT_ARGS+=(--input "briefing=$FIXTURE_ROOT/briefing.md")
@@ -246,7 +246,7 @@ trap cleanup_failed_build ERR
 
 rm -f "$PDF_OUT" "$PNG_OUT" "$RENDER_INPUT_MANIFEST" "$COMPILE_RUN_RECEIPT"
 clear_review_scale_previews
-"$ENGINE" -interaction=nonstopmode -jobname="$BASE" -output-directory="$BUILD_DIR" "$COMPILE_FILE"
+"$ENGINE" -recorder -halt-on-error -interaction=nonstopmode -jobname="$BASE" -output-directory="$BUILD_DIR" "$COMPILE_FILE"
 pdftocairo -png -r 600 -singlefile "$PDF_OUT" "${BUILD_DIR}/${BASE}"
 # Enforce physical print evidence for the active candidate only. A strict
 # regression fixture remains meaningful without borrowing a manuscript's
@@ -477,6 +477,8 @@ fi
 if ! "${UV_RUN[@]}" python3 "$WORKFLOW_DIR/scripts/render_input_manifest.py" \
   --fixture "${FIXTURE_NAME:-$BASE}" \
   --render "$PWD/$PDF_OUT" \
+  --recorder "$PWD/$BUILD_DIR/$BASE.fls" \
+  --engine "$(command -v "$ENGINE")" \
   --json-output "$PWD/$RENDER_INPUT_MANIFEST" \
   "${RENDER_INPUT_ARGS[@]}"; then
   echo "ERROR: render input manifest generation failed" >&2

@@ -2044,10 +2044,6 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
     violations.extend(_external_vision_review_violations(example_dir))
     if violations:
         return violations
-    violations.extend(_inspection_trace_violations(example_dir))
-    if violations:
-        return violations
-
     violations.extend(_aesthetic_intent_accounting_violations(example_dir, frontmatter))
     if violations:
         return violations
@@ -2110,6 +2106,8 @@ def lint_critique(example_dir: Path) -> list[CritiqueLintViolation]:
         return violations
     violations.extend(_historical_visual_clash_regression_violations(example_dir, frontmatter))
     violations.extend(_crop_audit_accounting_violations(example_dir, frontmatter))
+    if not violations:
+        violations.extend(_inspection_trace_violations(example_dir))
     return violations
 
 

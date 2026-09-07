@@ -15,9 +15,7 @@ ACCEPTED_BUT_STALE = "accepted_but_stale"
 ACCEPTED_BUT_UNATTESTED = "accepted_but_unattested"
 NOT_ACCEPTED = "not_accepted"
 # Acceptance states that must not carry a figure through a downstream gate.
-ACCEPTANCE_FRESHNESS_BLOCKING_STATES = frozenset(
-    {ACCEPTED_BUT_STALE, ACCEPTED_BUT_UNATTESTED}
-)
+ACCEPTANCE_FRESHNESS_BLOCKING_STATES = frozenset({ACCEPTED_BUT_STALE, ACCEPTED_BUT_UNATTESTED})
 
 
 def workflow_ready(
@@ -40,9 +38,7 @@ def workflow_ready(
     )
 
 
-def golden_ready(
-    *, workflow_ready: bool, accepted: bool | None, attestation_current: bool
-) -> bool:
+def golden_ready(*, workflow_ready: bool, accepted: bool | None, attestation_current: bool) -> bool:
     """``accepted: true`` is a static spec field; only the attestation is hash-bound.
 
     Without the second term a source edit after acceptance leaves golden_ready
@@ -136,6 +132,8 @@ def build_status_vector(
         "final_artifact_state": final_artifact["state"],
         "final_artifact_kind": final_artifact["kind"],
         "final_artifact_path": final_artifact["path"],
+        "editable_source_path": final_artifact.get("editable_source"),
+        "display_derivative_path": final_artifact.get("display_derivative"),
         "workflow_ready": is_workflow_ready,
         "golden_ready": is_golden_ready,
         "release_ready": is_release_ready,

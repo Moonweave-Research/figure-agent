@@ -226,9 +226,7 @@ def test_external_temp_runs_root_remains_supported(tmp_path: Path) -> None:
     _make_fixture(tmp_path)
     external_runs_root = tmp_path.parent / "external-loop-runs"
 
-    run_dir = run_loop(
-        "loop_demo", "inspect", repo_root=tmp_path, runs_root=external_runs_root
-    )
+    run_dir = run_loop("loop_demo", "inspect", repo_root=tmp_path, runs_root=external_runs_root)
 
     assert run_dir.is_relative_to(external_runs_root)
     assert (run_dir / "run_manifest.json").is_file()
@@ -297,9 +295,7 @@ def test_loop_main_reports_cyclic_scratch_without_stdout(
     workspace_entries = sorted(path.name for path in tmp_path.iterdir())
     real_run_loop = fig_loop_mod.run_loop
 
-    def run_loop_in_fixture_root(
-        name: str, goal: str, *, runs_root: Path | None = None
-    ) -> Path:
+    def run_loop_in_fixture_root(name: str, goal: str, *, runs_root: Path | None = None) -> Path:
         return real_run_loop(name, goal, repo_root=tmp_path, runs_root=runs_root)
 
     monkeypatch.setattr(fig_loop_mod, "run_loop", run_loop_in_fixture_root)
@@ -1085,7 +1081,7 @@ def test_loop_axis_verdicts_record_sources_and_evaluation_state(tmp_path: Path) 
     assert iteration["axis_verdicts"]["static_visual"]["evaluation_state"] == "not_evaluated"
     assert iteration["axis_verdicts"]["static_visual"]["source"] == "verify-only runner"
     assert iteration["axis_verdicts"]["adjudication"]["evaluation_state"] == "not_configured"
-    assert iteration["axis_verdicts"]["reference_fidelity"]["evaluation_state"] == "not_configured"
+    assert iteration["axis_verdicts"]["reference_fidelity"]["evaluation_state"] == "not_evaluated"
     assert iteration["axis_verdicts"]["theory"]["evaluation_state"] == "not_configured"
     assert iteration["axis_verdicts"]["story_hierarchy"]["evaluation_state"] == "not_configured"
 

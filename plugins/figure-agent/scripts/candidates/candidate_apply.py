@@ -176,20 +176,10 @@ def _candidate_apply_lock(example_dir: Path) -> Iterator[Path | None]:
         raise CandidateApplyError("sandbox_symlink_forbidden: .mcp-locks")
     lock_dir.mkdir(parents=True, exist_ok=True)
     lock_path = lock_dir / "mutation.lock"
-    try:
-        fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError:
-        yield lock_path
-        return
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write('{"operation":"apply_candidate"}\n')
-        yield None
-    finally:
-        try:
-            lock_path.unlink()
-        except FileNotFoundError:
-            pass
+    import mutation_lock
+
+    with mutation_lock.hold(lock_path, "apply_candidate") as acquired:
+        yield None if acquired else lock_path
 
 
 def _acceptance_hash_diagnostics(

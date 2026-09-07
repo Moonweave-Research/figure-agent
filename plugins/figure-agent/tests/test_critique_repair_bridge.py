@@ -106,9 +106,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
                 "render_pdf_sha256": _sha256(current_pdf),
                 "render_path": "build/demo.png",
                 "render_sha256": _sha256(current_render),
-                "collisions": [
-                    {"id": "TC001", "texts": ["carrier", "axis"]}
-                ],
+                "collisions": [{"id": "TC001", "texts": ["carrier", "axis"]}],
             }
         ),
         encoding="utf-8",
@@ -137,9 +135,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
                             "panel_a.axis",
                             "panel_a.carrier_label",
                         ],
-                        "semantic_relation_refs": [
-                            "carrier_label_remains_clear_of_axis"
-                        ],
+                        "semantic_relation_refs": ["carrier_label_remains_clear_of_axis"],
                     }
                 ],
             }
@@ -172,9 +168,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
                 example,
                 "demo",
                 spec,
-                style_lock_path=(
-                    PLUGIN_ROOT / "styles" / "polymer-paper-preamble.sty"
-                ),
+                style_lock_path=(PLUGIN_ROOT / "styles" / "polymer-paper-preamble.sty"),
                 base_dir=PLUGIN_ROOT,
             ),
         }
@@ -226,28 +220,18 @@ def test_builds_exact_additive_bridge_artifacts(tmp_path: Path) -> None:
     assert result["spec"]["path"] == "examples/demo/spec.yaml"
     assert result["current_render"]["path"] == "examples/demo/build/demo.png"
     assert result["current_pdf"]["path"] == "examples/demo/build/demo.pdf"
-    assert result["crop_manifest"]["path"] == (
-        "examples/demo/build/audit_crops/manifest.json"
-    )
+    assert result["crop_manifest"]["path"] == ("examples/demo/build/audit_crops/manifest.json")
     target = json.loads((attempt / "repair_targets.json").read_text())
-    assert target["targets"][0]["selector"]["selector_id"] == (
-        "panel-a-carrier-label"
-    )
+    assert target["targets"][0]["selector"]["selector_id"] == ("panel-a-carrier-label")
     semantic = json.loads((attempt / "semantic_attribution.json").read_text())
-    assert json.loads((attempt / "source_attribution.json").read_text())["summary"][
-        "exact"
-    ] == 1
+    assert json.loads((attempt / "source_attribution.json").read_text())["summary"]["exact"] == 1
     assert semantic["schema"] == "figure-agent.semantic-finding-attribution.v1"
     assert semantic["semantic_object_refs"] == [
         "panel_a.axis",
         "panel_a.carrier_label",
     ]
-    assert semantic["semantic_relation_refs"] == [
-        "carrier_label_remains_clear_of_axis"
-    ]
-    assert result["semantic_attribution"]["path"].endswith(
-        "/semantic_attribution.json"
-    )
+    assert semantic["semantic_relation_refs"] == ["carrier_label_remains_clear_of_axis"]
+    assert result["semantic_attribution"]["path"].endswith("/semantic_attribution.json")
     assert json.loads((attempt / "critique_repair_binding.json").read_text()) == result
 
 
@@ -348,7 +332,7 @@ def test_binding_rejects_rehashed_spec_stale_to_critique(tmp_path: Path) -> None
     )
     spec_path = workspace / "examples/demo/spec.yaml"
     spec_path.write_text(
-        spec_path.read_text(encoding="utf-8") + "panels:\n  - id: changed\n",
+        spec_path.read_text(encoding="utf-8").replace("panels: []", "panels:\n  - id: changed"),
         encoding="utf-8",
     )
     binding_path = attempt / "critique_repair_binding.json"
@@ -418,9 +402,7 @@ def test_binding_rejects_mixed_target_and_semantic_selectors(tmp_path: Path) -> 
             "repair_family": "local_reposition",
             "protected_invariants": ["S60"],
             "semantic_object_refs": ["panel_a.axis", "panel_a.carrier_label"],
-            "semantic_relation_refs": [
-                "carrier_label_remains_clear_of_axis"
-            ],
+            "semantic_relation_refs": ["carrier_label_remains_clear_of_axis"],
         }
     )
     registry_path.write_text(json.dumps(registry), encoding="utf-8")
@@ -563,9 +545,7 @@ def test_stored_pre_semantic_binding_remains_valid(tmp_path: Path) -> None:
         workspace_root=workspace,
     )
     binding.pop("semantic_attribution")
-    (attempt / "critique_repair_binding.json").write_text(
-        json.dumps(binding), encoding="utf-8"
-    )
+    (attempt / "critique_repair_binding.json").write_text(json.dumps(binding), encoding="utf-8")
 
     validated, paths = critique_repair_bridge.validate_adjudicated_repair_binding(
         attempt.relative_to(workspace) / "critique_repair_binding.json",
@@ -692,17 +672,23 @@ def test_bridge_rejects_null_semantic_contract_record(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("mutation", "reason_code", "missing_reference_kinds"),
     (
-        ("ambiguous", "multiple_declared_movable_selectors", [
-            "semantic_object",
-            "semantic_relation",
-        ]),
-        ("unbound", "no_declared_alias_match", [
-            "semantic_object",
-            "semantic_relation",
-        ]),
-        ("missing_refs", "selected_selector_missing_semantic_refs", [
-            "semantic_relation"
-        ]),
+        (
+            "ambiguous",
+            "multiple_declared_movable_selectors",
+            [
+                "semantic_object",
+                "semantic_relation",
+            ],
+        ),
+        (
+            "unbound",
+            "no_declared_alias_match",
+            [
+                "semantic_object",
+                "semantic_relation",
+            ],
+        ),
+        ("missing_refs", "selected_selector_missing_semantic_refs", ["semantic_relation"]),
     ),
 )
 def test_bridge_emits_handoff_only_for_unresolved_semantic_attribution(
@@ -875,14 +861,10 @@ def test_binding_validator_rejects_authority_mutation_after_snapshot(
         workspace_root=workspace,
     )
     selected = {
-        "critique_repair_binding.json": (
-            attempt / "critique_repair_binding.json"
-        ),
+        "critique_repair_binding.json": (attempt / "critique_repair_binding.json"),
         "collisions.json": attempt / "collisions.json",
         "repair_targets.json": attempt / "repair_targets.json",
-        "critique_adjudication.yaml": (
-            workspace / "examples/demo/critique_adjudication.yaml"
-        ),
+        "critique_adjudication.yaml": (workspace / "examples/demo/critique_adjudication.yaml"),
         "source_selectors.json": attempt / "source_selectors.json",
     }[artifact_name]
     original_read_bytes = Path.read_bytes
@@ -1045,20 +1027,14 @@ def test_bridge_to_attempt_local_post_review_preserves_canonical_baseline(
         manifest_path=post_manifest,
     )
     assert _sha256(baseline_manifest) == baseline_hash
-    assert binding["crop_manifest"]["path"] == (
-        "examples/demo/build/audit_crops/manifest.json"
-    )
+    assert binding["crop_manifest"]["path"] == ("examples/demo/build/audit_crops/manifest.json")
     packet_path = attempt / "repair_packet.json"
-    packet, _prompt = (
-        authoring_repair_packet.compile_adjudicated_repair_execution_packet(
-            "demo",
-            workspace_root=workspace,
-            model_id="gpt-5.5",
-            binding_path=(
-                attempt / "critique_repair_binding.json"
-            ).relative_to(workspace).as_posix(),
-            output_path=repaired_source.relative_to(workspace).as_posix(),
-        )
+    packet, _prompt = authoring_repair_packet.compile_adjudicated_repair_execution_packet(
+        "demo",
+        workspace_root=workspace,
+        model_id="gpt-5.5",
+        binding_path=(attempt / "critique_repair_binding.json").relative_to(workspace).as_posix(),
+        output_path=repaired_source.relative_to(workspace).as_posix(),
     )
     packet_path.write_text(json.dumps(packet), encoding="utf-8")
     repaired_source.write_text("\\node {repaired};\n", encoding="utf-8")
@@ -1096,7 +1072,7 @@ def test_bridge_to_attempt_local_post_review_preserves_canonical_baseline(
                     "png": {
                         "path": repaired_render.relative_to(workspace).as_posix(),
                         "sha256": _sha256(repaired_render),
-                    }
+                    },
                 },
                 "human_review": "pending",
                 "publication_acceptance": "not_claimed",
@@ -1114,18 +1090,16 @@ def test_bridge_to_attempt_local_post_review_preserves_canonical_baseline(
         crop_roles={
             "target_crop": "full_q1",
             "neighbor_crop": "full_q2",
-            "print_scale": "print_thumbnail",
+            "print_scale": "screen_thumbnail",
         },
         workspace_root=workspace,
     )
 
-    assert request["crop_manifest"]["path"] == post_manifest.relative_to(
-        workspace
-    ).as_posix()
+    assert request["crop_manifest"]["path"] == post_manifest.relative_to(workspace).as_posix()
     assert {item["crop_id"] for item in request["inspection_artifacts"] if "crop_id" in item} == {
         "full_q1",
         "full_q2",
-        "print_thumbnail",
+        "screen_thumbnail",
     }
 
 
@@ -1206,9 +1180,7 @@ def test_bridge_rejects_legacy_report_without_render_hash(tmp_path: Path) -> Non
 
 
 @pytest.mark.parametrize("missing", ("render_pdf_sha256", "render_sha256"))
-def test_bridge_rejects_report_missing_pdf_or_png_hash(
-    tmp_path: Path, missing: str
-) -> None:
+def test_bridge_rejects_report_missing_pdf_or_png_hash(tmp_path: Path, missing: str) -> None:
     workspace, attempt = _fixture(tmp_path)
     report_path = attempt / "collisions.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))
@@ -1311,9 +1283,7 @@ def test_bridge_rejects_current_schema_with_stale_input_metadata(
     monkeypatch.setattr(
         critique_adjudication,
         "_critique_metadata_mismatches",
-        lambda _example_dir, *, repo_root: [
-            "critique_input_hash mismatch; run /fig_critique demo"
-        ],
+        lambda _example_dir, *, repo_root: ["critique_input_hash mismatch; run /fig_critique demo"],
     )
 
     with pytest.raises(
@@ -1356,8 +1326,7 @@ def test_builder_rejects_redirected_crop_manifest_snapshot(
     with pytest.raises(
         critique_repair_bridge.CritiqueRepairBridgeError,
         match=(
-            "current crop manifest render lineage invalid|"
-            "bridge input drift before publication"
+            "current crop manifest render lineage invalid|bridge input drift before publication"
         ),
     ):
         critique_repair_bridge.build_adjudicated_repair_target(
@@ -1423,9 +1392,7 @@ def test_builder_rejects_spec_mutation_after_freshness_check(
 
 def test_bridge_honors_exclusive_transaction_lock(tmp_path: Path) -> None:
     workspace, attempt = _fixture(tmp_path)
-    (attempt / ".critique-repair-bridge.lock").write_text(
-        "other-owner\n", encoding="utf-8"
-    )
+    (attempt / ".critique-repair-bridge.lock").write_text("other-owner\n", encoding="utf-8")
 
     with pytest.raises(
         critique_repair_bridge.CritiqueRepairBridgeError,

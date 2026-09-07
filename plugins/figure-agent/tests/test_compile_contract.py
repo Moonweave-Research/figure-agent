@@ -244,7 +244,8 @@ def test_compile_publishes_content_bound_render_inputs_after_success() -> None:
     final_gate = 'echo "ERROR: strict detector gate failed after review evidence generation"'
     assert 'RENDER_INPUT_MANIFEST="${BUILD_DIR}/${BASE}_render_inputs.json"' in script
     assert '--input "source_tex=$TEX_INPUT_ABS"' in script
-    assert '--input "style_lock=$WORKFLOW_DIR/styles/polymer-paper-preamble.sty"' in script
+    assert "scripts/style_contract.py" in script
+    assert "--recorder" in script
     assert '--input "claim_authority=$FIXTURE_ROOT/claim_authority.yaml"' in script
     assert manifest_call in script
     assert script.index(final_gate) < script.index(manifest_call)
@@ -364,7 +365,7 @@ compile smoke
     render_inputs = json.loads(
         (tmp_path / "build" / "smoke_render_inputs.json").read_text(encoding="utf-8")
     )
-    assert render_inputs["schema"] == "figure-agent.render-input-manifest.v1"
+    assert render_inputs["schema"] == "figure-agent.render-input-manifest.v2"
     assert set(render_inputs["inputs"]) == {"source_tex", "style_lock"}
     receipt = json.loads((tmp_path / "build" / "compile_run.json").read_text(encoding="utf-8"))
     assert receipt["state"] == "passed"

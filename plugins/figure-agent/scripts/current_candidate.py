@@ -36,6 +36,9 @@ def common_render_inputs(
         if style_lock_path is not None
         else runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
     )
+    from style_contract import resolve_style
+
+    style_lock, _ = resolve_style(example_dir, style_lock)
     candidates = {
         "briefing": example_dir / "briefing.md",
         "spec": example_dir / "spec.yaml",

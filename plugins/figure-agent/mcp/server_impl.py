@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -122,9 +123,12 @@ def _fixture_lock(
     lock_root = workspace_root / "examples" / name / "build" / ".mcp-locks"
     lock_root.mkdir(parents=True, exist_ok=True)
     lock_path = lock_root / "mutation.lock"
-    try:
-        fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError:
+    import mutation_lock
+
+    with mutation_lock.hold(lock_path, operation) as acquired:
+        if acquired:
+            yield None
+            return
         active = "unknown"
         try:
             data = json.loads(lock_path.read_text(encoding="utf-8"))
@@ -135,16 +139,6 @@ def _fixture_lock(
             "active_operation": active,
             "lock_path": lock_path.relative_to(workspace_root).as_posix(),
         }
-        return
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            json.dump({"operation": operation, "created_at": time.time()}, handle, sort_keys=True)
-        yield None
-    finally:
-        try:
-            lock_path.unlink()
-        except FileNotFoundError:
-            pass
 
 
 def _bundle_diagnostics(plugin_root: Path) -> dict[str, Any]:
@@ -568,18 +562,30 @@ def _run_fig_agent(
         str(cli_path),
         *args,
     ]
-    return subprocess.run(
+    process = subprocess.Popen(
         command,
         cwd=workspace_root,
         env=_tool_env(plugin_root, workspace_root),
         text=True,
-        capture_output=True,
-        check=False,
-        timeout=timeout_seconds,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
     )
+    try:
+        stdout, stderr = process.communicate(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        stdout, stderr = process.communicate()
+        raise subprocess.TimeoutExpired(command, timeout_seconds, stdout, stderr) from None
+    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
 
 
-def _bounded(text: str, limit: int = 4000) -> str:
+def _bounded(text: str | bytes, limit: int = 4000) -> str:
+    if isinstance(text, bytes):
+        text = text.decode("utf-8", errors="replace")
     if len(text) <= limit:
         return text
     return text[:limit] + "\n...[truncated]"

@@ -249,7 +249,8 @@ polish backport, or actions the current mode forbids.
                          semantic-hash, and 100%/50%/33% render evidence agree;
                          compile success is never a reward. Pass a human verdict
                          only after a human reviewed these exact source bytes.
-/fig_critique <name>     required before export when usable reference grounding exists
+/fig_critique <name>     required before final export for every authored fixture;
+                         missing reference-free grounding remains an explicit gate
 /fig_ground <name>       author tex/semantic assertions from briefing §6/§7 so a
                          reversed force/bend direction is fail-loud (Layer 2)
 /fig_adjudicate <name>   scaffold critique_adjudication.yaml from critique.md
@@ -262,7 +263,7 @@ polish backport, or actions the current mode forbids.
 /fig_context_pack <name>
                          read-only authoring context pack for explicit
                          briefing/spec/design/style/rule/semantic contracts
-/fig_export <name>       candidate-aware PDF / outlined SVG / TIFF / PNG;
+/fig_export <name>       candidate-aware PDF / outlined SVG / TIFF / PNG + editable source ZIP;
                          export never promotes or accepts a candidate
 /fig_e2e_smoke <name>    deterministic compile/export/status/loop smoke harness
 /fig_status [<name>]     stage + render/critique/export/acceptance/final_ready state inference

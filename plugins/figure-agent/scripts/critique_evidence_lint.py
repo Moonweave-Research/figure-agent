@@ -10,6 +10,10 @@ PRINT_SCALE_EVIDENCE_TOKENS = (
     "print_scale",
     "print_178mm",
     "print_thumbnail",
+    "screen_overview",
+    "screen_thumbnail",
+    "physical_print_300dpi",
+    "physical_print_grayscale_300dpi",
 )
 SCHEMAS_WITH_PRINT_SCALE_EVIDENCE = frozenset(
     {

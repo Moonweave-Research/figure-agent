@@ -195,6 +195,20 @@ def _short_double_arrow_length(stripped: str) -> float | None:
 
 
 def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
+    from style_contract import COLOR_DEFINITION, resolve_style
+
+    default = Path(__file__).resolve().parents[1] / "styles" / "polymer-paper-preamble.sty"
+    style_path, definitions = resolve_style(tex_path.parent, default)
+    preamble_import = _RE_PREAMBLE_IMPORT
+    if style_path != default:
+        palette = parse_palette(style_path) | {
+            COLOR_DEFINITION.fullmatch(value).group(1) for value in definitions
+        }
+        preamble_import = re.compile(
+            r"\\(?:usepackage|RequirePackage|input)\b[^{]*\{(?:[^}]*,)?"
+            + re.escape(str(style_path.relative_to(tex_path.parent.resolve()).with_suffix("")))
+            + r"(?:\.sty)?(?:,[^}]*)?\}"
+        )
     if palette is None:
         palette = parse_palette()
     allowed_colors = palette | TIKZ_BUILTIN_COLORS
@@ -207,7 +221,10 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
         stripped_lines.append(stripped)
         snippet = raw_line.rstrip()[:80]
 
-        if _RE_DEFINECOLOR.search(stripped):
+        undeclared = stripped
+        for definition in definitions:
+            undeclared = undeclared.replace(definition, "")
+        if _RE_DEFINECOLOR.search(undeclared):
             violations.append(
                 Violation(
                     line=line_num,
@@ -389,7 +406,7 @@ def lint(tex_path: Path, palette: set[str] | None = None) -> list[Violation]:
         )
 
     joined_stripped = "\n".join(stripped_lines)
-    if _RE_DOCUMENT_BOUNDARY.search(joined_stripped) and not _RE_PREAMBLE_IMPORT.search(
+    if _RE_DOCUMENT_BOUNDARY.search(joined_stripped) and not preamble_import.search(
         joined_stripped
     ):
         violations.append(
@@ -425,7 +442,11 @@ def main() -> int:
         )
         return 2
 
-    violations = lint(args.tex_path, palette=palette)
+    try:
+        violations = lint(args.tex_path, palette=palette)
+    except ValueError as exc:
+        print(f"lint_tex.py: {exc}", file=sys.stderr)
+        return 2
     violations_sorted = sorted(
         violations,
         key=lambda v: (0 if v.severity == "blocker" else 1, v.line, v.category),
