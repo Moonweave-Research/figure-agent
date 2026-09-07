@@ -134,7 +134,9 @@ def test_vision_critique_rubric_carries_nature_communications_constraints() -> N
 
     assert "target is Nature Communications" in doc
     assert "lower-case bold panel letters" in doc
-    assert "no final printed line below 1 pt" in doc
+    assert "final lettering around\n5--8 pt" in doc
+    assert "0.25--1 pt as a normal stroke\nhierarchy" in doc
+    assert "does not establish a blanket 1 pt minimum" in doc
     assert "same\nreduction factor" in doc
 
 

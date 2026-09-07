@@ -39,7 +39,7 @@ import runtime_paths  # noqa: E402
 
 PROTOCOL_VERSION = "2025-06-18"
 SERVER_NAME = "figure-agent"
-SERVER_VERSION = "0.10.0"
+SERVER_VERSION = "0.10.3"
 ERROR_CATEGORIES = {
     "compile_failed",
     "dependency_missing",

@@ -205,6 +205,30 @@ def test_analytic_plot_is_attributed_without_claiming_its_scientific_shape() -> 
     assert geometry[0]["scientific_shape_status"] == "human_review_required"
 
 
+def test_literal_coordinate_plot_is_attributed_as_a_rendered_curve() -> None:
+    tex = (
+        r"\begin{scope}[shift={(0.5,-0.25)}]"
+        r"\draw[chainLine] plot[smooth,tension=0.55] coordinates "
+        r"{(1,2) (2,3) (3,2.5)};"
+        r"\end{scope}"
+    )
+
+    geometry = _parse_tikz_geometry(tex)
+    coverage = geometry_parse_coverage(tex)
+
+    assert [item["kind"] for item in geometry] == ["coordinate_plot"]
+    assert geometry[0]["points_pt"] == [
+        [42.519685, 49.606299],
+        [70.866142, 77.952756],
+        [99.212598, 63.779528],
+    ]
+    assert geometry[0]["clearance_mode"] == "rendered_curve_required"
+    assert geometry[0]["scientific_shape_status"] == "human_review_required"
+    assert coverage["coverage_ratio"] == 1.0
+    assert coverage["parsed_geometry_counts"] == {"coordinate_plot": 1}
+    assert coverage["unknown_reasons"] == {}
+
+
 def test_parse_coverage_reports_unknown_nonliteral_circle() -> None:
     tex = "\n".join(
         [
@@ -244,18 +268,21 @@ def test_parse_coverage_reports_specific_unknown_reasons() -> None:
     }
 
 
-def test_parse_coverage_reports_mixed_parsed_and_unknown_operation() -> None:
+def test_parse_coverage_attributes_mixed_segment_and_coordinate_plot() -> None:
     tex = r"\draw (0,0) -- (1,0) plot[smooth] coordinates {(1,0)(2,1)};"
 
     coverage = geometry_parse_coverage(tex)
 
     assert coverage["total_operations"] == 1
     assert coverage["parsed_operations"] == 1
-    assert coverage["fully_parsed_operations"] == 0
-    assert coverage["partial_unknown_operations"] == 1
+    assert coverage["fully_parsed_operations"] == 1
+    assert coverage["partial_unknown_operations"] == 0
     assert coverage["unknown_operations"] == 0
-    assert coverage["parsed_geometry_counts"] == {"horizontal_line": 1}
-    assert coverage["unknown_reasons"] == {"unsupported_plot": 1}
+    assert coverage["parsed_geometry_counts"] == {
+        "coordinate_plot": 1,
+        "horizontal_line": 1,
+    }
+    assert coverage["unknown_reasons"] == {}
 
 
 def test_payload_includes_geometry_parse_coverage() -> None:
@@ -270,6 +297,7 @@ def test_payload_includes_geometry_parse_coverage() -> None:
         "curve_conservative_hull",
         "to_curve_rendered_path_required",
         "analytic_plot_human_review_required",
+        "coordinate_plot_human_review_required",
     ]
 
 

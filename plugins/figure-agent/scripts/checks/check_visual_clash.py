@@ -457,7 +457,10 @@ def is_legible_reversed_label(image: Image.Image, issue: VisualIssue) -> bool:
         return False
     arr = np.asarray(image.crop(issue.bbox).convert("L"), dtype=np.float32)
     dark_fraction = float(np.mean(arr < 120))
-    light_fraction = float(np.mean(arr > 200))
+    # Publication palettes often use a muted light gray (for example RGB 200)
+    # instead of pure white on an instrument display. Treat it as reversed text
+    # only when the dark field dominates and the tonal separation remains large.
+    light_fraction = float(np.mean(arr >= 185))
     median = float(np.percentile(arr, 50))
     bright = float(np.percentile(arr, 95))
     return dark_fraction >= 0.65 and light_fraction >= 0.05 and bright - median >= 100.0

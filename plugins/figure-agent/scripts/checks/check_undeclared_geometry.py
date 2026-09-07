@@ -64,6 +64,12 @@ _ANALYTIC_PLOT_RE = re.compile(
     r"\(\s*\\x\s*,\s*\{(?P<expression>.*?)\}\s*\)",
     re.DOTALL,
 )
+_COORDINATE_PLOT_RE = re.compile(
+    r"\bplot(?:\s*\[(?P<plot_options>[^\]]*)\])?\s*coordinates\s*"
+    r"\{(?P<coordinates>.*?)\}",
+    re.DOTALL,
+)
+_LITERAL_POINT_RE = re.compile(_POINT_RE)
 _PLOT_DOMAIN_RE = re.compile(
     r"(?:^|,)\s*domain\s*=\s*"
     r"(?P<start>-?\d+(?:\.\d+)?)\s*:\s*(?P<end>-?\d+(?:\.\d+)?)\s*(?:,|$)"
@@ -386,6 +392,32 @@ def _parse_operation_geometry(
                 "scientific_shape_status": "human_review_required",
             }
         )
+    for match in _COORDINATE_PLOT_RE.finditer(text):
+        coordinate_text = match.group("coordinates")
+        point_matches = list(_LITERAL_POINT_RE.finditer(coordinate_text))
+        remainder = _LITERAL_POINT_RE.sub("", coordinate_text)
+        if len(point_matches) < 2 or remainder.strip(" \t\r\n,"):
+            continue
+        points = [
+            _point_cm_to_pt(
+                float(point.group(1)) + shift_x,
+                float(point.group(2)) + shift_y,
+            )
+            for point in point_matches
+        ]
+        geometry.append(
+            {
+                "kind": "coordinate_plot",
+                "points_pt": points,
+                "bbox_pt": _bbox_from_points_pt(points),
+                "plot_options": str(match.group("plot_options") or "").strip(),
+                "source_line": source_line,
+                "command": command,
+                "options": options,
+                "clearance_mode": "rendered_curve_required",
+                "scientific_shape_status": "human_review_required",
+            }
+        )
     return geometry
 
 
@@ -420,7 +452,11 @@ def _operation_unknown_reasons(
     if re.search(r"\barc\b", text):
         reasons.append("unsupported_arc")
     plot_count = len(re.findall(r"\bplot\b", text))
-    if plot_count > parsed_kind_counts.get("analytic_plot", 0):
+    parsed_plot_count = (
+        parsed_kind_counts.get("analytic_plot", 0)
+        + parsed_kind_counts.get("coordinate_plot", 0)
+    )
+    if plot_count > parsed_plot_count:
         reasons.append("unsupported_plot")
     to_curve_count = len(re.findall(r"\bto\s*\[", text))
     if to_curve_count > parsed_kind_counts.get("to_curve", 0):
@@ -429,6 +465,7 @@ def _operation_unknown_reasons(
     # expression braces; do not reclassify that already-attributed syntax as a
     # generic nonliteral coordinate. Other macro coordinates remain unknown.
     unparsed_text = _ANALYTIC_PLOT_RE.sub("", text)
+    unparsed_text = _COORDINATE_PLOT_RE.sub("", unparsed_text)
     if not reasons and re.search(r"\([^)]*(?:\\|\{)[^)]*\)", unparsed_text):
         reasons.append("nonliteral_coordinate")
     if not parsed and not reasons:
@@ -487,6 +524,7 @@ def geometry_parse_coverage(tex_text: str) -> dict[str, Any]:
             "curve_conservative_hull",
             "to_curve_rendered_path_required",
             "analytic_plot_human_review_required",
+            "coordinate_plot_human_review_required",
         ],
     }
 

@@ -756,6 +756,20 @@ def test_promotion_tier_demotes_legible_reversed_display_label() -> None:
     )
 
 
+def test_promotion_tier_demotes_muted_light_label_on_dark_display() -> None:
+    image = Image.new("RGB", (200, 200), "white")
+    bbox = (80, 80, 120, 120)
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((40, 40, 160, 160), fill=(51, 51, 51))
+    draw.rectangle((96, 84, 103, 116), fill=(200, 200, 200))
+    issue = check_visual_clash.VisualIssue("text_on_path", "V/A", "dark=0.800", bbox)
+
+    assert check_visual_clash.classify_promotion_tier(image, issue) == (
+        "report_only",
+        "legible_reversed_label",
+    )
+
+
 def test_own_glyph_enclosure_demotes_disk_wrapped_glyph() -> None:
     image, issue = _disk_enclosed_glyph_image()
 

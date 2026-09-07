@@ -4,6 +4,20 @@ All notable changes to figure-agent are documented here.
 
 ## [Unreleased]
 
+## [0.10.3] - 2026-09-07
+
+### Fixed
+
+- Parse literal TikZ `plot ... coordinates {...}` curves as attributed geometry,
+  so smooth authored chains no longer become unsupported-plot coverage gaps.
+- Recognize muted light-gray reversed labels on dark instrument displays without
+  weakening the dark-field and tonal-separation checks.
+- Correct the Nature Communications review guidance: final lettering is normally
+  5--8 pt, while Nature's broader artwork guidance uses a 0.25--1 pt stroke
+  hierarchy. Remove the unsupported blanket 1 pt minimum and require a final-size
+  proof before changing line weights.
+- Keep MCP `serverInfo.version` synchronized with the package release version.
+
 ## [0.10.2] - 2026-09-07
 
 ### Fixed

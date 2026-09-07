@@ -24,7 +24,7 @@ from package_cowork_plugin import build_zip  # noqa: E402
 from plugin_install_freshness import SCHEMA as INSTALL_FRESHNESS_SCHEMA  # noqa: E402
 from plugin_package_audit import find_packaging_junk, main, remove_paths  # noqa: E402
 
-EXPECTED_RELEASE_VERSION = "0.10.2"
+EXPECTED_RELEASE_VERSION = "0.10.3"
 EXPECTED_RELEASE_DATE = "2026-09-07"
 
 
@@ -83,6 +83,12 @@ def test_release_metadata_matches_current_version() -> None:
         f'name = "figure-agent"\nversion = "{EXPECTED_RELEASE_VERSION}"'
         in uv_lock
     )
+
+
+def test_mcp_server_version_matches_release_version() -> None:
+    server = (REPO_ROOT / "mcp" / "server_impl.py").read_text()
+
+    assert f'SERVER_VERSION = "{EXPECTED_RELEASE_VERSION}"' in server
 
 
 def test_active_docs_define_semantic_tikz_reference_workflow() -> None:
