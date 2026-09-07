@@ -24,7 +24,7 @@ from package_cowork_plugin import build_zip  # noqa: E402
 from plugin_install_freshness import SCHEMA as INSTALL_FRESHNESS_SCHEMA  # noqa: E402
 from plugin_package_audit import find_packaging_junk, main, remove_paths  # noqa: E402
 
-EXPECTED_RELEASE_VERSION = "0.10.1"
+EXPECTED_RELEASE_VERSION = "0.10.2"
 EXPECTED_RELEASE_DATE = "2026-09-07"
 
 

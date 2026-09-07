@@ -4,6 +4,16 @@ All notable changes to figure-agent are documented here.
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-09-07
+
+### Fixed
+
+- Use the documented top-left PDF coordinate origin when locating process stages
+  inside panel bounds. Bottom-panel labels are now checked in their actual panel;
+  identical labels in an upper panel cannot satisfy the lower-panel contract.
+- Add a regression covering both correct lower-panel labels and upper-panel
+  impostors. No figure source or publication acceptance is changed by this fix.
+
 ## [0.10.1] - 2026-09-07
 
 ### Fixed

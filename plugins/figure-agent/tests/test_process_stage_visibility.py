@@ -164,3 +164,42 @@ def test_process_stage_visibility_payload_names_fixture_from_build_parent() -> N
     )
 
     assert payload["fixture"] == "fig5"
+
+
+def test_loaded_bottom_panel_uses_same_top_origin_as_render_crops(tmp_path: Path) -> None:
+    spec = tmp_path / "spec.yaml"
+    spec.write_text(
+        """
+panels:
+  - id: A
+    bbox_pdf_cm: [0, 7, 7, 10]
+process_stage_visibility_checks:
+  - id: charge-off-reversal
+    panel_id: A
+    reading_axis: x
+    stages:
+      - id: charge
+        text_phrases: [{id: charge_label, words: [CHARGE]}]
+      - id: off_float
+        text_phrases: [{id: off_label, words: ['OFF']}]
+      - id: reverse
+        text_phrases: [{id: reverse_label, words: [REVERSE]}]
+""",
+        encoding="utf-8",
+    )
+    panels, checks = load_process_stage_visibility_checks(spec, page_size_pt=(220, 300))
+    bottom_words = [
+        _word("CHARGE", 12, 220, 44, 228),
+        _word("OFF", 76, 220, 90, 228),
+        _word("REVERSE", 120, 220, 158, 228),
+    ]
+    assert detect_process_stage_visibility(
+        bottom_words, page_size_pt=(220, 300), panel_bboxes=panels, checks=checks
+    ) == []
+    # Identical labels in the upper panel must not satisfy the lower panel.
+    upper_words = [{**word, "ymin": 20, "ymax": 28} for word in bottom_words]
+    issues = detect_process_stage_visibility(
+        upper_words, page_size_pt=(220, 300), panel_bboxes=panels, checks=checks
+    )
+    assert len(issues) == 3
+    assert {issue["kind"] for issue in issues} == {"process_stage_anchor_missing"}
