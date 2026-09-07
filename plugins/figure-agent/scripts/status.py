@@ -1329,11 +1329,8 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         result["review_scale_previews"] = _review_scale_previews_summary(build_png, spec)
     explicit_candidate = result.get("current_candidate")
     if not isinstance(explicit_candidate, dict):
-        explicit_candidate = current_candidate.resolve_current_candidate(
-            example_dir,
-            common_render_inputs=current_candidate.common_render_inputs(
-                example_dir, style_lock_path=STYLE_LOCK_PATH
-            ),
+        explicit_candidate = current_candidate.resolve_with_inputs(
+            example_dir, style_lock_path=STYLE_LOCK_PATH
         )
         result["current_candidate"] = explicit_candidate
     if explicit_candidate.get("state") == "VALID":
@@ -1580,12 +1577,7 @@ def _effective_current_candidate(
     *,
     canonical_render_state: str,
 ) -> dict[str, Any] | None:
-    explicit = current_candidate.resolve_current_candidate(
-        example_dir,
-        common_render_inputs=current_candidate.common_render_inputs(
-            example_dir, style_lock_path=STYLE_LOCK_PATH
-        ),
-    )
+    explicit = current_candidate.resolve_with_inputs(example_dir, style_lock_path=STYLE_LOCK_PATH)
     if explicit.get("state") != "NOT_DECLARED":
         explicit["canonical_render_state"] = canonical_render_state
         return explicit

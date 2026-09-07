@@ -116,3 +116,18 @@ def test_custom_style_is_explicit_and_content_bound(tmp_path):
     preamble.write_text("modified")
     with pytest.raises(ValueError, match="hash mismatch"):
         lint(tex)
+
+
+@pytest.mark.parametrize("spec", ["panels: [broken]\n", "style_lock: {preamble: absent.sty}\n"])
+def test_invalid_candidate_style_inputs_report_invalid_in_status(tmp_path: Path, spec: str) -> None:
+    from status import infer_stage
+
+    fixture = tmp_path / "demo"
+    (fixture / "review").mkdir(parents=True)
+    (fixture / "review/current-candidate.json").write_text("{}")
+    (fixture / "demo.tex").write_text("% source")
+    (fixture / "spec.yaml").write_text(spec)
+    result = infer_stage(fixture)
+    assert result["current_candidate"]["state"] == "INVALID"
+    assert "candidate_render_inputs_invalid" in result["current_candidate"]["reason"]
+    assert result["workflow_ready"] is False
