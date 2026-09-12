@@ -93,7 +93,7 @@ jobs:
       - name: Pre-build smoke export (required by stage-assertion test)
         if: ${{ !cancelled() }}
         run: |
-          uv run python3 scripts/run_export.py smoke_trap_demo
+          uv run python3 scripts/run_export.py smoke_trap_demo --skip-critique
 
       - name: Run tests
         if: ${{ !cancelled() }}

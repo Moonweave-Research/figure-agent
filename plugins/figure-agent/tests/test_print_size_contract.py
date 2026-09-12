@@ -7,12 +7,15 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks"))
 
+import check_print_size_contract as print_contract  # noqa: E402
 from check_print_size_contract import (  # noqa: E402, I001
+    FONT_FLOOR_SCOPE_EXPLICIT,
+    PrintSizeContractError,
     _journal_policy_floor,
     evaluate_contract,
     find_contract_file,
+    validate,
 )
-
 
 CONTRACT = {
     "natural_size_mm": [150.7, 153.6],
@@ -105,6 +108,89 @@ def test_journal_policy_floor_is_selected_only_by_explicit_nature_basis() -> Non
         == 5.0
     )
     assert _journal_policy_floor({"basis": "project_schematic"}) is None
+
+
+def test_explicit_font_floor_scope_uses_declared_tex_sizes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tex = tmp_path / "figure.tex"
+    pdf = tmp_path / "figure.pdf"
+    authority = tmp_path / "spec.yaml"
+    tex.write_text(r"\fontsize{5.1}{6.1}\selectfont", encoding="utf-8")
+    pdf.write_bytes(b"%PDF")
+    authority.write_text(
+        "\n".join(
+            [
+                "final_size_contract:",
+                "  basis: width_limited_nature_family_main_figure",
+                "  natural_size_mm: [180.0, 50.0]",
+                "  target_width_mm: 180.0",
+                "  max_height_mm: 170.0",
+                "  min_print_font_pt: 5.0",
+                "  font_floor_scope: explicit_tex_fontsize_declarations",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        print_contract,
+        "_page_size_pt",
+        lambda _pdf: (180.0 / print_contract.PT_TO_MM, 50.0 / print_contract.PT_TO_MM),
+    )
+    monkeypatch.setattr(
+        print_contract,
+        "rendered_font_sizes_pt",
+        lambda _pdf: pytest.fail("PDF text-state probing must not run for explicit scope"),
+    )
+
+    result = validate(
+        pdf_path=pdf,
+        tex_path=tex,
+        authority_path=authority,
+        require_contract=True,
+    )
+
+    assert result["font_measurement_basis"] == FONT_FLOOR_SCOPE_EXPLICIT
+    assert result["source_min_font_pt"] == 5.1
+    assert result["status"] == "passed"
+
+
+def test_unknown_font_floor_scope_fails_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tex = tmp_path / "figure.tex"
+    pdf = tmp_path / "figure.pdf"
+    authority = tmp_path / "spec.yaml"
+    tex.write_text(r"\fontsize{6.0}{7.0}\selectfont", encoding="utf-8")
+    pdf.write_bytes(b"%PDF")
+    authority.write_text(
+        "\n".join(
+            [
+                "final_size_contract:",
+                "  natural_size_mm: [180.0, 50.0]",
+                "  target_width_mm: 180.0",
+                "  max_height_mm: 170.0",
+                "  min_print_font_pt: 5.0",
+                "  font_floor_scope: guessed_from_pixels",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        print_contract,
+        "_page_size_pt",
+        lambda _pdf: (180.0 / print_contract.PT_TO_MM, 50.0 / print_contract.PT_TO_MM),
+    )
+
+    with pytest.raises(PrintSizeContractError, match="font_floor_scope must be one of"):
+        validate(
+            pdf_path=pdf,
+            tex_path=tex,
+            authority_path=authority,
+            require_contract=True,
+        )
 
 
 def test_source_specific_authority_wins_over_parent_fixture_spec(tmp_path: Path) -> None:

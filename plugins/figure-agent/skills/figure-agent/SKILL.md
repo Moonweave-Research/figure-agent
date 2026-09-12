@@ -382,8 +382,11 @@ redirect to matplotlib?"):
 - Physical print contract: every strict fixture must declare
   `spec.yaml.final_size_contract` with `natural_size_mm`, `target_width_mm`,
   `max_height_mm`, and `min_print_font_pt`. The compile gate checks the PDF
-  page geometry and the smallest explicit `\\fontsize` declaration at the
-  height-limited placement scale. A fresh PNG alone is not print-size evidence.
+  page geometry and the configured font floor at the placement scale. Use
+  `font_floor_scope: explicit_tex_fontsize_declarations` for authored TikZ
+  whose semantic text sizes are declared with `\\fontsize`; otherwise the
+  default is transformed PDF text-state measurement. A fresh PNG alone is not
+  print-size evidence.
   A prospective review source may instead declare a sibling
   `<source-stem>.authority.yaml` print contract when its deliberate composition
   changes natural page geometry. That sidecar applies only to that source's

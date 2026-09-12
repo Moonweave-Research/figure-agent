@@ -40,6 +40,7 @@ def test_full_render_workflow_runs_for_every_pull_request() -> None:
     assert "PYTHONPATH:" in workflow
     assert "plugins/figure-agent/scripts/checks" in workflow
     assert "scripts/checks/check_visual_clash_budget.py examples" in workflow
+    assert "scripts/run_export.py smoke_trap_demo --skip-critique" in workflow
     assert "uv run pytest -q" in workflow
 
 

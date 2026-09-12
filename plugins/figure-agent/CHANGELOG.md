@@ -13,6 +13,9 @@ All notable changes to figure-agent are documented here.
 
 - Route content-manifest `MISSING` or `STALE` renders to compile before host
   critique in both the human-readable status hint and structured next action.
+- Honour the declared print-size `font_floor_scope` instead of measuring PDF
+  subscript glyphs when a fixture explicitly selects authored `\\fontsize`
+  declarations, and keep the critique-free CI smoke export explicit.
 
 ### Changed
 

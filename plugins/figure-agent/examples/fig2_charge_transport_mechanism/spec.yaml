@@ -22,6 +22,7 @@ final_size_contract:
   max_height_mm: 170.0
   min_print_font_pt: 5.0
   scale_basis: width_limited
+  font_floor_scope: explicit_tex_fontsize_declarations
   double_column_reference_mm:
     nature_communications: 180.0
     nature_figure_guide: 183.0

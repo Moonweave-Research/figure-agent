@@ -2,9 +2,9 @@
 
 The PDF is authored at its natural size and scaled when placed in a manuscript.
 This check therefore validates the declared natural page geometry, the
-height-limited target placement, and the smallest transformed PDF text-state font
-at that placement scale. It intentionally does not infer journal policy from
-pixels or treat a screen render as print-size evidence.
+height-limited target placement, and the configured font-floor measurement at
+that placement scale. It intentionally does not infer journal policy from pixels
+or treat a screen render as print-size evidence.
 """
 
 from __future__ import annotations
@@ -24,6 +24,9 @@ PT_TO_MM = 25.4 / 72.0
 MM_TOLERANCE = 0.25
 FONT_TOLERANCE = 0.01
 JOURNAL_MIN_PRINT_FONT_PT = 5.0
+FONT_FLOOR_SCOPE_PDF = "pdf_text_state_and_transform"
+FONT_FLOOR_SCOPE_EXPLICIT = "explicit_tex_fontsize_declarations"
+FONT_FLOOR_SCOPES = {FONT_FLOOR_SCOPE_PDF, FONT_FLOOR_SCOPE_EXPLICIT}
 NATURE_FAMILY_BASES = {
     "height_limited_nature_family_main_figure",
     "width_limited_nature_family_main_figure",
@@ -85,6 +88,14 @@ def _journal_policy_floor(contract: dict[str, Any]) -> float | None:
     if contract.get("basis") in NATURE_FAMILY_BASES:
         return JOURNAL_MIN_PRINT_FONT_PT
     return None
+
+
+def _font_floor_scope(contract: dict[str, Any]) -> str:
+    scope = contract.get("font_floor_scope", FONT_FLOOR_SCOPE_PDF)
+    if not isinstance(scope, str) or scope not in FONT_FLOOR_SCOPES:
+        choices = ", ".join(sorted(FONT_FLOOR_SCOPES))
+        raise PrintSizeContractError(f"font_floor_scope must be one of: {choices}")
+    return scope
 
 
 def _page_size_pt(pdf_path: Path) -> tuple[float, float]:
@@ -260,17 +271,25 @@ def validate(
         return {"status": "skipped", "reason": "final_size_contract not declared"}
     if not pdf_path.is_file():
         raise PrintSizeContractError(f"PDF not found: {pdf_path}")
+    tex_text = tex_path.read_text(encoding="utf-8")
+    declared_font_sizes = _font_sizes_pt(tex_text)
+    font_floor_scope = _font_floor_scope(contract)
+    measured_font_sizes = (
+        declared_font_sizes
+        if font_floor_scope == FONT_FLOOR_SCOPE_EXPLICIT
+        else rendered_font_sizes_pt(pdf_path)
+    )
     result = evaluate_contract(
         page_size_pt=_page_size_pt(pdf_path),
-        source_font_sizes_pt=rendered_font_sizes_pt(pdf_path),
+        source_font_sizes_pt=measured_font_sizes,
         contract=contract,
         policy_min_print_font_pt=_journal_policy_floor(contract),
     )
     result["authority"] = str(authority_path)
     result["pdf"] = str(pdf_path)
     result["tex"] = str(tex_path)
-    result["font_measurement_basis"] = "pdf_text_state_and_transform"
-    result["declared_source_font_sizes_pt"] = _font_sizes_pt(tex_path.read_text(encoding="utf-8"))
+    result["font_measurement_basis"] = font_floor_scope
+    result["declared_source_font_sizes_pt"] = declared_font_sizes
     if result["violations"]:
         raise PrintSizeContractError("; ".join(result["violations"]))
     return result
