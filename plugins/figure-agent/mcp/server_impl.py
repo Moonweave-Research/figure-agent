@@ -734,6 +734,7 @@ def _run_json_fig_agent_tool(
     command: list[str],
     payload_key: str,
     failure_message: str,
+    timeout_seconds: int = 120,
 ) -> dict[str, Any]:
     started = time.monotonic()
     resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
@@ -745,7 +746,7 @@ def _run_json_fig_agent_tool(
         started=started,
         command=command,
         workspace_root=workspace_root,
-        timeout_seconds=120,
+        timeout_seconds=timeout_seconds,
         timeout_message=f"{failure_message} timed out",
         name=name,
     )
@@ -1409,6 +1410,76 @@ def _next(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _run(arguments: dict[str, Any]) -> dict[str, Any]:
+    started = time.monotonic()
+    schema = "figure-agent.mcp.run.v1"
+    resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
+    if isinstance(resolved, dict):
+        return resolved
+
+    mode = arguments.get("mode")
+    if mode not in {"authoring", "review", "release", "polish"}:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=str(arguments.get("name") or ""),
+            error=_error("invalid_request", "mode must be authoring, review, release, or polish"),
+        )
+    goal = arguments.get("goal")
+    if not isinstance(goal, str) or not goal.strip():
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=str(arguments.get("name") or ""),
+            error=_error("invalid_request", "goal must be a non-empty string"),
+        )
+    execute = arguments.get("execute", False)
+    if not isinstance(execute, bool):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=str(arguments.get("name") or ""),
+            error=_error("invalid_request", "execute must be a boolean"),
+        )
+    max_steps = arguments.get("max_steps")
+    if max_steps is not None and (
+        isinstance(max_steps, bool) or not isinstance(max_steps, int) or max_steps < 1
+    ):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=str(arguments.get("name") or ""),
+            error=_error("invalid_request", "max_steps must be an integer greater than zero"),
+        )
+
+    name = str(arguments.get("name") or "")
+    command = [
+        "run",
+        name,
+        "--mode",
+        mode,
+        "--goal",
+        goal,
+        "--json",
+    ]
+    if max_steps is not None:
+        command.extend(("--max-steps", str(max_steps)))
+    if execute:
+        command.append("--execute")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema=schema,
+        command=command,
+        payload_key="run_result",
+        failure_message="fig-agent run failed",
+        timeout_seconds=900 if execute else 120,
+    )
+
+
 def _accept_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
     started = time.monotonic()
     schema = "figure-agent.mcp.accept-candidate.v1"
@@ -1931,6 +2002,27 @@ TOOLS: dict[str, dict[str, Any]] = {
             "properties": {"name": {"type": "string"}},
         },
         "handler": _next,
+    },
+    "figure_agent_run": {
+        "description": (
+            "Run the bounded workflow executor until its next explicit host or human boundary."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name", "mode", "goal"],
+            "properties": {
+                "name": {"type": "string"},
+                "mode": {
+                    "type": "string",
+                    "enum": ["authoring", "review", "release", "polish"],
+                },
+                "goal": {"type": "string", "minLength": 1},
+                "execute": {"type": "boolean"},
+                "max_steps": {"type": "integer", "minimum": 1},
+            },
+        },
+        "handler": _run,
     },
     "figure_agent_compile": {
         "description": "Run the existing compile chain for one fixture.",

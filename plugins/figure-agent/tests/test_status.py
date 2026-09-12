@@ -1403,6 +1403,9 @@ def test_render_freshness_detects_content_drift_despite_older_mtime(
     result = infer_stage(fig_dir)
 
     assert result["render_state"] == "STALE"
+    assert "/fig_compile drifted_render" in result["next"]
+    assert result["next_action_summary"]["action"] == "run_compile"
+    assert result["next_action_summary"]["safe_command"] == "/fig_compile drifted_render"
 
 
 def test_render_without_a_manifest_is_stale_not_fresh(tmp_path: Path) -> None:
@@ -3292,6 +3295,10 @@ def test_stage_4_export_present_critique_stale_redirects_to_fig_critique(
     ):
         os.utime(path, (middle_time, middle_time))
     os.utime(fig_dir / "critique.md", (old_time, old_time))
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, name)
 
     result = infer_stage(fig_dir)
 
@@ -3325,6 +3332,10 @@ def test_stage_4_critique_required_takes_priority_over_not_accepted(
         reference / "golden.png",
     ):
         os.utime(path, (old_time, old_time))
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, name)
 
     result = infer_stage(fig_dir)
 
@@ -3630,6 +3641,10 @@ def test_stage_4_coordinate_hints_newer_stales_critique_not_exports(
         os.utime(exports_dir / fname, (old_time, old_time))
     hints = fig_dir / "coordinate_hints.yaml"
     hints.write_text("metadata:\n  extraction_version: '0.3'\n", encoding="utf-8")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / "myfig.pdf").write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, "myfig")
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
     result = infer_stage(fig_dir)
@@ -5299,6 +5314,10 @@ def test_tracked_golden_partial_export_gives_force_golden_hint(
     (fig_dir / "golden_partial.tex").write_text("% tex", encoding="utf-8")
     pdf = fig_dir / "exports" / "golden_partial.pdf"
     pdf.write_bytes(b"%PDF")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / "golden_partial.pdf").write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, "golden_partial")
     subprocess.run(["git", "add", str(pdf.relative_to(repo))], cwd=repo, check=True)
 
     old_time = 1_000_000.0

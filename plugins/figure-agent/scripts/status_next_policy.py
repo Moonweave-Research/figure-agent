@@ -77,6 +77,10 @@ _NEXT_4_CRITIQUE_REQUIRED = (
     " before treating exports as final;"
     " if no edits are needed, existing exports can remain in place."
 )
+_NEXT_RENDER_STALE = (
+    "render is missing or stale — run /fig_compile <name> first,"
+    " then rerun /fig_status <name>."
+)
 _NEXT_CRITIQUE_LINT_BLOCKED = (
     "run /fig_critique <name> to rewrite critique.md so it passes critique_lint.py"
     " before continuing."
@@ -150,6 +154,11 @@ def _select_stage_4_template(
         return _NEXT_CRITIQUE_LINT_BLOCKED
     if critique_state == "REFERENCE_MISSING":
         return _NEXT_REFERENCE_MISSING
+    # Content-bound render manifests can detect staleness that the legacy
+    # source/export summaries do not. Stop after the one safe first action so
+    # later routing is recomputed from the newly compiled evidence.
+    if render_state in {"MISSING", "STALE"} and not is_stale:
+        return _NEXT_RENDER_STALE
     if is_stale and critique_needs_action(critique_state):
         if exports_substate == EXPORT_TRACKED_GOLDEN:
             if render_state == "FRESH":

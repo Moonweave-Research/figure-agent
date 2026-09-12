@@ -361,6 +361,7 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_doctor",
         "figure_agent_status",
         "figure_agent_next",
+        "figure_agent_run",
         "figure_agent_compile",
         "figure_agent_export",
         "figure_agent_quality_map",
@@ -706,6 +707,71 @@ def test_mcp_next_returns_public_command_and_write_metadata(tmp_path: Path) -> N
     assert next_payload["action"] == "run_compile"
     assert next_payload["command"] == "fig-agent compile next_demo"
     assert next_payload["writes"] is True
+
+
+def test_mcp_run_exposes_canonical_plan_only_route_without_writes(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace, name="run_demo")
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_run",
+                    "arguments": {
+                        "name": "run_demo",
+                        "mode": "review",
+                        "goal": "verify the current figure",
+                        "max_steps": 1,
+                    },
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+        timeout=30,
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    after = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+    assert payload["schema"] == "figure-agent.mcp.run.v1"
+    assert payload["success"] is True
+    assert payload["run_result"]["schema"] == "figure-agent.run.v1"
+    assert payload["run_result"]["execute"] is False
+    assert payload["run_result"]["max_steps"] == 1
+    assert after == before
+
+
+def test_mcp_run_rejects_invalid_execution_contract(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace, name="run_demo")
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_run",
+                    "arguments": {
+                        "name": "run_demo",
+                        "mode": "final",
+                        "goal": "verify the current figure",
+                    },
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.run.v1"
+    assert payload["success"] is False
+    assert payload["error"]["category"] == "invalid_request"
 
 
 def test_mcp_propose_improvements_reports_no_op_on_pure_refusal(tmp_path: Path) -> None:

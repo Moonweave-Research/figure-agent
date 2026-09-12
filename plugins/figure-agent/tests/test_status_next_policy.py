@@ -104,6 +104,36 @@ def test_stage_4_source_stale_stale_render_and_stale_critique_includes_compile()
     )
 
 
+def test_stage_4_render_manifest_stale_always_compiles_before_critique() -> None:
+    hint = _hint(
+        stage=4,
+        critique_state="STALE",
+        source_stale=False,
+        export_content_stale=False,
+        render_state="STALE",
+    )
+
+    assert hint == (
+        "render is missing or stale — run /fig_compile demo first,"
+        " then rerun /fig_status demo."
+    )
+
+
+def test_stage_4_missing_render_compiles_before_other_release_work() -> None:
+    hint = _hint(
+        stage=4,
+        critique_state="FRESH",
+        source_stale=False,
+        export_content_stale=False,
+        render_state="MISSING",
+    )
+
+    assert hint == (
+        "render is missing or stale — run /fig_compile demo first,"
+        " then rerun /fig_status demo."
+    )
+
+
 def test_stage_4_missing_final_artifact_names_handoff_scaffolder() -> None:
     hint = _hint(stage=4, final_artifact_state="MISSING")
 

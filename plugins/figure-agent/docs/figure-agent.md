@@ -335,6 +335,7 @@ grants release, golden, or publication acceptance.
 | `figure_agent_doctor` | read-only | `fig-agent doctor` | — | Report bundle, workspace, and host dependency state. Dependency state is binary/module presence, not compile capability. |
 | `figure_agent_status` | read-only | `fig-agent status` | `/fig_status` | Return structured figure status and artifact descriptors. |
 | `figure_agent_next` | read-only | `fig-agent next` | — | Return one next action from the state router. |
+| `figure_agent_run` | plan-only by default; writes only with `execute: true` | `fig-agent run` | `/fig_run` | Run the bounded workflow executor until the next host, human, patch, polish, release, accepted, or golden boundary. The MCP route covers the standard status-to-run path; closed-loop lifecycle evidence inputs remain on the CLI. |
 | `figure_agent_compile` | writes `build/` | `fig-agent compile` | `/fig_compile` | Run the compile chain and its checkers for one fixture. |
 | `figure_agent_export` | writes `exports/` | `fig-agent export` | `/fig_export` | Run the export policy. Golden override is refused and routed to CLI closeout-accept. |
 | `figure_agent_quality_map` | read-only | `fig-agent quality-map` | — | Return the quality defect ledger. |

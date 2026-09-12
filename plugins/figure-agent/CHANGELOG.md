@@ -4,6 +4,21 @@ All notable changes to figure-agent are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Expose the bounded `fig-agent run` workflow through `figure_agent_run` on the
+  MCP facade. Calls remain plan-only unless `execute: true` is explicit.
+
+### Fixed
+
+- Route content-manifest `MISSING` or `STALE` renders to compile before host
+  critique in both the human-readable status hint and structured next action.
+
+### Changed
+
+- Run the full fixture compile, visual-clash budget, and render-marked test job
+  for every pull request instead of requiring a manually applied label.
+
 ## [0.10.3] - 2026-09-07
 
 ### Fixed
