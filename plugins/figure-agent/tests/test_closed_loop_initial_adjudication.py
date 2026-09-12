@@ -94,6 +94,12 @@ def _response_pack(workspace: Path, fixture: Path, state_path: Path) -> Path:
     critique = pack / response_adapter.CRITIQUE_FILE
     source = Path(__file__).resolve().parents[1] / "examples" / FIXTURE / "critique.md"
     shutil.copyfile(source, critique)
+    # This synthetic response is for the current crop inventory, not the archived IDs.
+    critique.write_text(
+        critique.read_text()
+        .replace("print_178mm", "screen_overview")
+        .replace("print_thumbnail", "screen_thumbnail")
+    )
     critique_text = critique.read_text(encoding="utf-8")
     _, frontmatter_text, markdown = critique_text.split("---", 2)
     frontmatter = yaml.safe_load(frontmatter_text)

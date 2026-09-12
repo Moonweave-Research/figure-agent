@@ -3,7 +3,7 @@
 Reads exports/ sub-state for `<name>` and dispatches:
 
   MISSING / STALE      -> regenerate (PDF copy, dvisvgm SVG, pdftocairo TIFF, rsvg-convert PNG)
-  FRESH                -> no-op
+  FRESH                -> preserve renders, refresh editable source bundle
   TRACKED_GOLDEN       -> skip with warning. --force-golden overrides.
   GOLDEN_UNVERIFIABLE  -> refuse with rc 1. --force-golden overrides.
 
@@ -19,7 +19,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
+from inputs import parse_spec
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
 SCRIPT_IMPORT_DIRS = (
@@ -102,13 +102,16 @@ def _regenerate(
         check=True,
     )
     shutil.copy(build_pdf, exports_pdf)
+    from submission_bundle import write_bundle
+
+    source, _ = _export_inputs(example_dir, name)
+    write_bundle(example_dir, name, source, build_pdf, plugin_root / "styles")
 
 
 def _load_spec(spec_path: Path) -> dict:
     if not spec_path.is_file():
         return {}
-    data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
-    return data if isinstance(data, dict) else {}
+    return parse_spec(spec_path.read_text(encoding="utf-8"))
 
 
 def _export_inputs(example_dir: Path, name: str) -> tuple[Path, Path]:
@@ -120,11 +123,25 @@ def _export_inputs(example_dir: Path, name: str) -> tuple[Path, Path]:
     exporting a different root source.
     """
 
-    candidate = current_candidate.resolve_current_candidate(
-        example_dir,
-        common_render_inputs=current_candidate.common_render_inputs(example_dir),
-    )
+    candidate = current_candidate.resolve_with_inputs(example_dir)
     if candidate.get("state") == "NOT_DECLARED":
+        import render_input_manifest
+
+        render = example_dir / "build" / f"{name}.pdf"
+        if render.is_file():
+            inputs = render_input_manifest.input_paths(
+                example_dir,
+                name,
+                runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty",
+            )
+            state = render_input_manifest.freshness(
+                manifest=render_input_manifest.manifest_path(render),
+                fixture=example_dir.name,
+                render_pdf=render,
+                inputs=inputs,
+            )
+            if state != render_input_manifest.FRESH:
+                raise ValueError(f"render inputs are {state}; recompile before exporting")
         return (
             example_dir / f"{name}.tex",
             example_dir / "build" / f"{name}.pdf",
@@ -145,6 +162,16 @@ def _export_inputs(example_dir: Path, name: str) -> tuple[Path, Path]:
             "current candidate render is not fresh: "
             + str(candidate.get("render_state") or "unknown")
         )
+    import render_input_manifest
+
+    state = render_input_manifest.freshness(
+        manifest=render_input_manifest.manifest_path(build_pdf),
+        fixture=example_dir.name,
+        render_pdf=build_pdf,
+        inputs={"source_tex": source_path, **current_candidate.common_render_inputs(example_dir)},
+    )
+    if state != render_input_manifest.FRESH:
+        raise ValueError(f"candidate render inputs are {state}; recompile before exporting")
     return source_path, build_pdf
 
 
@@ -318,7 +345,16 @@ def main(
     state = compute_export_state(example_dir, args.name)
 
     if state == EXPORT_FRESH:
-        print(f"run_export.py: exports/ already FRESH for {args.name}; no-op")
+        from submission_bundle import write_bundle
+
+        write_bundle(
+            example_dir,
+            args.name,
+            tex_path,
+            build_pdf,
+            runtime_paths.resolve_runtime_paths().styles_dir,
+        )
+        print(f"run_export.py: exports/ already FRESH for {args.name}; source bundle refreshed")
         return 0
 
     if state == EXPORT_TRACKED_GOLDEN and not args.force_golden:

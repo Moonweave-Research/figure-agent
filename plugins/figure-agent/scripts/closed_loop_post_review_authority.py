@@ -44,9 +44,7 @@ def assert_render_unchanged(
     expected_sha256: str,
     expected_fingerprint: tuple[int, int, int, int, int],
 ) -> None:
-    data, fingerprint = capture_render_snapshot(
-        path, expected_sha256=expected_sha256
-    )
+    data, fingerprint = capture_render_snapshot(path, expected_sha256=expected_sha256)
     if fingerprint != expected_fingerprint or sha256_bytes(data) != expected_sha256:
         raise ClosedLoopPostReviewError("verified_render_drift_detected")
 
@@ -96,18 +94,14 @@ def lineage_evidence_record(
         previous_path = current.get("previous_state_path")
         if not isinstance(previous_path, str):
             raise ClosedLoopPostReviewError(f"lineage_evidence_missing:{role}")
-        path = workspace_file(
-            workspace_root, previous_path, label=f"lineage_state_{role}"
-        )
+        path = workspace_file(workspace_root, previous_path, label=f"lineage_state_{role}")
         linked = load_json(path, label=f"lineage_state_{role}")
         try:
             current = closed_loop_attempt_state.validate_state(
                 linked, workspace_root=workspace_root
             )
         except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
-            raise ClosedLoopPostReviewError(
-                f"lineage_state_invalid:{role}:{exc}"
-            ) from exc
+            raise ClosedLoopPostReviewError(f"lineage_state_invalid:{role}:{exc}") from exc
 
 
 def load_published_state(
@@ -116,16 +110,12 @@ def load_published_state(
     path = workspace_file(workspace_root, state_path, label="closed_loop_state")
     state = load_json(path, label="closed_loop_state")
     try:
-        state = closed_loop_attempt_state.validate_state(
-            state, workspace_root=workspace_root
-        )
+        state = closed_loop_attempt_state.validate_state(state, workspace_root=workspace_root)
     except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
         raise ClosedLoopPostReviewError(f"closed_loop_state_invalid:{exc}") from exc
     if state["fixture"] != fixture:
         raise ClosedLoopPostReviewError("closed_loop_state_fixture_mismatch")
-    if path != closed_loop_attempt_state.state_path(
-        state, workspace_root=workspace_root
-    ):
+    if path != closed_loop_attempt_state.state_path(state, workspace_root=workspace_root):
         raise ClosedLoopPostReviewError("closed_loop_state_path_mismatch")
     return state, path
 
@@ -198,9 +188,7 @@ def validate_machine_repair_lineage(
     if receipt.get("packet_sha256") != packet.get("packet_sha256"):
         raise ClosedLoopPostReviewError("machine_receipt_packet_hash_mismatch")
     png_record = receipt.get("external_compile", {}).get("png")
-    if not isinstance(png_record, dict) or not isinstance(
-        png_record.get("sha256"), str
-    ):
+    if not isinstance(png_record, dict) or not isinstance(png_record.get("sha256"), str):
         raise ClosedLoopPostReviewError("machine_receipt_render_hash_missing")
     return {
         "binding": binding_path,
@@ -234,9 +222,7 @@ def find_finding_bbox(payload: object, finding_id: str) -> list[int] | None:
     return None
 
 
-def bound_generic_crop_roles(
-    lineage: dict[str, Any], *, workspace_root: Path
-) -> dict[str, str]:
+def bound_generic_crop_roles(lineage: dict[str, Any], *, workspace_root: Path) -> dict[str, str]:
     binding = load_json(lineage["binding"], label="adjudicated_repair_binding")
     target_record = binding.get("target_contract")
     if not isinstance(target_record, dict):
@@ -273,10 +259,7 @@ def bound_generic_crop_roles(
     )
     example_dir = workspace_root / "examples" / str(binding.get("fixture") or "")
     report_render = example_dir / str(report.get("render_path") or "")
-    if (
-        report_render != before_path
-        or report.get("render_sha256") != before_record.get("sha256")
-    ):
+    if report_render != before_path or report.get("render_sha256") != before_record.get("sha256"):
         raise ClosedLoopPostReviewError("target_coordinate_provenance_mismatch")
     before_bytes, _ = capture_render_snapshot(
         before_path, expected_sha256=str(before_record.get("sha256") or "")
@@ -300,17 +283,13 @@ def bound_generic_crop_roles(
     elif bbox[0] >= x_mid:
         column = 1
     else:
-        raise ClosedLoopPostReviewError(
-            "target_finding_bbox_crosses_crop_boundary"
-        )
+        raise ClosedLoopPostReviewError("target_finding_bbox_crosses_crop_boundary")
     if bbox[3] <= y_mid:
         row = 0
     elif bbox[1] >= y_mid:
         row = 1
     else:
-        raise ClosedLoopPostReviewError(
-            "target_finding_bbox_crosses_crop_boundary"
-        )
+        raise ClosedLoopPostReviewError("target_finding_bbox_crosses_crop_boundary")
     crop_bbox = [
         column * x_mid,
         row * y_mid,
@@ -329,7 +308,7 @@ def bound_generic_crop_roles(
     return {
         "target_crop": f"full_q{target_index}",
         "neighbor_crop": f"full_q{neighbor_index}",
-        "print_scale": "print_thumbnail",
+        "print_scale": "screen_thumbnail",
     }
 
 
@@ -358,43 +337,31 @@ def validate_request_against_machine_state(
     previous_path = state.get("previous_state_path")
     if not isinstance(previous_path, str):
         raise ClosedLoopPostReviewError("post_review_machine_state_missing")
-    machine_path = workspace_file(
-        workspace_root, previous_path, label="post_review_machine_state"
-    )
+    machine_path = workspace_file(workspace_root, previous_path, label="post_review_machine_state")
     machine_state = load_json(machine_path, label="post_review_machine_state")
     try:
         machine_state = closed_loop_attempt_state.validate_state(
             machine_state, workspace_root=workspace_root
         )
     except closed_loop_attempt_state.ClosedLoopAttemptStateError as exc:
-        raise ClosedLoopPostReviewError(
-            f"post_review_machine_state_invalid:{exc}"
-        ) from exc
+        raise ClosedLoopPostReviewError(f"post_review_machine_state_invalid:{exc}") from exc
     if machine_state.get("state") != "machine_repaired":
         raise ClosedLoopPostReviewError("post_review_machine_state_invalid")
-    lineage = validate_machine_repair_lineage(
-        machine_state, workspace_root=workspace_root
-    )
+    lineage = validate_machine_repair_lineage(machine_state, workspace_root=workspace_root)
     expected = {
-        "binding": post_repair_visual_review._artifact(
-            lineage["binding"], root=workspace_root
-        ),
+        "binding": post_repair_visual_review._artifact(lineage["binding"], root=workspace_root),
         "materialization_receipt": post_repair_visual_review._artifact(
             lineage["receipt"], root=workspace_root
         ),
     }
     packet = load_json(lineage["packet"], label="repair_packet")
     expected["repair_packet"] = {
-        **post_repair_visual_review._artifact(
-            lineage["packet"], root=workspace_root
-        ),
+        **post_repair_visual_review._artifact(lineage["packet"], root=workspace_root),
         "packet_sha256": packet.get("packet_sha256"),
     }
     if any(request.get(key) != value for key, value in expected.items()):
         raise ClosedLoopPostReviewError("post_review_request_machine_lineage_mismatch")
-    expected_crop_roles = bound_generic_crop_roles(
-        lineage, workspace_root=workspace_root
-    )
+    expected_crop_roles = bound_generic_crop_roles(lineage, workspace_root=workspace_root)
     if request.get("crop_roles") != expected_crop_roles:
         raise ClosedLoopPostReviewError("post_review_request_crop_role_mismatch")
     manifest_record = request.get("crop_manifest")

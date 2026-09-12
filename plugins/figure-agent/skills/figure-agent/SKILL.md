@@ -249,7 +249,8 @@ polish backport, or actions the current mode forbids.
                          semantic-hash, and 100%/50%/33% render evidence agree;
                          compile success is never a reward. Pass a human verdict
                          only after a human reviewed these exact source bytes.
-/fig_critique <name>     required before export when usable reference grounding exists
+/fig_critique <name>     required before final export for every authored fixture;
+                         missing reference-free grounding remains an explicit gate
 /fig_ground <name>       author tex/semantic assertions from briefing §6/§7 so a
                          reversed force/bend direction is fail-loud (Layer 2)
 /fig_adjudicate <name>   scaffold critique_adjudication.yaml from critique.md
@@ -262,7 +263,7 @@ polish backport, or actions the current mode forbids.
 /fig_context_pack <name>
                          read-only authoring context pack for explicit
                          briefing/spec/design/style/rule/semantic contracts
-/fig_export <name>       candidate-aware PDF / outlined SVG / TIFF / PNG;
+/fig_export <name>       candidate-aware PDF / outlined SVG / TIFF / PNG + editable source ZIP;
                          export never promotes or accepts a candidate
 /fig_e2e_smoke <name>    deterministic compile/export/status/loop smoke harness
 /fig_status [<name>]     stage + render/critique/export/acceptance/final_ready state inference
@@ -381,8 +382,11 @@ redirect to matplotlib?"):
 - Physical print contract: every strict fixture must declare
   `spec.yaml.final_size_contract` with `natural_size_mm`, `target_width_mm`,
   `max_height_mm`, and `min_print_font_pt`. The compile gate checks the PDF
-  page geometry and the smallest explicit `\\fontsize` declaration at the
-  height-limited placement scale. A fresh PNG alone is not print-size evidence.
+  page geometry and the configured font floor at the placement scale. Use
+  `font_floor_scope: explicit_tex_fontsize_declarations` for authored TikZ
+  whose semantic text sizes are declared with `\\fontsize`; otherwise the
+  default is transformed PDF text-state measurement. A fresh PNG alone is not
+  print-size evidence.
   A prospective review source may instead declare a sibling
   `<source-stem>.authority.yaml` print contract when its deliberate composition
   changes natural page geometry. That sidecar applies only to that source's

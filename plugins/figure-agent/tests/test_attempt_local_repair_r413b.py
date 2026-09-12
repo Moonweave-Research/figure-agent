@@ -421,8 +421,8 @@ def test_v2_machine_repair_reconstructs_write_free_post_review_authority(
         "full_q4",
         "full_center_vertical",
         "full_center_horizontal",
-        "print_178mm",
-        "print_thumbnail",
+        "screen_overview",
+        "screen_thumbnail",
     }
     assert sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*")) == before
 
@@ -452,8 +452,8 @@ def test_v2_post_review_plan_is_write_free_and_execute_publishes_separate_reques
         "full_q4",
         "full_center_vertical",
         "full_center_horizontal",
-        "print_178mm",
-        "print_thumbnail",
+        "screen_overview",
+        "screen_thumbnail",
     }
     assert all("bbox_px" not in crop for crop in request["initial_crops"])
     assert result["published_state"]["state"] == "post_review_requested"
@@ -821,9 +821,7 @@ def test_v2_post_review_response_revalidates_after_receipt_before_state(
             execute=True,
             workspace_root=workspace,
         )
-    assert not any(
-        requested["next_state_path"].parent.glob("state-*-visually_re_reviewed.json")
-    )
+    assert not any(requested["next_state_path"].parent.glob("state-*-visually_re_reviewed.json"))
 
 
 def test_fig_run_dispatches_attempt_local_machine_repaired_to_v2_outbound(
@@ -912,9 +910,7 @@ def test_fig_run_attempt_local_missing_execution_remains_write_free(
     assert inbound["final_stop_reason"] == "human_review_boundary"
     handoff = inbound["boundary_handoff"]
     assert handoff["required_actor"] == "human_reviewer"
-    assert "complete or clarify the exact host execution and response" in handoff[
-        "blocking_reason"
-    ]
+    assert "complete or clarify the exact host execution and response" in handoff["blocking_reason"]
     assert handoff["closeout_checks"] == [
         "complete or clarify the exact hash-bound host execution and response"
     ]

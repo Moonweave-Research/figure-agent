@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -58,6 +59,57 @@ def test_load_optional_inspection_trace_reports_missing_as_not_applicable(
 
     assert result["state"] == "not_applicable"
     assert result["trace"] is None
+
+
+def test_skipped_only_trace_cannot_satisfy_inspection(tmp_path):
+    fixture = _write_fixture(tmp_path)
+    path = _write_trace(fixture)
+    trace = yaml.safe_load(path.read_text())
+    trace["inspected_artifacts"][0]["verdict"] = "skipped"
+    path.write_text(yaml.safe_dump(trace))
+    with pytest.raises(InspectionTraceError, match="no inspected artifacts"):
+        load_optional_inspection_trace(fixture)
+
+
+def test_crop_coverage_requires_host_receipt_and_binds_transcript(tmp_path):
+    from post_repair_visual_review import EXECUTION_RECEIPT_SCHEMA, _canonical_hash
+
+    fixture = _write_fixture(tmp_path)
+    path = _write_trace(fixture)
+    trace = yaml.safe_load(path.read_text())
+    crop = trace["inspected_artifacts"][0]
+    manifest = fixture / "build/audit_crops/manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema": "figure-agent.audit-crop-manifest.v1",
+                "fixture": fixture.name,
+                "render_path": crop["path"],
+                "render_sha256": crop["sha256"],
+                "required_crop_ids": [crop["id"]],
+                "crops": [crop],
+            }
+        )
+    )
+    with pytest.raises(InspectionTraceError, match="execution receipt required"):
+        load_optional_inspection_trace(fixture)
+    transcript = fixture / "host-transcript.json"
+    transcript.write_text(json.dumps({"tool": "test-image-reader", "path": crop["path"]}))
+    artifact = {key: crop[key] for key in ("path", "sha256")}
+    execution = {
+        "schema": EXECUTION_RECEIPT_SCHEMA,
+        "request_sha256": file_sha256(manifest),
+        "actor": {"kind": "tool", "identity": "test-host", "model_or_tool": "test-image-reader"},
+        "transcript": {"path": transcript.name, "sha256": file_sha256(transcript)},
+        "inspected_artifacts": [artifact, artifact],
+    }
+    execution["receipt_sha256"] = _canonical_hash(execution, omitted="receipt_sha256")
+    trace["execution"] = execution
+    path.write_text(yaml.safe_dump(trace))
+    assert load_optional_inspection_trace(fixture)["state"] == "pass"
+    transcript.write_text("changed transcript")
+    with pytest.raises(InspectionTraceError, match="transcript hash drift"):
+        load_optional_inspection_trace(fixture)
 
 
 def test_load_optional_inspection_trace_validates_artifact_hash(tmp_path: Path) -> None:

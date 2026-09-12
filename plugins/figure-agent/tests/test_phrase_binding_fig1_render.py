@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -29,20 +30,46 @@ FORMERLY_DEAD = (
 
 
 @pytest.fixture(scope="module")
-def compiled_fig1() -> Path:
-    completed = subprocess.run(
+def compiled_fig1(tmp_path_factory) -> Path:
+    """Exercise phrase geometry independently of this fixture's known print-font failure."""
+    build = tmp_path_factory.mktemp("fig1-phrase-geometry")
+    source = FIXTURE / "fig1_updated_agent_redraw_v1.tex"
+    env = os.environ.copy()
+    env["TEXINPUTS"] = str(PLUGIN_ROOT / "styles") + "/:" + env.get("TEXINPUTS", "")
+    result = subprocess.run(
         [
-            "bash",
-            str(PLUGIN_ROOT / "scripts" / "compile.sh"),
-            str(FIXTURE / "fig1_updated_agent_redraw_v1.tex"),
+            "lualatex",
+            "-no-shell-escape",
+            "-halt-on-error",
+            "-interaction=nonstopmode",
+            f"-output-directory={build}",
+            str(source),
         ],
-        cwd=PLUGIN_ROOT,
+        cwd=FIXTURE,
+        env=env,
         capture_output=True,
         text=True,
-        check=False,
     )
-    assert completed.returncode == 0, completed.stderr[-2000:]
-    return FIXTURE / "build"
+    assert result.returncode == 0, result.stdout[-2000:]
+    pdf = build / "fig1_updated_agent_redraw_v1.pdf"
+    import check_text_boundary_clash as boundary
+
+    for module, report in ((boundary, "text_boundary_clash"), (proximity, "label_path_proximity")):
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setattr(
+                sys,
+                "argv",
+                [
+                    module.__file__,
+                    "--spec",
+                    str(FIXTURE / "spec.yaml"),
+                    "--json-output",
+                    str(build / f"{report}.json"),
+                    str(pdf),
+                ],
+            )
+            assert module.main() == 0
+    return build
 
 
 @pytest.mark.render
@@ -163,9 +190,7 @@ def test_fig1_declared_paths_lie_on_their_bound_element(compiled_fig1: Path) -> 
     )
     assert placement is not None
     checks = proximity.load_label_path_proximity_checks(FIXTURE / "spec.yaml")
-    bound = {
-        check["id"]: check for check in checks if check.get("source_binding") is not None
-    }
+    bound = {check["id"]: check for check in checks if check.get("source_binding") is not None}
 
     assert sorted(bound) == list(BOUND_PATHS)
     for check_id, check in bound.items():

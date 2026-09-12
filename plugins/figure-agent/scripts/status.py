@@ -114,14 +114,7 @@ def _source_paths(example_dir: Path, name: str, spec: dict) -> tuple[Path, ...]:
 
 
 def _render_input_paths(example_dir: Path, name: str) -> dict[str, Path]:
-    candidates = {
-        "source_tex": example_dir / f"{name}.tex",
-        "briefing": example_dir / "briefing.md",
-        "spec": example_dir / "spec.yaml",
-        "claim_authority": example_dir / "claim_authority.yaml",
-        "style_lock": STYLE_LOCK_PATH,
-    }
-    return {role: path for role, path in candidates.items() if path.exists()}
+    return render_input_manifest.input_paths(example_dir, name, STYLE_LOCK_PATH)
 
 
 def _fixture_local_path(example_dir: Path, value: object) -> Path | None:
@@ -213,7 +206,7 @@ def compute_critique_state(example_dir: Path, name: str, spec: dict | None = Non
     has_panel_reference = bool(participating_panel_reference_paths(example_dir, spec))
     if not has_figure_reference and not has_panel_reference:
         if not has_reference_free_grounding_context(example_dir):
-            return CRITIQUE_NOT_REQUIRED
+            return CRITIQUE_BRIEFING_REQUIRED
         critique_path = example_dir / "critique.md"
         if not critique_path.is_file():
             return CRITIQUE_BRIEFING_REQUIRED
@@ -382,7 +375,9 @@ def _default_final_artifact(name: str) -> dict:
     return {
         "state": "NONE",
         "kind": "generated_export",
-        "path": f"exports/{name}.svg" if name else None,
+        "path": f"exports/{name}.pdf" if name else None,
+        "editable_source": f"{name}.tex" if name else None,
+        "display_derivative": f"exports/{name}.svg" if name else None,
         "notes": [],
         "error": "",
     }
@@ -615,11 +610,7 @@ def _paper_plan_summary(example_dir: Path, name: str) -> dict[str, Any]:
     ]
     # A finding that names another fixture is that fixture's problem: a stale
     # binding on a superseded fixture must not stop every other figure's driver.
-    own_blocking = [
-        finding
-        for finding in blocking
-        if finding.get("fixture") in (None, name)
-    ]
+    own_blocking = [finding for finding in blocking if finding.get("fixture") in (None, name)]
     other_blocking = [finding for finding in blocking if finding not in own_blocking]
     if own_blocking:
         return {
@@ -1338,11 +1329,8 @@ def _finalize_status(result: dict, example_dir: Path) -> dict:
         result["review_scale_previews"] = _review_scale_previews_summary(build_png, spec)
     explicit_candidate = result.get("current_candidate")
     if not isinstance(explicit_candidate, dict):
-        explicit_candidate = current_candidate.resolve_current_candidate(
-            example_dir,
-            common_render_inputs=current_candidate.common_render_inputs(
-                example_dir, style_lock_path=STYLE_LOCK_PATH
-            ),
+        explicit_candidate = current_candidate.resolve_with_inputs(
+            example_dir, style_lock_path=STYLE_LOCK_PATH
         )
         result["current_candidate"] = explicit_candidate
     if explicit_candidate.get("state") == "VALID":
@@ -1589,12 +1577,7 @@ def _effective_current_candidate(
     *,
     canonical_render_state: str,
 ) -> dict[str, Any] | None:
-    explicit = current_candidate.resolve_current_candidate(
-        example_dir,
-        common_render_inputs=current_candidate.common_render_inputs(
-            example_dir, style_lock_path=STYLE_LOCK_PATH
-        ),
-    )
+    explicit = current_candidate.resolve_with_inputs(example_dir, style_lock_path=STYLE_LOCK_PATH)
     if explicit.get("state") != "NOT_DECLARED":
         explicit["canonical_render_state"] = canonical_render_state
         return explicit
@@ -1801,9 +1784,12 @@ def infer_stage(example_dir: Path) -> dict:
     )
     sources = _source_paths(example_dir, name, spec)
     critique_state = compute_critique_state(example_dir, name, spec)
-    render_state, render_binding_note = _compute_render_state(
-        example_dir, spec_path, tex_path, build_pdf
-    )
+    try:
+        render_state, render_binding_note = _compute_render_state(
+            example_dir, spec_path, tex_path, build_pdf
+        )
+    except (ValueError, UnicodeDecodeError):
+        render_state, render_binding_note = RENDER_STALE, "render_inputs_invalid"
     if render_binding_note is not None:
         notes.append(render_binding_note)
     review_scale_summary = _review_scale_previews_summary(build_png, spec)
@@ -1840,6 +1826,8 @@ def infer_stage(example_dir: Path) -> dict:
     _append_reference_image_check(checks, notes, spec, example_dir)
     _append_panel_reference_checks(notes, spec, example_dir)
     final_artifact = _final_artifact_state(example_dir, name, spec)
+    if isinstance(current_candidate, dict) and current_candidate.get("state") == "VALID":
+        final_artifact["editable_source"] = current_candidate.get("source_path")
     release_decision = _release_decision_summary(
         example_dir,
         name,

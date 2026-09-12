@@ -48,6 +48,7 @@ def generate_generic_crop_staging(
             output_dir=staging_crops,
             manifest_path=staging_manifest,
             include_detector_crops=False,
+            include_context_views=False,
         )
         manifest = load_json(staging_manifest, label="staged_crop_manifest")
         old_prefix = staging_crops.relative_to(example_dir).as_posix() + "/"
@@ -145,8 +146,7 @@ def verify_existing_generic_crop_pack(
             expected_paths != actual_paths
             or any(path.is_symlink() for path in actual_root.rglob("*"))
             or any(
-                (expected_root / relative).read_bytes()
-                != (actual_root / relative).read_bytes()
+                (expected_root / relative).read_bytes() != (actual_root / relative).read_bytes()
                 for relative in expected_paths
             )
         ):

@@ -42,7 +42,6 @@ def _cm_to_pt(value: float | int) -> float:
 def _bbox_from_pdf_cm(
     values: object,
     *,
-    page_height_pt: float,
     field: str,
 ) -> list[float]:
     if (
@@ -52,12 +51,8 @@ def _bbox_from_pdf_cm(
     ):
         raise ProcessStageVisibilityError(f"{field} must be a four-number list")
     x1, y1, x2, y2 = (_cm_to_pt(value) for value in values)
-    return [
-        min(x1, x2),
-        min(page_height_pt - y1, page_height_pt - y2),
-        max(x1, x2),
-        max(page_height_pt - y1, page_height_pt - y2),
-    ]
+    # Panel crops and pdftotext word boxes both use a top-left, y-down origin.
+    return [min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)]
 
 
 def _word_key(word: dict[str, Any]) -> tuple[float, float, str]:
@@ -173,7 +168,6 @@ def load_process_stage_visibility_checks(
             raise ProcessStageVisibilityError("duplicate panel id")
         panels[panel_id] = _bbox_from_pdf_cm(
             panel.get("bbox_pdf_cm"),
-            page_height_pt=page_size_pt[1],
             field=f"panels[{index}].bbox_pdf_cm",
         )
 

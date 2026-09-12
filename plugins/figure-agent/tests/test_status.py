@@ -58,7 +58,9 @@ def _write_explicit_candidate_render(fig_dir: Path) -> tuple[Path, Path]:
     }
     run_id = issue_compile_run(build, source_tex=source, render_pdf=render_pdf)
     manifest = {
-        "schema": "figure-agent.render-input-manifest.v1",
+        "schema": render_input_manifest.SCHEMA,
+        "dependencies": {},
+        "toolchain": {},
         "fixture": fig_dir.name,
         "compile_run_id": run_id,
         "render": {
@@ -648,9 +650,7 @@ def _write_strict_receipt(
     }
     if live_assertion_target is not None:
         payload["live_assertion_target"] = live_assertion_target
-    (build_dir / "strict_status.json").write_text(
-        json.dumps(payload) + "\n", encoding="utf-8"
-    )
+    (build_dir / "strict_status.json").write_text(json.dumps(payload) + "\n", encoding="utf-8")
 
 
 def _attest_fixture(fig_dir: Path, monkeypatch: pytest.MonkeyPatch, home: Path) -> None:
@@ -683,7 +683,17 @@ def _write_render_input_manifest(
     render_input_manifest.write_manifest(
         fixture=name,
         render_pdf=build_pdf,
-        inputs=status_mod._render_input_paths(directory, name),
+        inputs={
+            role: path
+            for role, path in {
+                "source_tex": directory / f"{name}.tex",
+                "briefing": directory / "briefing.md",
+                "spec": directory / "spec.yaml",
+                "style_lock": status_mod.STYLE_LOCK_PATH,
+                "claim_authority": directory / "claim_authority.yaml",
+            }.items()
+            if path.is_file()
+        },
         output=render_input_manifest.manifest_path(build_pdf),
         compile_run_id=run_id,
     )
@@ -844,6 +854,10 @@ def _write_hashed_critique(
             + "\n",
             encoding="utf-8",
         )
+    from inspection_trace_fixtures import issue_inspection_trace
+
+    if "render_path" in json.loads(crop_manifest.read_text()) if crop_manifest.exists() else False:
+        issue_inspection_trace(fig_dir)
     crop_audit_log_yaml = ""
     if crop_manifest.exists():
         crop_audit_log_yaml = (
@@ -1218,7 +1232,7 @@ Explain transient-current trapping in a compact mechanism schematic.
     assert result["status_explanation"]["first_blocker"]["code"] == "critique_briefing_required"
 
 
-def test_reference_free_thin_briefing_with_detector_signal_does_not_require_critique(
+def test_reference_free_thin_briefing_with_detector_signal_requires_critique(
     tmp_path: Path,
 ) -> None:
     fig_dir = tmp_path / "thin_fig"
@@ -1232,7 +1246,7 @@ def test_reference_free_thin_briefing_with_detector_signal_does_not_require_crit
         encoding="utf-8",
     )
 
-    assert compute_critique_state(fig_dir, "thin_fig") == status_mod.CRITIQUE_NOT_REQUIRED
+    assert compute_critique_state(fig_dir, "thin_fig") == status_mod.CRITIQUE_BRIEFING_REQUIRED
 
 
 def test_reference_free_named_briefing_with_detector_signal_requires_critique(
@@ -1389,6 +1403,9 @@ def test_render_freshness_detects_content_drift_despite_older_mtime(
     result = infer_stage(fig_dir)
 
     assert result["render_state"] == "STALE"
+    assert "/fig_compile drifted_render" in result["next"]
+    assert result["next_action_summary"]["action"] == "run_compile"
+    assert result["next_action_summary"]["safe_command"] == "/fig_compile drifted_render"
 
 
 def test_render_without_a_manifest_is_stale_not_fresh(tmp_path: Path) -> None:
@@ -2737,13 +2754,31 @@ def _make_fresh_exports(fig_dir: Path, name: str) -> None:
     _write_render_input_manifest(fig_dir)
 
 
+def _complete_test_review(fig_dir: Path) -> None:
+    """Arrange all review prerequisites for tests of later release gates."""
+    from critique_adjudication import scaffold_adjudication
+
+    (fig_dir / "briefing.md").write_text(
+        "## 1. Topic\nA polymer trap schematic explaining charge retention and relaxation.\n"
+        "## 6. Physics invariants\n- Must preserve charge and ground ownership.\n"
+    )
+    _write_hashed_critique(fig_dir, fig_dir.name)
+    scaffold_adjudication(fig_dir, force=True)
+    _write_render_input_manifest(fig_dir)
+
+
 def _make_status_ready_fixture(fig_dir: Path, *, accepted: bool | None = None) -> None:
     name = fig_dir.name
     fig_dir.mkdir()
     _make_spec(fig_dir, accepted=accepted)
     (fig_dir / f"{name}.tex").write_text("% tikz", encoding="utf-8")
-    (fig_dir / "critique.md").write_text("# critique\n", encoding="utf-8")
+    (fig_dir / "briefing.md").write_text(
+        "## 1. Topic\nA reference-free polymer trap schematic explaining charge retention.\n"
+        "## 6. Physics invariants\n- Must preserve charge and ground ownership.\n"
+    )
+    _write_hashed_critique(fig_dir, name)
     _make_fresh_exports(fig_dir, name)
+    _complete_test_review(fig_dir)
 
 
 def _mark_sources_older_than_outputs(fig_dir: Path) -> None:
@@ -2832,7 +2867,7 @@ def test_final_artifact_state_none_without_polish_opt_in(
 
     assert result["final_artifact_state"] == "NONE"
     assert result["final_artifact_kind"] == "generated_export"
-    assert result["final_artifact_path"] == "exports/plain_final.svg"
+    assert result["final_artifact_path"] == "exports/plain_final.pdf"
     assert result["workflow_ready"] is True
 
 
@@ -2846,6 +2881,7 @@ def test_final_artifact_generated_export_kind_keeps_current_readiness(
     _mark_sources_older_than_outputs(fig_dir)
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
+    _complete_test_review(fig_dir)
     result = infer_stage(fig_dir)
 
     assert result["final_artifact_state"] == "NONE"
@@ -2864,6 +2900,7 @@ def test_declared_external_svg_handoff_blocks_release_as_unsupported(
     _attest_fixture(fig_dir, monkeypatch, tmp_path / "home")
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
+    _complete_test_review(fig_dir)
     result = infer_stage(fig_dir)
 
     assert result["final_artifact_state"] == "INVALID"
@@ -2930,10 +2967,10 @@ def test_unknown_style_profile_with_malformed_panels_does_not_crash(
 
     result = infer_stage(fig_dir)
 
-    assert "style_profile_unknown" in result["notes"]
+    assert "spec_parse_error" in result["notes"]
     assert result["stage"] == 4
     assert result["workflow_ready"] is False
-    assert "style_profile" in result["next"]
+    assert "fix malformed" in result["next"]
 
 
 def test_legacy_spec_parse_error_does_not_become_final_artifact_invalid(
@@ -3201,7 +3238,7 @@ def test_malformed_spec_with_fresh_build_routes_to_spec_fix_first(
 
     result = infer_stage(fig_dir)
 
-    assert result["stage"] == 3
+    assert result["stage"] == 2
     assert "spec_parse_error" in result["notes"]
     assert "fix malformed" in result["next"]
 
@@ -3217,6 +3254,7 @@ def test_unknown_final_artifact_kind_blocks_release(
     _attest_fixture(fig_dir, monkeypatch, tmp_path / "home")
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
+    _complete_test_review(fig_dir)
     result = infer_stage(fig_dir)
 
     assert result["final_artifact_state"] == "INVALID"
@@ -3257,6 +3295,10 @@ def test_stage_4_export_present_critique_stale_redirects_to_fig_critique(
     ):
         os.utime(path, (middle_time, middle_time))
     os.utime(fig_dir / "critique.md", (old_time, old_time))
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, name)
 
     result = infer_stage(fig_dir)
 
@@ -3290,6 +3332,10 @@ def test_stage_4_critique_required_takes_priority_over_not_accepted(
         reference / "golden.png",
     ):
         os.utime(path, (old_time, old_time))
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / f"{name}.pdf").write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, name)
 
     result = infer_stage(fig_dir)
 
@@ -3595,6 +3641,10 @@ def test_stage_4_coordinate_hints_newer_stales_critique_not_exports(
         os.utime(exports_dir / fname, (old_time, old_time))
     hints = fig_dir / "coordinate_hints.yaml"
     hints.write_text("metadata:\n  extraction_version: '0.3'\n", encoding="utf-8")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / "myfig.pdf").write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, "myfig")
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
     result = infer_stage(fig_dir)
@@ -3940,8 +3990,7 @@ def test_accepted_false_resolves_in_result(tmp_path: Path, monkeypatch: pytest.M
     result = status_mod.infer_stage(fig_dir)
     assert result["stage"] == 4
     assert result["accepted"] is False
-    assert "QUALITY_AUDIT.md" in result["next"]
-    assert "accepted: true" in result["next"]
+    assert "/fig_critique" in result["next"]
 
 
 def test_accepted_invalid_type_coerces_to_none(tmp_path: Path) -> None:
@@ -4174,7 +4223,7 @@ def test_no_arg_all_figures(tmp_path: Path, capsys, monkeypatch) -> None:
     assert "stage 1" in captured.out
     assert "zeta_fig" in captured.out
     assert "stage 4" in captured.out
-    assert "notes:" not in captured.out
+    assert "critique_briefing_required" in captured.out
     lines = [ln for ln in captured.out.splitlines() if ln.strip()]
     names = [ln.split()[0] for ln in lines]
     assert names == sorted(names)
@@ -4297,10 +4346,11 @@ def test_infer_stage_returns_status_vector_for_ready_final(
 
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
+    _complete_test_review(fig_dir)
     result = status_mod.infer_stage(fig_dir)
 
     assert result["render_state"] == "FRESH"
-    assert result["critique_state"] == "NOT_REQUIRED"
+    assert result["critique_state"] == "FRESH"
     assert result["export_state"] == "FRESH"
     assert result["acceptance_state"] == "NOT_DECLARED"
     assert result["workflow_ready"] is True
@@ -4331,6 +4381,7 @@ def test_infer_stage_status_vector_not_ready_when_not_accepted(
 
     monkeypatch.setattr(status_mod, "compute_export_state", lambda _example, _name: "FRESH")
 
+    _complete_test_review(fig_dir)
     result = status_mod.infer_stage(fig_dir)
 
     assert result["acceptance_state"] == "NOT_ACCEPTED"
@@ -4443,6 +4494,8 @@ def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
 
     import status as status_mod
 
+    _complete_test_review(fig_dir)
+    _mark_sources_older_than_outputs(fig_dir)
     _attest_fixture(fig_dir, monkeypatch, tmp_path / "home")
     monkeypatch.setattr(
         status_mod,
@@ -4452,7 +4505,11 @@ def test_infer_stage_release_ready_requires_fresh_export_not_tracked_golden(
 
     result = status_mod.infer_stage(fig_dir)
 
-    assert result["workflow_ready"] is True
+    assert result["workflow_ready"] is True, (
+        result["notes"],
+        result["spine_evidence"],
+        result["strict_evidence"],
+    )
     assert result["golden_ready"] is True
     assert result["release_ready"] is False
     assert result["final_ready"] is False
@@ -4680,7 +4737,7 @@ def test_print_single_shows_status_vector(tmp_path: Path, capsys) -> None:
     status_mod._print_single(result)
     captured = capsys.readouterr()
     assert (
-        "States: render=NOT_AUTHORED critique=NOT_REQUIRED "
+        "States: render=NOT_AUTHORED critique=BRIEFING_REQUIRED "
         "export=MISSING acceptance=NOT_DECLARED "
         "workflow_ready=false golden_ready=false release_ready=false final_ready=false"
     ) in captured.out
@@ -4714,7 +4771,7 @@ def test_print_single_shows_final_artifact_state(tmp_path: Path, capsys) -> None
     result = status_mod.infer_stage(fixture)
     status_mod._print_single(result)
     captured = capsys.readouterr()
-    assert "Final artifact: generated_export NONE exports/no_exports_fig.svg" in captured.out
+    assert "Final artifact: generated_export NONE exports/no_exports_fig.pdf" in captured.out
 
 
 def test_status_explanation_separates_stale_render_and_stale_critique(
@@ -4781,7 +4838,7 @@ def test_status_explanation_separates_tracked_golden_and_stale_critique(
     assert "--force-golden" in explanation["buckets"]["human_blockers"][0]["next_command"]
 
 
-def test_status_explanation_marks_critique_not_required_as_non_blocking(
+def test_status_explanation_marks_completed_critique_as_non_blocking(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     fig_dir = tmp_path / "plainfig"
@@ -4793,9 +4850,9 @@ def test_status_explanation_marks_critique_not_required_as_non_blocking(
 
     explanation = result["status_explanation"]
     plugin_codes = {item["code"] for item in explanation["buckets"]["plugin_state"]}
-    assert "critique_not_required" in plugin_codes
+    assert "critique_not_required" not in plugin_codes
     assert explanation["first_blocker"]["code"] != "critique_not_required"
-    assert result["critique_state"] == "NOT_REQUIRED"
+    assert result["critique_state"] == "FRESH"
 
 
 def test_status_explanation_surfaces_acceptance_not_declared_release_gate(
@@ -4816,7 +4873,7 @@ def test_status_explanation_surfaces_acceptance_not_declared_release_gate(
     assert explanation["first_blocker"]["category"] == "human_blocker"
     assert explanation["first_blocker"]["manual"] is True
     plugin_codes = {item["code"] for item in explanation["buckets"]["plugin_state"]}
-    assert "critique_not_required" in plugin_codes
+    assert "critique_not_required" not in plugin_codes
 
 
 def test_status_names_explicit_release_operation_when_accept_record_exists(
@@ -5156,7 +5213,7 @@ def test_tracked_golden_stale_gives_force_golden_hint(
     assert result["exports_substate"] == "TRACKED_GOLDEN"
     assert "stale_export" in result["notes"]
     assert "--force-golden" in result["next"]
-    assert "/fig_compile" not in result["next"]
+    assert "/fig_compile" in result["next"]
 
 
 def test_tracked_golden_stale_with_fresh_render_and_missing_critique_skips_compile(
@@ -5257,6 +5314,10 @@ def test_tracked_golden_partial_export_gives_force_golden_hint(
     (fig_dir / "golden_partial.tex").write_text("% tex", encoding="utf-8")
     pdf = fig_dir / "exports" / "golden_partial.pdf"
     pdf.write_bytes(b"%PDF")
+    build_dir = fig_dir / "build"
+    build_dir.mkdir()
+    (build_dir / "golden_partial.pdf").write_bytes(b"%PDF")
+    _write_render_input_manifest(fig_dir, "golden_partial")
     subprocess.run(["git", "add", str(pdf.relative_to(repo))], cwd=repo, check=True)
 
     old_time = 1_000_000.0
@@ -5471,17 +5532,17 @@ def test_spine_rejects_a_report_that_never_examined_the_declared_phrases(
 ) -> None:
     assert _phrase_coverage_spine(tmp_path, None)["text_boundary_coverage"]["state"] == "invalid"
     assert (
-        _phrase_coverage_spine(
-            tmp_path, {"checked": 0, "state": "not_declared", "failures": []}
-        )["text_boundary_coverage"]["state"]
+        _phrase_coverage_spine(tmp_path, {"checked": 0, "state": "not_declared", "failures": []})[
+            "text_boundary_coverage"
+        ]["state"]
         == "invalid"
     )
 
 
 def test_spine_accepts_a_report_that_bound_every_declared_phrase(tmp_path: Path) -> None:
-    coverage = _phrase_coverage_spine(
-        tmp_path, {"checked": 1, "state": "passed", "failures": []}
-    )["text_boundary_coverage"]
+    coverage = _phrase_coverage_spine(tmp_path, {"checked": 1, "state": "passed", "failures": []})[
+        "text_boundary_coverage"
+    ]
 
     assert coverage["state"] == "passed"
     assert coverage["phrase_binding_state"] == "passed"

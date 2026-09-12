@@ -20,16 +20,17 @@ def test_pr_workflow_is_fast_and_skips_render_marked_tests() -> None:
     assert "bash scripts/compile.sh" not in workflow
 
 
-def test_full_render_workflow_owns_heavy_system_dependencies() -> None:
+def test_full_render_workflow_runs_for_every_pull_request() -> None:
     workflow = (REPO_ROOT / ".github" / "workflows" / "full-render.yml").read_text(
         encoding="utf-8"
     )
+    job = yaml.safe_load(workflow)["jobs"]["full-render"]
 
     assert "workflow_dispatch:" in workflow
     assert "push:" in workflow
     assert "pull_request:" in workflow
-    assert "labeled" in workflow
-    assert "full-render" in workflow
+    assert "contains(github.event.pull_request.labels" not in workflow
+    assert "if" not in job
     assert "branches:" in workflow
     assert "main" in workflow
     assert "Install system dependencies" in workflow
@@ -39,6 +40,7 @@ def test_full_render_workflow_owns_heavy_system_dependencies() -> None:
     assert "PYTHONPATH:" in workflow
     assert "plugins/figure-agent/scripts/checks" in workflow
     assert "scripts/checks/check_visual_clash_budget.py examples" in workflow
+    assert "scripts/run_export.py smoke_trap_demo --skip-critique" in workflow
     assert "uv run pytest -q" in workflow
 
 

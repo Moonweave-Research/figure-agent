@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -38,7 +39,7 @@ import runtime_paths  # noqa: E402
 
 PROTOCOL_VERSION = "2025-06-18"
 SERVER_NAME = "figure-agent"
-SERVER_VERSION = "0.10.0"
+SERVER_VERSION = "0.10.3"
 ERROR_CATEGORIES = {
     "compile_failed",
     "dependency_missing",
@@ -122,9 +123,12 @@ def _fixture_lock(
     lock_root = workspace_root / "examples" / name / "build" / ".mcp-locks"
     lock_root.mkdir(parents=True, exist_ok=True)
     lock_path = lock_root / "mutation.lock"
-    try:
-        fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError:
+    import mutation_lock
+
+    with mutation_lock.hold(lock_path, operation) as acquired:
+        if acquired:
+            yield None
+            return
         active = "unknown"
         try:
             data = json.loads(lock_path.read_text(encoding="utf-8"))
@@ -135,16 +139,6 @@ def _fixture_lock(
             "active_operation": active,
             "lock_path": lock_path.relative_to(workspace_root).as_posix(),
         }
-        return
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            json.dump({"operation": operation, "created_at": time.time()}, handle, sort_keys=True)
-        yield None
-    finally:
-        try:
-            lock_path.unlink()
-        except FileNotFoundError:
-            pass
 
 
 def _bundle_diagnostics(plugin_root: Path) -> dict[str, Any]:
@@ -568,18 +562,30 @@ def _run_fig_agent(
         str(cli_path),
         *args,
     ]
-    return subprocess.run(
+    process = subprocess.Popen(
         command,
         cwd=workspace_root,
         env=_tool_env(plugin_root, workspace_root),
         text=True,
-        capture_output=True,
-        check=False,
-        timeout=timeout_seconds,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
     )
+    try:
+        stdout, stderr = process.communicate(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        stdout, stderr = process.communicate()
+        raise subprocess.TimeoutExpired(command, timeout_seconds, stdout, stderr) from None
+    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
 
 
-def _bounded(text: str, limit: int = 4000) -> str:
+def _bounded(text: str | bytes, limit: int = 4000) -> str:
+    if isinstance(text, bytes):
+        text = text.decode("utf-8", errors="replace")
     if len(text) <= limit:
         return text
     return text[:limit] + "\n...[truncated]"
@@ -728,6 +734,7 @@ def _run_json_fig_agent_tool(
     command: list[str],
     payload_key: str,
     failure_message: str,
+    timeout_seconds: int = 120,
 ) -> dict[str, Any]:
     started = time.monotonic()
     resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
@@ -739,7 +746,7 @@ def _run_json_fig_agent_tool(
         started=started,
         command=command,
         workspace_root=workspace_root,
-        timeout_seconds=120,
+        timeout_seconds=timeout_seconds,
         timeout_message=f"{failure_message} timed out",
         name=name,
     )
@@ -1403,6 +1410,76 @@ def _next(arguments: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _run(arguments: dict[str, Any]) -> dict[str, Any]:
+    started = time.monotonic()
+    schema = "figure-agent.mcp.run.v1"
+    resolved = _validated_workspace_and_name(arguments, started, schema, require_fixture=True)
+    if isinstance(resolved, dict):
+        return resolved
+
+    mode = arguments.get("mode")
+    if mode not in {"authoring", "review", "release", "polish"}:
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=str(arguments.get("name") or ""),
+            error=_error("invalid_request", "mode must be authoring, review, release, or polish"),
+        )
+    goal = arguments.get("goal")
+    if not isinstance(goal, str) or not goal.strip():
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=str(arguments.get("name") or ""),
+            error=_error("invalid_request", "goal must be a non-empty string"),
+        )
+    execute = arguments.get("execute", False)
+    if not isinstance(execute, bool):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=str(arguments.get("name") or ""),
+            error=_error("invalid_request", "execute must be a boolean"),
+        )
+    max_steps = arguments.get("max_steps")
+    if max_steps is not None and (
+        isinstance(max_steps, bool) or not isinstance(max_steps, int) or max_steps < 1
+    ):
+        return _tool_envelope(
+            schema,
+            success=False,
+            started=started,
+            name=str(arguments.get("name") or ""),
+            error=_error("invalid_request", "max_steps must be an integer greater than zero"),
+        )
+
+    name = str(arguments.get("name") or "")
+    command = [
+        "run",
+        name,
+        "--mode",
+        mode,
+        "--goal",
+        goal,
+        "--json",
+    ]
+    if max_steps is not None:
+        command.extend(("--max-steps", str(max_steps)))
+    if execute:
+        command.append("--execute")
+    return _run_json_fig_agent_tool(
+        arguments=arguments,
+        schema=schema,
+        command=command,
+        payload_key="run_result",
+        failure_message="fig-agent run failed",
+        timeout_seconds=900 if execute else 120,
+    )
+
+
 def _accept_candidate(arguments: dict[str, Any]) -> dict[str, Any]:
     started = time.monotonic()
     schema = "figure-agent.mcp.accept-candidate.v1"
@@ -1925,6 +2002,27 @@ TOOLS: dict[str, dict[str, Any]] = {
             "properties": {"name": {"type": "string"}},
         },
         "handler": _next,
+    },
+    "figure_agent_run": {
+        "description": (
+            "Run the bounded workflow executor until its next explicit host or human boundary."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name", "mode", "goal"],
+            "properties": {
+                "name": {"type": "string"},
+                "mode": {
+                    "type": "string",
+                    "enum": ["authoring", "review", "release", "polish"],
+                },
+                "goal": {"type": "string", "minLength": 1},
+                "execute": {"type": "boolean"},
+                "max_steps": {"type": "integer", "minimum": 1},
+            },
+        },
+        "handler": _run,
     },
     "figure_agent_compile": {
         "description": "Run the existing compile chain for one fixture.",

@@ -155,14 +155,12 @@ def test_fig_run_root_admission_publishes_only_initial_outbound_request(
     request = json.loads(request_path.read_text(encoding="utf-8"))
     assert request["schema"] == "figure-agent.initial-visual-review-request.v1"
     assert request["render"]["sha256"] == _sha256(second_render)
-    assert request["crop_roles"]["panel_scale"] == [
-        "full_q1", "full_q2", "full_q3", "full_q4"
-    ]
+    assert request["crop_roles"]["panel_scale"] == ["full_q1", "full_q2", "full_q3", "full_q4"]
     assert request["crop_roles"]["seam_scale"] == [
         "full_center_vertical",
         "full_center_horizontal",
     ]
-    assert request["crop_roles"]["print_scale"] == ["print_178mm", "print_thumbnail"]
+    assert request["crop_roles"]["print_scale"] == ["screen_overview", "screen_thumbnail"]
     crop_manifest = json.loads(
         (request_path.parent / "crops" / "manifest.json").read_text(encoding="utf-8")
     )
@@ -193,11 +191,10 @@ def test_execute_writes_hash_bound_request_state_and_is_idempotent(tmp_path: Pat
     request_path = created["request_path"]
     request = json.loads(request_path.read_text(encoding="utf-8"))
     assert request["authored_source"] == {
-        "path": "examples/demo/demo.tex", "sha256": _sha256(source)
+        "path": "examples/demo/demo.tex",
+        "sha256": _sha256(source),
     }
-    assert request["render"] == {
-        "path": "examples/demo/build/demo.png", "sha256": _sha256(render)
-    }
+    assert request["render"] == {"path": "examples/demo/build/demo.png", "sha256": _sha256(render)}
     assert request["publication_acceptance"] == "not_claimed"
     state = json.loads(created["next_state_path"].read_text(encoding="utf-8"))
     assert state["state"] == "initial_review_requested"
@@ -205,7 +202,12 @@ def test_execute_writes_hash_bound_request_state_and_is_idempotent(tmp_path: Pat
     manifest_path = state_path.parent / "initial-review" / "crops" / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
     assert {crop["id"] for crop in manifest["crops"]} >= {
-        "full_q1", "full_q2", "full_q3", "full_q4", "print_178mm", "print_thumbnail"
+        "full_q1",
+        "full_q2",
+        "full_q3",
+        "full_q4",
+        "screen_overview",
+        "screen_thumbnail",
     }
 
 
@@ -254,9 +256,7 @@ def test_retry_recovers_a_complete_request_left_before_state_publication(
         nonlocal calls
         calls += 1
         if calls == 1:
-            raise closed_loop_attempt_state.ClosedLoopAttemptStateError(
-                "simulated_publish_failure"
-            )
+            raise closed_loop_attempt_state.ClosedLoopAttemptStateError("simulated_publish_failure")
         return original_publish(*args, **kwargs)
 
     monkeypatch.setattr(closed_loop_attempt_state, "publish_state", fail_once)
@@ -277,9 +277,7 @@ def test_retry_recovers_a_complete_request_left_before_state_publication(
 
 
 @pytest.mark.parametrize("failure", ["tamper", "missing", "symlink"])
-def test_initial_review_fails_closed_for_invalid_bound_render(
-    tmp_path: Path, failure: str
-) -> None:
+def test_initial_review_fails_closed_for_invalid_bound_render(tmp_path: Path, failure: str) -> None:
     workspace, fixture, _, render, state_path = _setup(tmp_path)
     if failure == "tamper":
         render.write_bytes(b"tampered")
@@ -418,9 +416,7 @@ def test_idempotent_recheck_rejects_pixel_forged_crop_with_valid_hash(tmp_path: 
     def forge(updated_manifest: dict[str, object]) -> None:
         crops = updated_manifest["crops"]
         assert isinstance(crops, list)
-        next(crop for crop in crops if crop["id"] == "full_q1")["sha256"] = _sha256(
-            crop_path
-        )
+        next(crop for crop in crops if crop["id"] == "full_q1")["sha256"] = _sha256(crop_path)
 
     _rewrite_initial_pack_and_state(created, mutate_manifest=forge)
 

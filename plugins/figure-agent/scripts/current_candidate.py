@@ -36,6 +36,9 @@ def common_render_inputs(
         if style_lock_path is not None
         else runtime_paths.resolve_runtime_paths().styles_dir / "polymer-paper-preamble.sty"
     )
+    from style_contract import resolve_style
+
+    style_lock, _ = resolve_style(example_dir, style_lock)
     candidates = {
         "briefing": example_dir / "briefing.md",
         "spec": example_dir / "spec.yaml",
@@ -226,3 +229,20 @@ def resolve_current_candidate(
             for key, path in artifacts.items()
         },
     }
+
+
+def resolve_with_inputs(
+    example_dir: Path, *, style_lock_path: Path | None = None
+) -> dict[str, Any]:
+    pointer = example_dir / POINTER_RELATIVE_PATH
+    if not pointer.is_file():
+        return resolve_current_candidate(example_dir)
+    try:
+        inputs = common_render_inputs(example_dir, style_lock_path=style_lock_path)
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        return {
+            "path": POINTER_RELATIVE_PATH.as_posix(),
+            "state": "INVALID",
+            "reason": f"candidate_render_inputs_invalid: {exc}",
+        }
+    return resolve_current_candidate(example_dir, common_render_inputs=inputs)

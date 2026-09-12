@@ -15,6 +15,15 @@ it does not replace `docs/figure-agent.md` as product authority.
 
 ### L4.5 Vision Critique (host-orchestrated)
 
+The audit manifest is the inspection inventory. Inspect every required whole-panel,
+quadrant, seam, and physical-print image, even when a panel has no reference image.
+`screen_overview` and `screen_thumbnail` are pixel-width proxies; only
+`physical_print_300dpi` and its grayscale companion carry a millimeter/DPI contract.
+Read `critique_brief.py`'s inspection execution evidence section and preserve the real
+host tool transcript in `inspection_trace.yaml`. Missing coverage, skipped-only logs,
+or an absent execution receipt cannot satisfy generated-crop inspection. A valid
+receipt proves binding to recorded artifacts, not visual or scientific correctness.
+
 ```
 /fig_critique <name>         vision-capable host (Codex or Claude) reads
                              build/<name>.png + briefing,
@@ -718,10 +727,15 @@ misallocated panel boundary or a real reduction-scale legibility failure.
 When the declared target is Nature Communications, audit against its current
 figure guidance: lower-case bold panel letters, clear sans-serif lettering at an
 approximately common size, a white background, restrained boxing/color/decorative
-effects, and no final printed line below 1 pt. Size every panel for the same
+effects, editable vector artwork where appropriate, and final lettering around
+5--8 pt. Nature's broader artwork guidance gives 0.25--1 pt as a normal stroke
+hierarchy; it does not establish a blanket 1 pt minimum for Nature Communications.
+Do not thicken every line from an unsupported floor: preserve functional line-weight
+hierarchy and inspect the final physical-size proof. Size every panel for the same
 reduction factor rather than inventing a hero exception. Recheck the official
-Nature Communications author page before final compliance work because journal
-requirements can change.
+[Nature Communications submission guide](https://www.nature.com/documents/ncomms-submission-guide.pdf)
+and [Nature artwork guidance](https://www.nature.com/documents/aj-artworkguidelines.pdf)
+before final compliance work because journal requirements can change.
 
 Treat panel letters as navigation markers, not focal scientific content. At the
 declared final width, compare their visible cap height with adjacent panel titles

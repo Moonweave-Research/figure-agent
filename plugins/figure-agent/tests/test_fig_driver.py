@@ -48,7 +48,11 @@ def _write_basic_fixture(root: Path, name: str = "driver_demo") -> Path:
     fixture = root / "examples" / name
     fixture.mkdir(parents=True)
     (fixture / "spec.yaml").write_text(f"name: {name}\npanels: []\n", encoding="utf-8")
-    (fixture / "briefing.md").write_text("brief\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text(
+        "## 1. Topic\nA polymer trap schematic explaining charge retention and relaxation.\n"
+        "## 6. Physics invariants\n- Must preserve charge and ground ownership.\n",
+        encoding="utf-8",
+    )
     (fixture / f"{name}.tex").write_text("% tikz\n", encoding="utf-8")
     return fixture
 
@@ -64,6 +68,11 @@ def _write_fresh_build_and_exports(fixture: Path, name: str = "driver_demo") -> 
     (exports / f"{name}.svg").write_text("<svg/>\n", encoding="utf-8")
     (exports / f"{name}.png").write_bytes(b"\x89PNG")
     (exports / f"{name}.tif").write_bytes(b"TIFF")
+    from critique_adjudication import scaffold_adjudication
+    from test_status import _write_hashed_critique
+
+    _write_hashed_critique(fixture, name)
+    scaffold_adjudication(fixture, force=True)
     old_time = time.time() - 100
     fresh_time = time.time() + 10
     for path in (fixture / "spec.yaml", fixture / "briefing.md", fixture / f"{name}.tex"):
@@ -543,8 +552,7 @@ def test_driver_summary_includes_status_explanation_and_first_blocker_code(
 
     assert summary["status_explanation"]["first_blocker"]["code"] == "export_missing"
     assert [
-        entry["code"]
-        for entry in summary["status_explanation"]["buckets"]["fixture_freshness"]
+        entry["code"] for entry in summary["status_explanation"]["buckets"]["fixture_freshness"]
     ] == ["export_missing"]
     assert summary["safe_command"] == "fig-agent export driver_demo"
 
@@ -657,15 +665,18 @@ def test_authoring_mode_explains_source_before_export_for_un_authored_fixture(
     fixture = tmp_path / "examples" / "driver_demo"
     fixture.mkdir(parents=True)
     (fixture / "spec.yaml").write_text("name: driver_demo\npanels: []\n", encoding="utf-8")
-    (fixture / "briefing.md").write_text("brief\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text(
+        "## 1. Topic\nA polymer trap schematic explaining charge retention and relaxation.\n"
+        "## 6. Physics invariants\n- Must preserve charge and ground ownership.\n",
+        encoding="utf-8",
+    )
 
     summary = _run_driver("driver_demo", mode="authoring", goal="author", repo_root=tmp_path)
 
     assert summary["action"] == "create_or_fix_source"
     assert summary["status_explanation"]["first_blocker"]["code"] == "source_not_authored"
     codes = [
-        entry["code"]
-        for entry in summary["status_explanation"]["buckets"]["fixture_freshness"]
+        entry["code"] for entry in summary["status_explanation"]["buckets"]["fixture_freshness"]
     ]
     assert codes.index("source_not_authored") < codes.index("export_missing")
 
@@ -1003,6 +1014,7 @@ def test_review_mode_stops_for_host_critique_when_critique_missing(
     )
     _write_fresh_build_and_exports(fixture)
 
+    (fixture / "critique.md").unlink()
     summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
 
     assert summary["action"] == "run_critique"
@@ -1716,7 +1728,7 @@ def test_review_mode_ignores_loop_checkpoint_older_than_adjudication(
     os.utime(run_dir / "run_manifest.json", (old_time, old_time))
     os.utime(run_dir / "iteration_001.json", (old_time, old_time))
     adjudication = fixture / "critique_adjudication.yaml"
-    adjudication.write_text("schema: figure-agent.critique-adjudication.v1\n", encoding="utf-8")
+    adjudication.write_text(adjudication.read_text() + "\n# newer review\n", encoding="utf-8")
     os.utime(adjudication, (new_time, new_time))
 
     summary = _run_driver("driver_demo", mode="review", goal="review", repo_root=tmp_path)
@@ -2124,6 +2136,7 @@ def test_release_mode_requires_adjudication_before_completion(
     release_ready_status["critique_state"] = "FRESH"
     monkeypatch.setattr(fig_driver, "_status_for", lambda _ex: release_ready_status)
 
+    (fixture / "critique_adjudication.yaml").unlink()
     summary = _run_driver("driver_demo", mode="release", goal="release", repo_root=tmp_path)
 
     assert summary["action"] == "run_adjudicate"
@@ -2287,34 +2300,27 @@ def test_polish_mode_svg_gate_points_to_export_before_loop(tmp_path: Path) -> No
     ]
 
 
-def test_polish_mode_not_required_critique_routes_to_release_or_final(
+def test_polish_mode_completed_critique_routes_to_release_or_final(
     tmp_path: Path,
 ) -> None:
-    # NOT_REQUIRED critique: no reference declared, so an editorial
-    # art-direction summary (and thus ready_for_svg_polish) can never be
-    # produced. Guidance must route to release/final, not the unreachable
-    # ready_for_svg_polish condition.
+    # Reference-free figures can now receive a complete editorial review.
     fixture = _write_basic_fixture(tmp_path)
     _write_fresh_build_and_exports(fixture)
 
     summary = _run_driver("driver_demo", mode="polish", goal="polish", repo_root=tmp_path)
 
-    assert summary["status"]["critique_state"] == "NOT_REQUIRED"
+    assert summary["status"]["critique_state"] == "FRESH"
     assert summary["action"] == "run_fig_loop"
     assert summary["stop_boundary"] == "mode_forbidden_action"
     assert summary["safe_command"] == ("fig-agent loop driver_demo --goal polish --json")
-    assert "ready_for_svg_polish" not in summary["reason"]
-    assert "NOT_REQUIRED" in summary["reason"]
-    assert "--mode release" in summary["reason"]
+    assert "ready_for_svg_polish" in summary["reason"]
+    assert "NOT_REQUIRED" not in summary["reason"]
     assert summary["svg_polish_gate"]["state"] == "no_current_checkpoint"
     assert summary["svg_polish_gate"]["can_start_svg_polish"] is False
     assert summary["svg_polish_gate"]["next_action"] == "rerun_fig_loop"
     next_step = summary["operator_guidance"]["next_step"]
     assert "Run the selected command" not in next_step
-    assert "ready_for_svg_polish" not in next_step
-    assert "--mode review" not in next_step
-    assert "--mode release" in next_step
-    assert "--mode final" in next_step
+    assert "--mode review" in next_step
 
 
 def test_polish_mode_fresh_critique_requires_loop_checkpoint_before_svg_handoff(
@@ -2661,7 +2667,11 @@ def test_create_or_fix_source_when_tex_missing(tmp_path: Path) -> None:
     fixture = tmp_path / "examples" / "driver_demo"
     fixture.mkdir(parents=True)
     (fixture / "spec.yaml").write_text("name: driver_demo\npanels: []\n", encoding="utf-8")
-    (fixture / "briefing.md").write_text("brief\n", encoding="utf-8")
+    (fixture / "briefing.md").write_text(
+        "## 1. Topic\nA polymer trap schematic explaining charge retention and relaxation.\n"
+        "## 6. Physics invariants\n- Must preserve charge and ground ownership.\n",
+        encoding="utf-8",
+    )
 
     summary = _run_driver("driver_demo", mode="authoring", goal="author", repo_root=tmp_path)
 

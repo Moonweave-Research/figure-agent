@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import run_export  # noqa: E402
 import status as status_mod  # noqa: E402
+from compile_run_fixtures import bind_render_inputs  # noqa: E402
 from quality_manifest import (  # noqa: E402
     CRITIQUE_RUBRIC_VERSION,
     compute_critique_input_hash,
@@ -39,6 +40,8 @@ def _make_reference_fixture(tmp_path: Path) -> Path:
     (fixture / "ref_fig.tex").write_text("% tikz", encoding="utf-8")
     (fixture / "reference" / "ref.png").write_bytes(b"\x89PNG")
     (fixture / "build" / "ref_fig.pdf").write_bytes(b"%PDF")
+    (fixture / "exports").mkdir()
+    (fixture / "exports" / "ref_fig.pdf").write_bytes(b"%PDF")
     return repo
 
 
@@ -202,6 +205,11 @@ def test_run_export_blocks_reference_fixture_without_critique(
     monkeypatch.setattr(run_export, "REPO_ROOT", repo)
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -246,6 +254,11 @@ def test_run_export_blocks_on_violated_semantic_assertion(
     monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: run_export.EXPORT_FRESH)
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -303,6 +316,11 @@ def test_run_export_blocks_violating_tex_source_without_cache(
     monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: run_export.EXPORT_FRESH)
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -327,6 +345,11 @@ def test_run_export_ignores_stale_clean_tex_assertion_cache(
     monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: run_export.EXPORT_FRESH)
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -355,6 +378,11 @@ def test_run_export_blocks_malformed_tex_assertions_spec(
     monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: run_export.EXPORT_FRESH)
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -374,6 +402,11 @@ def test_run_export_allows_satisfied_tex_source_without_cache(
     monkeypatch.setattr(run_export, "compute_export_state", lambda _e, _n: run_export.EXPORT_FRESH)
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     assert rc == 0
@@ -432,6 +465,22 @@ def test_run_export_uses_declared_current_candidate_source_and_render(
     # The render must postdate every render input; a candidate rendered before
     # a spec edit is honestly stale and run_export must refuse it.
     candidate_pdf.write_bytes(b"%PDF current candidate")
+    import render_input_manifest
+    from compile_run_fixtures import issue_compile_run
+
+    run_id = issue_compile_run(
+        candidate_pdf.parent, source_tex=candidate_source, render_pdf=candidate_pdf
+    )
+    render_input_manifest.write_manifest(
+        fixture=fixture.name,
+        render_pdf=candidate_pdf,
+        inputs={
+            "source_tex": candidate_source,
+            **run_export.current_candidate.common_render_inputs(fixture),
+        },
+        output=render_input_manifest.manifest_path(candidate_pdf),
+        compile_run_id=run_id,
+    )
     shallow = {"text": "shallow", "xmin": 0.0, "xmax": 10.0, "ymin": 5.0, "ymax": 15.0}
     deep = {"text": "deep", "xmin": 0.0, "xmax": 10.0, "ymin": 95.0, "ymax": 105.0}
     inspected_pdfs: list[Path] = []
@@ -451,10 +500,18 @@ def test_run_export_uses_declared_current_candidate_source_and_render(
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     assert rc == 0
     assert inspected_pdfs == [candidate_pdf]
+    assert regenerated == [candidate_pdf]
+    render_input_manifest.manifest_path(candidate_pdf).unlink()
+    assert run_export.main() == 1
     assert regenerated == [candidate_pdf]
 
 
@@ -498,6 +555,11 @@ def test_run_export_rejects_unsafe_fixture_name_before_regenerate(
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "../outside", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -520,6 +582,11 @@ def test_run_export_blocks_declared_missing_reference_before_regenerate(
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "broken_ref_fig"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -543,6 +610,11 @@ def test_run_export_skip_critique_still_blocks_declared_missing_reference(
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "broken_ref_fig", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -564,6 +636,11 @@ def test_run_export_skip_critique_allows_regenerate(tmp_path: Path, monkeypatch,
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -586,6 +663,12 @@ def test_run_export_regenerate_uses_explicit_plugin_root(tmp_path: Path, monkeyp
 
     monkeypatch.setattr(run_export.subprocess, "run", fake_run)
 
+    (fixture / "ref_fig.tex").write_text("test source")
+    bind_render_inputs(fixture, "ref_fig", status_mod.STYLE_LOCK_PATH)
+    (plugin_root / "styles").mkdir()
+    (plugin_root / "styles/polymer-paper-preamble.sty").write_bytes(
+        status_mod.STYLE_LOCK_PATH.read_bytes()
+    )
     run_export._regenerate(fixture, "ref_fig", plugin_root=plugin_root)
 
     assert [cwd for _cmd, cwd, _check in calls] == [plugin_root, plugin_root, plugin_root]
@@ -611,6 +694,11 @@ def test_run_export_blocks_hash_stale_critique(tmp_path: Path, monkeypatch, caps
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -650,6 +738,11 @@ def test_run_export_blocks_hash_fresh_but_invalid_critique(
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -677,6 +770,11 @@ def test_run_export_skip_critique_allows_hash_stale_regenerate(
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -705,6 +803,11 @@ def test_run_export_refuses_to_regenerate_when_golden_is_unverifiable(
     )
     monkeypatch.setattr(sys, "argv", ["run_export.py", "ref_fig", "--skip-critique"])
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     captured = capsys.readouterr()
@@ -735,6 +838,11 @@ def test_run_export_force_golden_overrides_an_unverifiable_golden(
         sys, "argv", ["run_export.py", "ref_fig", "--force-golden", "--skip-critique"]
     )
 
+    fixture_name = sys.argv[1]
+    if "/" not in fixture_name and ".." not in fixture_name:
+        bind_render_inputs(
+            repo / "examples" / fixture_name, fixture_name, status_mod.STYLE_LOCK_PATH
+        )
     rc = run_export.main()
 
     assert rc == 0

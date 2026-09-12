@@ -38,3 +38,32 @@ def issue_compile_run(
         payload=payload,
     )
     return resolved
+
+
+def bind_render_inputs(fixture: Path, name: str, style: Path) -> None:
+    """Bind an arranged filesystem fixture without running TeX."""
+    import render_input_manifest
+
+    render = fixture / "build" / f"{name}.pdf"
+    source = fixture / f"{name}.tex"
+    if not render.is_file() or not source.is_file():
+        return
+    run_id = issue_compile_run(render.parent, source_tex=source, render_pdf=render)
+    inputs = {
+        role: path
+        for role, path in {
+            "source_tex": source,
+            "briefing": fixture / "briefing.md",
+            "spec": fixture / "spec.yaml",
+            "claim_authority": fixture / "claim_authority.yaml",
+            "style_lock": style,
+        }.items()
+        if path.is_file()
+    }
+    render_input_manifest.write_manifest(
+        fixture=fixture.name,
+        render_pdf=render,
+        inputs=inputs,
+        output=render_input_manifest.manifest_path(render),
+        compile_run_id=run_id,
+    )

@@ -178,7 +178,7 @@ declared meaning better.
 
 ---
 
-## Current state (v0.10.0)
+## Current state (v0.10.3)
 
 | Area | What's working |
 |---|---|

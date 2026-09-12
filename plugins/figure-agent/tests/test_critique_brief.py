@@ -84,6 +84,38 @@ CB, VB, E_t
     return example_dir
 
 
+def _bind_render(example_dir: Path) -> None:
+    """Issue a test compile receipt after arranging a formatting fixture."""
+    import render_input_manifest
+    from compile_run_fixtures import issue_compile_run
+
+    png = example_dir / "build/review_demo.png"
+    pdf = png.with_suffix(".pdf")
+    if not png.is_file():
+        return
+    if not pdf.is_file():
+        with Image.open(png) as image:
+            image.convert("RGB").save(pdf, "PDF", resolution=72)
+    source = example_dir / "review_demo.tex"
+    if not source.is_file():
+        return
+    run_id = issue_compile_run(pdf.parent, source_tex=source, render_pdf=pdf)
+    # Deliberately malformed-spec tests fail before checking this receipt.
+    inputs = {
+        "source_tex": source,
+        "briefing": example_dir / "briefing.md",
+        "spec": example_dir / "spec.yaml",
+        "style_lock": critique_brief.STYLE_LOCK_PATH,
+    }
+    render_input_manifest.write_manifest(
+        fixture=example_dir.name,
+        render_pdf=pdf,
+        inputs=inputs,
+        output=render_input_manifest.manifest_path(pdf),
+        compile_run_id=run_id,
+    )
+
+
 def _write_real_render_pair(example_dir: Path, *, size: tuple[int, int] = (200, 100)) -> None:
     build_dir = example_dir / "build"
     image = Image.new("RGB", size, "white")
@@ -278,6 +310,7 @@ def test_critique_brief_includes_invariants_when_section6_present(tmp_path):
         section6="- E_t must stay inside the bandgap.\n- Capture arrow must point CB to trap.",
     )
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Physics invariants the figure MUST honor" in brief
@@ -288,10 +321,11 @@ def test_critique_brief_includes_invariants_when_section6_present(tmp_path):
 def test_critique_brief_handles_missing_section6_gracefully(tmp_path):
     example_dir = _write_example(tmp_path, section6=None)
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "(none provided" in brief
-    assert "critic should infer plausible physics constraints from §1+§2" in brief
+    assert "scientific constraints remain unverified; obtain author grounding" in brief
 
 
 def test_critique_brief_reference_free_mode_anchors_to_explicit_briefing_rules(
@@ -318,6 +352,7 @@ Explain transient-current trapping in a compact mechanism schematic.
     fresh_time = os.stat(example_dir / "briefing.md").st_mtime + 1
     os.utime(png_path, (fresh_time, fresh_time))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "Reference-free briefing-grounded critique mode" in brief
@@ -377,6 +412,7 @@ polish_triggers:
     fresh_time = os.stat(example_dir / "aesthetic_intent.yaml").st_mtime + 1
     os.utime(png_path, (fresh_time, fresh_time))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Aesthetic Intent Calibration" in brief
@@ -392,6 +428,7 @@ polish_triggers:
 def test_critique_brief_errors_when_png_missing(tmp_path, capsys, monkeypatch):
     example_dir = _write_example(tmp_path, section6="- invariant", png=False)
 
+    _bind_render(example_dir)
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
 
     assert main() == 2
@@ -403,6 +440,7 @@ def test_critique_brief_errors_when_png_missing(tmp_path, capsys, monkeypatch):
 def test_critique_brief_embeds_full_tex_source(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     tex = (example_dir / "review_demo.tex").read_text(encoding="utf-8")
@@ -422,6 +460,7 @@ def test_critique_brief_reports_latin1_tex_without_traceback(tmp_path, capsys, m
     future = os.stat(tex_path).st_mtime + 10000
     os.utime(png_path, (future, future))
 
+    _bind_render(example_dir)
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
 
     assert main() == 2
@@ -436,6 +475,7 @@ def test_critique_brief_reports_latin1_spec_without_traceback(tmp_path, capsys, 
     spec_path = example_dir / "spec.yaml"
     spec_path.write_bytes(b"name: review_demo\ncaption: caf\xe9\n")
 
+    _bind_render(example_dir)
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
 
     assert main() == 2
@@ -452,6 +492,7 @@ def test_critique_brief_reports_malformed_spec_yaml_without_traceback(
     spec_path = example_dir / "spec.yaml"
     spec_path.write_text("panels:\n  - {id: 1\n", encoding="utf-8")
 
+    _bind_render(example_dir)
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
 
     assert main() == 2
@@ -470,6 +511,7 @@ def test_critique_brief_reports_unknown_style_profile_without_traceback(
         encoding="utf-8",
     )
 
+    _bind_render(example_dir)
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
 
     assert main() == 2
@@ -481,6 +523,7 @@ def test_critique_brief_reports_unknown_style_profile_without_traceback(
 def test_critique_brief_uses_example_relative_png_path(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     absolute_png_path = str((example_dir / "build" / "review_demo.png").resolve())
@@ -489,13 +532,16 @@ def test_critique_brief_uses_example_relative_png_path(tmp_path):
     assert "host main loop via the Read tool" in brief
 
 
-def test_critique_brief_errors_when_png_is_older_than_tex(tmp_path, capsys, monkeypatch):
+def test_critique_brief_rejects_changed_tex(tmp_path, capsys, monkeypatch):
     example_dir = _write_example(tmp_path, section6="- invariant")
     tex_path = example_dir / "review_demo.tex"
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (100, 100))
     os.utime(tex_path, (200, 200))
 
+    _bind_render(example_dir)
+    tex_path.write_text(tex_path.read_text() + "\n% changed bytes\n")
+    os.utime(tex_path, (100, 100))
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
 
     assert main() == 2
@@ -504,13 +550,16 @@ def test_critique_brief_errors_when_png_is_older_than_tex(tmp_path, capsys, monk
     assert "run /fig_compile first" in captured.err
 
 
-def test_critique_brief_errors_when_png_is_older_than_briefing(tmp_path, capsys, monkeypatch):
+def test_critique_brief_rejects_changed_briefing(tmp_path, capsys, monkeypatch):
     example_dir = _write_example(tmp_path, section6="- invariant")
     briefing_path = example_dir / "briefing.md"
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (100, 100))
     os.utime(briefing_path, (200, 200))
 
+    _bind_render(example_dir)
+    briefing_path.write_text(briefing_path.read_text() + "\n% changed bytes\n")
+    os.utime(briefing_path, (100, 100))
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
 
     assert main() == 2
@@ -519,7 +568,7 @@ def test_critique_brief_errors_when_png_is_older_than_briefing(tmp_path, capsys,
     assert "run /fig_compile first" in captured.err
 
 
-def test_critique_brief_errors_when_png_is_older_than_style_lock(tmp_path, capsys, monkeypatch):
+def test_critique_brief_rejects_changed_style_lock(tmp_path, capsys, monkeypatch):
     example_dir = _write_example(tmp_path, section6="- invariant")
     style_path = tmp_path / "polymer-paper-preamble.sty"
     style_path.write_text("% style", encoding="utf-8")
@@ -527,18 +576,21 @@ def test_critique_brief_errors_when_png_is_older_than_style_lock(tmp_path, capsy
     os.utime(png_path, (100, 100))
     os.utime(style_path, (200, 200))
     monkeypatch.setattr(critique_brief, "STYLE_LOCK_PATH", style_path)
+    _bind_render(example_dir)
+    style_path.write_text(style_path.read_text() + "\n% changed bytes\n")
+    os.utime(style_path, (100, 100))
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
 
     assert main() == 2
     captured = capsys.readouterr()
     assert captured.out == ""
     assert "run /fig_compile first" in captured.err
-    assert "polymer-paper-preamble.sty" in captured.err
 
 
 def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "### A. Physics correctness" in brief
@@ -551,6 +603,7 @@ def test_critique_brief_includes_rubric_sections_A_and_B(tmp_path):
 def test_critique_brief_includes_journal_grade_quality_axes(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Journal-Grade Quality Axes (host LLM MUST evaluate)" in brief
@@ -577,6 +630,7 @@ def test_critique_brief_includes_read_only_narrative_context(tmp_path: Path) -> 
         encoding="utf-8",
     )
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Human Narrative Context (read-only)" in brief
@@ -590,6 +644,7 @@ def test_critique_brief_includes_read_only_narrative_context(tmp_path: Path) -> 
 def test_critique_brief_includes_top_tier_journal_audit(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Top-Tier Journal Figure Audit (host LLM MUST enumerate)" in brief
@@ -608,6 +663,7 @@ def test_critique_brief_includes_top_tier_journal_audit(tmp_path):
 def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "### Mandatory semantic-morphology and metadata-leak checks" in brief
@@ -687,6 +743,7 @@ def test_critique_brief_requires_semantic_morphology_and_metadata_leak_checks(tm
 def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Aesthetic Anti-Pattern Checklist (host LLM MUST inspect)" in brief
@@ -720,6 +777,7 @@ def test_critique_brief_includes_aesthetic_antipattern_checklist(tmp_path):
 def test_critique_brief_includes_weakest_panel_coherence_check(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Weakest-Panel Coherence Check (host LLM MUST name one)" in brief
@@ -732,6 +790,7 @@ def test_critique_brief_includes_weakest_panel_coherence_check(tmp_path):
 def test_critique_brief_includes_editorial_art_direction_audit(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Editorial Art-Direction Audit (host LLM MUST evaluate)" in brief
@@ -754,6 +813,7 @@ def test_critique_brief_includes_editorial_art_direction_audit(tmp_path):
 def test_critique_brief_includes_fresh_reaudit_benchmark_level_schema(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Journal-Grade Fresh Re-Audit Assessment" in brief
@@ -771,6 +831,7 @@ def test_critique_brief_includes_fresh_reaudit_benchmark_level_schema(tmp_path):
 def test_critique_brief_includes_advisory_numeric_score_schema(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "overall_score: 0-100" in brief
@@ -789,6 +850,7 @@ def test_critique_brief_includes_advisory_numeric_score_schema(tmp_path):
 def test_critique_brief_states_numeric_scores_are_advisory_not_gates(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "Scores are advisory fresh re-audit diagnostics" in brief
@@ -803,6 +865,7 @@ def test_critique_brief_states_numeric_scores_are_advisory_not_gates(tmp_path):
 def test_critique_brief_includes_mandatory_audit_checklists(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Mandatory Audit Checklists (host LLM MUST enumerate)" in brief
@@ -816,6 +879,7 @@ def test_critique_brief_includes_high_zoom_audit_crops(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     _write_real_render_pair(example_dir)
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "schema: figure-agent.critique.v1.17" in brief
@@ -827,30 +891,31 @@ def test_critique_brief_includes_high_zoom_audit_crops(tmp_path):
     assert "line_crosses_label" in brief
     assert "arrow_tip_fused" in brief
     assert "## Print-Scale Audit Images" in brief
-    assert "`examples/review_demo/build/audit_crops/print_178mm.png`" in brief
-    assert "`examples/review_demo/build/audit_crops/print_thumbnail.png`" in brief
+    assert "`examples/review_demo/build/audit_crops/screen_overview.png`" in brief
+    assert "`examples/review_demo/build/audit_crops/screen_thumbnail.png`" in brief
     assert "basis=fixed_width_proxy" in brief
     assert "target_width_px=1000" in brief
     assert "target_width_px=360" in brief
-    assert "proxy evidence" in brief
+    assert "screen proxies" in brief
     assert "journal_polish" in brief
     assert "publication_readiness" in brief
     assert "print_scale_unreadable" in brief
     assert (example_dir / "build" / "audit_crops" / "full_q1.png").is_file()
-    assert (example_dir / "build" / "audit_crops" / "print_178mm.png").is_file()
+    assert (example_dir / "build" / "audit_crops" / "screen_overview.png").is_file()
 
 
 def test_critique_brief_keeps_print_scale_images_out_of_high_zoom_section(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     _write_real_render_pair(example_dir)
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     high_zoom_section = brief.split("## High-Zoom Visual Audit Crops", 1)[1].split(
         "## Print-Scale Audit Images", 1
     )[0]
-    assert "print_178mm.png" not in high_zoom_section
-    assert "print_thumbnail.png" not in high_zoom_section
+    assert "screen_overview.png" not in high_zoom_section
+    assert "screen_thumbnail.png" not in high_zoom_section
     assert "print_scale_unreadable" not in high_zoom_section
 
     print_scale_section = brief.split("## Print-Scale Audit Images", 1)[1].split(
@@ -891,6 +956,7 @@ def test_critique_brief_includes_visual_clash_candidates(tmp_path):
         encoding="utf-8",
     )
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Visual Clash Candidates (from check_visual_clash.py)" in brief
@@ -947,6 +1013,7 @@ def test_critique_brief_includes_text_boundary_clash_candidates(tmp_path):
         encoding="utf-8",
     )
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Text Boundary Clash Candidates (from check_text_boundary_clash.py)" in brief
@@ -1008,6 +1075,7 @@ def test_critique_brief_includes_label_path_proximity_candidates(tmp_path):
         encoding="utf-8",
     )
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Label-Path Proximity Candidates (from check_label_path_proximity.py)" in brief
@@ -1062,6 +1130,7 @@ def test_critique_brief_includes_undeclared_geometry_candidates(tmp_path):
         encoding="utf-8",
     )
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Undeclared Geometry Candidates (from check_undeclared_geometry.py)" in brief
@@ -1094,6 +1163,7 @@ def test_critique_brief_includes_panel_high_zoom_crops(tmp_path):
     )
     _write_real_render_pair(example_dir)
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "`examples/review_demo/build/panel_crops/A.png`" in brief
@@ -1104,6 +1174,7 @@ def test_critique_brief_includes_panel_high_zoom_crops(tmp_path):
 def test_critique_brief_output_format_includes_hash_manifest_metadata(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "generator: critique_brief.py" in brief
@@ -1134,6 +1205,7 @@ def test_critique_brief_output_format_uses_v1_17_default_schema_with_crops(
 ):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "schema: figure-agent.critique.v1.17" in brief
@@ -1186,6 +1258,7 @@ def test_critique_brief_output_format_uses_v1_17_default_schema_with_crops(
 def test_critique_brief_explains_top_tier_link_rule(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "top_tier_audit.<slot_key>" in brief
@@ -1221,6 +1294,7 @@ def test_critique_brief_uses_spec_reference_image_over_directory_scan(tmp_path):
     for path in (spec_ref, other_ref, example_dir / "spec.yaml"):
         os.utime(path, (old_time, old_time))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "examples/review_demo/reference/foo.png" in brief
@@ -1241,6 +1315,7 @@ def test_critique_brief_does_not_scan_reference_directory_without_spec_reference
     old_time = 1_000_000.0
     os.utime(implicit_ref, (old_time, old_time))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "Reference image (for drift detection)" not in brief
@@ -1265,6 +1340,7 @@ def test_critique_brief_allows_coordinate_hints_newer_than_png(tmp_path, capsys,
     os.utime(png_path, (png_time, png_time))
     os.utime(hints, (png_time + 100, png_time + 100))
 
+    _bind_render(example_dir)
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
     assert main() == 0
     captured = capsys.readouterr()
@@ -1280,6 +1356,7 @@ def test_critique_brief_cli_accepts_examples_fixture_path(tmp_path, capsys, monk
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", "examples/review_demo"])
 
+    _bind_render(example_dir)
     assert main() == 0
     captured = capsys.readouterr()
     assert "# Critique brief — review_demo" in captured.out
@@ -1356,6 +1433,7 @@ def test_critique_brief_allows_reference_image_newer_than_png(tmp_path, capsys, 
     os.utime(png_path, (png_time, png_time))
     os.utime(reference, (newer_time, newer_time))
 
+    _bind_render(example_dir)
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
     assert main() == 0
     captured = capsys.readouterr()
@@ -1378,6 +1456,7 @@ def test_critique_brief_blocks_missing_declared_reference_without_fallback(
         encoding="utf-8",
     )
 
+    _bind_render(example_dir)
     monkeypatch.setattr(sys, "argv", ["critique_brief.py", str(example_dir)])
     assert main() == 2
     captured = capsys.readouterr()
@@ -1406,6 +1485,7 @@ def test_critique_brief_adds_panel_reference_context_when_ref_and_bbox_present(t
     newer_time = 4_000_000_000.0
     os.utime(png_path, (newer_time, newer_time))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Per-panel reference contexts" in brief
@@ -1434,6 +1514,7 @@ def test_critique_brief_strips_panel_reference_path_whitespace(tmp_path):
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "Panel `a`" in brief
@@ -1459,6 +1540,7 @@ def test_critique_brief_warns_and_skips_panel_reference_without_bbox(tmp_path):
     newer_time = 4_000_000_000.0
     os.utime(png_path, (newer_time, newer_time))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "WARN" in brief
@@ -1480,14 +1562,15 @@ def test_critique_brief_warns_and_skips_missing_panel_reference_without_bbox(tmp
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "WARN" in brief
-    assert "Panel `a` declares reference_image `reference/missing_panel.png`" in brief
+    assert "Panel `a` reference missing" in brief
     assert "Per-panel reference contexts" not in brief
 
 
-def test_critique_brief_warns_and_skips_panel_bbox_without_reference_image(tmp_path):
+def test_critique_brief_crops_panel_bbox_without_reference_image(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     (example_dir / "spec.yaml").write_text(
         "name: review_demo\n"
@@ -1502,11 +1585,12 @@ def test_critique_brief_warns_and_skips_panel_bbox_without_reference_image(tmp_p
     newer_time = 4_000_000_000.0
     os.utime(png_path, (newer_time, newer_time))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
-    assert "WARN" in brief
-    assert "Panel `a` declares bbox_pdf_cm but no reference_image" in brief
-    assert "Per-panel reference contexts" not in brief
+    assert "No panel reference: inspect against briefing and physics" in brief
+    assert "panel_a_whole" in brief
+    assert (example_dir / "build/panel_crops/a.png").is_file()
 
 
 def test_critique_brief_warns_when_skipped_panel_reference_is_newer_than_png(tmp_path):
@@ -1535,6 +1619,7 @@ def test_critique_brief_warns_when_skipped_panel_reference_is_newer_than_png(tmp
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
     os.utime(ref_path, (4_000_000_001.0, 4_000_000_001.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "Panel `a` declares reference_image but no bbox_pdf_cm" in brief
@@ -1581,6 +1666,7 @@ def test_critique_brief_includes_reference_conditioned_authoring_docs(tmp_path):
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Reference-conditioned authoring context" in brief
@@ -1614,6 +1700,7 @@ def test_critique_brief_includes_subregion_active_set(tmp_path):
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "### Sub-region Active Set" in brief
@@ -1652,6 +1739,7 @@ calibration_questions:
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Reference-Calibrated Top-Tier Comparison" in brief
@@ -1726,6 +1814,7 @@ reference_learning:
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Reference Learning Contract" in brief
@@ -1803,6 +1892,7 @@ reference_learning:
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "unintended_visible_anomaly: none | present | uncertain" in brief
@@ -1873,6 +1963,7 @@ reference_learning:
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Reference Aesthetic Metrics" in brief
@@ -1887,6 +1978,7 @@ def test_critique_brief_includes_external_second_opinion_review(tmp_path):
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## External Second-Opinion Vision Review" in brief
@@ -1908,6 +2000,7 @@ def test_critique_brief_rejects_malformed_external_vision_review(tmp_path):
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     try:
         generate_for(example_dir)
     except critique_brief.CritiqueBriefError as exc:
@@ -1944,6 +2037,7 @@ polish_triggers:
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Paper-Wide Aesthetic Context" in brief
@@ -1968,6 +2062,7 @@ polish_triggers:
 def test_critique_brief_omits_paper_wide_context_without_opt_in(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Paper-Wide Aesthetic Context" not in brief
@@ -1980,6 +2075,7 @@ def test_critique_brief_reports_invalid_paper_wide_context(tmp_path):
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     try:
         generate_for(example_dir)
     except critique_brief.CritiqueBriefError as exc:
@@ -1994,6 +2090,7 @@ def test_critique_brief_includes_journal_art_direction_playbook(tmp_path):
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Journal Art-Direction Playbook" in brief
@@ -2055,6 +2152,7 @@ aesthetic_levers:
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "schema: figure-agent.critique.v1.17" in brief
@@ -2066,6 +2164,7 @@ aesthetic_levers:
 def test_critique_brief_omits_journal_playbook_without_opt_in(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Journal Art-Direction Playbook" not in brief
@@ -2078,6 +2177,7 @@ def test_critique_brief_reports_invalid_journal_playbook(tmp_path):
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     try:
         generate_for(example_dir)
     except critique_brief.CritiqueBriefError as exc:
@@ -2113,6 +2213,7 @@ polish_triggers:
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Aesthetic Intent Calibration" in brief
@@ -2170,6 +2271,7 @@ aesthetic_levers:
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Aesthetic Lever Grammar" in brief
@@ -2211,6 +2313,7 @@ polish_triggers:
     png_path = example_dir / "build" / "review_demo.png"
     os.utime(png_path, (4_000_000_000.0, 4_000_000_000.0))
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Aesthetic Intent Calibration" in brief
@@ -2223,6 +2326,7 @@ polish_triggers:
 def test_critique_brief_omits_aesthetic_intent_calibration_when_missing(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Aesthetic Intent Calibration" not in brief
@@ -2232,6 +2336,7 @@ def test_critique_brief_reports_malformed_aesthetic_intent(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     (example_dir / "aesthetic_intent.yaml").write_text("schema: [", encoding="utf-8")
 
+    _bind_render(example_dir)
     try:
         generate_for(example_dir)
     except critique_brief.CritiqueBriefError as exc:
@@ -2243,6 +2348,7 @@ def test_critique_brief_reports_malformed_aesthetic_intent(tmp_path):
 def test_critique_brief_omits_reference_calibrated_pack_when_missing(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
 
+    _bind_render(example_dir)
     brief = generate_for(example_dir)
 
     assert "## Reference-Calibrated Top-Tier Comparison" not in brief
@@ -2252,6 +2358,7 @@ def test_critique_brief_reports_malformed_reference_calibration_pack(tmp_path):
     example_dir = _write_example(tmp_path, section6="- invariant")
     (example_dir / "critique_reference_pack.yaml").write_text("schema: [", encoding="utf-8")
 
+    _bind_render(example_dir)
     try:
         generate_for(example_dir)
     except critique_brief.CritiqueBriefError as exc:

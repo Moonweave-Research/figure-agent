@@ -414,6 +414,8 @@ def _adjudicate(argv: list[str]) -> int:
         sub_args = argv
     else:
         sub_args = ["scaffold", *argv]
+    if not any(arg == "--repo-root" or arg.startswith("--repo-root=") for arg in sub_args):
+        sub_args = [*sub_args, "--repo-root", str(_paths().workspace_root)]
     return _run(
         [sys.executable, str(SCRIPTS_DIR / "critique_adjudication.py"), *sub_args],
         cwd=_paths().workspace_root,

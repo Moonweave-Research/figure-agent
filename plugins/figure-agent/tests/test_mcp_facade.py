@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import shutil
@@ -22,6 +23,61 @@ sys.path.insert(0, str(PLUGIN_ROOT / "mcp"))
 import figure_agent_server  # noqa: E402
 from figure_agent_server import ERROR_CATEGORIES  # noqa: E402
 from plugin_package_audit import find_mcp_config_issues  # noqa: E402
+
+
+def test_timeout_output_bytes_are_json_serializable():
+    import server_impl
+
+    result = {"stdout": server_impl._bounded(b"partial\xffoutput", limit=9)}
+    assert isinstance(result["stdout"], str)
+    assert "partial" in json.dumps(result)
+    assert "truncated" in result["stdout"]
+
+
+def test_mutation_lock_recovers_after_process_death(tmp_path):
+    import server_impl
+
+    code = (
+        "import sys,time; from pathlib import Path; "
+        f"sys.path.insert(0, {str(PLUGIN_ROOT / 'mcp')!r}); "
+        "from server_impl import _fixture_lock; "
+        f"lock=_fixture_lock(Path({str(tmp_path)!r}), 'demo', 'compile'); "
+        "assert lock.__enter__() is None; print('locked', flush=True); time.sleep(30)"
+    )
+    process = subprocess.Popen([INTERPRETER, "-c", code], stdout=subprocess.PIPE, text=True)
+    try:
+        assert process.stdout.readline().strip() == "locked"
+        with server_impl._fixture_lock(tmp_path, "demo", "export") as lock:
+            assert lock["active_operation"] == "compile"
+        process.kill()
+        process.wait(timeout=5)
+        with server_impl._fixture_lock(tmp_path, "demo", "export") as lock:
+            assert lock is None
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.wait(timeout=5)
+
+
+def test_timeout_kills_descendant_process(tmp_path, monkeypatch):
+    import time
+
+    import server_impl
+
+    plugin = tmp_path / "plugin"
+    (plugin / "bin").mkdir(parents=True)
+    marker = tmp_path / "child-survived"
+    child = f"import time; from pathlib import Path; time.sleep(.6); Path({str(marker)!r}).touch()"
+    (plugin / "bin/fig-agent").write_text(
+        "import subprocess,sys,time\n"
+        f"subprocess.Popen([sys.executable, '-c', {child!r}])\n"
+        "print('started', flush=True)\ntime.sleep(20)\n"
+    )
+    monkeypatch.setattr(server_impl, "_plugin_root", lambda: plugin)
+    with pytest.raises(subprocess.TimeoutExpired):
+        server_impl._run_fig_agent([], workspace_root=tmp_path, timeout_seconds=0.2)
+    time.sleep(0.7)
+    assert not marker.exists()
 
 
 def _mcp_request(method: str, params: dict | None = None, request_id: int = 1) -> str:
@@ -305,6 +361,7 @@ def test_mcp_startup_and_list_tools_are_side_effect_free(tmp_path: Path) -> None
         "figure_agent_doctor",
         "figure_agent_status",
         "figure_agent_next",
+        "figure_agent_run",
         "figure_agent_compile",
         "figure_agent_export",
         "figure_agent_quality_map",
@@ -566,6 +623,8 @@ def test_mcp_compile_reports_operation_in_progress(tmp_path: Path) -> None:
         json.dumps({"operation": "export"}),
         encoding="utf-8",
     )
+    lock_handle = (lock_root / "mutation.lock").open("r+")
+    fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
     result = _run_mcp_server(
         [
@@ -648,6 +707,71 @@ def test_mcp_next_returns_public_command_and_write_metadata(tmp_path: Path) -> N
     assert next_payload["action"] == "run_compile"
     assert next_payload["command"] == "fig-agent compile next_demo"
     assert next_payload["writes"] is True
+
+
+def test_mcp_run_exposes_canonical_plan_only_route_without_writes(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace, name="run_demo")
+    before = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_run",
+                    "arguments": {
+                        "name": "run_demo",
+                        "mode": "review",
+                        "goal": "verify the current figure",
+                        "max_steps": 1,
+                    },
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+        timeout=30,
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    after = sorted(path.relative_to(workspace).as_posix() for path in workspace.rglob("*"))
+    assert payload["schema"] == "figure-agent.mcp.run.v1"
+    assert payload["success"] is True
+    assert payload["run_result"]["schema"] == "figure-agent.run.v1"
+    assert payload["run_result"]["execute"] is False
+    assert payload["run_result"]["max_steps"] == 1
+    assert after == before
+
+
+def test_mcp_run_rejects_invalid_execution_contract(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _write_minimal_fixture(workspace, name="run_demo")
+
+    result = _run_mcp_server(
+        [
+            _mcp_request(
+                "tools/call",
+                {
+                    "name": "figure_agent_run",
+                    "arguments": {
+                        "name": "run_demo",
+                        "mode": "final",
+                        "goal": "verify the current figure",
+                    },
+                },
+                request_id=1,
+            )
+        ],
+        cwd=tmp_path,
+        env={"FIGURE_AGENT_WORKSPACE": str(workspace)},
+    )
+
+    payload = _tool_payload(_response_lines(result)[0])
+    assert payload["schema"] == "figure-agent.mcp.run.v1"
+    assert payload["success"] is False
+    assert payload["error"]["category"] == "invalid_request"
 
 
 def test_mcp_propose_improvements_reports_no_op_on_pure_refusal(tmp_path: Path) -> None:
@@ -1554,6 +1678,8 @@ def test_mcp_candidate_render_reports_operation_in_progress(tmp_path: Path) -> N
         json.dumps({"operation": "export"}),
         encoding="utf-8",
     )
+    lock_handle = (lock_root / "mutation.lock").open("r+")
+    fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
     result = _run_mcp_server(
         [
@@ -1652,6 +1778,8 @@ def test_mcp_mutating_tool_reports_operation_in_progress(tmp_path: Path) -> None
         json.dumps({"operation": "export"}),
         encoding="utf-8",
     )
+    lock_handle = (lock_root / "mutation.lock").open("r+")
+    fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
     result = _run_mcp_server(
         [
             _mcp_request(
@@ -1689,7 +1817,10 @@ def test_cowork_zip_includes_mcp_contract(tmp_path: Path) -> None:
     )
 
     assert package_result.returncode == 0, package_result.stderr
-    zip_path = output_dir / "figure-agent-cowork-0.10.0.zip"
+    package_version = json.loads(
+        (PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text()
+    )["version"]
+    zip_path = output_dir / f"figure-agent-cowork-{package_version}.zip"
     with zipfile.ZipFile(zip_path) as archive:
         names = set(archive.namelist())
 

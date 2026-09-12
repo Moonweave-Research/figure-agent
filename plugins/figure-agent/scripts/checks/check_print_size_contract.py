@@ -2,27 +2,31 @@
 
 The PDF is authored at its natural size and scaled when placed in a manuscript.
 This check therefore validates the declared natural page geometry, the
-height-limited target placement, and the smallest explicitly declared TeX font
-at that placement scale. It intentionally does not infer journal policy from
-pixels or treat a screen render as print-size evidence.
+height-limited target placement, and the configured font-floor measurement at
+that placement scale. It intentionally does not infer journal policy from pixels
+or treat a screen render as print-size evidence.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
-import yaml
+from inputs import parse_spec
 
 PT_TO_MM = 25.4 / 72.0
 MM_TOLERANCE = 0.25
 FONT_TOLERANCE = 0.01
 JOURNAL_MIN_PRINT_FONT_PT = 5.0
+FONT_FLOOR_SCOPE_PDF = "pdf_text_state_and_transform"
+FONT_FLOOR_SCOPE_EXPLICIT = "explicit_tex_fontsize_declarations"
+FONT_FLOOR_SCOPES = {FONT_FLOOR_SCOPE_PDF, FONT_FLOOR_SCOPE_EXPLICIT}
 NATURE_FAMILY_BASES = {
     "height_limited_nature_family_main_figure",
     "width_limited_nature_family_main_figure",
@@ -55,12 +59,14 @@ def find_contract_file(tex_path: Path) -> Path | None:
 
 
 def _number(value: Any, name: str) -> float:
+    if isinstance(value, bool):
+        raise PrintSizeContractError(f"{name} must be numeric, not boolean")
     try:
         result = float(value)
     except (TypeError, ValueError) as exc:
         raise PrintSizeContractError(f"{name} must be numeric") from exc
-    if result <= 0:
-        raise PrintSizeContractError(f"{name} must be positive")
+    if not math.isfinite(result) or result <= 0:
+        raise PrintSizeContractError(f"{name} must be finite and positive")
     return result
 
 
@@ -84,6 +90,14 @@ def _journal_policy_floor(contract: dict[str, Any]) -> float | None:
     return None
 
 
+def _font_floor_scope(contract: dict[str, Any]) -> str:
+    scope = contract.get("font_floor_scope", FONT_FLOOR_SCOPE_PDF)
+    if not isinstance(scope, str) or scope not in FONT_FLOOR_SCOPES:
+        choices = ", ".join(sorted(FONT_FLOOR_SCOPES))
+        raise PrintSizeContractError(f"font_floor_scope must be one of: {choices}")
+    return scope
+
+
 def _page_size_pt(pdf_path: Path) -> tuple[float, float]:
     result = subprocess.run(
         ["pdfinfo", str(pdf_path)],
@@ -102,10 +116,46 @@ def _page_size_pt(pdf_path: Path) -> tuple[float, float]:
 def _font_sizes_pt(tex_text: str) -> list[float]:
     return [
         float(value)
-        for value in re.findall(
-            r"\\fontsize\s*\{\s*([0-9]+(?:\.[0-9]+)?)\s*\}", tex_text
-        )
+        for value in re.findall(r"\\fontsize\s*\{\s*([0-9]+(?:\.[0-9]+)?)\s*\}", tex_text)
     ]
+
+
+def rendered_font_sizes_pt(pdf_path: Path) -> list[float]:
+    """Measure text-state size after the PDF transform, including rotated text."""
+    from pdfminer.converter import PDFPageAggregator
+    from pdfminer.pdfinterp import PDFPageInterpreter, PDFResourceManager
+    from pdfminer.pdfpage import PDFPage
+
+    sizes: list[float] = []
+
+    class FontProbe(PDFPageAggregator):
+        def render_char(self, matrix, font, fontsize, scaling, rise, cid, ncs, graphicstate):
+            try:
+                visible = bool(font.to_unichr(cid).strip())
+            except Exception:
+                visible = True
+            if visible:
+                sizes.append(abs(fontsize) * math.hypot(matrix[2], matrix[3]))
+            return super().render_char(
+                matrix, font, fontsize, scaling, rise, cid, ncs, graphicstate
+            )
+
+    manager = PDFResourceManager()
+    device = FontProbe(manager)
+    try:
+        with pdf_path.open("rb") as handle:
+            interpreter = PDFPageInterpreter(manager, device)
+            for page in PDFPage.get_pages(handle):
+                if page.attrs.get("UserUnit", 1) != 1:
+                    raise PrintSizeContractError("non-default PDF UserUnit needs explicit support")
+                interpreter.process_page(page)
+    except PrintSizeContractError:
+        raise
+    except Exception as exc:
+        raise PrintSizeContractError(f"cannot measure rendered PDF text: {exc}") from exc
+    finally:
+        device.close()
+    return sizes
 
 
 def evaluate_contract(
@@ -117,8 +167,8 @@ def evaluate_contract(
 ) -> dict[str, Any]:
     """Return deterministic print-size metrics and violations."""
 
-    natural_width, natural_height, target_width, max_height, min_print_font = (
-        _contract_values(contract)
+    natural_width, natural_height, target_width, max_height, min_print_font = _contract_values(
+        contract
     )
     effective_min_print_font = max(
         min_print_font,
@@ -159,7 +209,7 @@ def evaluate_contract(
             f"height, above max_height {max_height:.2f} mm"
         )
     if not source_font_sizes_pt:
-        violations.append("no explicit \\fontsize declarations found in TeX")
+        violations.append("no measurable text fonts found")
         source_min_font = None
         print_min_font = None
     else:
@@ -172,7 +222,7 @@ def evaluate_contract(
                 else "min_print_font_pt"
             )
             violations.append(
-                f"smallest explicit font {source_min_font:.2f} pt becomes {print_min_font:.2f} pt "
+                f"smallest measured font {source_min_font:.2f} pt becomes {print_min_font:.2f} pt "
                 f"at print scale, below {floor_label} "
                 f"{effective_min_print_font:.2f} pt"
             )
@@ -210,7 +260,10 @@ def validate(
             )
         return {"status": "skipped", "reason": "authority.yaml/spec.yaml not found"}
 
-    payload = yaml.safe_load(authority_path.read_text(encoding="utf-8")) or {}
+    try:
+        payload = parse_spec(authority_path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise PrintSizeContractError(str(exc)) from exc
     contract = payload.get("final_size_contract")
     if not isinstance(contract, dict):
         if require_contract:
@@ -218,15 +271,25 @@ def validate(
         return {"status": "skipped", "reason": "final_size_contract not declared"}
     if not pdf_path.is_file():
         raise PrintSizeContractError(f"PDF not found: {pdf_path}")
+    tex_text = tex_path.read_text(encoding="utf-8")
+    declared_font_sizes = _font_sizes_pt(tex_text)
+    font_floor_scope = _font_floor_scope(contract)
+    measured_font_sizes = (
+        declared_font_sizes
+        if font_floor_scope == FONT_FLOOR_SCOPE_EXPLICIT
+        else rendered_font_sizes_pt(pdf_path)
+    )
     result = evaluate_contract(
         page_size_pt=_page_size_pt(pdf_path),
-        source_font_sizes_pt=_font_sizes_pt(tex_path.read_text(encoding="utf-8")),
+        source_font_sizes_pt=measured_font_sizes,
         contract=contract,
         policy_min_print_font_pt=_journal_policy_floor(contract),
     )
     result["authority"] = str(authority_path)
     result["pdf"] = str(pdf_path)
     result["tex"] = str(tex_path)
+    result["font_measurement_basis"] = font_floor_scope
+    result["declared_source_font_sizes_pt"] = declared_font_sizes
     if result["violations"]:
         raise PrintSizeContractError("; ".join(result["violations"]))
     return result

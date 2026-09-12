@@ -29,8 +29,8 @@ BASE_CROP_IDS = (
     "full_q2",
     "full_q3",
     "full_q4",
-    "print_178mm",
-    "print_thumbnail",
+    "screen_overview",
+    "screen_thumbnail",
 )
 SEAM_CROP_IDS = ("full_center_vertical", "full_center_horizontal")
 EXTENDED_CROP_IDS = tuple(sorted((*BASE_CROP_IDS, *SEAM_CROP_IDS)))
@@ -361,7 +361,7 @@ def _crop_roles(manifest: dict[str, Any]) -> dict[str, list[str]]:
     crop_ids = {str(crop.get("id")) for crop in manifest["crops"] if isinstance(crop, dict)}
     roles = {
         "panel_scale": ["full_q1", "full_q2", "full_q3", "full_q4"],
-        "print_scale": ["print_178mm", "print_thumbnail"],
+        "print_scale": ["screen_overview", "screen_thumbnail"],
     }
     if set(SEAM_CROP_IDS).issubset(crop_ids):
         roles["seam_scale"] = list(SEAM_CROP_IDS)
@@ -584,6 +584,7 @@ def _publish_review_pack(
             output_dir=crops_root,
             manifest_path=manifest_path,
             include_detector_crops=False,
+            include_context_views=False,
         )
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if not isinstance(manifest, dict):

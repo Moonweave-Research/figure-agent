@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import sys
@@ -547,6 +548,8 @@ def test_apply_candidate_refuses_existing_mcp_or_quality_lock(tmp_path: Path) ->
     lock = fixture / "build" / ".mcp-locks" / "mutation.lock"
     lock.parent.mkdir()
     lock.write_text("{}", encoding="utf-8")
+    lock_handle = lock.open("r+")
+    fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
     result = candidate_apply.apply_candidate(
         "candidate_demo",
@@ -591,7 +594,8 @@ def test_apply_candidate_uses_shared_mcp_mutation_lock(tmp_path: Path) -> None:
         candidate_apply._candidate_apply_lock = original_lock
 
     assert result["status"] == "applied_unverified"
-    assert not lock_path.exists()
+    with candidate_apply._candidate_apply_lock(fixture) as active:
+        assert active is None
 
 
 def test_apply_candidate_rejects_source_drift(tmp_path: Path) -> None:

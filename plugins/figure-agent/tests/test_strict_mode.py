@@ -31,7 +31,7 @@ def test_compile_sh_wires_the_physics_checks() -> None:
     compile_sh = (REPO_ROOT / "scripts" / "compile.sh").read_text(encoding="utf-8")
     # Checker imports are absolute-path stable even after compile.sh cd's into a fixture.
     assert (
-        'SCRIPT_IMPORT_PATH="${WORKFLOW_DIR}/scripts:${WORKFLOW_DIR}/scripts/checks"' in compile_sh
+        'SCRIPT_IMPORT_PATH="${WORKFLOW_DIR}/scripts:${WORKFLOW_DIR}/scripts/checks:' in compile_sh
     )
     assert 'export PYTHONPATH="${SCRIPT_IMPORT_PATH}:${PYTHONPATH}"' in compile_sh
     # tex-geometry assertions are STRICT-gated (a reversed arrow is a defect);
@@ -749,6 +749,20 @@ def test_promotion_tier_demotes_legible_reversed_display_label() -> None:
     draw.rectangle((40, 40, 160, 160), fill=(50, 50, 50))
     draw.rectangle((96, 84, 103, 116), fill="white")
     issue = check_visual_clash.VisualIssue("text_on_path", "V", "dark=0.800, edge=0.014", bbox)
+
+    assert check_visual_clash.classify_promotion_tier(image, issue) == (
+        "report_only",
+        "legible_reversed_label",
+    )
+
+
+def test_promotion_tier_demotes_muted_light_label_on_dark_display() -> None:
+    image = Image.new("RGB", (200, 200), "white")
+    bbox = (80, 80, 120, 120)
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((40, 40, 160, 160), fill=(51, 51, 51))
+    draw.rectangle((96, 84, 103, 116), fill=(200, 200, 200))
+    issue = check_visual_clash.VisualIssue("text_on_path", "V/A", "dark=0.800", bbox)
 
     assert check_visual_clash.classify_promotion_tier(image, issue) == (
         "report_only",

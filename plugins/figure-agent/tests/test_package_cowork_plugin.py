@@ -12,6 +12,7 @@ import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = PLUGIN_ROOT.parents[1]
+PLUGIN_VERSION = json.loads((PLUGIN_ROOT / ".claude-plugin/plugin.json").read_text())["version"]
 
 
 def test_package_cowork_plugin_default_output_is_plugin_local(
@@ -46,7 +47,7 @@ def test_package_cowork_plugin_zip_contract(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    zip_path = output_dir / "figure-agent-cowork-0.10.0.zip"
+    zip_path = output_dir / f"figure-agent-cowork-{PLUGIN_VERSION}.zip"
     assert zip_path.is_file()
 
     with zipfile.ZipFile(zip_path) as archive:
@@ -183,7 +184,7 @@ def test_package_cowork_plugin_includes_installed_smoke_fixtures(tmp_path: Path)
     )
 
     assert result.returncode == 0, result.stderr
-    zip_path = output_dir / "figure-agent-cowork-0.10.0.zip"
+    zip_path = output_dir / f"figure-agent-cowork-{PLUGIN_VERSION}.zip"
     with zipfile.ZipFile(zip_path) as archive:
         names = set(archive.namelist())
 

@@ -18,6 +18,37 @@ def _write_png(path: Path, size: tuple[int, int] = (120, 80)) -> None:
     Image.new("RGB", size, "white").save(path)
 
 
+def test_physical_print_carries_mm_dpi_and_grayscale(tmp_path):
+    from critique_brief import _print_scale_audit_section
+
+    fixture = tmp_path / "demo"
+    render = fixture / "build/demo.png"
+    _write_png(render, size=(1200, 600))
+    crops = build_zoom_crop_pack(
+        fixture,
+        render,
+        panel_crop_paths=(),
+        spec={
+            "final_size_contract": {
+                "natural_size_mm": [100, 50],
+                "target_width_mm": 80,
+                "max_height_mm": 50,
+                "min_print_font_pt": 5,
+            }
+        },
+    )
+    physical = [crop for crop in crops if crop.get("scale_basis") == "physical_contract"]
+    assert len(physical) == 2
+    for crop in physical:
+        assert crop["size_mm"] == [80, 40]
+        assert crop["size_px"] == [945, 472]
+        with Image.open(fixture / crop["path"]) as image:
+            assert image.info["dpi"] == pytest.approx((300, 300), abs=0.02)
+            if "grayscale" in crop["id"]:
+                assert image.mode == "L"
+    assert "size_mm=[80.0, 40.0] dpi=300" in _print_scale_audit_section(fixture, crops)
+
+
 def test_build_zoom_crop_pack_creates_full_render_quadrants(tmp_path: Path) -> None:
     example_dir = tmp_path / "examples" / "demo"
     render = example_dir / "build" / "demo.png"
@@ -31,6 +62,9 @@ def test_build_zoom_crop_pack_creates_full_render_quadrants(tmp_path: Path) -> N
         "full_q2",
         "full_q3",
         "full_q4",
+        "full_whole",
+        "full_seam_vertical",
+        "full_seam_horizontal",
     ]
     assert all((example_dir / item["path"]).is_file() for item in zoom_crops)
     assert zoom_crops[0]["source"] == "full_render"
@@ -64,8 +98,7 @@ def test_build_zoom_crop_pack_supports_attempt_local_output_without_baseline_dri
     assert manifest_path.is_file()
     assert file_sha256(baseline_manifest) == baseline_hash
     assert all(
-        item["path"].startswith("review/failure-first/execution-repair-v1/")
-        for item in crops
+        item["path"].startswith("review/failure-first/execution-repair-v1/") for item in crops
     )
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["render_path"] == (
@@ -172,9 +205,9 @@ def test_build_zoom_crop_pack_creates_print_scale_audit_images(tmp_path: Path) -
     crops = build_zoom_crop_pack(example_dir, render, panel_crop_paths=())
 
     print_items = [item for item in crops if item["kind"] == "print_scale"]
-    assert [item["id"] for item in print_items] == ["print_178mm", "print_thumbnail"]
+    assert [item["id"] for item in print_items] == ["screen_overview", "screen_thumbnail"]
     assert [item["scale_label"] for item in print_items] == [
-        "178mm_equivalent",
+        "screen_overview",
         "thumbnail",
     ]
     assert [item["scale_basis"] for item in print_items] == [
@@ -215,8 +248,8 @@ def test_build_zoom_crop_pack_print_scale_size_is_deterministic_for_nonsquare_re
     crops = build_zoom_crop_pack(example_dir, render, panel_crop_paths=())
 
     print_items = {item["id"]: item for item in crops if item["kind"] == "print_scale"}
-    assert print_items["print_178mm"]["size_px"] == [1000, 562]
-    assert print_items["print_thumbnail"]["size_px"] == [360, 202]
+    assert print_items["screen_overview"]["size_px"] == [1000, 562]
+    assert print_items["screen_thumbnail"]["size_px"] == [360, 202]
 
 
 def test_build_zoom_crop_pack_adds_panel_quadrants(tmp_path: Path) -> None:
@@ -233,7 +266,7 @@ def test_build_zoom_crop_pack_adds_panel_quadrants(tmp_path: Path) -> None:
     assert "panel_A_q4" in ids
     assert (example_dir / "build" / "audit_crops" / "panel_A_q1.png").is_file()
     print_items = [item for item in crops if item["kind"] == "print_scale"]
-    assert [item["id"] for item in print_items] == ["print_178mm", "print_thumbnail"]
+    assert [item["id"] for item in print_items] == ["screen_overview", "screen_thumbnail"]
     assert all(item["source_path"] == "build/demo.png" for item in print_items)
     assert not any(item["id"].startswith("panel_A") for item in print_items)
 
@@ -340,13 +373,10 @@ def test_build_zoom_crop_pack_adds_visual_clash_crops_and_manifest(
 
     crops = build_zoom_crop_pack(example_dir, render, panel_crop_paths=())
 
-    visual_clash_crops = [
-        item for item in crops if item["kind"] == "visual_clash_crop"
-    ]
+    visual_clash_crops = [item for item in crops if item["kind"] == "visual_clash_crop"]
     assert [item["id"] for item in visual_clash_crops] == ["VC001_A", "VC002_HV"]
     assert all(
-        item["path"].startswith("build/audit_crops/visual_clash/")
-        for item in visual_clash_crops
+        item["path"].startswith("build/audit_crops/visual_clash/") for item in visual_clash_crops
     )
     assert all((example_dir / item["path"]).is_file() for item in visual_clash_crops)
     assert visual_clash_crops[0]["visual_clash_ref"] == "VC001"
@@ -362,12 +392,8 @@ def test_build_zoom_crop_pack_adds_visual_clash_crops_and_manifest(
     assert manifest["schema"] == "figure-agent.audit-crop-manifest.v1"
     assert manifest["fixture"] == "demo"
     assert manifest["render_path"] == "build/demo.png"
-    assert manifest["required_crop_ids"] == sorted(
-        item["id"] for item in manifest["crops"]
-    )
-    manifest_visual = [
-        item for item in manifest["crops"] if item["kind"] == "visual_clash_crop"
-    ]
+    assert manifest["required_crop_ids"] == sorted(item["id"] for item in manifest["crops"])
+    manifest_visual = [item for item in manifest["crops"] if item["kind"] == "visual_clash_crop"]
     assert [item["visual_clash_ref"] for item in manifest_visual] == ["VC001", "VC002"]
     for crop in manifest["crops"]:
         assert isinstance(crop.get("sha256"), str)
@@ -430,9 +456,7 @@ def test_build_zoom_crop_pack_writes_label_path_crops_and_manifest(
 
     manifest_path = example_dir / "build" / "audit_crops" / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    manifest_label_path = [
-        item for item in manifest["crops"] if item["kind"] == "label_path_crop"
-    ]
+    manifest_label_path = [item for item in manifest["crops"] if item["kind"] == "label_path_crop"]
     assert [item["label_path_ref"] for item in manifest_label_path] == ["LP001"]
     assert manifest_label_path[0]["sha256"] == file_sha256(
         example_dir / manifest_label_path[0]["path"]

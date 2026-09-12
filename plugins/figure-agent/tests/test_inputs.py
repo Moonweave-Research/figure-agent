@@ -5,6 +5,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from inputs import parse_briefing, parse_spec  # noqa: E402
@@ -37,8 +39,9 @@ def test_parse_spec_comments_only_returns_default():
     assert parse_spec("# comment\n") == {"panels": []}
 
 
-def test_parse_spec_non_dict_root_returns_default():
-    assert parse_spec("- a\n- b\n") == {"panels": []}
+def test_parse_spec_non_dict_root_rejected():
+    with pytest.raises(ValueError):
+        parse_spec("- a\n- b\n")
 
 
 def test_parse_spec_panels_list_preserved():
@@ -150,15 +153,15 @@ selection_notes: |
     assert spec["selection_notes"] == expected
 
 
-def test_parse_spec_malformed_panels_coerced():
+def test_parse_spec_malformed_panels_rejected():
     text = """name: test
 panels: "not a list"
 """
-    spec = parse_spec(text)
-    assert spec["panels"] == []
+    with pytest.raises(ValueError):
+        parse_spec(text)
 
 
-def test_parse_spec_panels_with_non_dict_elements_filtered():
+def test_parse_spec_panels_with_non_dict_elements_rejected():
     text = """name: test
 panels:
   - id: a
@@ -167,10 +170,8 @@ panels:
   - id: b
     caption: Also good
 """
-    spec = parse_spec(text)
-    assert len(spec["panels"]) == 2
-    assert spec["panels"][0]["id"] == "a"
-    assert spec["panels"][1]["id"] == "b"
+    with pytest.raises(ValueError):
+        parse_spec(text)
 
 
 def test_parse_spec_accepts_panel_reference_image_and_normalizes_bbox_pdf_cm():

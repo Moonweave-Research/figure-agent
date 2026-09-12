@@ -4,6 +4,72 @@ All notable changes to figure-agent are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Expose the bounded `fig-agent run` workflow through `figure_agent_run` on the
+  MCP facade. Calls remain plan-only unless `execute: true` is explicit.
+
+### Fixed
+
+- Route content-manifest `MISSING` or `STALE` renders to compile before host
+  critique in both the human-readable status hint and structured next action.
+- Honour the declared print-size `font_floor_scope` instead of measuring PDF
+  subscript glyphs when a fixture explicitly selects authored `\\fontsize`
+  declarations, and keep the critique-free CI smoke export explicit.
+
+### Changed
+
+- Run the full fixture compile, visual-clash budget, and render-marked test job
+  for every pull request instead of requiring a manually applied label.
+
+## [0.10.3] - 2026-09-07
+
+### Fixed
+
+- Parse literal TikZ `plot ... coordinates {...}` curves as attributed geometry,
+  so smooth authored chains no longer become unsupported-plot coverage gaps.
+- Recognize muted light-gray reversed labels on dark instrument displays without
+  weakening the dark-field and tonal-separation checks.
+- Correct the Nature Communications review guidance: final lettering is normally
+  5--8 pt, while Nature's broader artwork guidance uses a 0.25--1 pt stroke
+  hierarchy. Remove the unsupported blanket 1 pt minimum and require a final-size
+  proof before changing line weights.
+- Keep MCP `serverInfo.version` synchronized with the package release version.
+
+## [0.10.2] - 2026-09-07
+
+### Fixed
+
+- Use the documented top-left PDF coordinate origin when locating process stages
+  inside panel bounds. Bottom-panel labels are now checked in their actual panel;
+  identical labels in an upper panel cannot satisfy the lower-panel contract.
+- Add a regression covering both correct lower-panel labels and upper-panel
+  impostors. No figure source or publication acceptance is changed by this fix.
+
+## [0.10.1] - 2026-09-07
+
+### Fixed
+
+- Require critique for reference-free authored figures and bind review/export to
+  current PDF/PNG, compile receipts, included sources, assets and toolchain hashes.
+- Reject duplicate or malformed YAML and nonfinite geometry; report invalid
+  candidate inputs through status without crashing.
+- Measure transformed PDF text for print font limits. Add complete panel/seam
+  inspection, physical print previews, grayscale and required host viewing receipts.
+- Recover advisory mutation locks after owner exit and stop timeout process groups
+  while returning JSON-safe captured output.
+
+### Added
+
+- Hash-bound custom preambles for Cowork-authored figures, and editable TeX source
+  bundles alongside the default PDF submission artifact and outlined SVG display.
+
+### Compatibility
+
+- Render-input manifests now use v2; old renders must be recompiled.
+- Restart plugin sessions after updating to adopt the shared advisory-lock protocol.
+- Codex, Claude Code and Cowork packages share release version 0.10.1.
+
 ### Changed
 
 - `fig-agent doctor` compiles a one-node TikZ document with the configured

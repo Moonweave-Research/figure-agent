@@ -58,6 +58,34 @@ def test_manifest_freshness_ignores_copy_mtime_when_bytes_match(tmp_path: Path) 
     )
 
 
+@pytest.mark.parametrize("changed", ["scene.tex", "asset.png", "font.otf", "raster"])
+def test_recorder_and_raster_detect_preserved_mtime_drift(tmp_path: Path, changed: str) -> None:
+    root, render, inputs, output = _fixture(tmp_path)
+    scene = root / "scene.tex"
+    asset = root / "asset.png"
+    font = tmp_path / "font.otf"
+    raster = render.with_suffix(".png")
+    for path in (scene, asset, font, raster):
+        path.write_bytes(b"original")
+    recorder = render.with_suffix(".fls")
+    recorder.write_text(f"INPUT scene.tex\nINPUT asset.png\nINPUT {font}\n")
+    render_input_manifest.write_manifest(
+        fixture="demo",
+        render_pdf=render,
+        inputs=inputs,
+        output=output,
+        compile_run_id="run-demo",
+        recorder=recorder,
+    )
+    arguments = dict(fixture="demo", render_pdf=render, inputs=inputs, png=raster)
+    assert render_input_manifest.raster_freshness(**arguments) == "FRESH"
+    target = {"scene.tex": scene, "asset.png": asset, "font.otf": font, "raster": raster}[changed]
+    old = target.stat()
+    target.write_bytes(b"modified")
+    os.utime(target, ns=(old.st_atime_ns, old.st_mtime_ns))
+    assert render_input_manifest.raster_freshness(**arguments) == "STALE"
+
+
 def test_manifest_freshness_detects_input_and_render_drift(tmp_path: Path) -> None:
     _, render, inputs, output = _fixture(tmp_path)
     inputs["source_tex"].write_text("changed", encoding="utf-8")

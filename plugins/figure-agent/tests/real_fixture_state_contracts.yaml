@@ -39,29 +39,29 @@ fixtures:
     status:
       stage: 4
       render_state: FRESH
-      critique_state: NOT_REQUIRED
+      critique_state: BRIEFING_REQUIRED
       export_state: FRESH
       acceptance_state: NOT_DECLARED
       final_artifact_state: NONE
       final_artifact_kind: generated_export
-      workflow_ready: true
+      workflow_ready: false
       golden_ready: false
       release_ready: false
       final_ready: false
       publication_gate_state: NOT_APPLICABLE
     driver:
       review:
-        action: run_fig_loop
-        safe_command: fig-agent loop smoke_trap_demo --goal 'contract matrix' --json
-        stop_boundary:
+        action: run_critique
+        safe_command: /fig_critique smoke_trap_demo
+        stop_boundary: host_llm_critique_required
       release:
-        action: release_blocked
-        safe_command:
-        stop_boundary: accepted_or_final_ready_required
+        action: run_critique
+        safe_command: /fig_critique smoke_trap_demo
+        stop_boundary: host_llm_critique_required
       polish:
-        action: run_fig_loop
-        safe_command: fig-agent loop smoke_trap_demo --goal 'contract matrix' --json
-        stop_boundary: mode_forbidden_action
+        action: run_critique
+        safe_command: /fig_critique smoke_trap_demo
+        stop_boundary: host_llm_critique_required
 
   - fixture: fig5_floating_clip_mechanism
     artifacts:
