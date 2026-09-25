@@ -1,0 +1,405 @@
+{
+  "acceptance_freshness_state": "not_accepted",
+  "acceptance_state": "NOT_DECLARED",
+  "accepted": null,
+  "adjudication_state": "FRESH",
+  "audit_evidence": {
+    "blocking_items": [],
+    "critique_schema": "figure-agent.critique.v1.17",
+    "crop_audit": {
+      "manifest_present": true,
+      "required_count": 174,
+      "uncertain_crop_ids": [],
+      "verdict_counts": {
+        "defect": 0,
+        "no_defect": 174,
+        "uncertain": 0
+      }
+    },
+    "detector_feedback": {
+      "label_path": {
+        "accepted_false_positive_count": 0,
+        "accepted_simplification_count": 0,
+        "accounted_count": 0,
+        "candidate_count": 0,
+        "linked_defect_count": 0
+      },
+      "summary": "25 accepted reviewed non-defect(s), including 25 false positive(s); 0 detector-linked defect(s); 0 unlinked micro defect(s)",
+      "text_boundary": {
+        "accepted_false_positive_count": 0,
+        "accepted_simplification_count": 0,
+        "accounted_count": 0,
+        "candidate_count": 0,
+        "linked_defect_count": 0
+      },
+      "undeclared_geometry": {
+        "accepted_false_positive_count": 0,
+        "accepted_simplification_count": 0,
+        "accounted_count": 0,
+        "candidate_count": 0,
+        "linked_defect_count": 0
+      },
+      "unlinked_micro_defect_count": 0,
+      "unlinked_micro_defect_ids": [],
+      "visual_clash": {
+        "accepted_false_positive_count": 25,
+        "accepted_simplification_count": 25,
+        "accounted_count": 25,
+        "candidate_count": 25,
+        "linked_defect_count": 0
+      }
+    },
+    "evaluation_state": "passed",
+    "fixture": "fig1_overview_alt_260906_M1",
+    "label_path": {
+      "accounted_count": 0,
+      "candidate_count": 0,
+      "missing_refs": [],
+      "present": true,
+      "unknown_refs": []
+    },
+    "next_action": "/fig_loop fig1_overview_alt_260906_M1 --goal <goal>",
+    "reason": "audit evidence inputs are present and accounted",
+    "schema": "figure-agent.audit-evidence-summary.v1",
+    "text_boundary": {
+      "accounted_count": 0,
+      "candidate_count": 0,
+      "missing_refs": [],
+      "present": true,
+      "unknown_refs": []
+    },
+    "undeclared_geometry": {
+      "accounted_count": 0,
+      "candidate_count": 0,
+      "missing_refs": [],
+      "present": true,
+      "unknown_refs": []
+    },
+    "visual_clash": {
+      "accounted_count": 25,
+      "candidate_count": 25,
+      "missing_refs": [],
+      "present": true,
+      "unknown_refs": []
+    }
+  },
+  "canonical_render_state": "STALE",
+  "checks": [
+    [
+      "reference_image",
+      "reference/selected_M1.png"
+    ],
+    [
+      "exports",
+      "present"
+    ],
+    [
+      "critique",
+      "fresh"
+    ],
+    [
+      "critique_lint",
+      "passed"
+    ]
+  ],
+  "claim_authority": {
+    "blocking_item_ids": [],
+    "items": [],
+    "path": "claim_authority.yaml",
+    "requires_contract_repair": false,
+    "requires_human": false,
+    "schema": "figure-agent.claim-authority.v1",
+    "state": "NOT_DECLARED"
+  },
+  "closed_loop_attempt": {
+    "attempt_id": null,
+    "disposition": null,
+    "fixture": "fig1_overview_alt_260906_M1",
+    "path": null,
+    "publication_acceptance": "not_claimed",
+    "reason": "no_attempt_states",
+    "required_actor": null,
+    "resolution": "absent",
+    "schema": "figure-agent.closed-loop-current-state.v1",
+    "sequence": null,
+    "state": null,
+    "state_sha256": null,
+    "terminal": null
+  },
+  "critique_freshness": {
+    "actual": {
+      "critique_input_hash": "sha256:4b5ae884f238a31dc579246d0ebca1bab77a8a84bc6fb4396c9e0a8ef3775400",
+      "generator_version": "sha256:986ca6a2fb9c99aa41a9f54e1f9b724eadd06347fd5be1a5299e7c7ab49573af",
+      "rubric_version": "figure-agent.critique-rubric.v1.17",
+      "schema": "figure-agent.critique.v1.17"
+    },
+    "expected": {
+      "critique_input_hash": "sha256:4b5ae884f238a31dc579246d0ebca1bab77a8a84bc6fb4396c9e0a8ef3775400",
+      "generator_version": "sha256:986ca6a2fb9c99aa41a9f54e1f9b724eadd06347fd5be1a5299e7c7ab49573af",
+      "rubric_version": "figure-agent.critique-rubric.v1.17"
+    },
+    "is_fresh": true,
+    "metadata_complete": true,
+    "mismatch_reasons": [],
+    "schema_matches_rubric": true
+  },
+  "critique_lint_summary": {
+    "first_category": null,
+    "first_message": null,
+    "state": "passed",
+    "violation_count": 0
+  },
+  "critique_state": "FRESH",
+  "current_candidate": {
+    "path": "review/current-candidate.json",
+    "state": "NOT_DECLARED"
+  },
+  "current_render_review": {
+    "human_review_state": null,
+    "path": "review/failure-first/current_render_review_scaffold_v1.yaml",
+    "reason": null,
+    "stale_fields": [],
+    "state": "NOT_DECLARED"
+  },
+  "display_derivative_path": "exports/fig1_overview_alt_260906_M1.svg",
+  "editable_source_path": "fig1_overview_alt_260906_M1.tex",
+  "export_state": "FRESH",
+  "exports_substate": "FRESH",
+  "final_artifact_kind": "generated_export",
+  "final_artifact_path": "exports/fig1_overview_alt_260906_M1.pdf",
+  "final_artifact_state": "NONE",
+  "final_ready": false,
+  "geometry_coverage": {
+    "coverage_ratio": 0.878981,
+    "parsed_operations": 138,
+    "partial_unknown_operations": 0,
+    "path": "build/undeclared_geometry.json",
+    "schema": "figure-agent.undeclared-geometry.v1",
+    "state": "present",
+    "total_operations": 157,
+    "unknown_operations": 19,
+    "zero_findings_clean_claim": {
+      "allowed": true,
+      "failures": [],
+      "state": "passed"
+    }
+  },
+  "golden_ready": false,
+  "learning_evidence": {
+    "eligible_prior_count": 0,
+    "eligible_source_fixture_count": 0,
+    "event_count": 0,
+    "reason": "explicit human verdicts or verified outcomes are required before cross-fixture learning evidence exists",
+    "required_action": "record explicit human accept or reject verdicts for verified direct edits",
+    "source_fixture_count": 1,
+    "state": "blocked_no_eligible_outcomes",
+    "unknown_event_count": 0,
+    "unknown_event_rate": 0.0
+  },
+  "name": "fig1_overview_alt_260906_M1",
+  "next": "fixture has no accepted or final-ready declaration \u2014 stop automatic iteration and obtain an explicit human acceptance/final-artifact decision before release.",
+  "next_action_summary": {
+    "action": "run_compile",
+    "allowed_scope": [
+      "examples/fig1_overview_alt_260906_M1/build/",
+      "compile reports"
+    ],
+    "blocking_source": "render_stale",
+    "decision_boundary": {
+      "authority": "plugin",
+      "blocks_progress": true,
+      "blocks_release": true,
+      "explanation": "A deterministic plugin workflow step must run before continuing.",
+      "kind": "deterministic_plugin_gate",
+      "schema": "figure-agent.decision-boundary.v1"
+    },
+    "evidence_refs": [
+      "status.first_blocker:render_stale"
+    ],
+    "forbidden_scope": [
+      "accepted/golden state without explicit human approval",
+      "unrelated examples",
+      "hidden source edits",
+      "generated artifacts outside the selected command"
+    ],
+    "reason": "build PDF is older than its source set; refresh the render first.",
+    "release_blocker": {
+      "blocking_source": "acceptance_not_declared",
+      "blocks_release": true,
+      "reason": "fixture has no accepted or final-ready declaration; release requires explicit human acceptance or a valid final artifact path.",
+      "required_actor": "human",
+      "requires_human": true,
+      "safe_command": null,
+      "schema": "figure-agent.release-blocker.v1",
+      "stop_boundary": "accepted_or_final_ready_required",
+      "suggested_command": null
+    },
+    "release_blockers": [
+      {
+        "blocking_source": "acceptance_not_declared",
+        "blocks_release": true,
+        "reason": "fixture has no accepted or final-ready declaration; release requires explicit human acceptance or a valid final artifact path.",
+        "required_actor": "human",
+        "requires_human": true,
+        "safe_command": null,
+        "schema": "figure-agent.release-blocker.v1",
+        "stop_boundary": "accepted_or_final_ready_required",
+        "suggested_command": null
+      }
+    ],
+    "requires_human": false,
+    "safe_command": "/fig_compile fig1_overview_alt_260906_M1",
+    "schema": "figure-agent.next-action-summary.v1"
+  },
+  "notes": [
+    "coordinate_hints_missing"
+  ],
+  "paper_plan": {
+    "schema": "figure-agent.paper-plan-status.v1",
+    "state": "NOT_APPLICABLE"
+  },
+  "promotion_queue": {
+    "path": "build/promotion_queue.json",
+    "state": "missing",
+    "top_items": [],
+    "total": 0
+  },
+  "publication_gate_failures": [],
+  "publication_gate_state": "NOT_APPLICABLE",
+  "release_decision": {
+    "decision_kind": null,
+    "message": "no valid release-authorizing human decision record found",
+    "record_path": null,
+    "schema": "figure-agent.release-decision-summary.v1",
+    "state": "missing"
+  },
+  "release_ready": false,
+  "render_state": "STALE",
+  "review_scale_previews": {
+    "required": false,
+    "state": "NOT_REQUIRED"
+  },
+  "spine_evidence": {
+    "build_dir": "build",
+    "convention_receipt": {
+      "counts": {
+        "fixture": 27,
+        "project": 28,
+        "total": 55
+      },
+      "path": "build/convention_receipt.json",
+      "schema": "figure-agent.convention-receipt.v1",
+      "state": "present",
+      "total": 55
+    },
+    "fixture": "fig1_overview_alt_260906_M1",
+    "label_path_coverage": {
+      "path": "build/label_path_proximity.json",
+      "state": "not_declared"
+    },
+    "physics_grounding": {
+      "path": "build/physics_grounding.json",
+      "schema": "figure-agent.physics-grounding.v1",
+      "state": "present",
+      "status": "grounded"
+    },
+    "schema": "figure-agent.spine-evidence-summary.v1",
+    "semantic_assertions": {
+      "checked": 6,
+      "coverage_state": "complete",
+      "issue_count": 0,
+      "path": "build/semantic_assertions.json",
+      "schema": "figure-agent.semantic-assertions.v1",
+      "state": "passed",
+      "total": 0
+    },
+    "semantic_contract": {
+      "contract_schema": "figure-agent.failure-first-semantic-contract.v1",
+      "path": "build/semantic_contract.json",
+      "schema": "figure-agent.semantic-contract-evidence.v1",
+      "source_sha256": "8b4908ef2fe51d6ccd426689bdfd041ea7762857bd7182e6c97f8aed80f0ff5c",
+      "state": "validated",
+      "summary": {
+        "electrical_connection_count": 4,
+        "electrical_node_count": 9,
+        "floating_object_count": 1,
+        "forbidden_connector_count": 2,
+        "forbidden_implication_count": 12,
+        "label_ownership_count": 9,
+        "object_role_count": 37,
+        "panel_story_role_count": 0,
+        "parallel_comparison_count": 0,
+        "protected_relation_count": 20,
+        "transfer_relations_required": true,
+        "visible_connector_count": 23,
+        "visual_review_required": true
+      }
+    },
+    "silhouette_morphology": {
+      "path": "build/silhouette_morphology.json",
+      "state": "not_declared"
+    },
+    "state": "present",
+    "tex_assertions": {
+      "checked": 4,
+      "issue_count": 0,
+      "path": "build/tex_assertions.json",
+      "schema": "figure-agent.tex-assertions.v1",
+      "state": "passed",
+      "total": 0
+    },
+    "text_boundary_coverage": {
+      "allowlist_binding_checked": 0,
+      "allowlist_binding_state": "not_declared",
+      "checked": 6,
+      "declared": 6,
+      "path": "build/text_boundary_clash.json",
+      "phrase_binding_checked": 0,
+      "phrase_binding_state": "not_declared",
+      "schema": "figure-agent.text-boundary-clash.v1",
+      "state": "passed",
+      "violation_count": 0
+    }
+  },
+  "stage": 4,
+  "status_explanation": {
+    "buckets": {
+      "fixture_freshness": [
+        {
+          "category": "fixture_freshness",
+          "code": "render_stale",
+          "manual": false,
+          "message": "build PDF is older than its source set; refresh the render first.",
+          "next_command": "/fig_compile fig1_overview_alt_260906_M1"
+        }
+      ],
+      "human_blockers": [
+        {
+          "category": "human_blocker",
+          "code": "acceptance_not_declared",
+          "manual": true,
+          "message": "fixture has no accepted or final-ready declaration; release requires explicit human acceptance or a valid final artifact path.",
+          "next_command": null
+        }
+      ],
+      "plugin_state": []
+    },
+    "first_blocker": {
+      "category": "fixture_freshness",
+      "code": "render_stale",
+      "manual": false,
+      "message": "build PDF is older than its source set; refresh the render first.",
+      "next_command": "/fig_compile fig1_overview_alt_260906_M1"
+    },
+    "summary": "build PDF is older than its source set; refresh the render first."
+  },
+  "strict_evidence": {
+    "detector_failed": false,
+    "live_assertion_target": true,
+    "path": "build/strict_status.json",
+    "schema": "figure-agent.strict-status.v1",
+    "state": "passed",
+    "strict_requested": true
+  },
+  "workflow_ready": false
+}

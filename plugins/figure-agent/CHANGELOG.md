@@ -27,6 +27,14 @@ All notable changes to figure-agent are documented here.
 - Run the full fixture compile, visual-clash budget, and render-marked test job
   for every pull request instead of requiring a manually applied label.
 
+### Docs
+
+- Preserve the 2026-09-08 F1/F2/F4 aesthetic-consistency review
+  (`docs/reviews/2026-09-08-f124-aesthetic-consistency/`: font/size
+  measurements, grayscale proof pages, and the patch closeout record) as an
+  audit trail. The patch itself landed against the NAS-canonical figure set
+  and this repo's figure sources are unchanged here.
+
 ## [0.10.3] - 2026-09-07
 
 ### Fixed

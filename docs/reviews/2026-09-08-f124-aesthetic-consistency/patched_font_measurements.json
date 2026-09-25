@@ -1,0 +1,39 @@
+{
+  "F1": {
+    "pdf_sha256": "1e7d70596689d2b7d318e4546c0843a5ebb9aa7ba2e45673f5045c63e8ce8008",
+    "width_mm": 180.0048611111111,
+    "height_mm": 162.39561080932617,
+    "fonts": [
+      "Arial-BoldMT",
+      "Arial-ItalicMT",
+      "ArialMT",
+      "ArialUnicodeMS"
+    ],
+    "min_font_pt": 5.031139850616455,
+    "image_objects": 0
+  },
+  "F2a": {
+    "pdf_sha256": "53c263173b3a10cb3d291d414cc586c7a3c4c8ec51a80abcad828c83755fa5a5",
+    "width_mm": 180.021085357666,
+    "height_mm": 50.99508391486274,
+    "fonts": [
+      "Arial-BoldMT",
+      "Arial-ItalicMT",
+      "ArialMT"
+    ],
+    "min_font_pt": 5.200884819030762,
+    "image_objects": 0
+  },
+  "F4_schematic": {
+    "pdf_sha256": "306004dfa8b3dcb498a76bfdb180e912af8e99a5b8e4022299552b66bda22bd5",
+    "width_mm": 179.9999195522732,
+    "height_mm": 47.58407872517903,
+    "fonts": [
+      "Arial-BoldMT",
+      "Arial-ItalicMT",
+      "ArialMT"
+    ],
+    "min_font_pt": 5.479450225830078,
+    "image_objects": 0
+  }
+}
