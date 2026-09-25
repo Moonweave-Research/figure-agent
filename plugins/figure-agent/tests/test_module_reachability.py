@@ -40,6 +40,7 @@ KNOWN_DORMANT = {
     ),
     "panel_f_transfer_receipt": "fig1 Panel-F campaign receipt",
     "prospective_evidence_receipt": "named in docs/execution-plan.md",
+    "raise_stroke_floor": "operator PDF utility requiring optional PyMuPDF",
     "recover_experience_records": "operator recovery CLI",
     "semantic_legibility_evidence": "operator CLI",
     "structural_collision_gate": "operator CLI",

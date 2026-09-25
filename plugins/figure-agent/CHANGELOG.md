@@ -8,6 +8,11 @@ All notable changes to figure-agent are documented here.
 
 - Expose the bounded `fig-agent run` workflow through `figure_agent_run` on the
   MCP facade. Calls remain plan-only unless `execute: true` is explicit.
+- `scripts/tools/raise_stroke_floor.py`, an operator utility that rewrites a
+  compiled figure PDF's stroke widths to a floor without redrawing it, for the
+  day a journal enforces a literal minimum line width. Declared dormant in
+  `test_module_reachability.py` (requires optional PyMuPDF; no runtime entry
+  point imports it).
 
 ### Fixed
 
