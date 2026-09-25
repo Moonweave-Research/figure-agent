@@ -8,6 +8,11 @@ All notable changes to figure-agent are documented here.
 
 - Expose the bounded `fig-agent run` workflow through `figure_agent_run` on the
   MCP facade. Calls remain plan-only unless `execute: true` is explicit.
+- `scripts/tools/raise_stroke_floor.py`, an operator utility that rewrites a
+  compiled figure PDF's stroke widths to a floor without redrawing it, for the
+  day a journal enforces a literal minimum line width. Declared dormant in
+  `test_module_reachability.py` (requires optional PyMuPDF; no runtime entry
+  point imports it).
 
 ### Fixed
 
@@ -21,6 +26,14 @@ All notable changes to figure-agent are documented here.
 
 - Run the full fixture compile, visual-clash budget, and render-marked test job
   for every pull request instead of requiring a manually applied label.
+
+### Docs
+
+- Preserve the 2026-09-08 F1/F2/F4 aesthetic-consistency review
+  (`docs/reviews/2026-09-08-f124-aesthetic-consistency/`: font/size
+  measurements, grayscale proof pages, and the patch closeout record) as an
+  audit trail. The patch itself landed against the NAS-canonical figure set
+  and this repo's figure sources are unchanged here.
 
 ## [0.10.3] - 2026-09-07
 
